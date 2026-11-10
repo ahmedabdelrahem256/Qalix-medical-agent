@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Qalix Medical Agent | لوحة تحكم وكيل منظومة كالكس ميديكال الطبية وشبكة الموزعين</title>
+  <style>
+    :root {
+      --bg: #060d18;
+      --bg-grad:
+        radial-gradient(circle at 12% 12%, rgba(16, 185, 129, 0.16), transparent 42%),
+        radial-gradient(circle at 88% 18%, rgba(14, 165, 233, 0.16), transparent 42%),
+        radial-gradient(circle at 50% 88%, rgba(99, 102, 241, 0.11), transparent 48%);
+      --card: rgba(15, 23, 42, 0.68);
+      --card-2: rgba(30, 41, 59, 0.56);
+      --border: rgba(148, 163, 184, 0.22);
+      --border-glow: rgba(16, 185, 129, 0.38);
+      --text: #f8fafc;
+      --muted: #cbd5e1;
+      --emerald: #10b981;
+      --sky: #38bdf8;
+      --amber: #fbbf24;
+      --rose: #fb7185;
+      --purple: #c084fc;
+      --shadow: 0 18px 42px -12px rgba(2, 6, 23, 0.65), inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+    }
+    body.theme-pearl {
+      --bg: #f0f7f9;
+      --bg-grad:
+        radial-gradient(circle at 10% 10%, rgba(16, 185, 129, 0.14), transparent 45%),
+        radial-gradient(circle at 90% 20%, rgba(14, 165, 233, 0.15), transparent 45%);
+      --card: rgba(255, 255, 255, 0.78);
+      --card-2: rgba(241, 245, 249, 0.85);
+      --border: rgba(15, 23, 42, 0.12);
+      --border-glow: rgba(16, 185, 129, 0.45);
+      --text: #0f172a;
+      --muted: #475569;
+      --emerald: #059669;
+      --sky: #0284c7;
+      --amber: #d97706;
+      --rose: #e11d48;
+      --purple: #7c3aed;
+      --shadow: 0 14px 34px -10px rgba(15, 23, 42, 0.09), inset 0 1px 0 0 rgba(255, 255, 255, 0.85);
+    }
+    body.theme-ocean {
+      --bg: #071923;
+      --bg-grad:
+        radial-gradient(circle at 18% 15%, rgba(20, 184, 166, 0.2), transparent 45%),
+        radial-gradient(circle at 82% 75%, rgba(56, 189, 248, 0.18), transparent 45%);
+      --card: rgba(11, 34, 48, 0.72);
+      --card-2: rgba(17, 48, 66, 0.62);
+    }
+    * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, system-ui, sans-serif; }
+    body {
+      margin: 0;
+      padding: 22px;
+      background-color: var(--bg);
+      background-image: var(--bg-grad);
+      background-attachment: fixed;
+      color: var(--text);
+      min-height: 100vh;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+    .wrap { max-width: 1440px; margin: 0 auto; }
+    .glass {
+      background: var(--card);
+      backdrop-filter: blur(22px) saturate(165%);
+      -webkit-backdrop-filter: blur(22px) saturate(165%);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 22px;
+      margin-bottom: 22px;
+      box-shadow: var(--shadow);
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+    .glass:hover {
+      border-color: var(--border-glow);
+    }
+    .sub-card {
+      background: var(--card-2);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 15px;
+      box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+      transition: 0.2s ease;
+    }
+    .sub-card:hover {
+      border-color: rgba(56, 189, 248, 0.35);
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      backdrop-filter: blur(8px);
+    }
+    .b-emerald { background: rgba(16, 185, 129, 0.16); color: var(--emerald); border: 1px solid rgba(16, 185, 129, 0.38); }
+    .b-sky     { background: rgba(56, 189, 248, 0.16); color: var(--sky);     border: 1px solid rgba(56, 189, 248, 0.38); }
+    .b-amber   { background: rgba(251, 191, 36, 0.16); color: var(--amber);   border: 1px solid rgba(251, 191, 36, 0.38); }
+    .b-rose    { background: rgba(251, 113, 133, 0.16); color: var(--rose);   border: 1px solid rgba(251, 113, 133, 0.38); }
+    .b-purple  { background: rgba(192, 132, 252, 0.16); color: var(--purple); border: 1px solid rgba(192, 132, 252, 0.38); }
+
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; margin-top: 18px; }
+    .nav-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding: 12px 16px;
+      border-radius: 16px;
+      background: var(--card);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+    .tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+    .tab-btn {
+      padding: 10px 18px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--card-2);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.22s ease;
+    }
+    .tab-btn:hover {
+      border-color: var(--sky);
+      transform: translateY(-1px);
+    }
+    .tab-btn.active {
+      background: linear-gradient(135deg, #10b981, #0ea5e9);
+      color: #ffffff;
+      font-weight: 800;
+      border-color: transparent;
+      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.32);
+    }
+    .pane { display: none; animation: fadeIn 0.25s ease; }
+    .pane.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 18px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+    table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+    th, td { padding: 11px 12px; border-bottom: 1px solid var(--border); text-align: right; }
+    th { background: rgba(15, 23, 42, 0.35); color: var(--muted); font-weight: 700; }
+    tr:hover td { background: rgba(56, 189, 248, 0.05); }
+    input, select, textarea {
+      width: 100%;
+      padding: 9px 12px;
+      border-radius: 11px;
+      border: 1px solid var(--border);
+      background: var(--card-2);
+      color: var(--text);
+      font-size: 13px;
+      backdrop-filter: blur(10px);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--sky);
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.18);
+    }
+    .btn {
+      padding: 10px 16px;
+      border-radius: 11px;
+      border: none;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #ffffff;
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.28);
+      transition: 0.2s ease;
+    }
+    .btn:hover { opacity: 0.94; transform: translateY(-1px); }
+    .btn-sky { background: linear-gradient(135deg, #0ea5e9, #0284c7); color: #ffffff; box-shadow: 0 4px 14px rgba(14, 165, 233, 0.28); }
+    .btn-sm { padding: 5px 11px; font-size: 12px; border-radius: 8px; }
+    .filter-chip {
+      padding: 6px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--card-2);
+      color: var(--text);
+      font-size: 12px;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+    .filter-chip.active {
+      background: linear-gradient(135deg, #0ea5e9, #10b981);
+      color: #ffffff;
+      font-weight: 700;
+      border-color: transparent;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <!-- Top Sovereign Glass Header -->
+    <header class="glass">
+      <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:16px;">
+        <div>
+          <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
+            <span class="badge b-emerald">★ QALIX · ABSOLUTE SECURITY · أمان سيادي تام ★</span>
+            <span class="badge b-sky">100% AIR-GAPPED FORTRESS · أوفلاين بالكامل</span>
+            <span class="badge b-amber">مشروع: Qalix Medical Agent (G:\Qalix medical agent)</span>
+          </div>
+          <h1 style="margin:0; font-size:24px;">لوحة تحكم: وكيل منظومة كالكس ميديكال الطبية وشبكة الموزعين</h1>
+          <p style="margin:4px 0 0; color:var(--muted); font-size:13px;">
+            واجهة زجاجية عصرية مريحة للعين · إدارة الموزعين المستقلين بنظام النسبة من السعر الثابت · نافذة المنظومات المنافسة · ركن الارتقاء والريادة (#1 طبياً)
+          </p>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+          <!-- Comfort Theme Selector Dropdown -->
+          <div class="sub-card" style="padding:10px 14px;">
+            <label style="font-size:11px; color:var(--muted); display:block; margin-bottom:4px;">🎨 نمط الإضاءة والألوان المريحة:</label>
+            <select id="themeSelect" onchange="setGlassTheme(this.value)" style="padding:6px 10px; font-size:12px; min-width:175px;">
+              <option value="default">الزجاجي الزمردي الداكن (مريح ليلاً)</option>
+              <option value="theme-ocean">الزجاجي المحيطي الهادئ (Ocean Teal)</option>
+              <option value="theme-pearl">الزجاجي اللؤلؤي النهاري (Pearl Light)</option>
+            </select>
+          </div>
+          <div class="sub-card">
+            <div style="font-size:12px; color:var(--muted);">وكيل منظومة كالكس ميديكال الطبية</div>
+            <div style="font-size:15px; font-weight:800; color:var(--emerald);" dir="ltr">01122166076 (+20 112 216 6076)</div>
+          </div>
+          <div class="sub-card">
+            <div style="font-size:12px; color:var(--muted);">نسخة العميل v1.0 (محمية بدون أي لمس)</div>
+            <div style="font-size:14px; font-weight:800; color:var(--sky);">مفحوصة 18/18 · بصمة SHA-256 مطابقة</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live KPIs from SQLite WAL -->
+      <div class="kpi-grid">
+        <div class="sub-card">
+          <div style="font-size:12px; color:var(--muted);">الموزعون المستقلون المعتمدون</div>
+          <div id="kpiDistCount" style="font-size:20px; font-weight:800; color:var(--sky); margin-top:4px;">3 موزعين</div>
+          <div style="font-size:12px; color:var(--muted);">لكل موزع بوابة مستقلة (.html)</div>
+        </div>
+        <div class="sub-card">
+          <div style="font-size:12px; color:var(--muted);">إجمالي المبيعات المعتمدة (بالسعر الثابت)</div>
+          <div id="kpiGrossSales" style="font-size:20px; font-weight:800; color:var(--text); margin-top:4px;">13,600 ج.م</div>
+          <div id="kpiDealsCount" style="font-size:12px; color:var(--muted);">2 صفقة مكتملة · 1 معلقة</div>
+        </div>
+        <div class="sub-card">
+          <div style="font-size:12px; color:var(--muted);">إجمالي عمولات الموزعين المستحقة</div>
+          <div id="kpiDistComm" style="font-size:20px; font-weight:800; color:var(--amber); margin-top:4px;">3,145 ج.م</div>
+          <div style="font-size:12px; color:var(--muted);">نسبة من سعر البيع الرسمي الثابت</div>
+        </div>
+        <div class="sub-card">
+          <div style="font-size:12px; color:var(--muted);">صافي إيراد الوكيل المحصّل (01122166076)</div>
+          <div id="kpiAgentNet" style="font-size:20px; font-weight:800; color:var(--emerald); margin-top:4px;">10,455 ج.م</div>
+          <div id="kpiPendingNet" style="font-size:12px; color:var(--muted);">+13,875 ج.م قيد التحصيل</div>
+        </div>
+        <div class="sub-card">
+          <div style="font-size:12px; color:var(--muted);">ركن مقترحات التطوير والريادة (#1)</div>
+          <div id="kpiPropsCount" style="font-size:20px; font-weight:800; color:var(--purple); margin-top:4px;">12 محور ارتقاء</div>
+          <div style="font-size:12px; color:var(--muted);">5 أركان: المنظومة · العرض · البيع · المتابعة · الإدارة</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Navigation Bar with Tabs & Quick Section Dropdown -->
+    <div class="nav-bar">
+      <nav class="tabs">
+        <button class="tab-btn active" id="btn-pane-agent" onclick="openTab('pane-agent', this)">1. إدارة الوكيل والموزعين المستقلين والصفقات</button>
+        <button class="tab-btn" id="btn-pane-excellence" onclick="openTab('pane-excellence', this)">2. 🏆 ركن التطوير والارتقاء والريادة (المركز #1 طبياً)</button>
+        <button class="tab-btn" id="btn-pane-market" onclick="openTab('pane-market', this)">3. ⚔️ نافذة المنظومات المنافسة (المزايا والعيوب والمقارنة مع كالكس)</button>
+        <button class="tab-btn" id="btn-pane-audit" onclick="openTab('pane-audit', this)">4. نتيجة استضافة واختبار نسخة العميل (MEGA)</button>
+      </nav>
+      <div style="display:flex; align-items:center; gap:8px; min-width:250px;">
+        <span style="font-size:12px; color:var(--muted); white-space:nowrap;">⚡ انتقال سريع للقسم:</span>
+        <select id="quickNavSelect" onchange="quickJumpSection(this.value)" style="padding:8px 12px; font-size:12.5px;">
+          <option value="pane-agent">القسم 1: إدارة الوكيل والموزعين والصفقات</option>
+          <option value="pane-excellence">القسم 2: ركن التطوير والارتقاء (#1 طبياً)</option>
+          <option value="pane-market">القسم 3: نافذة المنظومات المنافسة والمقارنة</option>
+          <option value="pane-audit">القسم 4: فحص واستضافة نسخة العميل (MEGA)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- ==================== PANE 1: AGENT & INDEPENDENT DISTRIBUTORS ==================== -->
+    <section id="pane-agent" class="pane active">
+      <div class="grid-2">
+        <!-- Create Independent Distributor -->
+        <div class="glass">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <h2 style="margin:0; font-size:17px;">إضافة موزع مستقل جديد وتوليد حقيبته المستقلة</h2>
+            <span class="badge b-emerald">يولّد ملف بوابة مستقل للموزع</span>
+          </div>
+          <p style="font-size:12.5px; color:var(--muted); margin-top:0;">
+            كل موزع يعمل كوحدة مستقلة بذاتها لبيع أكبر عدد من النسخ بالسعر الرسمي الثابت، ويحصل على نسبته المحددة تلقائياً، بينما يصدر مفتاح التفعيل مركزياً من الوكيل (`01122166076`).
+          </p>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:12px;">
+            <div>
+              <label style="font-size:12px; color:var(--muted);">اسم الموزع / المكتب المستقل:</label>
+              <input id="dName" placeholder="مثال: مكتب الصعيد للأنظمة الطبية" />
+            </div>
+            <div>
+              <label style="font-size:12px; color:var(--muted);">رقم هاتف الموزع:</label>
+              <input id="dPhone" placeholder="010..." dir="ltr" />
+            </div>
+            <div>
+              <label style="font-size:12px; color:var(--muted);">المحافظة / النطاق الجغرافي:</label>
+              <input id="dGov" placeholder="مثال: سوهاج وقنا" />
+            </div>
+            <div>
+              <label style="font-size:12px; color:var(--muted);">نسبة عمولة الموزع من السعر الثابت (%):</label>
+              <input id="dRate" type="number" min="5" max="45" value="20" />
+            </div>
+          </div>
+          <button class="btn" style="width:100%;" onclick="createDistributor()">+ اعتماد الموزع وتوليد بوابته المستقلة فوراً</button>
+        </div>
+
+        <!-- Register New Deal via Distributor -->
+        <div class="glass">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <h2 style="margin:0; font-size:17px;">تسجيل بيعة عيادة جديدة عبر موزع (بالسعر الثابت)</h2>
+            <span class="badge b-sky">حساب تلقائي للنسبة وصافي الوكيل</span>
+          </div>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:12px;">
+            <div>
+              <label style="font-size:12px; color:var(--muted);">الموزع القائم بالبيع:</label>
+              <select id="dlDist"></select>
+            </div>
+            <div>
+              <label style="font-size:12px; color:var(--muted);">الباقة (سعر رسمي ثابت):</label>
+              <select id="dlTier">
+                <option value="basic">الأساسية (4,500 ج.م / أسيوط 2,700)</option>
+                <option value="professional" selected>التخصصية (8,500 ج.م / أسيوط 5,100)</option>
+                <option value="enterprise">المراكز الكبرى (18,500 ج.م / أسيوط 11,100)</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:12px; color:var(--muted);">اسم العيادة / المركز الطبي:</label>
+              <input id="dlClinic" placeholder="مثال: عيادة الحياة التخصصية" />
+            </div>
+            <div>
+              <label style="font-size:12px; color:var(--muted);">اسم الطبيب وهاتفه:</label>
+              <input id="dlDoctor" placeholder="د. محمد علي - 010..." />
+            </div>
+            <div>
+              <label style="font-size:12px; color:var(--muted);">بصمة جهاز العيادة (Hardware ID):</label>
+              <input id="dlHwid" placeholder="تُنسخ من نافذة التفعيل بالعيادة" dir="ltr" />
+            </div>
+            <div style="display:flex; align-items:center; gap:8px; padding-top:18px;">
+              <input type="checkbox" id="dlAssiut" style="width:18px; height:18px;" />
+              <label for="dlAssiut" style="font-size:12.5px; cursor:pointer;">تطبيق خصم محافظة أسيوط (40%)</label>
+            </div>
+          </div>
+          <button class="btn btn-sky" style="width:100%;" onclick="createDeal()">تسجيل الصفقة وحساب عمولة الموزع وصافي الوكيل</button>
+        </div>
+      </div>
+
+      <!-- Independent Distributors Table -->
+      <div class="glass">
+        <h3 style="margin-top:0;">سجل الموزعين المستقلين التابعين للوكيل (01122166076)</h3>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>كود الموزع</th>
+                <th>اسم الموزع المستقل</th>
+                <th>المحافظة</th>
+                <th>الهاتف</th>
+                <th>نسبة العمولة</th>
+                <th>عدد المبيعات</th>
+                <th>إجمالي مبيعاته</th>
+                <th>إجمالي عمولته</th>
+                <th>صافي الوكيل منه</th>
+                <th>حقيبة الموزع المستقلة</th>
+              </tr>
+            </thead>
+            <tbody id="distRows"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Deals & Settlements Ledger -->
+      <div class="glass">
+        <h3 style="margin-top:0;">دفتر مبيعات النسخ وتوريدات الموزعين (تحت السعر الثابت)</h3>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>رقم الصفقة</th>
+                <th>الموزع</th>
+                <th>العيادة والطبيب</th>
+                <th>الباقة</th>
+                <th>السعر الثابت</th>
+                <th>عمولة الموزع</th>
+                <th>صافي الوكيل (01122166076)</th>
+                <th>بصمة الجهاز (HWID)</th>
+                <th>الحالة / مرجع الترخيص</th>
+              </tr>
+            </thead>
+            <tbody id="dealRows"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== PANE 2: EXCELLENCE & #1 LEADERSHIP HUB ==================== -->
+    <section id="pane-excellence" class="pane">
+      <div class="glass">
+        <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:12px; margin-bottom:16px;">
+          <div>
+            <span class="badge b-emerald">خارطة الطريق لجعل Qalix Medical رقم #1 في القطاع الطبي</span>
+            <h2 style="margin:6px 0 4px;">ركن اقتراحات التطوير والارتقاء بالمنظومة والعرض والبيع والمتابعة والإدارة</h2>
+            <p style="margin:0; font-size:12.5px; color:var(--muted);">
+              ملاحظة دستورية: الإصدار الحالي `v1.0` محمي وموقّع رقمياً ولا يُلمس أبداً؛ كافة الأدوات المساعدة والخطط هنا تعمل حول المنظومة أو تُجدول كحزم تحديث موقعة مستقبلاً.
+            </p>
+          </div>
+        </div>
+
+        <!-- 5 Pillars Filter Chips -->
+        <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px;">
+          <button class="filter-chip active" onclick="filterProposals('all', this)">الكل (الأركان الخمسة الشاملة)</button>
+          <button class="filter-chip" onclick="filterProposals('product', this)">1. الارتقاء بالمنظومة والأدوات المحيطة</button>
+          <button class="filter-chip" onclick="filterProposals('presentation', this)">2. تحسين العرض والإبهار الميداني</button>
+          <button class="filter-chip" onclick="filterProposals('sales', this)">3. تحسين طرق البيع وإغلاق الصفقات</button>
+          <button class="filter-chip" onclick="filterProposals('followup', this)">4. تحسين المتابعة وخدمة ما بعد البيع</button>
+          <button class="filter-chip" onclick="filterProposals('management', this)">5. تحسين الإدارة وحوكمة الموزعين</button>
+        </div>
+
+        <!-- Add New Proposal Form (Stored in SQLite) -->
+        <div class="sub-card" style="margin-bottom:20px;">
+          <h4 style="margin:0 0 10px; color:var(--sky);">+ تسجيل فكرة أو مقترح تطوير جديد في قاعدة بيانات الوكيل:</h4>
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:10px;">
+            <select id="pPillar">
+              <option value="product">1. الارتقاء بالمنظومة والأدوات</option>
+              <option value="presentation">2. تحسين العرض التقديمي</option>
+              <option value="sales">3. تحسين طرق البيع</option>
+              <option value="followup">4. تحسين المتابعة</option>
+              <option value="management">5. تحسين الإدارة والموزعين</option>
+            </select>
+            <input id="pTitle" placeholder="عنوان المقترح أو طريقة التطوير..." />
+            <input id="pImpact" placeholder="الأثر المتوقع (مثال: مضاعفة المبيعات)" value="أثر استراتيجي مرتفع" />
+            <button class="btn" onclick="addProposal()">حفظ المقترح في السجل</button>
+          </div>
+          <textarea id="pDesc" rows="2" placeholder="تفاصيل التنفيذ وكيف يخدم تصدر كالكس ميديكال للمركز الأول..." style="margin-top:8px;"></textarea>
+        </div>
+
+        <!-- Proposals Cards Grid -->
+        <div id="proposalsGrid" class="grid-3"></div>
+      </div>
+    </section>
+
+    <!-- ==================== PANE 3: COMPETITORS PROS & CONS & HEAD-TO-HEAD COMPARISON ==================== -->
+    <section id="pane-market" class="pane">
+      <!-- Interactive 3-Year Cost & Savings Simulator against Competitors -->
+      <div class="glass">
+        <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:12px; margin-bottom:14px;">
+          <div>
+            <span class="badge b-amber">دليل الوكيل والموزع للرد العلمي والمالي على الأطباء</span>
+            <h2 style="margin:6px 0 4px;">نافذة المنظومات المنافسة: المزايا والعيوب والمقارنة الحاسمة مع كالكس ميديكال</h2>
+            <p style="margin:0; font-size:12.5px; color:var(--muted);">
+              تحليل مفصل لأشهر 5 منظومات في السوق المصري (طَبَّبَ، طبيب بلس، أوركا/أميدرا، تيبورا/منصات الحجز، والبرامج المكتبية القديمة) مع نقاط القوة والضعف والرد الإقناعي الجاهز للنسخ.
+            </p>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="filter-chip active" onclick="filterCompetitors('all', this)">عرض جميع المنافسين (5)</button>
+            <button class="filter-chip" onclick="filterCompetitors('tabbaba', this)">طَبَّبَ (Tabbaba)</button>
+            <button class="filter-chip" onclick="filterCompetitors('tabeeb_plus', this)">طبيب بلس (Tabeeb+)</button>
+            <button class="filter-chip" onclick="filterCompetitors('orcaa_amedra', this)">أوركا / أميدرا</button>
+            <button class="filter-chip" onclick="filterCompetitors('tebora_vezeeta', this)">تيبورا / منصات الحجز</button>
+            <button class="filter-chip" onclick="filterCompetitors('legacy_desktop', this)">البرامج المكتبية القديمة</button>
+          </div>
+        </div>
+
+        <!-- Interactive Financial Savings Calculator vs Selected Competitor -->
+        <div class="sub-card" style="margin-bottom:20px; border-color:rgba(16,185,129,0.4);">
+          <h3 style="margin:0 0 10px; font-size:15px; color:var(--emerald);">💰 حاسبة التوفير المالي للطبيب (كالكس ميديكال مقابل الأنظمة المنافسة خلال 3 سنوات):</h3>
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px; align-items:end;">
+            <div>
+              <label style="font-size:12px; color:var(--muted);">اختر المنظومة المنافسة التي يسأل عنها الطبيب:</label>
+              <select id="simComp" onchange="runCompSim()">
+                <option value="50470|طَبَّبَ (باقة العيادة 1,599/شهر + تأسيس)">طَبَّبَ — Tabbaba (50,470 ج.م في 3 سنوات)</option>
+                <option value="36000|طبيب بلس (باقة العيادة 1,000/شهر)">طبيب بلس — Tabeeb+ (36,000 ج.م في 3 سنوات)</option>
+                <option value="54000|أوركا / أميدرا (1,500/شهر)">أوركا / أميدرا (54,000 ج.م في 3 سنوات)</option>
+                <option value="32000|تيبورا / منصات الحجز السحابية">تيبورا / منصات الحجز (32,000 ج.م في 3 سنوات)</option>
+                <option value="12000|البرامج المكتبية القديمة + صيانة سنوية">البرامج المكتبية القديمة (12,000 ج.م في 3 سنوات)</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:12px; color:var(--muted);">باقة كالكس ميديكال المقترحة للطبيب:</label>
+              <select id="simQalix" onchange="runCompSim()">
+                <option value="4500">الباقة الأساسية — 4,500 ج.م (دفعة واحدة مدى الحياة)</option>
+                <option value="8500" selected>الباقة التخصصية — 8,500 ج.م (دفعة واحدة مدى الحياة)</option>
+                <option value="18500">باقة المراكز الكبرى — 18,500 ج.م (دفعة واحدة مدى الحياة)</option>
+                <option value="2700">الأساسية (خصم أسيوط 40%) — 2,700 ج.م</option>
+                <option value="5100">التخصصية (خصم أسيوط 40%) — 5,100 ج.م</option>
+                <option value="11100">المراكز الكبرى (خصم أسيوط 40%) — 11,100 ج.م</option>
+              </select>
+            </div>
+            <div class="sub-card" style="background:rgba(244,63,94,0.1); border-color:rgba(244,63,94,0.3);">
+              <div style="font-size:11.5px; color:var(--muted);">يدفع الطبيب في النظام المنافس (3 سنوات):</div>
+              <div id="simCompCost" style="font-size:18px; font-weight:800; color:var(--rose);">50,470 ج.م</div>
+            </div>
+            <div class="sub-card" style="background:rgba(16,185,129,0.12); border-color:rgba(16,185,129,0.4);">
+              <div style="font-size:11.5px; color:var(--muted);">صافي التوفير المالي الفوري للطبيب مع كالكس:</div>
+              <div id="simSavings" style="font-size:18px; font-weight:800; color:var(--emerald);">يوفر 41,970 ج.م (83%)</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Detailed Competitor Cards (Pros, Cons, Qalix Win Edge, Copyable Sales Pitch) -->
+        <div id="competitorsGrid" class="grid-2"></div>
+      </div>
+
+      <!-- Master Head-to-Head Matrix Table -->
+      <div class="glass">
+        <h3 style="margin-top:0;">جدول المقارنة الفنية والمالية الشامل (كالكس ميديكال في مواجهة المنافسين)</h3>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>وجه المقارنة</th>
+                <th style="color:var(--emerald);">★ منظومة كالكس الطبية (Qalix Medical v1.0)</th>
+                <th>طَبَّبَ (Tabbaba)</th>
+                <th>طبيب بلس (Tabeeb+)</th>
+                <th>أوركا (ORCAA) / أميدرا</th>
+                <th>البرامج المكتبية القديمة</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>طريقة التشغيل والإنترنت</strong></td>
+                <td style="color:var(--emerald); font-weight:bold;">100% أوفلاين + شبكة محلية (LAN/Wi-Fi) للهواتف وشاشة الانتظار بلا إنترنت</td>
+                <td>سحابي أونلاين (يتوقف بانقطاع الإنترنت)</td>
+                <td>سحابي أونلاين (يتوقف بانقطاع الإنترنت)</td>
+                <td>سحابي أونلاين 100%</td>
+                <td>أوفلاين لجهاز واحد فقط (لا يدعم الموبايل)</td>
+              </tr>
+              <tr>
+                <td><strong>نظام الدفع والترخيص</strong></td>
+                <td style="color:var(--emerald); font-weight:bold;">دفعة واحدة مدى الحياة: 4,500 / 8,500 / 18,500 ج.م (أسيوط: 2,700 / 5,100 / 11,100)</td>
+                <td>2,500 تأسيس + 799 إلى 3,299 ج.م شهرياً</td>
+                <td>500 إلى 1,500 ج.م شهرياً</td>
+                <td>~1,500 ج.م شهرياً</td>
+                <td>3,000 - 7,000 ج.م + رسوم صيانة وفورمات</td>
+              </tr>
+              <tr>
+                <td><strong>التكلفة خلال 3 سنوات (عيادة نشطة)</strong></td>
+                <td style="color:var(--emerald); font-weight:bold;">8,500 ج.م فقط (أو 5,100 ج.م في أسيوط)</td>
+                <td style="color:var(--rose); font-weight:bold;">50,470 ج.م</td>
+                <td style="color:var(--amber); font-weight:bold;">36,000 ج.م</td>
+                <td style="color:var(--rose); font-weight:bold;">54,000 ج.م</td>
+                <td>12,000 ج.م</td>
+              </tr>
+              <tr>
+                <td><strong>تشفير البيانات وملكيتها</strong></td>
+                <td style="color:var(--emerald); font-weight:bold;">تشفير عسكري AES-256-GCM على جهاز العيادة حصراً + مفتاح استرجاع بيد الطبيب</td>
+                <td>على خوادم الشركة السحابية</td>
+                <td>على خوادم الشركة السحابية</td>
+                <td>على خوادم الشركة السحابية</td>
+                <td style="color:var(--rose);">ملف غير مشفر يسهل نسخه وسرقته</td>
+              </tr>
+              <tr>
+                <td><strong>النداء الصوتي العربي وQR للمريض</strong></td>
+                <td style="color:var(--emerald); font-weight:bold;">مدمج مجاناً بصوت «هدى» + مسح QR من موبايل المريض أوفلاين</td>
+                <td>غير متوفر أوفلاين</td>
+                <td>غير متوفر</td>
+                <td>غير متوفر</td>
+                <td>غير متوفر</td>
+              </tr>
+              <tr>
+                <td><strong>فحص التداخلات الدوائية والحساسية</strong></td>
+                <td style="color:var(--emerald); font-weight:bold;">تنبيه لحظي للتداخلات الخطيرة وحساسية المريض قبل حفظ الروشتة</td>
+                <td>محدود</td>
+                <td>غير متوفر</td>
+                <td>محدود</td>
+                <td>غير متوفر</td>
+              </tr>
+              <tr>
+                <td><strong>الصيدلية والمختبر والأشعة والغرف</strong></td>
+                <td style="color:var(--emerald); font-weight:bold;">مدمجة بالكامل في نفس النسخة (مع صرف بالباركود وتقفيل Z-Report)</td>
+                <td>إضافات في الباقات العليا</td>
+                <td>الصيدلية والمختبر برامج منفصلة مدفوعة</td>
+                <td>جزئي</td>
+                <td>برامج منفصلة</td>
+              </tr>
+              <tr>
+                <td><strong>المحادثات الداخلية (نص + صوت)</strong></td>
+                <td style="color:var(--emerald); font-weight:bold;">شات داخلي مشفر (نصي وصوتي) بين الطبيب والاستقبال بلا إنترنت</td>
+                <td>غير متوفر</td>
+                <td>غير متوفر</td>
+                <td>غير متوفر</td>
+                <td>غير متوفر</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== PANE 4: LIVE HOSTED CLIENT PACKAGE AUDIT ==================== -->
+    <section id="pane-audit" class="pane">
+      <div class="glass">
+        <h2 style="margin-top:0;">تقرير استضافة واختبار نسخة العميل الحية من رابط MEGA (18 / 18 ناجح)</h2>
+        <p style="font-size:13px; color:var(--muted);">
+          تم تحميل حزمة `Qalix_Medical_v1.0.zip` (35.63 ميجابايت) من رابط MEGA العام وفحص بصمتها `0f7ff4448eb11ee1385332edf4233f0b6cc9964f490782800de78efc2b8499f7` وتشغيلها في بيئة معزولة تماماً دون لمس أو تعديل أي ملف فيها:
+        </p>
+        <div class="grid-3">
+          <div class="sub-card">
+            <strong style="color:var(--emerald);">1. الأمان وحساب المصنع الموحد</strong>
+            <p style="font-size:12px; color:var(--muted);">دخول أول بـ `admin / Qalix@11` يفرض تغيير كلمة المرور فوراً (`403` لأي عملية قبل التغيير) ثم يلغي كلمة المصنع نهائياً.</p>
+          </div>
+          <div class="sub-card">
+            <strong style="color:var(--emerald);">2. التشفير الجنائي للقاعدة `clinic.db`</strong>
+            <p style="font-size:12px; color:var(--muted);">فحص الملف الخام للقاعدة أثبت صفر وجود لأي نص صريح لأسماء المرضى أو التشخيصات أو المحادثات (تشفير AES-256-GCM + مفتاح استرجاع 25 حرفاً).</p>
+          </div>
+          <div class="sub-card">
+            <strong style="color:var(--emerald);">3. التشغيل الطبي والمالي الكامل</strong>
+            <p style="font-size:12px; color:var(--muted);">نجاح الفروع المتعددة، منع تضارب المواعيد (`409`)، فحص التداخلات الدوائية والحساسية، الصيدلية بالباركود، تقفيل الوردية Z-Report، والمراسلات الداخلية المشفرة.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    let allProposals = [];
+    let currentPillarFilter = 'all';
+    let allCompetitors = [];
+    let currentCompFilter = 'all';
+
+    const PILLAR_META = {
+      product:      { label: '1. الارتقاء بالمنظومة والأدوات', badge: 'b-emerald' },
+      presentation: { label: '2. تحسين العرض والإبهار الميداني', badge: 'b-sky' },
+      sales:        { label: '3. تحسين طرق البيع والإغلاق', badge: 'b-amber' },
+      followup:     { label: '4. تحسين المتابعة وما بعد البيع', badge: 'b-purple' },
+      management:   { label: '5. تحسين الإدارة وحوكمة الموزعين', badge: 'b-rose' }
+    };
+
+    function fmt(n) { return Math.round(Number(n) || 0).toLocaleString('ar-EG') + ' ج.م'; }
+
+    function openTab(id, btn) {
+      document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      if (btn) btn.classList.add('active');
+      const qSel = document.getElementById('quickNavSelect');
+      if (qSel) qSel.value = id;
+    }
+
+    function quickJumpSection(id) {
+      const btn = document.getElementById('btn-' + id);
+      openTab(id, btn);
+    }
+
+    function setGlassTheme(themeClass) {
+      document.body.className = themeClass === 'default' ? '' : themeClass;
+    }
+
+    function filterProposals(pillar, btn) {
+      currentPillarFilter = pillar;
+      btn.parentElement.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      renderProposals();
+    }
+
+    function filterCompetitors(compId, btn) {
+      currentCompFilter = compId;
+      btn.parentElement.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      renderCompetitors();
+    }
+
+    function runCompSim() {
+      const compEl = document.getElementById('simComp');
+      const qalixEl = document.getElementById('simQalix');
+      if (!compEl || !qalixEl) return;
+      const [compCostStr] = compEl.value.split('|');
+      const compCost = Number(compCostStr) || 50470;
+      const qalixCost = Number(qalixEl.value) || 8500;
+      const diff = compCost - qalixCost;
+      const pct = Math.max(0, Math.round((diff / compCost) * 100));
+      document.getElementById('simCompCost').innerText = fmt(compCost);
+      document.getElementById('simSavings').innerText = diff > 0
+        ? `يوفر ${fmt(diff)} (${pct}%)`
+        : `فرق ${fmt(Math.abs(diff))} مقابل أمان وشبكة موبايل كاملة`;
+    }
+
+    function copyTextMsg(txt) {
+      if (navigator.clipboard) navigator.clipboard.writeText(txt);
+      alert('تم نسخ الرد الإقناعي الجاهز لإرساله للطبيب عبر واتساب');
+    }
+
+    function renderCompetitors() {
+      const grid = document.getElementById('competitorsGrid');
+      if (!grid) return;
+      const list = currentCompFilter === 'all'
+        ? allCompetitors
+        : allCompetitors.filter(c => c.id === currentCompFilter);
+
+      grid.innerHTML = list.map(c => `
+        <div class="sub-card" style="display:flex; flex-direction:column; justify-content:space-between; gap:12px;">
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px;">
+              <h3 style="margin:0; font-size:16px; color:var(--sky);">${c.nameAr}</h3>
+              <span class="badge b-rose">تكلفته في 3 سنوات: ${fmt(c.cost3YearsEgp)}</span>
+            </div>
+            <div style="font-size:12px; color:var(--muted); margin-bottom:10px;">
+              <strong>النوع:</strong> ${c.category} · <strong>التسعير:</strong> ${c.pricingModel}
+            </div>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:10px;">
+              <div style="background:rgba(14,165,233,0.07); border:1px solid rgba(14,165,233,0.25); border-radius:10px; padding:10px;">
+                <div style="font-size:12px; font-weight:800; color:var(--sky); margin-bottom:6px;">➕ مزايا النظام المنافس:</div>
+                <ul style="margin:0; padding-right:16px; font-size:11.8px; color:var(--text); line-height:1.55;">
+                  ${(c.pros || []).map(p => `<li>${p}</li>`).join('')}
+                </ul>
+              </div>
+              <div style="background:rgba(244,63,94,0.08); border:1px solid rgba(244,63,94,0.28); border-radius:10px; padding:10px;">
+                <div style="font-size:12px; font-weight:800; color:var(--rose); margin-bottom:6px;">➖ العيوب ونقاط الضعف الحرجة:</div>
+                <ul style="margin:0; padding-right:16px; font-size:11.8px; color:var(--text); line-height:1.55;">
+                  ${(c.cons || []).map(cn => `<li>${cn}</li>`).join('')}
+                </ul>
+              </div>
+            </div>
+
+            <div style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.35); border-radius:10px; padding:10px; margin-bottom:8px;">
+              <div style="font-size:12px; font-weight:800; color:var(--emerald); margin-bottom:4px;">🏆 تفوق منظومة كالكس ميديكال (توفير ${fmt(c.savings3YearsEgp)}):</div>
+              <div style="font-size:12px; color:var(--text); line-height:1.55;">${c.qalixWinEdge}</div>
+            </div>
+          </div>
+
+          <div style="background:rgba(15,23,42,0.9); border:1px dashed var(--amber); border-radius:10px; padding:10px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+              <span style="font-size:11.5px; font-weight:700; color:var(--amber);">💬 الرد البيعي الجاهز للطبيب (للموزع والوكيل):</span>
+              <button class="btn btn-sm" style="padding:3px 8px; font-size:11px;" onclick="copyTextMsg(${JSON.stringify(c.salesPitchAr).replace(/"/g, '&quot;')})">نسخ الرد</button>
+            </div>
+            <div style="font-size:12px; color:var(--muted); line-height:1.5;">«${c.salesPitchAr}»</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderProposals() {
+      const list = currentPillarFilter === 'all'
+        ? allProposals
+        : allProposals.filter(p => p.pillar === currentPillarFilter);
+
+      document.getElementById('proposalsGrid').innerHTML = list.map(p => {
+        const meta = PILLAR_META[p.pillar] || PILLAR_META.product;
+        return `
+          <div class="sub-card" style="display:flex; flex-direction:column; justify-content:space-between; gap:10px;">
+            <div>
+              <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:8px;">
+                <span class="badge ${meta.badge}">${meta.label}</span>
+                <span style="font-size:11.5px; color:var(--muted);">${p.priority}</span>
+              </div>
+              <h3 style="margin:0 0 6px; font-size:15px; line-height:1.4;">${p.title}</h3>
+              <p style="margin:0; font-size:12.5px; color:var(--muted); line-height:1.6;">${p.description}</p>
+            </div>
+            <div style="border-top:1px solid var(--border); padding-top:8px; display:flex; justify-content:space-between; align-items:center; font-size:12px;">
+              <span style="color:var(--emerald); font-weight:bold;">الأثر: ${p.impact}</span>
+              <span class="badge b-sky">${p.status}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function addProposal() {
+      const pillar = document.getElementById('pPillar').value;
+      const title = document.getElementById('pTitle').value.trim();
+      const impact = document.getElementById('pImpact').value.trim();
+      const description = document.getElementById('pDesc').value.trim();
+      if (!title || !description) return alert('أدخل عنوان المقترح وتفاصيله');
+      const r = await fetch('/api/proposals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pillar, title, impact, description })
+      });
+      const j = await r.json();
+      if (j.error) return alert(j.error);
+      document.getElementById('pTitle').value = '';
+      document.getElementById('pDesc').value = '';
+      render(j.summary);
+    }
+
+    function render(data) {
+      document.getElementById('kpiDistCount').innerText = data.kpis.activeDistributors + ' موزعين نشطين';
+      document.getElementById('kpiGrossSales').innerText = fmt(data.kpis.totalGrossSales);
+      document.getElementById('kpiDealsCount').innerText = `${data.kpis.completedDealsCount} مكتملة · ${data.kpis.pendingDealsCount} معلقة`;
+      document.getElementById('kpiDistComm').innerText = fmt(data.kpis.totalDistributorCommissions);
+      document.getElementById('kpiAgentNet').innerText = fmt(data.kpis.totalAgentNetRevenue);
+      document.getElementById('kpiPendingNet').innerText = `+${fmt(data.kpis.pendingAgentNetRevenue)} قيد التحصيل`;
+      document.getElementById('kpiPropsCount').innerText = `${data.proposals ? data.proposals.length : 12} محور ارتقاء`;
+
+      allProposals = data.proposals || [];
+      renderProposals();
+
+      allCompetitors = data.competitors || [];
+      renderCompetitors();
+      runCompSim();
+
+      const sel = document.getElementById('dlDist');
+      sel.innerHTML = data.distributors.filter(d => d.status === 'active').map(d =>
+        `<option value="${d.id}">${d.name} (${d.code} — عمولة ${d.commission_rate}%)</option>`
+      ).join('');
+
+      document.getElementById('distRows').innerHTML = data.distributors.map(d => `
+        <tr>
+          <td style="font-family:monospace; font-weight:bold; color:var(--sky);">${d.code}</td>
+          <td><strong>${d.name}</strong></td>
+          <td>${d.governorate}</td>
+          <td dir="ltr">${d.phone}</td>
+          <td><span class="badge b-emerald">${d.commission_rate}%</span></td>
+          <td>${d.metrics.completedDeals} مكتملة (${d.metrics.pendingDeals} معلقة)</td>
+          <td>${fmt(d.metrics.grossSales)}</td>
+          <td style="color:var(--amber); font-weight:bold;">${fmt(d.metrics.totalDistributorCommission)}</td>
+          <td style="color:var(--emerald); font-weight:bold;">${fmt(d.metrics.totalAgentNet)}</td>
+          <td><a href="/api/distributors/${d.id}/kit" class="btn btn-sm" style="text-decoration:none; display:inline-block;">⬇ تنزيل بوابة الموزع (.html)</a></td>
+        </tr>
+      `).join('');
+
+      const tierNames = { basic: 'الأساسية', professional: 'التخصصية', enterprise: 'المراكز الكبرى' };
+      document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
+        <tr>
+          <td style="font-family:monospace; font-weight:bold;">${dl.deal_no}</td>
+          <td>${dl.distributor_name} <span style="color:var(--muted);">(${dl.distributor_code})</span></td>
+          <td><strong>${dl.clinic_name}</strong><br><span style="color:var(--muted);">${dl.doctor_name} — ${dl.city}${dl.is_assiut ? ' (خصم أسيوط 40%)' : ''}</span></td>
+          <td>${tierNames[dl.tier] || dl.tier}</td>
+          <td><strong>${fmt(dl.fixed_price)}</strong></td>
+          <td style="color:var(--amber); font-weight:bold;">${fmt(dl.distributor_commission)} (${dl.commission_rate}%)</td>
+          <td style="color:var(--emerald); font-weight:bold;">${fmt(dl.agent_net_amount)}</td>
+          <td style="font-family:monospace;" dir="ltr">${dl.hardware_id || '—'}</td>
+          <td>
+            ${dl.status === 'completed'
+              ? `<span class="badge b-emerald">مكتملة · ${dl.license_key_ref}</span>`
+              : `<button class="btn btn-sm" onclick="settleDeal('${dl.id}')">✔ اعتماد التحصيل وإصدار التفعيل</button>`}
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    async function load() {
+      const r = await fetch('/api/bootstrap');
+      const data = await r.json();
+      render(data);
+    }
+
+    async function createDistributor() {
+      const name = document.getElementById('dName').value.trim();
+      const phone = document.getElementById('dPhone').value.trim();
+      const governorate = document.getElementById('dGov').value.trim();
+      const commissionRate = Number(document.getElementById('dRate').value);
+      if (!name || !phone) return alert('أدخل اسم الموزع ورقم هاتفه');
+      const r = await fetch('/api/distributors', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, phone, governorate, commissionRate })
+      });
+      const j = await r.json();
+      if (j.error) return alert(j.error);
+      document.getElementById('dName').value = '';
+      document.getElementById('dPhone').value = '';
+      document.getElementById('dGov').value = '';
+      render(j.summary);
+    }
+
+    async function createDeal() {
+      const distributorId = document.getElementById('dlDist').value;
+      const tier = document.getElementById('dlTier').value;
+      const clinicName = document.getElementById('dlClinic').value.trim();
+      const doctorName = document.getElementById('dlDoctor').value.trim();
+      const hardwareId = document.getElementById('dlHwid').value.trim();
+      const isAssiut = document.getElementById('dlAssiut').checked;
+      if (!clinicName || !doctorName) return alert('أدخل اسم العيادة واسم الطبيب');
+      const r = await fetch('/api/deals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ distributorId, tier, clinicName, doctorName, clinicPhone: doctorName, hardwareId, isAssiut })
+      });
+      const j = await r.json();
+      if (j.error) return alert(j.error);
+      document.getElementById('dlClinic').value = '';
+      document.getElementById('dlDoctor').value = '';
+      document.getElementById('dlHwid').value = '';
+      render(j.summary);
+    }
+
+    async function settleDeal(id) {
+      const r = await fetch(`/api/deals/${id}/settle`, { method: 'POST' });
+      const j = await r.json();
+      if (j.summary) render(j.summary);
+    }
+
+    load();
+  </script>
+</body>
+</html>

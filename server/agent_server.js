@@ -1,0 +1,705 @@
+/* Qalix Medical Agent — Official Agent & Independent Distributors Management Server
+ * 100% Offline Air-Gapped · Zero External Dependencies · Node.js Built-in HTTP + SQLite
+ * Official Agent Phone: 01122166076 (+201122166076)
+ */
+'use strict';
+
+const http = require('node:http');
+const fs = require('node:fs');
+const path = require('node:path');
+const crypto = require('node:crypto');
+const { DatabaseSync } = require('node:sqlite');
+
+const PORT = Number(process.env.PORT) || 4000;
+const HOST = process.env.HOST || '127.0.0.1';
+const ROOT = path.join(__dirname, '..');
+const PUBLIC_DIR = path.join(ROOT, 'public');
+const DATA_DIR = process.env.DATA_DIR || path.join(ROOT, 'data');
+const KITS_DIR = path.join(ROOT, 'distributors_kits');
+
+fs.mkdirSync(DATA_DIR, { recursive: true });
+fs.mkdirSync(KITS_DIR, { recursive: true });
+
+/* ---------------- Fixed Official Pricing (EGP) ---------------- */
+const OFFICIAL_PRICING = {
+  basic:        { id: 'basic',        nameAr: 'الباقة الأساسية (عيادة طبيب فردي)',         price: 4500,  assiutPrice: 2700, maxDoctors: 2,  maxUsers: 4 },
+  professional: { id: 'professional', nameAr: 'الباقة التخصصية (العيادات النشطة)',         price: 8500,  assiutPrice: 5100, maxDoctors: 5,  maxUsers: 12 },
+  enterprise:   { id: 'enterprise',   nameAr: 'باقة المراكز الكبرى والفروع (Enterprise)', price: 18500, assiutPrice: 11100, maxDoctors: 99, maxUsers: 99 }
+};
+
+const AGENT_INFO = {
+  projectName: 'Qalix Medical Agent',
+  titleAr: 'وكيل منظومة كالكس ميديكال الطبية',
+  phone: '01122166076',
+  intlPhone: '+201122166076',
+  whatsappUrl: 'https://wa.me/201122166076',
+  megaTrialUrl: 'https://mega.nz/file/T6hxgRaK#j7_5EtTGN3TJcgxoOHd_eP-JENFmXHgaxXNlrKO6qGI',
+  packageSha256: '0f7ff4448eb11ee1385332edf4233f0b6cc9964f490782800de78efc2b8499f7'
+};
+
+/* ---------------- SQLite WAL Database ---------------- */
+const dbPath = path.join(DATA_DIR, 'agent.db');
+const db = new DatabaseSync(dbPath);
+db.exec('PRAGMA journal_mode = WAL;');
+db.exec('PRAGMA synchronous = NORMAL;');
+db.exec('PRAGMA foreign_keys = ON;');
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS distributors (
+    id TEXT PRIMARY KEY,
+    code TEXT UNIQUE NOT NULL,
+    name TEXT NOT NULL,
+    phone TEXT NOT NULL,
+    governorate TEXT NOT NULL,
+    commission_rate REAL NOT NULL DEFAULT 20,
+    status TEXT NOT NULL DEFAULT 'active',
+    access_pin TEXT NOT NULL,
+    notes TEXT DEFAULT '',
+    created_at TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS deals (
+    id TEXT PRIMARY KEY,
+    deal_no TEXT UNIQUE NOT NULL,
+    distributor_id TEXT NOT NULL,
+    clinic_name TEXT NOT NULL,
+    doctor_name TEXT NOT NULL,
+    clinic_phone TEXT NOT NULL,
+    city TEXT NOT NULL,
+    is_assiut INTEGER NOT NULL DEFAULT 0,
+    tier TEXT NOT NULL,
+    fixed_price REAL NOT NULL,
+    commission_rate REAL NOT NULL,
+    distributor_commission REAL NOT NULL,
+    agent_net_amount REAL NOT NULL,
+    hardware_id TEXT DEFAULT '',
+    status TEXT NOT NULL DEFAULT 'pending',
+    license_key_ref TEXT DEFAULT '',
+    notes TEXT DEFAULT '',
+    created_at TEXT NOT NULL,
+    settled_at TEXT DEFAULT '',
+    FOREIGN KEY (distributor_id) REFERENCES distributors(id)
+  );
+
+  CREATE TABLE IF NOT EXISTS excellence_proposals (
+    id TEXT PRIMARY KEY,
+    pillar TEXT NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL,
+    impact TEXT NOT NULL DEFAULT 'مرتفع جداً',
+    priority TEXT NOT NULL DEFAULT 'أولوية قصوى',
+    status TEXT NOT NULL DEFAULT 'معتمد للتنفيذ',
+    created_at TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS audit_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    at TEXT NOT NULL,
+    action TEXT NOT NULL,
+    details TEXT NOT NULL,
+    prev_hash TEXT NOT NULL,
+    curr_hash TEXT NOT NULL
+  );
+`);
+
+function logAudit(action, details) {
+  const at = new Date().toISOString();
+  const last = db.prepare('SELECT curr_hash FROM audit_log ORDER BY id DESC LIMIT 1').get();
+  const prevHash = last ? last.curr_hash : '0'.repeat(64);
+  const currHash = crypto.createHash('sha256').update(`${prevHash}|${at}|${action}|${details}`).digest('hex');
+  db.prepare('INSERT INTO audit_log(at, action, details, prev_hash, curr_hash) VALUES(?, ?, ?, ?, ?)')
+    .run(at, action, details, prevHash, currHash);
+}
+
+/* Seed initial sample distributors if empty */
+const distCount = db.prepare('SELECT COUNT(*) AS n FROM distributors').get().n;
+if (distCount === 0) {
+  const now = new Date().toISOString();
+  const seedDists = [
+    { id: 'dist_assiut_01', code: 'QMA-DIST-01', name: 'مكتب النخبة للحلول الطبية (قطاع أسيوط)', phone: '01098765431', gov: 'أسيوط', rate: 20, pin: '1001', notes: 'موزع معتمد لنطاق عيادات ومراكز محافظة أسيوط' },
+    { id: 'dist_cairo_02',  code: 'QMA-DIST-02', name: 'شركة ميديكال تك للتوريدات (القاهرة والجيزة)', phone: '01234567892', gov: 'القاهرة الكبرى', rate: 25, pin: '1002', notes: 'موزع مستقل لعيادات مدينة نصر والمعادي والدقي' },
+    { id: 'dist_delta_03',  code: 'QMA-DIST-03', name: 'مجموعة الدلتا للأنظمة الطبية (المنصورة وطنطا)', phone: '01145678903', gov: 'الدلتا والإسكندرية', rate: 20, pin: '1003', notes: 'موزع مستقل لقطاع الدلتا' }
+  ];
+  const insDist = db.prepare('INSERT INTO distributors(id, code, name, phone, governorate, commission_rate, status, access_pin, notes, created_at) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+  for (const d of seedDists) {
+    insDist.run(d.id, d.code, d.name, d.phone, d.gov, d.rate, 'active', d.pin, d.notes, now);
+  }
+
+  const insDeal = db.prepare(`INSERT INTO deals(
+    id, deal_no, distributor_id, clinic_name, doctor_name, clinic_phone, city, is_assiut,
+    tier, fixed_price, commission_rate, distributor_commission, agent_net_amount,
+    hardware_id, status, license_key_ref, notes, created_at, settled_at
+  ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
+
+  insDeal.run(
+    'deal_01', 'DEAL-2026-101', 'dist_assiut_01', 'عيادة النور التخصصية للباطنة والقلب', 'د. عمرو عبد العليم', '01011223344', 'أسيوط', 1,
+    'professional', 5100, 20, 1020, 4080, '7F8A9C12B4E09911A2B3C4D5', 'completed', 'QLX2-ISSUED-ASSIUT-101', 'تم التفعيل وتوريد صافي الوكيل', now, now
+  );
+  insDeal.run(
+    'deal_02', 'DEAL-2026-102', 'dist_cairo_02', 'مركز الصفوة لطب وجراحة الأسنان', 'د. كريم المنشاوي', '01022334455', 'القاهرة', 0,
+    'professional', 8500, 25, 2125, 6375, '9A1B2C3D4E5F60718293A4B5', 'completed', 'QLX2-ISSUED-CAIRO-102', 'تم التفعيل وتحصيل صافي الوكيل', now, now
+  );
+  insDeal.run(
+    'deal_03', 'DEAL-2026-103', 'dist_cairo_02', 'مجمع الشفاء الطبي المتكامل (3 فروع)', 'د. هاني محمود', '01288990011', 'الجيزة', 0,
+    'enterprise', 18500, 25, 4625, 13875, '3C4D5E6F7A8B9C0D1E2F3A4B', 'pending', '', 'بانتظار مراجعة الوكيل وإصدار مفتاح التفعيل', now, ''
+  );
+  logAudit('system_init', 'تأسيس قاعدة بيانات مشروع Qalix Medical Agent بنظام السعر الثابت ونسب الموزعين');
+}
+
+/* Seed initial Excellence & #1 Leadership Proposals if empty */
+const propCount = db.prepare('SELECT COUNT(*) AS n FROM excellence_proposals').get().n;
+if (propCount === 0) {
+  const now = new Date().toISOString();
+  const seedProps = [
+    // Pillar 1: الارتقاء بالمنظومة والمنتج (بدون المساس بالإصدار الحالي v1.0)
+    { id: 'prop_01', pillar: 'product', title: 'أداة خارجية لتحويل شيتات Excel القديمة للعيادات إلى ملف استيراد جاهز', description: 'بما أن الإصدار الحالي v1.0 ثابت وموقع رقمياً ولا يُلمس، يوفر الوكيل أداة مستقلة تحول ملفات المرضى والأدوية القديمة من Excel إلى صيغة استيراد المنظومة في ثوانٍ لكسر حاجز خوف الطبيب من نقل بياناته.', impact: 'يضاعف سرعة إغلاق الصفقات 3x', priority: 'أولوية قصوى', status: 'جاهز للتنفيذ في حزمة الوكيل' },
+    { id: 'prop_02', pillar: 'product', title: 'مكتبة قوالب تخصصية جاهزة للاستيراد (أسنان، أطفال، نساء، باطنة، عيون)', description: 'ملفات إعدادات وأدوية وخدمات جاهزة لكل تخصص طبي يستوردها الموزع للطبيب عند التثبيت، فيجد الطبيب 200 دواء شائع في تخصصه وقائمة خدماته جاهزة من أول دقيقة بدون إدخال يدوي.', impact: 'إبهار فوري للطبيب', priority: 'أولوية قصوى', status: 'معتمد للتنفيذ' },
+    { id: 'prop_03', pillar: 'product', title: 'حزمة الهاردوير المتكاملة للعيادة (Qalix Turnkey Clinic Box)', description: 'طرح خيار توريد راوتر واي فاي محلي مجهز مسبقاً باسم العيادة + فلاشة نسخ احتياطي مشفرة 64GB + قارئ باركود للصيدلية الداخلية كحزمة إضافية اختيارية يربح منها الوكيل والموزع.', impact: 'رفع متوسط الربح +1,500 ج.م', priority: 'أولوية عالية', status: 'مقترح استراتيجي' },
+
+    // Pillar 2: تحسين العرض التقديمي والإبهار الميداني (Presentation & Live Demo)
+    { id: 'prop_04', pillar: 'presentation', title: 'سيناريو العرض الميداني في 5 دقائق (The 5-Minute WOW Demo)', description: 'تدريب كل موزع على عرض 4 نقاط فقط بالترتيب: (1) مسح QR بالموبايل لسماع نداء «هدى» الصوتي، (2) كتابة وارفارين + أسبرين لرؤية تحذير النزيف اللحظي، (3) إرسال رسالة صوتية مشفرة للاستقبال، (4) فصل الإنترنت لإثبات أن العيادة تعمل 100% بلا توقف.', impact: 'نسبة اقتناع تتجاوز 80%', priority: 'أولوية قصوى', status: 'معتمد ومطبق' },
+    { id: 'prop_05', pillar: 'presentation', title: 'بطاقة المقارنة المالية البصرية أمام الطبيب (ورقة A4 مغلفة مع كل موزع)', description: 'بطاقة مطبوعة يضعها الموزع على مكتب الطبيب تقارن تكلفة 3 سنوات في الأنظمة السحابية (50,000+ ج.م إيجار ينتهي بقفل الحساب) مقابل دفعة واحدة مدى الحياة في كالكس ميديكال تعادل كشفين في الأسبوع.', impact: 'يقضي على اعتراض السعر فوراً', priority: 'أولوية قصوى', status: 'معتمد للتنفيذ' },
+
+    // Pillar 3: تحسين طرق البيع وإغلاق الصفقات (Sales & Closing)
+    { id: 'prop_06', pillar: 'sales', title: 'استراتيجية «التجربة الميدانية ببيانات جاهزة» لمدة 14 يوماً', description: 'بدلاً من ترك الطبيب يحمّل البرنامج فارغاً، يقوم الموزع بتثبيت النسخة التجريبية لمكتب الاستقبال وضبط اسم العيادة والطبيب في 5 دقائق، لتبدأ السكرتيرة بالحجز الفعلي من نفس اليوم.', impact: 'يرفع التحويل من تجربة لشراء إلى 70%', priority: 'أولوية قصوى', status: 'معتمد ومطبق' },
+    { id: 'prop_07', pillar: 'sales', title: 'برنامج «ترشيح الزملاء للأطباء» (Doctor-to-Doctor Referral)', description: 'منح الطبيب المتعاقد هدية (سنة دعم إضافية مجاناً أو ترقية للباقة الأعلى بخصم خاص) عند ترشيح طبيبين زميلين في نفس البرج الطبي أو المستشفى.', impact: 'انتشار فيروسي بدون تكلفة إعلانات', priority: 'أولوية عالية', status: 'معتمد للتنفيذ' },
+    { id: 'prop_08', pillar: 'sales', title: 'حملات الأبراج الطبية والمراكز المتجاورة (Medical Tower Blitz)', description: 'توجيه كل موزع للتركيز على برج طبي واحد أسبوعياً؛ بمجرد تركيب شاشة الانتظار والنداء الصوتي في عيادة واحدة بالبرج، تصبح مرجعاً حياً لكل الأطباء في نفس البرج.', impact: 'مبيعات جماعية سريعة', priority: 'أولوية عالية', status: 'معتمد للتنفيذ' },
+
+    // Pillar 4: تحسين المتابعة وخدمة ما بعد البيع (Follow-up & Retention)
+    { id: 'prop_09', pillar: 'followup', title: 'جدول المتابعة الذهبي لـ 14 يوم تجربة (اليوم 1، 3، 7، 12، 14)', description: 'نظام متابعة منضبط عبر واتساب (01122166076 والموزعين): اليوم 1 (تأكيد التثبيت)، اليوم 3 (تفعيل شاشة الانتظار والنداء)، اليوم 7 (مراجعة تقارير الإيراد)، اليوم 12 (عرض التعاقد المبكر مع نقل البيانات مجاناً)، اليوم 14 (إصدار مفتاح التفعيل الدائم).', impact: 'منع تسرب العملاء المحتملين', priority: 'أولوية قصوى', status: 'معتمد ومطبق' },
+    { id: 'prop_10', pillar: 'followup', title: 'فحص الاطمئنان الدوري بعد البيع (اليوم 30 واليوم 90)', description: 'رسالة واتساب تلقائية من الوكيل بعد شهر من الشراء للتأكد من انتظام النسخ الاحتياطي المشفر على الفلاشة الخارجية، مما يبني ثقة مطلقة وسمعة ذهبية للمنظومة في السوق الطبي.', impact: 'سمعة رقم #1 في السوق الطبي', priority: 'أولوية عالية', status: 'معتمد للتنفيذ' },
+
+    // Pillar 5: تحسين الإدارة والحوكمة لشبكة الموزعين (Management & Governance)
+    { id: 'prop_11', pillar: 'management', title: 'نظام شرائح حوافز الموزعين التصاعدي (Bronze / Silver / Gold)', description: 'الموزع يبدأ بنسبة 20% من السعر الثابت، وإذا حقق 10 مبيعات مكتملة في الشهر ترتفع نسبته تلقائياً إلى 25% عن ذلك الشهر، مع حماية النطاق الجغرافي لكل موزع نشط.', impact: 'تحفيز الموزعين على مضاعفة المبيعات', priority: 'أولوية قصوى', status: 'معتمد في لوحة الوكيل' },
+    { id: 'prop_12', pillar: 'management', title: 'القاعدة الحديدية: التفعيل مقابل صافي التوريد وبصمة العتاد (HWID)', description: 'حوكمة مالية صارمة 100%: لا يصدر مفتاح التفعيل `QLX2` إلا بعد استلام الوكيل (01122166076) لبصمة جهاز العيادة وصافي المبلغ، وتُسجل كل عملية في سلسلة التدقيق الجنائي المشفرة.', impact: 'صفر مديونيات أو تسريب للتراخيص', priority: 'أولوية قصوى', status: 'مفعل برمجياً' }
+  ];
+  const insProp = db.prepare('INSERT INTO excellence_proposals(id, pillar, title, description, impact, priority, status, created_at) VALUES(?, ?, ?, ?, ?, ?, ?, ?)');
+  for (const p of seedProps) {
+    insProp.run(p.id, p.pillar, p.title, p.description, p.impact, p.priority, p.status, now);
+  }
+}
+
+/* ---------------- Competitors & Market Comparison Catalog (Egypt 2026) ---------------- */
+const COMPETITORS_CATALOG = [
+  {
+    id: 'tabbaba',
+    nameAr: 'طَبَّبَ (Tabbaba)',
+    category: 'نظام سحابي أونلاين (Cloud SaaS)',
+    pricingModel: '2,500 ج.م تأسيس + اشتراك شهري (799 ج.م أساسي / 1,599 ج.م عيادة / 3,299 ج.م برو)',
+    cost3YearsEgp: 50470,
+    qalixCost3YearsEgp: 8500,
+    qalixAssiutCost3YearsEgp: 5100,
+    savings3YearsEgp: 41970,
+    pros: [
+      'واجهة ويب سحابية حديثة يمكن فتحها من المتصفح في حال توفر إنترنت مستقر',
+      'إرسال إشعارات وتذكيرات مواعيد عبر الإنترنت',
+      'تقارير مالية أساسية للعيادة'
+    ],
+    cons: [
+      'تكلفة باهظة جداً على المدى المتوسط (50,470 ج.م خلال 3 سنوات لباقة العيادة)',
+      'توقف العيادة بالكامل عن العمل عند انقطاع الإنترنت أو بطء الشبكة',
+      'بيانات المرضى وأسرار دخل العيادة مخزنة على خوادم خارجية وليست ملكاً خالصاً للطبيب',
+      'الباقة الاقتصادية محدودة بـ 100 مريض فقط شهرياً وتفرض رسوماً إضافية للتوسع',
+      'لا يوجد شات داخلي صوتي/نصي أوفلاين ولا إدارة أسرة وغرف متكاملة'
+    ],
+    qalixWinEdge: 'كالكس ميديكال يوفر على الطبيب أكثر من 41,970 ج.م في 3 سنوات، ويعمل 100% أوفلاين بلا إنترنت وبعدد غير محدود من المرضى، مع تشفير كامل للبيانات على جهاز العيادة حصراً.',
+    salesPitchAr: 'يا دكتور، ليه تدفع 2,500 جنيه تأسيس وبعدها 1,600 جنيه كل شهر مدى الحياة (يعني أكثر من 50 ألف جنيه في 3 سنين) في نظام لو النت قطع العيادة تقف؟ كالكس ميديكال دفعة واحدة بس مدى الحياة (8,500 ج.م أو 5,100 ج.م في أسيوط) وبياناتك مشفرة على جهازك ومش مربوط بعدد مرضى شهري!'
+  },
+  {
+    id: 'tabeeb_plus',
+    nameAr: 'طبيب بلس (Tabeeb+)',
+    category: 'نظام سحابي بالاشتراك الشهري (مع نسخ مكتبية منفصلة)',
+    pricingModel: 'اشتراك شهري متكرر: 500 ج.م (فردي) / 1,000 ج.م (عيادة) / 1,500 ج.م (مراكز)',
+    cost3YearsEgp: 36000,
+    qalixCost3YearsEgp: 8500,
+    qalixAssiutCost3YearsEgp: 5100,
+    savings3YearsEgp: 27500,
+    pros: [
+      'بداية اشتراك شهري تبدو منخفضة ظاهرياً (500 - 1,000 ج.م شهرياً)',
+      'يغطي أساسيات الحجز والملف الطبي والفواتير',
+      'معروف في بعض العيادات التقليدية'
+    ],
+    cons: [
+      'استنزاف مالي مستمر (36,000 ج.م في 3 سنوات للعيادة النشطة) ويتوقف الحساب عند تأخر السداد',
+      'نظام الصيدلية ونظام المختبر يباعان كبرامج منفصلة باشتراكات مستقلة وليسا مدمجين مجاناً',
+      'لا يضم نظام محادثات داخلية صوتية/نصية مشفرة بين الطبيب والاستقبال',
+      'لا يضم نداءً صوتياً عربياً ذكياً بـ QR للموبايل على الشبكة المحلية بدون إنترنت',
+      'لا يملك تشفيراً جنائياً للقاعدة (AES-256-GCM) يمنع سرقة ملف قاعدة البيانات'
+    ],
+    qalixWinEdge: 'في كالكس ميديكال، الصيدلية بالباركود + المختبر والأشعة + الغرف والأسرة + الشات الصوتي والنداء الصوتي كلها مدمجة في حزمة واحدة مدى الحياة بدون أي اشتراك شهري.',
+    salesPitchAr: 'في طبيب بلس هتدفع 12,000 جنيه كل سنة للعيادة، ولو محتاج صيدلية داخلية بتشتري برنامج تاني منفصل! في كالكس ميديكال الصيدلية والمختبر والأشعة والنداء الصوتي والشات الداخلي كلها داخل نفس النسخة وبسعر أقل من اشتراك 8 شهور فقط!'
+  },
+  {
+    id: 'orcaa_amedra',
+    nameAr: 'أوركا (ORCAA) / أميدرا (Amedra)',
+    category: 'أنظمة سحابية للمراكز والعيادات (Cloud ERP)',
+    pricingModel: 'اشتراك شهري ~1,500 ج.م شهرياً (أو باقات سنوية متجددة بالدولار/الجنيه)',
+    cost3YearsEgp: 54000,
+    qalixCost3YearsEgp: 8500,
+    qalixAssiutCost3YearsEgp: 5100,
+    savings3YearsEgp: 45500,
+    pros: [
+      'تنظيم جيد للمواعيد ولوحات التقارير السحابية',
+      'مناسبة لمن يشترط الإدارة عن بُعد عبر الإنترنت دائماً'
+    ],
+    cons: [
+      'تكلفة 3 سنوات تصل إلى 54,000 ج.م مع ارتباط كامل بالإنترنت والخوادم السحابية',
+      'تخزين الكشوف المالية وأرباح الطبيب على سيرفرات خارجية مما يثير قلق الأطباء مالياً وضريبياً',
+      'غياب خاصية النداء الصوتي المحلي وشاشات الانتظار بدون إنترنت',
+      'تعقيد في الاستخدام يحتاج تدريب طويل لموظفي الاستقبال'
+    ],
+    qalixWinEdge: 'سرية مالية وطبية مطلقة 100% أوفلاين (صفر خوادم خارجية)، مع واجهة عربية فائقة السرعة تتعلمها السكرتيرة في 10 دقائق فقط.',
+    salesPitchAr: 'أغلب الأطباء بيرفضوا الأنظمة السحابية لأن إيرادات العيادة اليومية وأسماء المرضى بتكون مرفوعة على سيرفر شركة خارجية. كالكس ميديكال بيضمن لك سيادة تامة: إيرادك ومرضاك جوه جهازك أنت بس ومشفرين بمفتاح استرجاع في إيدك وحدك.'
+  },
+  {
+    id: 'tebora_vezeeta',
+    nameAr: 'تيبورا (Tebora) / منصات الحجز السحابية (دكتورك / فيزيتا كلينك)',
+    category: 'منصات حجز وإدارة سحابية مرتبطة بتطبيقات الحجز',
+    pricingModel: 'اشتراك شهري/سنوي متغير + عمولات أو رسوم تسويق إضافية',
+    cost3YearsEgp: 32000,
+    qalixCost3YearsEgp: 8500,
+    qalixAssiutCost3YearsEgp: 5100,
+    savings3YearsEgp: 23500,
+    pros: [
+      'ربط مع تطبيقات الحجز أونلاين للمرضى',
+      'تطبيق موبايل للطبيب متصل بالسحابة'
+    ],
+    cons: [
+      'تركز على الحجز أكثر من الإدارة الطبية العميقة (ضعيفة في التداخلات الدوائية، الصيدلية، تقفيل الورديات Z-Report)',
+      'تشارك بيانات المرضى مع المنصة السحابية وقد تعرض للمريض أطباء منافسين في نفس التخصص',
+      'لا تعمل نهائياً بدون اتصال إنترنت'
+    ],
+    qalixWinEdge: 'كالكس ميديكال يمنح العيادة بوابة انتظار ذكية خاصة بالعيادة وحدها عبر QR محلي دون مشاركة بيانات مرضاك مع أي منصة إعلانية تعرض منافسيك.',
+    salesPitchAr: 'منصات الحجز السحابية بتاخد بيانات مرضاك وممكن ترشحلهم دكتور تاني في نفس التخصص! كالكس ميديكال بيعمل لعيادتك شبكة محلية خاصة بيك، المريض يمسح الـ QR من موبايله في الاستقبال ويتابع دوره بدون ما بياناته تطلع بره عيادتك.'
+  },
+  {
+    id: 'legacy_desktop',
+    nameAr: 'البرامج المكتبية التقليدية القديمة (Access / SQL Desktop)',
+    category: 'برامج كمبيوتر تقليدية قديمة (Legacy Desktop)',
+    pricingModel: '3,000 إلى 7,000 ج.م للجهاز الواحد + رسوم سنوية للصيانة أو إعادة التثبيت بعد الفورمات',
+    cost3YearsEgp: 12000,
+    qalixCost3YearsEgp: 8500,
+    qalixAssiutCost3YearsEgp: 5100,
+    savings3YearsEgp: 3500,
+    pros: [
+      'تعمل بدون إنترنت على جهاز الكمبيوتر'
+    ],
+    cons: [
+      'قواعد بيانات غير مشفرة إطلاقاً (أي شخص ينسخ ملف القاعدة على فلاشة يقرأ كل المرضى والإيرادات)',
+      'واجهة قديمة جداً ومعقدة ولا تدعم الموبايل أو التابلت داخل العيادة',
+      'لا يوجد فحص تداخلات دوائية أو حساسية، ولا نداء صوتي آلي، ولا شات داخلي، ولا ختم نزاهة رقمي ضد التلاعب',
+      'تحتاج لتثبيت معقد (SQL Server / .NET) وتفقد التفعيل أو البيانات عند سقوط الويندوز'
+    ],
+    qalixWinEdge: 'كالكس ميديكال يجمع قوة الأوفلاين مع حداثة الويب: يفتح على أي موبايل أو تابلت في العيادة عبر الواي فاي المحلي، مشفر بـ AES-256-GCM، ويضم نداءً صوتياً وتداخلات دوائية ومحادثات داخلية.',
+    salesPitchAr: 'البرامج المكتبية القديمة لو حد سحب ملف الداتابيز على فلاشة يقدر يفتح كل حساباتك ومرضاك، ومبتفتحش على موبايلك ولا تابلت الكشف! كالكس ميديكال بيشتغل أوفلاين بس بتقنية حديثة جداً يفتح على موبايلك في غرفة الكشف وشاشة الانتظار وقاعدته مشفرة عسكرياً.'
+  }
+];
+
+/* ---------------- Helper Functions ---------------- */
+function calculateDealFinancials(tierId, isAssiut, commissionRate) {
+  const tier = OFFICIAL_PRICING[tierId];
+  if (!tier) throw new Error('باقة غير صالحة');
+  const rate = Math.max(0, Math.min(50, Number(commissionRate) || 0));
+  const fixedPrice = isAssiut ? tier.assiutPrice : tier.price;
+  const distributorCommission = Math.round(fixedPrice * (rate / 100));
+  const agentNetAmount = fixedPrice - distributorCommission;
+  return {
+    tierId: tier.id,
+    tierNameAr: tier.nameAr,
+    fixedPrice,
+    commissionRate: rate,
+    distributorCommission,
+    agentNetAmount
+  };
+}
+
+function generateStandaloneDistributorPortalHtml(dist) {
+  return `<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>حقيبة الموزع المستقل: ${dist.name} | Qalix Medical Agent</title>
+  <style>
+    :root { --bg: #0b1120; --card: #111827; --border: #1f2937; --text: #f9fafb; --muted: #9ca3af; --accent: #10b981; --blue: #0ea5e9; --amber: #f59e0b; }
+    * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
+    body { margin: 0; padding: 24px; background: var(--bg); color: var(--text); line-height: 1.6; }
+    .container { max-width: 1080px; margin: 0 auto; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 20px; }
+    .badge { display: inline-block; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; background: rgba(16,185,129,0.15); color: var(--accent); border: 1px solid rgba(16,185,129,0.3); }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+    input, select, textarea { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border); background: #0f172a; color: var(--text); font-size: 13px; margin-top: 4px; }
+    button { cursor: pointer; padding: 11px 18px; border-radius: 10px; border: none; font-weight: 700; font-size: 13px; background: var(--accent); color: #052e16; width: 100%; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { padding: 10px; border-bottom: 1px solid var(--border); text-align: right; }
+    th { color: var(--muted); background: #0f172a; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <span class="badge">بوابة الموزع المستقل المعتمد · Qalix Medical Agent</span>
+      <h1 style="margin: 10px 0 4px; font-size: 22px;">${dist.name} (${dist.code})</h1>
+      <p style="margin: 0; color: var(--muted); font-size: 13px;">
+        النطاق الجغرافي: <strong>${dist.governorate}</strong> · نسبة العمولة الثابتة من كل عملية بيع: <strong style="color:var(--accent)">${dist.commission_rate}%</strong> · بإشراف وكيل منظومة كالكس ميديكال الطبية: <strong dir="ltr">01122166076</strong>
+      </p>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h3 style="margin-top:0; color:var(--accent);">1. جدول الأسعار الرسمية الثابتة وعمولتك الفورية (${dist.commission_rate}%)</h3>
+        <table>
+          <thead>
+            <tr><th>الباقة</th><th>السعر الرسمي</th><th>عمولتك (${dist.commission_rate}%)</th><th>صافي التوريد للوكيل</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>الباقة الأساسية</td><td>4,500 ج.م</td><td style="color:var(--accent);font-weight:bold;">${Math.round(4500 * dist.commission_rate / 100)} ج.م</td><td>${4500 - Math.round(4500 * dist.commission_rate / 100)} ج.م</td></tr>
+            <tr><td>الباقة التخصصية</td><td>8,500 ج.م</td><td style="color:var(--accent);font-weight:bold;">${Math.round(8500 * dist.commission_rate / 100)} ج.م</td><td>${8500 - Math.round(8500 * dist.commission_rate / 100)} ج.م</td></tr>
+            <tr><td>باقة المراكز الكبرى</td><td>18,500 ج.م</td><td style="color:var(--accent);font-weight:bold;">${Math.round(18500 * dist.commission_rate / 100)} ج.م</td><td>${18500 - Math.round(18500 * dist.commission_rate / 100)} ج.م</td></tr>
+            <tr><td>الأساسية (خصم أسيوط 40%)</td><td>2,700 ج.م</td><td style="color:var(--amber);font-weight:bold;">${Math.round(2700 * dist.commission_rate / 100)} ج.م</td><td>${2700 - Math.round(2700 * dist.commission_rate / 100)} ج.م</td></tr>
+            <tr><td>التخصصية (خصم أسيوط 40%)</td><td>5,100 ج.م</td><td style="color:var(--amber);font-weight:bold;">${Math.round(5100 * dist.commission_rate / 100)} ج.م</td><td>${5100 - Math.round(5100 * dist.commission_rate / 100)} ج.م</td></tr>
+            <tr><td>المراكز (خصم أسيوط 40%)</td><td>11,100 ج.م</td><td style="color:var(--amber);font-weight:bold;">${Math.round(11100 * dist.commission_rate / 100)} ج.م</td><td>${11100 - Math.round(11100 * dist.commission_rate / 100)} ج.م</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-top:0; color:var(--blue);">2. مولّد طلب إصدار ترخيص عيادة للوكيل (01122166076)</h3>
+        <div style="display:grid; gap:10px;">
+          <div><label style="font-size:12px;">اسم العيادة / المركز الطبي:</label><input id="cName" placeholder="مثال: عيادة الشفاء التخصصية" /></div>
+          <div><label style="font-size:12px;">اسم الطبيب وهاتفه:</label><input id="dName" placeholder="مثال: د. أحمد سامي - 010..." /></div>
+          <div><label style="font-size:12px;">بصمة جهاز العيادة (Hardware ID من شاشة التفعيل):</label><input id="hwId" placeholder="24 حرفاً ورقماً" dir="ltr" /></div>
+          <div>
+            <label style="font-size:12px;">الباقة المتعاقد عليها:</label>
+            <select id="tierSel">
+              <option value="basic|4500">الباقة الأساسية (4,500 ج.م)</option>
+              <option value="pro|8500" selected>الباقة التخصصية (8,500 ج.م)</option>
+              <option value="ent|18500">باقة المراكز الكبرى (18,500 ج.م)</option>
+              <option value="basic_as|2700">الأساسية - عرض أسيوط (2,700 ج.م)</option>
+              <option value="pro_as|5100">التخصصية - عرض أسيوط (5,100 ج.م)</option>
+              <option value="ent_as|11100">المراكز - عرض أسيوط (11,100 ج.م)</option>
+            </select>
+          </div>
+          <button onclick="genRequest()">توليد رسالة طلب التفعيل للوكيل (نسخ واتساب)</button>
+          <textarea id="outMsg" rows="5" readonly placeholder="ستظهر رسالة الطلب الجاهزة هنا..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-top:0;">3. رابط النسخة التجريبية للعملاء (14 يوماً بكامل المزايا)</h3>
+      <p style="font-size:13px; color:var(--muted);">أرسل هذا الرابط لأي طبيب لتثبيت النسخة وتجربتها فوراً (حساب المصنع: <code>admin</code> / كلمة المرور: <code>Qalix@11</code>):</p>
+      <input readonly value="${AGENT_INFO.megaTrialUrl}" dir="ltr" onclick="this.select()" />
+    </div>
+  </div>
+  <script>
+    const rate = ${Number(dist.commission_rate)};
+    function genRequest() {
+      const c = document.getElementById('cName').value.trim() || 'غير محدد';
+      const d = document.getElementById('dName').value.trim() || 'غير محدد';
+      const hw = document.getElementById('hwId').value.trim() || 'غير محدد';
+      const [tCode, pStr] = document.getElementById('tierSel').value.split('|');
+      const price = Number(pStr);
+      const comm = Math.round(price * rate / 100);
+      const net = price - comm;
+      const msg = \`طلب إصدار ترخيص جديد — Qalix Medical Agent
+• كود الموزع: ${dist.code} (${dist.name})
+• المنشأة الطبية: \${c}
+• الطبيب والهاتف: \${d}
+• بصمة الجهاز (HWID): \${hw}
+• السعر الرسمي الثابت: \${price} ج.م
+• عمولة الموزع (\${rate}%): \${comm} ج.م
+• صافي التوريد للوكيل (01122166076): \${net} ج.م\`;
+      const box = document.getElementById('outMsg');
+      box.value = msg;
+      box.select();
+      if (navigator.clipboard) navigator.clipboard.writeText(msg);
+    }
+  <\/script>
+</body>
+</html>`;
+}
+
+/* ---------------- REST API Handler ---------------- */
+function sendJson(res, status, data) {
+  const body = Buffer.from(JSON.stringify(data));
+  res.writeHead(status, {
+    'Content-Type': 'application/json; charset=utf-8',
+    'Content-Length': body.length,
+    'Cache-Control': 'no-store'
+  });
+  res.end(body);
+}
+
+function readJsonBody(req) {
+  return new Promise((resolve, reject) => {
+    let chunks = [];
+    let size = 0;
+    req.on('data', c => {
+      size += c.length;
+      if (size > 1e6) { req.destroy(); reject(new Error('Payload too large')); }
+      else chunks.push(c);
+    });
+    req.on('end', () => {
+      if (!size) return resolve({});
+      try { resolve(JSON.parse(Buffer.concat(chunks).toString('utf8'))); }
+      catch { reject(new Error('Invalid JSON')); }
+    });
+    req.on('error', reject);
+  });
+}
+
+function getSummaryResponse() {
+  const distributors = db.prepare('SELECT * FROM distributors ORDER BY created_at DESC').all();
+  const deals = db.prepare(`
+    SELECT d.*, dist.name AS distributor_name, dist.code AS distributor_code, dist.governorate AS distributor_gov
+    FROM deals d
+    JOIN distributors dist ON dist.id = d.distributor_id
+    ORDER BY d.created_at DESC
+  `).all();
+  const proposals = db.prepare('SELECT * FROM excellence_proposals ORDER BY created_at DESC').all();
+
+  const statsPerDist = {};
+  for (const dist of distributors) {
+    statsPerDist[dist.id] = {
+      totalDeals: 0,
+      completedDeals: 0,
+      pendingDeals: 0,
+      grossSales: 0,
+      totalDistributorCommission: 0,
+      totalAgentNet: 0
+    };
+  }
+
+  let totalGrossSales = 0;
+  let totalDistributorCommissions = 0;
+  let totalAgentNetRevenue = 0;
+  let pendingAgentNetRevenue = 0;
+  let completedDealsCount = 0;
+  let pendingDealsCount = 0;
+
+  for (const dl of deals) {
+    const st = statsPerDist[dl.distributor_id];
+    if (st) st.totalDeals++;
+    if (dl.status === 'completed') {
+      completedDealsCount++;
+      totalGrossSales += dl.fixed_price;
+      totalDistributorCommissions += dl.distributor_commission;
+      totalAgentNetRevenue += dl.agent_net_amount;
+      if (st) {
+        st.completedDeals++;
+        st.grossSales += dl.fixed_price;
+        st.totalDistributorCommission += dl.distributor_commission;
+        st.totalAgentNet += dl.agent_net_amount;
+      }
+    } else if (dl.status === 'pending') {
+      pendingDealsCount++;
+      pendingAgentNetRevenue += dl.agent_net_amount;
+      if (st) st.pendingDeals++;
+    }
+  }
+
+  const enrichedDistributors = distributors.map(d => ({
+    ...d,
+    metrics: statsPerDist[d.id]
+  }));
+
+  const audits = db.prepare('SELECT * FROM audit_log ORDER BY id DESC LIMIT 50').all();
+
+  return {
+    agent: AGENT_INFO,
+    pricing: OFFICIAL_PRICING,
+    competitors: COMPETITORS_CATALOG,
+    kpis: {
+      activeDistributors: distributors.filter(d => d.status === 'active').length,
+      totalDistributors: distributors.length,
+      completedDealsCount,
+      pendingDealsCount,
+      totalGrossSales,
+      totalDistributorCommissions,
+      totalAgentNetRevenue,
+      pendingAgentNetRevenue,
+      proposalsCount: proposals.length,
+      competitorsCount: COMPETITORS_CATALOG.length
+    },
+    distributors: enrichedDistributors,
+    deals,
+    proposals,
+    audits
+  };
+}
+
+const server = http.createServer(async (req, res) => {
+  try {
+    const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+    const pathname = decodeURIComponent(url.pathname);
+
+    if (req.method === 'GET' && pathname === '/api/bootstrap') {
+      return sendJson(res, 200, getSummaryResponse());
+    }
+
+    if (req.method === 'GET' && pathname === '/api/competitors') {
+      return sendJson(res, 200, { ok: true, competitors: COMPETITORS_CATALOG, pricing: OFFICIAL_PRICING });
+    }
+
+    if (req.method === 'POST' && pathname === '/api/distributors') {
+      const body = await readJsonBody(req);
+      const name = String(body.name || '').trim();
+      const phone = String(body.phone || '').trim();
+      const governorate = String(body.governorate || 'مصر').trim();
+      const commissionRate = Math.max(5, Math.min(45, Number(body.commissionRate) || 20));
+      const notes = String(body.notes || '').trim();
+      if (!name || !phone) return sendJson(res, 400, { error: 'اسم الموزع ورقم الهاتف مطلوبان' });
+
+      const count = db.prepare('SELECT COUNT(*) AS n FROM distributors').get().n + 1;
+      const id = 'dist_' + crypto.randomBytes(6).toString('hex');
+      const code = `QMA-DIST-${String(count).padStart(2, '0')}`;
+      const pin = String(Math.floor(1000 + Math.random() * 9000));
+      const now = new Date().toISOString();
+
+      db.prepare('INSERT INTO distributors(id, code, name, phone, governorate, commission_rate, status, access_pin, notes, created_at) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+        .run(id, code, name, phone, governorate, commissionRate, 'active', pin, notes, now);
+
+      const distObj = db.prepare('SELECT * FROM distributors WHERE id = ?').get(id);
+      const kitHtml = generateStandaloneDistributorPortalHtml(distObj);
+      const kitFile = path.join(KITS_DIR, `${code}-${name.replace(/\s+/g, '_')}.html`);
+      fs.writeFileSync(kitFile, kitHtml, 'utf8');
+
+      logAudit('create_distributor', `اعتماد موزع مستقل جديد: ${name} (${code}) بنسبة ${commissionRate}%`);
+      return sendJson(res, 200, { ok: true, distributor: distObj, kitFile, summary: getSummaryResponse() });
+    }
+
+    if (req.method === 'PUT' && pathname.startsWith('/api/distributors/')) {
+      const id = pathname.split('/')[3];
+      const body = await readJsonBody(req);
+      const dist = db.prepare('SELECT * FROM distributors WHERE id = ?').get(id);
+      if (!dist) return sendJson(res, 404, { error: 'الموزع غير موجود' });
+
+      const status = body.status || dist.status;
+      const rate = body.commissionRate !== undefined ? Math.max(5, Math.min(45, Number(body.commissionRate))) : dist.commission_rate;
+      db.prepare('UPDATE distributors SET status = ?, commission_rate = ? WHERE id = ?').run(status, rate, id);
+      logAudit('update_distributor', `تحديث بيانات الموزع ${dist.code}: الحالة=${status}, النسبة=${rate}%`);
+      return sendJson(res, 200, { ok: true, summary: getSummaryResponse() });
+    }
+
+    if (req.method === 'GET' && pathname.startsWith('/api/distributors/') && pathname.endsWith('/kit')) {
+      const id = pathname.split('/')[3];
+      const dist = db.prepare('SELECT * FROM distributors WHERE id = ?').get(id);
+      if (!dist) return sendJson(res, 404, { error: 'الموزع غير موجود' });
+      const html = generateStandaloneDistributorPortalHtml(dist);
+      res.writeHead(200, {
+        'Content-Type': 'text/html; charset=utf-8',
+        'Content-Disposition': `attachment; filename="${dist.code}-Standalone-Kit.html"`
+      });
+      return res.end(html);
+    }
+
+    if (req.method === 'POST' && pathname === '/api/deals') {
+      const body = await readJsonBody(req);
+      const dist = db.prepare('SELECT * FROM distributors WHERE id = ?').get(String(body.distributorId || ''));
+      if (!dist) return sendJson(res, 400, { error: 'يرجى اختيار موزع معتمد' });
+      if (dist.status !== 'active') return sendJson(res, 400, { error: 'هذا الموزع موقوف حالياً' });
+
+      const clinicName = String(body.clinicName || '').trim();
+      const doctorName = String(body.doctorName || '').trim();
+      const clinicPhone = String(body.clinicPhone || '').trim();
+      const city = String(body.city || dist.governorate).trim();
+      const isAssiut = body.isAssiut ? 1 : 0;
+      const tier = String(body.tier || 'professional');
+      const hardwareId = String(body.hardwareId || '').trim().toUpperCase();
+      const status = body.status === 'completed' ? 'completed' : 'pending';
+
+      if (!clinicName || !doctorName) return sendJson(res, 400, { error: 'اسم العيادة واسم الطبيب مطلوبان' });
+
+      const calc = calculateDealFinancials(tier, isAssiut, dist.commission_rate);
+      const id = 'deal_' + crypto.randomBytes(6).toString('hex');
+      const count = db.prepare('SELECT COUNT(*) AS n FROM deals').get().n + 101;
+      const dealNo = `DEAL-2026-${count}`;
+      const now = new Date().toISOString();
+      const licenseRef = status === 'completed' ? `QLX2-${tier.toUpperCase().slice(0,3)}-${count}` : '';
+
+      db.prepare(`INSERT INTO deals(
+        id, deal_no, distributor_id, clinic_name, doctor_name, clinic_phone, city, is_assiut,
+        tier, fixed_price, commission_rate, distributor_commission, agent_net_amount,
+        hardware_id, status, license_key_ref, notes, created_at, settled_at
+      ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(
+        id, dealNo, dist.id, clinicName, doctorName, clinicPhone, city, isAssiut,
+        calc.tierId, calc.fixedPrice, calc.commissionRate, calc.distributorCommission, calc.agentNetAmount,
+        hardwareId, status, licenseRef, String(body.notes || ''), now, status === 'completed' ? now : ''
+      );
+
+      logAudit('create_deal', `تسجيل صفقة ${dealNo} عبر الموزع ${dist.code} للعيادة "${clinicName}" بالسعر الثابت ${calc.fixedPrice} ج.م (عمولة الموزع: ${calc.distributorCommission} ج.م، صافي الوكيل: ${calc.agentNetAmount} ج.م)`);
+      return sendJson(res, 200, { ok: true, summary: getSummaryResponse() });
+    }
+
+    if (req.method === 'POST' && pathname.startsWith('/api/deals/') && pathname.endsWith('/settle')) {
+      const id = pathname.split('/')[3];
+      const deal = db.prepare('SELECT * FROM deals WHERE id = ?').get(id);
+      if (!deal) return sendJson(res, 404, { error: 'الصفقة غير موجودة' });
+
+      const now = new Date().toISOString();
+      const licRef = `QLX2-${deal.tier.toUpperCase().slice(0, 3)}-${deal.deal_no.split('-').pop()}`;
+      db.prepare("UPDATE deals SET status = 'completed', settled_at = ?, license_key_ref = ? WHERE id = ?")
+        .run(now, licRef, id);
+
+      logAudit('settle_deal', `اعتماد وتفعيل الصفقة ${deal.deal_no} وتحصيل صافي الوكيل (${deal.agent_net_amount} ج.م) وإصدار المرجع ${licRef}`);
+      return sendJson(res, 200, { ok: true, summary: getSummaryResponse() });
+    }
+
+    /* ---------------- Excellence & #1 Leadership Proposals API ---------------- */
+    if (req.method === 'POST' && pathname === '/api/proposals') {
+      const body = await readJsonBody(req);
+      const pillar = String(body.pillar || 'product').trim();
+      const title = String(body.title || '').trim();
+      const description = String(body.description || '').trim();
+      const impact = String(body.impact || 'مرتفع جداً').trim();
+      const priority = String(body.priority || 'أولوية قصوى').trim();
+      const status = String(body.status || 'معتمد للتنفيذ').trim();
+      if (!title || !description) return sendJson(res, 400, { error: 'عنوان المقترح وتفاصيله مطلوبان' });
+
+      const id = 'prop_' + crypto.randomBytes(6).toString('hex');
+      const now = new Date().toISOString();
+      db.prepare('INSERT INTO excellence_proposals(id, pillar, title, description, impact, priority, status, created_at) VALUES(?, ?, ?, ?, ?, ?, ?, ?)')
+        .run(id, pillar, title, description, impact, priority, status, now);
+
+      logAudit('create_proposal', `إضافة مقترح ارتقاء وتطوير جديد (${pillar}): ${title}`);
+      return sendJson(res, 200, { ok: true, summary: getSummaryResponse() });
+    }
+
+    if (req.method === 'PUT' && pathname.startsWith('/api/proposals/')) {
+      const id = pathname.split('/')[3];
+      const body = await readJsonBody(req);
+      const prop = db.prepare('SELECT * FROM excellence_proposals WHERE id = ?').get(id);
+      if (!prop) return sendJson(res, 404, { error: 'المقترح غير موجود' });
+      const status = String(body.status || prop.status);
+      db.prepare('UPDATE excellence_proposals SET status = ? WHERE id = ?').run(status, id);
+      logAudit('update_proposal', `تحديث حالة المقترح "${prop.title}" إلى: ${status}`);
+      return sendJson(res, 200, { ok: true, summary: getSummaryResponse() });
+    }
+
+    // Serve static files
+    let rel = pathname === '/' ? '/index.html' : pathname;
+    const filePath = path.resolve(PUBLIC_DIR, '.' + rel);
+    if (!filePath.startsWith(PUBLIC_DIR)) return sendJson(res, 403, { error: 'Forbidden' });
+    if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+      const ext = path.extname(filePath).toLowerCase();
+      const mime = ext === '.html' ? 'text/html; charset=utf-8' : ext === '.js' ? 'text/javascript; charset=utf-8' : ext === '.css' ? 'text/css; charset=utf-8' : 'application/octet-stream';
+      res.writeHead(200, { 'Content-Type': mime, 'Cache-Control': 'no-cache' });
+      return fs.createReadStream(filePath).pipe(res);
+    }
+
+    return sendJson(res, 404, { error: 'Not found' });
+  } catch (e) {
+    console.error(e);
+    return sendJson(res, 500, { error: e.message || 'Server error' });
+  }
+});
+
+server.listen(PORT, HOST, () => {
+  console.log(`=============================================================`);
+  console.log(`★ Qalix Medical Agent Server v1.0 (100% Offline Air-Gapped) ★`);
+  console.log(`  - Official Agent Contact: 01122166076 (+201122166076)`);
+  console.log(`  - Agent Command URL:      http://${HOST}:${PORT}`);
+  console.log(`  - Database (SQLite WAL):  ${dbPath}`);
+  console.log(`=============================================================`);
+});

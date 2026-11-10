@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>حقيبة الموزع المستقل: مكتب الصعيد للأنظمة الطبية | Qalix Medical Agent</title>
+  <style>
+    :root { --bg: #0b1120; --card: #111827; --border: #1f2937; --text: #f9fafb; --muted: #9ca3af; --accent: #10b981; --blue: #0ea5e9; --amber: #f59e0b; }
+    * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
+    body { margin: 0; padding: 24px; background: var(--bg); color: var(--text); line-height: 1.6; }
+    .container { max-width: 1080px; margin: 0 auto; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 20px; }
+    .badge { display: inline-block; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; background: rgba(16,185,129,0.15); color: var(--accent); border: 1px solid rgba(16,185,129,0.3); }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+    input, select, textarea { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border); background: #0f172a; color: var(--text); font-size: 13px; margin-top: 4px; }
+    button { cursor: pointer; padding: 11px 18px; border-radius: 10px; border: none; font-weight: 700; font-size: 13px; background: var(--accent); color: #052e16; width: 100%; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { padding: 10px; border-bottom: 1px solid var(--border); text-align: right; }
+    th { color: var(--muted); background: #0f172a; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <span class="badge">بوابة الموزع المستقل المعتمد · Qalix Medical Agent</span>
+      <h1 style="margin: 10px 0 4px; font-size: 22px;">مكتب الصعيد للأنظمة الطبية (QMA-DIST-04)</h1>
+      <p style="margin: 0; color: var(--muted); font-size: 13px;">
+        النطاق الجغرافي: <strong>أسيوط وسوهاج</strong> · نسبة العمولة الثابتة من كل عملية بيع: <strong style="color:var(--accent)">20%</strong> · بإشراف وكيل منظومة كالكس ميديكال الطبية: <strong dir="ltr">01122166076</strong>
+      </p>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h3 style="margin-top:0; color:var(--accent);">1. جدول الأسعار الرسمية الثابتة وعمولتك الفورية (20%)</h3>
+        <table>
+          <thead>
+            <tr><th>الباقة</th><th>السعر الرسمي</th><th>عمولتك (20%)</th><th>صافي التوريد للوكيل</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>الباقة الأساسية</td><td>4,500 ج.م</td><td style="color:var(--accent);font-weight:bold;">900 ج.م</td><td>3600 ج.م</td></tr>
+            <tr><td>الباقة التخصصية</td><td>8,500 ج.م</td><td style="color:var(--accent);font-weight:bold;">1700 ج.م</td><td>6800 ج.م</td></tr>
+            <tr><td>باقة المراكز الكبرى</td><td>18,500 ج.م</td><td style="color:var(--accent);font-weight:bold;">3700 ج.م</td><td>14800 ج.م</td></tr>
+            <tr><td>الأساسية (خصم أسيوط 40%)</td><td>2,700 ج.م</td><td style="color:var(--amber);font-weight:bold;">540 ج.م</td><td>2160 ج.م</td></tr>
+            <tr><td>التخصصية (خصم أسيوط 40%)</td><td>5,100 ج.م</td><td style="color:var(--amber);font-weight:bold;">1020 ج.م</td><td>4080 ج.م</td></tr>
+            <tr><td>المراكز (خصم أسيوط 40%)</td><td>11,100 ج.م</td><td style="color:var(--amber);font-weight:bold;">2220 ج.م</td><td>8880 ج.م</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-top:0; color:var(--blue);">2. مولّد طلب إصدار ترخيص عيادة للوكيل (01122166076)</h3>
+        <div style="display:grid; gap:10px;">
+          <div><label style="font-size:12px;">اسم العيادة / المركز الطبي:</label><input id="cName" placeholder="مثال: عيادة الشفاء التخصصية" /></div>
+          <div><label style="font-size:12px;">اسم الطبيب وهاتفه:</label><input id="dName" placeholder="مثال: د. أحمد سامي - 010..." /></div>
+          <div><label style="font-size:12px;">بصمة جهاز العيادة (Hardware ID من شاشة التفعيل):</label><input id="hwId" placeholder="24 حرفاً ورقماً" dir="ltr" /></div>
+          <div>
+            <label style="font-size:12px;">الباقة المتعاقد عليها:</label>
+            <select id="tierSel">
+              <option value="basic|4500">الباقة الأساسية (4,500 ج.م)</option>
+              <option value="pro|8500" selected>الباقة التخصصية (8,500 ج.م)</option>
+              <option value="ent|18500">باقة المراكز الكبرى (18,500 ج.م)</option>
+              <option value="basic_as|2700">الأساسية - عرض أسيوط (2,700 ج.م)</option>
+              <option value="pro_as|5100">التخصصية - عرض أسيوط (5,100 ج.م)</option>
+              <option value="ent_as|11100">المراكز - عرض أسيوط (11,100 ج.م)</option>
+            </select>
+          </div>
+          <button onclick="genRequest()">توليد رسالة طلب التفعيل للوكيل (نسخ واتساب)</button>
+          <textarea id="outMsg" rows="5" readonly placeholder="ستظهر رسالة الطلب الجاهزة هنا..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-top:0;">3. رابط النسخة التجريبية للعملاء (14 يوماً بكامل المزايا)</h3>
+      <p style="font-size:13px; color:var(--muted);">أرسل هذا الرابط لأي طبيب لتثبيت النسخة وتجربتها فوراً (حساب المصنع: <code>admin</code> / كلمة المرور: <code>Qalix@11</code>):</p>
+      <input readonly value="https://mega.nz/file/T6hxgRaK#j7_5EtTGN3TJcgxoOHd_eP-JENFmXHgaxXNlrKO6qGI" dir="ltr" onclick="this.select()" />
+    </div>
+  </div>
+  <script>
+    const rate = 20;
+    function genRequest() {
+      const c = document.getElementById('cName').value.trim() || 'غير محدد';
+      const d = document.getElementById('dName').value.trim() || 'غير محدد';
+      const hw = document.getElementById('hwId').value.trim() || 'غير محدد';
+      const [tCode, pStr] = document.getElementById('tierSel').value.split('|');
+      const price = Number(pStr);
+      const comm = Math.round(price * rate / 100);
+      const net = price - comm;
+      const msg = `طلب إصدار ترخيص جديد — Qalix Medical Agent
+• كود الموزع: QMA-DIST-04 (مكتب الصعيد للأنظمة الطبية)
+• المنشأة الطبية: ${c}
+• الطبيب والهاتف: ${d}
+• بصمة الجهاز (HWID): ${hw}
+• السعر الرسمي الثابت: ${price} ج.م
+• عمولة الموزع (${rate}%): ${comm} ج.م
+• صافي التوريد للوكيل (01122166076): ${net} ج.م`;
+      const box = document.getElementById('outMsg');
+      box.value = msg;
+      box.select();
+      if (navigator.clipboard) navigator.clipboard.writeText(msg);
+    }
+  </script>
+</body>
+</html>
