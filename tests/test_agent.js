@@ -220,7 +220,49 @@ function req(method, urlPath, body) {
       kitV3Res.body.includes('01122166076')
     );
 
-    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/16 PASSED ===`);
+    // 17. Verify Network Diagnostics & Local WiFi Mobile QR Access (Phase 4)
+    const netRes = await req('GET', '/api/network-status');
+    check('17. فحص واكتشاف عناوين الشبكة المحلية وتوليد QR للموبايل (Network Diagnostics)',
+      netRes.status === 200 &&
+      netRes.body.ok === true &&
+      netRes.body.network &&
+      netRes.body.network.primaryIp &&
+      netRes.body.network.primaryMobileUrl.includes(':4150') &&
+      netRes.body.network.qrCodeSvg.includes('<svg')
+    );
+
+    // 18. Generate Official Distributor Partnership Contract (Phase 4)
+    const ctrRes = await req('GET', `/api/contracts/distributor/${distId}`);
+    check('18. توليد عقد التوزيع المستقل المعتمد القابل للطباعة A4 ببنود الأسعار الثابتة والعمولة',
+      ctrRes.status === 200 &&
+      typeof ctrRes.body === 'string' &&
+      ctrRes.body.includes('عقد تعيين موزع مستقل معتمد') &&
+      ctrRes.body.includes('01122166076') &&
+      ctrRes.body.includes('20%')
+    );
+
+    // 19. Generate Clinic Handover & Operation Sign-off Certificate (Phase 4)
+    const hDealId = dl1.body.summary.deals[0].id;
+    const handRes = await req('GET', `/api/contracts/deal/${hDealId}`);
+    check('19. توليد محضر تسليم وتشغيل العيادة المعتمد (Sign-Off Handover Certificate)',
+      handRes.status === 200 &&
+      typeof handRes.body === 'string' &&
+      handRes.body.includes('محضر تسليم وتشغيل واعتماد ترخيص نهائي') &&
+      handRes.body.includes('مركز النيل التخصصي') &&
+      handRes.body.includes('A1B2C3D4E5F60718293A4B5C')
+    );
+
+    // 20. Generate Distributor Financial Ledger Statement (Phase 4)
+    const stmtRes = await req('GET', `/api/distributors/${distId}/statement`);
+    check('20. استخراج كشف الحساب المالي التفصيلي للموزع (Statement of Account) وسلسلة التدقيق',
+      stmtRes.status === 200 &&
+      typeof stmtRes.body === 'string' &&
+      stmtRes.body.includes('كشف حساب مالي وتسوية مستحقات موزع معتمد') &&
+      stmtRes.body.includes('إجمالي المبيعات المحققة') &&
+      stmtRes.body.includes('01122166076')
+    );
+
+    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/20 PASSED ===`);
     for (const r of results) console.log(' ✅', r);
   } finally {
     srv.kill('SIGINT');

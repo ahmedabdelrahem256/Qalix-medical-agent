@@ -12,6 +12,9 @@ const { DatabaseSync } = require('node:sqlite');
 const { SPECIALTY_PACKS, getAllPacks, getPackById } = require('./specialty_packs');
 const { processMigration } = require('./data_migrator');
 const { MARKETING_MATERIALS } = require('./marketing_kit');
+const { getLocalNetworkInfo } = require('./network_diagnostics');
+const { generateDistributorContractHtml, generateClinicHandoverHtml } = require('./contract_generator');
+const { generateDistributorStatementHtml } = require('./financial_ledger');
 
 const PORT = Number(process.env.PORT) || 4000;
 const HOST = process.env.HOST || '127.0.0.1';
@@ -413,6 +416,7 @@ function getSummaryResponse() {
     competitors: COMPETITORS_CATALOG,
     specialtyPacks: getAllPacks(),
     marketing: MARKETING_MATERIALS,
+    network: getLocalNetworkInfo(PORT),
     kpis: {
       activeDistributors: distributors.filter(d => d.status === 'active').length,
       totalDistributors: distributors.length,
@@ -638,6 +642,41 @@ const server = http.createServer(async (req, res) => {
     /* ---------------- Marketing & Field Kits API (Phase 3) ---------------- */
     if (req.method === 'GET' && pathname === '/api/marketing/materials') {
       return sendJson(res, 200, { ok: true, materials: MARKETING_MATERIALS });
+    }
+
+    /* ---------------- Network Diagnostics & Mobile QR Access (Phase 4) ---------------- */
+    if (req.method === 'GET' && pathname === '/api/network-status') {
+      return sendJson(res, 200, { ok: true, network: getLocalNetworkInfo(PORT) });
+    }
+
+    /* ---------------- Legal Contracts & Handover Certificates (Phase 4) ---------------- */
+    if (req.method === 'GET' && pathname.startsWith('/api/contracts/distributor/')) {
+      const id = pathname.split('/')[4];
+      const dist = db.prepare('SELECT * FROM distributors WHERE id = ?').get(id);
+      if (!dist) return sendJson(res, 404, { error: 'الموزع غير موجود' });
+      const html = generateDistributorContractHtml(dist, AGENT_INFO);
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      return res.end(html);
+    }
+
+    if (req.method === 'GET' && pathname.startsWith('/api/contracts/deal/')) {
+      const id = pathname.split('/')[4];
+      const deal = db.prepare('SELECT * FROM deals WHERE id = ?').get(id);
+      if (!deal) return sendJson(res, 404, { error: 'الصفقة غير موجودة' });
+      const dist = db.prepare('SELECT * FROM distributors WHERE id = ?').get(deal.distributor_id);
+      const html = generateClinicHandoverHtml(deal, dist || { name: 'وكيل المنظومة', code: 'MAIN' }, AGENT_INFO);
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      return res.end(html);
+    }
+
+    if (req.method === 'GET' && pathname.startsWith('/api/distributors/') && pathname.endsWith('/statement')) {
+      const id = pathname.split('/')[3];
+      const dist = db.prepare('SELECT * FROM distributors WHERE id = ?').get(id);
+      if (!dist) return sendJson(res, 404, { error: 'الموزع غير موجود' });
+      const deals = db.prepare('SELECT * FROM deals WHERE distributor_id = ? ORDER BY created_at DESC').all(id);
+      const html = generateDistributorStatementHtml(dist, deals, AGENT_INFO);
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      return res.end(html);
     }
 
     // Serve static files

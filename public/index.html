@@ -280,7 +280,8 @@
         <button class="tab-btn" id="btn-pane-specialty" onclick="openTab('pane-specialty', this)">4. 📦 حزم التخصصات الجاهزة</button>
         <button class="tab-btn" id="btn-pane-migrator" onclick="openTab('pane-migrator', this)">5. 🔄 أداة هجرة Excel</button>
         <button class="tab-btn" id="btn-pane-fieldkit" onclick="openTab('pane-fieldkit', this)">6. 🖨️ حقيبة العرض والتسويق</button>
-        <button class="tab-btn" id="btn-pane-audit" onclick="openTab('pane-audit', this)">7. فحص نسخة MEGA</button>
+        <button class="tab-btn" id="btn-pane-contracts" onclick="openTab('pane-contracts', this)">7. 📄 العقود ومحاضر التسليم</button>
+        <button class="tab-btn" id="btn-pane-audit" onclick="openTab('pane-audit', this)">8. فحص نسخة MEGA</button>
       </nav>
       <div style="display:flex; align-items:center; gap:8px; min-width:250px;">
         <span style="font-size:12px; color:var(--muted); white-space:nowrap;">⚡ انتقال سريع للقسم:</span>
@@ -291,7 +292,8 @@
           <option value="pane-specialty">القسم 4: حزم التخصصات الجاهزة للاستيراد</option>
           <option value="pane-migrator">القسم 5: أداة هجرة شيتات Excel القديمة</option>
           <option value="pane-fieldkit">القسم 6: حقيبة العرض الميداني والمواد التسويقية</option>
-          <option value="pane-audit">القسم 7: فحص واستضافة نسخة العميل (MEGA)</option>
+          <option value="pane-contracts">القسم 7: العقود ومحاضر التسليم وكشوف الحساب</option>
+          <option value="pane-audit">القسم 8: فحص واستضافة نسخة العميل (MEGA)</option>
         </select>
       </div>
     </div>
@@ -369,7 +371,29 @@
         </div>
       </div>
 
-      <!-- Independent Distributors Table -->
+<!-- Network Diagnostics & Mobile QR Access (Phase 4) -->
+      <div class="glass" style="margin-bottom:18px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+          <div>
+            <div style="display:flex; gap:8px; margin-bottom:6px;">
+              <span class="badge b-emerald">🟢 الشبكة المحلية نشطة وجاهزة للاستخدام</span>
+              <span class="badge b-sky">أوفلاين بالكامل داخل العيادة</span>
+            </div>
+            <h3 style="margin:0 0 4px; font-size:17px; color:var(--text);">جاهزية شبكة العيادة وربط الموبايل والتابلت بـ QR فوري</h3>
+            <p style="margin:0; font-size:12.5px; color:var(--muted); max-width:650px; line-height:1.6;">
+              امسح الرمز بكاميرا أي هاتف أو تابلت متصل بنفس راوتر الواي فاي بالعيادة لتجربة شاشة الانتظار والنداء الصوتي والاستدعاء فوراً بدون إنترنت:
+            </p>
+            <div style="margin-top:10px; font-size:13px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+              <span>رابط العيادة المحلي المباشر:</span>
+              <code id="localNetUrl" style="color:var(--sky); font-weight:bold; font-size:14px; background:rgba(15,23,42,0.8); padding:4px 10px; border-radius:6px;" dir="ltr">جاري الفحص...</code>
+              <button class="btn btn-sm btn-sky" onclick="copyNetUrl()">نسخ الرابط</button>
+            </div>
+          </div>
+          <div id="localNetQrContainer" style="display:flex; flex-direction:column; align-items:center; gap:4px;"></div>
+        </div>
+      </div>
+
+            <!-- Independent Distributors Table -->
       <div class="glass">
         <h3 style="margin-top:0;">سجل الموزعين المستقلين التابعين للوكيل (01122166076)</h3>
         <div style="overflow-x:auto;">
@@ -789,6 +813,47 @@
       </div>
     </section>
 
+    <!-- ==================== PANE 7: LEGAL CONTRACTS & HANDOVER CERTIFICATES (PHASE 4) ==================== -->
+    <section id="pane-contracts" class="pane">
+      <div class="glass">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
+          <div>
+            <h2 style="margin:0; font-size:18px; color:var(--sky);">📄 العقود الرسمية ومحاضر التسليم وكشوف الحسابات المعتمدة</h2>
+            <p style="margin:4px 0 0; font-size:12.5px; color:var(--muted);">
+              نماذج تعاقد وتسليم قانونية وفنية لحماية حقوق الوكيل والموزعين المستقلين والعيادات، قابلة للطباعة المباشرة (A4).
+            </p>
+          </div>
+          <span class="badge b-emerald">موثقة ومطابقة للأعراف التجارية والطبية</span>
+        </div>
+
+        <div class="grid-3" style="margin-bottom:20px;">
+          <div class="sub-card">
+            <h3 style="margin-top:0; font-size:14.5px; color:var(--sky);">1. عقود التوزيع المستقل المعتمدة</h3>
+            <p style="font-size:12px; color:var(--muted); line-height:1.5;">
+              عقد رسمي محرر بين وكيل المنظومة والموزع المستقل يحدد نطاقه الجغرافي ونسبة عمولته والتزامه بالسعر الثابت الرسمي.
+            </p>
+            <div id="contractsDistList" style="display:flex; flex-direction:column; gap:6px; margin-top:8px;"></div>
+          </div>
+
+          <div class="sub-card">
+            <h3 style="margin-top:0; font-size:14.5px; color:var(--emerald);">2. محاضر تسليم وتشغيل العيادات (Sign-Off)</h3>
+            <p style="font-size:12px; color:var(--muted); line-height:1.5;">
+              محضر تشغيل معتمد يوقعه الطبيب أو مدير المركز يؤكد استلام المنظومة، تدريب الموظفين، وفحص بصمة HWID ومفتاح التفعيل.
+            </p>
+            <div id="handoverDealsList" style="display:flex; flex-direction:column; gap:6px; margin-top:8px;"></div>
+          </div>
+
+          <div class="sub-card">
+            <h3 style="margin-top:0; font-size:14.5px; color:var(--amber);">3. كشوف الحسابات وتسوية العمولات</h3>
+            <p style="font-size:12px; color:var(--muted); line-height:1.5;">
+              كشف حساب مالي تفصيلي لكل موزع يوضح المبيعات المحققة، العمولات المصروفة، وصافي توريدات الوكيل وسلسلة الهاش.
+            </p>
+            <div id="statementsDistList" style="display:flex; flex-direction:column; gap:6px; margin-top:8px;"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- ==================== PANE 4: LIVE HOSTED CLIENT PACKAGE AUDIT ==================== -->
     <section id="pane-audit" class="pane">
       <div class="glass">
@@ -1008,12 +1073,54 @@
           <td>${fmt(d.metrics.grossSales)}</td>
           <td style="color:var(--amber); font-weight:bold;">${fmt(d.metrics.totalDistributorCommission)}</td>
           <td style="color:var(--emerald); font-weight:bold;">${fmt(d.metrics.totalAgentNet)}</td>
-          <td><a href="/api/distributors/${d.id}/kit" class="btn btn-sm" style="text-decoration:none; display:inline-block;">⬇ تنزيل بوابة الموزع (.html)</a></td>
+          <td>
+            <div style="display:flex; gap:4px; flex-wrap:wrap;">
+              <a href="/api/distributors/${d.id}/kit" class="btn btn-sm" style="text-decoration:none;" title="تنزيل بوابة الموزع المستقلة">⬇ البوابة</a>
+              <a href="/api/contracts/distributor/${d.id}" target="_blank" class="btn btn-sm btn-sky" style="text-decoration:none;" title="طباعة عقد التوزيع الرسمي">📄 العقد</a>
+              <a href="/api/distributors/${d.id}/statement" target="_blank" class="btn btn-sm btn-amber" style="text-decoration:none;" title="عرض وطباعة كشف الحساب المالي">📊 كشف حساب</a>
+            </div>
+          </td>
         </tr>
       `).join('');
 
       const tierNames = { basic: 'الأساسية', professional: 'التخصصية', enterprise: 'المراكز الكبرى' };
-      document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
+      
+      // Render Network Info & QR
+      if (data.network) {
+        const netUrlEl = document.getElementById('localNetUrl');
+        const netQrEl = document.getElementById('localNetQrContainer');
+        if (netUrlEl) netUrlEl.innerText = data.network.primaryMobileUrl;
+        if (netQrEl) netQrEl.innerHTML = data.network.qrCodeSvg + '<span style="font-size:11px; color:var(--muted); margin-top:2px;">امسح بالموبايل للربط</span>';
+      }
+
+      // Render Contracts Pane lists
+      const cDistList = document.getElementById('contractsDistList');
+      if (cDistList) {
+        cDistList.innerHTML = data.distributors.map(d => `
+          <a href="/api/contracts/distributor/${d.id}" target="_blank" class="btn btn-sm btn-sky" style="text-decoration:none; text-align:right; display:block;">
+            📄 عقد: ${d.name} (${d.code})
+          </a>
+        `).join('');
+      }
+
+      const hDealList = document.getElementById('handoverDealsList');
+      if (hDealList) {
+        hDealList.innerHTML = data.deals.map(dl => `
+          <a href="/api/contracts/deal/${dl.id}" target="_blank" class="btn btn-sm" style="text-decoration:none; text-align:right; display:block; background:rgba(16,185,129,0.15); border:1px solid var(--emerald); color:var(--emerald);">
+            📋 محضر تسليم: ${dl.clinic_name} (${dl.deal_no})
+          </a>
+        `).join('');
+      }
+
+      const sDistList = document.getElementById('statementsDistList');
+      if (sDistList) {
+        sDistList.innerHTML = data.distributors.map(d => `
+          <a href="/api/distributors/${d.id}/statement" target="_blank" class="btn btn-sm btn-amber" style="text-decoration:none; text-align:right; display:block;">
+            📊 كشف حساب: ${d.name} (${d.code})
+          </a>
+        `).join('');
+      }
+document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
         <tr>
           <td style="font-family:monospace; font-weight:bold;">${dl.deal_no}</td>
           <td>${dl.distributor_name} <span style="color:var(--muted);">(${dl.distributor_code})</span></td>
@@ -1025,7 +1132,10 @@
           <td style="font-family:monospace;" dir="ltr">${dl.hardware_id || '—'}</td>
           <td>
             ${dl.status === 'completed'
-              ? `<span class="badge b-emerald">مكتملة · ${dl.license_key_ref}</span>`
+              ? `<div style="display:flex; flex-direction:column; gap:4px;">
+                  <span class="badge b-emerald">مكتملة · ${dl.license_key_ref}</span>
+                  <a href="/api/contracts/deal/${dl.id}" target="_blank" class="btn btn-sm btn-sky" style="text-decoration:none; text-align:center; padding:3px 6px; font-size:11px;">📋 محضر تسليم وتشغيل</a>
+                </div>`
               : `<button class="btn btn-sm" onclick="settleDeal('${dl.id}')">✔ اعتماد التحصيل وإصدار التفعيل</button>`}
           </td>
         </tr>
@@ -1214,6 +1324,13 @@
           </table>
         `;
       }
+    }
+
+    
+    function copyNetUrl() {
+      const u = document.getElementById('localNetUrl').innerText;
+      if (navigator.clipboard) navigator.clipboard.writeText(u);
+      alert('تم نسخ رابط الشبكة المحلية للموبايل: ' + u);
     }
 
     function copyPitchText(txt) {
