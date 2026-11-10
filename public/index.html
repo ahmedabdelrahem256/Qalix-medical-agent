@@ -308,6 +308,9 @@
 
     <!-- ==================== PANE 1: AGENT & INDEPENDENT DISTRIBUTORS ==================== -->
     <section id="pane-agent" class="pane active">
+      <!-- Commercial Alerts & Pipeline Bar (Phase 9) -->
+      <div id="commercialAlertsBanner" style="display:none; margin-bottom:16px;"></div>
+
       <div class="grid-2">
         <!-- Create Independent Distributor -->
         <div class="glass">
@@ -460,6 +463,45 @@
           </table>
         </div>
       </div>
+
+      <!-- Lead Locks & Territory Protection (Phase 9) -->
+      <div class="glass" style="margin-top:20px; border:1px solid rgba(14,165,233,0.3);">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
+          <div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span class="badge b-sky">حماية العيادات والنطاقات الجغرافية</span>
+              <span class="badge b-emerald">حجز حصري 14 يوماً</span>
+            </div>
+            <h3 style="margin:6px 0 0; font-size:16px; color:var(--sky);">🛡️ حجز العيادات للموزعين ومنع تضارب المبيعات (Lead Lock Engine)</h3>
+            <p style="margin:2px 0 0; font-size:12px; color:var(--muted);">
+              احجز عيادة لموزع معين لمدة 14 يوماً لمنع أي موزع آخر من زيارتها أو تسجيلها، وتأمين النطاقات الجغرافية في أسيوط والصعيد والمحافظات.
+            </p>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-sm btn-sky" onclick="openLeadLockModal()">+ حجز عيادة جديدة لموزع</button>
+            <a href="/api/reports/weekly-digest" target="_blank" class="btn btn-sm btn-emerald" style="text-decoration:none;">📊 التقرير التنفيذي الأسبوعي (A4)</a>
+          </div>
+        </div>
+
+        <div style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>كود الحجز</th>
+                <th>الموزع المسؤول</th>
+                <th>اسم العيادة والطبيب</th>
+                <th>هاتف العيادة</th>
+                <th>المحافظة والمركز</th>
+                <th>المدة المتبقية</th>
+                <th>الحالة</th>
+              </tr>
+            </thead>
+            <tbody id="leadLockRows">
+              <tr><td colspan="7" style="text-align:center; color:var(--muted);">جاري تحميل سجل الحجوزات...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </section>
 
     <!-- ==================== PANE 2: EXCELLENCE & #1 LEADERSHIP HUB ==================== -->
@@ -473,6 +515,7 @@
               ملاحظة دستورية: الإصدار الحالي `v1.0` محمي وموقّع رقمياً ولا يُلمس أبداً؛ كافة الأدوات المساعدة والخطط هنا تعمل حول المنظومة أو تُجدول كحزم تحديث موقعة مستقبلاً.
             </p>
           </div>
+          <a href="/api/proposals/document" target="_blank" class="btn btn-sky" style="text-decoration:none;">📄 تصدير وثيقة متطلبات وتطوير الإصدار القادم Qalix Medical v2.0 (A4)</a>
         </div>
 
         <!-- 5 Pillars Filter Chips -->
@@ -1497,7 +1540,10 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
             ${dl.status === 'completed'
               ? `<div style="display:flex; flex-direction:column; gap:4px;">
                   <span class="badge b-emerald">مكتملة · ${dl.license_key_ref}</span>
-                  <a href="/api/contracts/deal/${dl.id}" target="_blank" class="btn btn-sm btn-sky" style="text-decoration:none; text-align:center; padding:3px 6px; font-size:11px;">📋 محضر تسليم وتشغيل</a>
+                  <div style="display:flex; gap:4px;">
+                    <a href="/api/contracts/deal/${dl.id}" target="_blank" class="btn btn-sm btn-sky" style="text-decoration:none; flex:1; text-align:center; padding:3px 4px; font-size:11px;">📋 محضر تسليم</a>
+                    <a href="/api/receipts/generate?dealId=${dl.id}" target="_blank" class="btn btn-sm btn-emerald" style="text-decoration:none; flex:1; text-align:center; padding:3px 4px; font-size:11px;">🧾 سند قبض</a>
+                  </div>
                 </div>`
               : `<button class="btn btn-sm" onclick="settleDeal('${dl.id}')">✔ اعتماد التحصيل وإصدار التفعيل</button>`}
           </td>
@@ -2266,13 +2312,121 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
       document.getElementById('imageLightboxModal').style.display = 'none';
     }
 
+    async function loadCommercialAlerts() {
+      try {
+        const r = await fetch('/api/alerts/commercial');
+        const j = await r.json();
+        if (!j.ok || !j.alerts || j.alerts.length === 0) return;
+        const b = document.getElementById('commercialAlertsBanner');
+        if (!b) return;
+        b.style.display = 'block';
+        b.innerHTML = `
+          <div class="glass" style="border:1px solid rgba(245,158,11,0.4); background:rgba(245,158,11,0.08); padding:12px 16px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span class="badge b-amber">تنبيهات الإغلاق والمتابعة التجارية (${j.alerts.length})</span>
+                <strong style="color:var(--text); font-size:13.5px;">فرص صفقات بانتظار الاعتماد والمتابعة الميدانية</strong>
+              </div>
+              <a href="/api/reports/weekly-digest" target="_blank" class="btn btn-sm btn-sky" style="text-decoration:none;">📊 التقرير التنفيذي الأسبوعي (A4)</a>
+            </div>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:8px;">
+              ${j.alerts.map(a => `
+                <div style="background:rgba(15,23,42,0.8); border:1px solid var(--border); border-radius:6px; padding:8px 10px; font-size:12px;">
+                  <div style="display:flex; justify-content:space-between; margin-bottom:2px;">
+                    <strong style="color:${a.level === 'warning' ? 'var(--amber)' : a.level === 'success' ? 'var(--emerald)' : 'var(--sky)'};">${a.title}</strong>
+                    <span class="badge ${a.level === 'warning' ? 'b-amber' : a.level === 'success' ? 'b-emerald' : 'b-sky'}" style="font-size:9.5px; padding:1px 5px;">${a.badge}</span>
+                  </div>
+                  <p style="margin:2px 0 4px; font-size:11px; color:var(--muted); line-height:1.4;">${a.message}</p>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      } catch (e) { console.error(e); }
+    }
+
+    async function loadLeadLocks() {
+      try {
+        const r = await fetch('/api/territory/list');
+        const j = await r.json();
+        if (!j.ok) return;
+        const tbody = document.getElementById('leadLockRows');
+        if (tbody) {
+          if (!j.locks || j.locks.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--muted); padding:12px;">لا توجد عيادات محجوزة حالياً. استخدم زر "حجز عيادة جديدة" لتأمين نطاق الموزع.</td></tr>';
+          } else {
+            tbody.innerHTML = j.locks.map(lk => `
+              <tr>
+                <td style="font-family:monospace; font-weight:bold; color:var(--sky);">${lk.id}</td>
+                <td><strong>${lk.distributor_name}</strong></td>
+                <td><strong>${lk.clinic_name}</strong><br><span style="font-size:11px; color:var(--muted);">${lk.doctor_name}</span></td>
+                <td dir="ltr">${lk.clinic_phone}</td>
+                <td>${lk.governorate} — ${lk.district}</td>
+                <td><strong style="color:${lk.daysRemaining <= 3 ? 'var(--rose)' : 'var(--emerald)'};">${lk.daysRemaining} يوم</strong></td>
+                <td>
+                  <span class="badge ${lk.status === 'active' ? 'b-emerald' : 'b-rose'}">${lk.status === 'active' ? 'حجز نشط' : 'منتهي الصلاحية'}</span>
+                </td>
+              </tr>
+            `).join('');
+          }
+        }
+      } catch (e) { console.error(e); }
+    }
+
+    function openLeadLockModal() {
+      const sel = document.getElementById('lkDistSelect');
+      if (sel && window.lastSummaryDistributors) {
+        sel.innerHTML = window.lastSummaryDistributors.map(d => `<option value="${d.id}" data-name="${d.name}">${d.name} (${d.code})</option>`).join('');
+      }
+      document.getElementById('leadLockModal').style.display = 'flex';
+    }
+
+    function closeLeadLockModal(e) {
+      if (e.target.id === 'leadLockModal') {
+        document.getElementById('leadLockModal').style.display = 'none';
+      }
+    }
+
+    async function submitLeadLock() {
+      const sel = document.getElementById('lkDistSelect');
+      const distId = sel.value;
+      const distName = sel.options[sel.selectedIndex]?.getAttribute('data-name') || '';
+      const clinicName = document.getElementById('lkClinicName').value.trim();
+      const doctorName = document.getElementById('lkDoctorName').value.trim();
+      const clinicPhone = document.getElementById('lkPhone').value.trim();
+      const governorate = document.getElementById('lkGov').value.trim();
+      const district = document.getElementById('lkDistrict').value.trim();
+      const notes = document.getElementById('lkNotes').value.trim();
+
+      if (!clinicName || !doctorName || !clinicPhone) {
+        return alert('يرجى كتابة اسم العيادة والطبيب ورقم الهاتف');
+      }
+
+      const r = await fetch('/api/territory/lock-lead', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ distributorId: distId, distributorName: distName, clinicName, doctorName, clinicPhone, governorate, district, notes })
+      });
+      const j = await r.json();
+      if (!j.ok) return alert(j.error || 'فشل حجز العيادة');
+      alert(`تم حجز العيادة بنجاح للموزع "${distName}" لمدة 14 يوماً! كود الحجز: ${j.lockId}`);
+      document.getElementById('leadLockModal').style.display = 'none';
+      document.getElementById('lkClinicName').value = '';
+      document.getElementById('lkDoctorName').value = '';
+      document.getElementById('lkPhone').value = '';
+      loadLeadLocks();
+    }
+
     async function load() {
       const r = await fetch('/api/summary');
       const data = await r.json();
+      window.lastSummaryDistributors = data.distributors || [];
       render(data);
       loadSpecialtyPacks();
       loadMarketingMaterials();
       loadLegalDocuments();
+      loadLeadLocks();
+      loadCommercialAlerts();
       loadObjectionsPlaybook();
       loadAfterSalesDeals();
       loadSnapshotsList();
@@ -2285,6 +2439,47 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
 
     load();
   </script>
+
+  <!-- Modal for Lead Lock (Phase 9) -->
+  <div id="leadLockModal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.85); backdrop-filter:blur(8px); align-items:center; justify-content:center; padding:20px;" onclick="closeLeadLockModal(event)">
+    <div style="background:#0f172a; border:1px solid var(--sky); border-radius:12px; padding:20px 24px; max-width:540px; width:100%; box-shadow:0 25px 60px rgba(0,0,0,0.8);" onclick="event.stopPropagation()">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; border-bottom:1px solid var(--border); padding-bottom:10px;">
+        <h3 style="margin:0; font-size:16px; color:var(--sky);">🛡️ حجز عيادة جديدة وتأمين النطاق للموزع (14 يوماً)</h3>
+        <button class="btn btn-sm btn-rose" onclick="document.getElementById('leadLockModal').style.display='none'">✕</button>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+        <div>
+          <label style="font-size:11.5px; color:var(--muted);">اختر الموزع المسؤول:</label>
+          <select id="lkDistSelect" style="padding:6px; font-size:12px;"></select>
+        </div>
+        <div>
+          <label style="font-size:11.5px; color:var(--muted);">اسم العيادة / المركز:</label>
+          <input id="lkClinicName" placeholder="مثال: عيادة النور التخصصية" style="padding:6px; font-size:12px;" />
+        </div>
+        <div>
+          <label style="font-size:11.5px; color:var(--muted);">اسم الطبيب المسؤول:</label>
+          <input id="lkDoctorName" placeholder="مثال: د. حسام عادل" style="padding:6px; font-size:12px;" />
+        </div>
+        <div>
+          <label style="font-size:11.5px; color:var(--muted);">هاتف العيادة (رقم التحقق):</label>
+          <input id="lkPhone" placeholder="010..." dir="ltr" style="padding:6px; font-size:12px;" />
+        </div>
+        <div>
+          <label style="font-size:11.5px; color:var(--muted);">المحافظة:</label>
+          <input id="lkGov" value="أسيوط" style="padding:6px; font-size:12px;" />
+        </div>
+        <div>
+          <label style="font-size:11.5px; color:var(--muted);">المركز / الحي:</label>
+          <input id="lkDistrict" placeholder="ديروط / مدينة أسيوط" style="padding:6px; font-size:12px;" />
+        </div>
+      </div>
+      <div style="margin-bottom:12px;">
+        <label style="font-size:11.5px; color:var(--muted);">ملاحظات التفاوض:</label>
+        <input id="lkNotes" placeholder="تمت الزيارة الأولى وتحديد موعد تجربة المنظومة" style="padding:6px; font-size:12px;" />
+      </div>
+      <button class="btn btn-sky" style="width:100%;" onclick="submitLeadLock()">✔ تأكيد حجز العيادة للموزع لمدة 14 يوماً</button>
+    </div>
+  </div>
 
   <!-- Modal for High-Resolution Image Lightbox -->
   <div id="imageLightboxModal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.85); backdrop-filter:blur(8px); align-items:center; justify-content:center; padding:20px;" onclick="closeLightbox(event)">

@@ -473,7 +473,51 @@ function req(method, urlPath, body) {
       docStaticRes.body.includes('شهادة تسليم وضمان منظومة كـالـكـس السيادية')
     );
 
-    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/39 PASSED ===`);
+    // 40. Territory Protection & Clinic Lead Lock (Phase 9)
+    const lockRes = await req('POST', '/api/territory/lock-lead', {
+      distributorId: distId,
+      distributorName: 'مكتب الصعيد المعتمد',
+      clinicName: 'عيادة الأمل التخصصية للأطفال',
+      doctorName: 'د. سمير النجار',
+      clinicPhone: '01055667788',
+      governorate: 'أسيوط',
+      district: 'ديروط'
+    });
+    check('40. حجز عيادة جديدة وتأمين النطاق الجغرافي للموزع لمدة 14 يوماً ومنع التضارب',
+      lockRes.status === 201 &&
+      lockRes.body.ok === true &&
+      lockRes.body.lockId &&
+      lockRes.body.daysProtected === 14
+    );
+
+    // 41. Official Payment Receipt Voucher A4 Generation (Phase 9)
+    const receiptRes = await req('GET', `/api/receipts/generate?dealId=deal_01&channel=instapay`);
+    check('41. توليد سند القبض والتوريد المالي الرسمي A4 مع رمز QR وبصمة التوثيق وقنوات الدفع',
+      receiptRes.status === 200 &&
+      typeof receiptRes.body === 'string' &&
+      receiptRes.body.includes('سند قبض وتوريد مالي رسمي') &&
+      receiptRes.body.includes('إنستاباي') &&
+      receiptRes.body.includes('01122166076')
+    );
+
+    // 42. Commercial Deals Alerts & Pipeline Monitoring (Phase 9)
+    const alertsRes = await req('GET', '/api/alerts/commercial');
+    check('42. رصد تنبيهات الصفقات المعلقة واقتراب ترقيات الموزعين وتنبيهات حجز العيادات',
+      alertsRes.status === 200 &&
+      alertsRes.body.ok === true &&
+      Array.isArray(alertsRes.body.alerts)
+    );
+
+    // 43. R&D Proposals Blueprint v2.0 Exporter (Phase 9)
+    const bpRes = await req('GET', '/api/proposals/document');
+    check('43. تصدير وثيقة متطلبات وتطوير الإصدار القادم Qalix Medical v2.0 المجمعة للأطباء (A4)',
+      bpRes.status === 200 &&
+      typeof bpRes.body === 'string' &&
+      bpRes.body.includes('وثيقة متطلبات وتطوير الإصدار القادم') &&
+      bpRes.body.includes('Qalix Medical v2.0')
+    );
+
+    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/43 PASSED ===`);
     for (const r of results) console.log(' ✅', r);
   } finally {
     srv.kill('SIGINT');

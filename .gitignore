@@ -3,9 +3,13 @@ node_modules/
 
 # Local & Test Runtime Artifacts
 .local_temp/
+.backup_stage/
 data/.test_run/
+data/backups/
 *.db-shm
 *.db-wal
+*.zip
+*.rar
 
 # Large marketing video binaries (served locally from disk)
 *.mp4

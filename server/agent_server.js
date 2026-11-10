@@ -25,6 +25,10 @@ const { AUDIT_CHECKPOINTS, evaluateClinicChecklist, generateClinicAuditReportHtm
 const { getAllCampaigns, composeCampaignMessage } = require('./broadcast_composer');
 const { COMMISSION_TIERS, calculateDistributorTier, getDistributorHierarchyProfile, generateTierPromotionLetterHtml } = require('./commission_hierarchy');
 const { SCENARIOS, calculate12MonthForecast } = require('./financial_forecast');
+const { PROTECTED_TERRITORIES, initializeTerritoryTables, lockClinicLead, getLeadLocks } = require('./territory_protection');
+const { PAYMENT_CHANNELS, generateReceiptHtml } = require('./payment_receipt_engine');
+const { calculateCommercialAlerts, generateExecutiveWeeklyDigestHtml } = require('./executive_digest');
+const { generateProposalsDocumentHtml } = require('./rd_proposals_exporter');
 
 const PORT = Number(process.env.PORT) || 4000;
 const HOST = process.env.HOST || '127.0.0.1';
@@ -123,6 +127,8 @@ db.exec(`
     curr_hash TEXT NOT NULL
   );
 `);
+
+initializeTerritoryTables(db);
 
 function logAudit(action, details) {
   const at = new Date().toISOString();
@@ -869,6 +875,95 @@ const server = http.createServer(async (req, res) => {
         ok: true,
         documents: MARKETING_MATERIALS.legalHandoverDocs || []
       });
+    }
+
+    /* ---------------- Territory Protection & Lead Locks API (Phase 9) ---------------- */
+    if (req.method === 'GET' && pathname === '/api/territory/list') {
+      return sendJson(res, 200, {
+        ok: true,
+        territories: PROTECTED_TERRITORIES,
+        locks: getLeadLocks(db)
+      });
+    }
+
+    if (req.method === 'POST' && pathname === '/api/territory/lock-lead') {
+      const body = await readJsonBody(req);
+      try {
+        const result = lockClinicLead(db, body);
+        logAudit('lock_lead', `حجز عيادة للموزع (${body.distributorName || 'مستقل'}): ${body.clinicName} (${body.doctorName}) لمدة 14 يوماً`);
+        return sendJson(res, 201, result);
+      } catch (err) {
+        return sendJson(res, 400, { ok: false, error: err.message });
+      }
+    }
+
+    /* ---------------- Payment Receipts & Verification API (Phase 9) ---------------- */
+    if (req.method === 'GET' && pathname === '/api/receipts/channels') {
+      return sendJson(res, 200, { ok: true, channels: PAYMENT_CHANNELS });
+    }
+
+    if (req.method === 'GET' && pathname === '/api/receipts/generate') {
+      const qParams = Object.fromEntries(url.searchParams.entries());
+      const dealId = qParams.dealId;
+      let deal = null;
+      if (dealId) {
+        deal = db.prepare('SELECT * FROM deals WHERE id = ?').get(dealId);
+      }
+      const dist = deal ? db.prepare('SELECT * FROM distributors WHERE id = ?').get(deal.distributor_id) : null;
+      const tier = deal ? OFFICIAL_PRICING[deal.tier] : (OFFICIAL_PRICING[qParams.tier] || OFFICIAL_PRICING.professional);
+      const stdPrice = tier.price;
+      const isAssiut = deal ? Boolean(deal.is_assiut) : (qParams.isAssiut === '1' || qParams.isAssiut === 'true');
+      const paid = deal ? deal.fixed_price : (isAssiut ? tier.assiutPrice : tier.price);
+      const recNo = 'REC-2026-' + (deal ? deal.deal_no.replace(/[^0-9]/g, '') : Math.floor(100 + Math.random() * 900));
+      const channelKey = qParams.channel || 'instapay';
+      const channel = PAYMENT_CHANNELS[channelKey] || PAYMENT_CHANNELS.instapay;
+      const refId = qParams.refId || (deal ? (deal.license_key_ref || 'TRX-PAID') : 'IPN-' + Math.floor(10000000 + Math.random() * 90000000));
+      const sha = crypto.createHash('sha256').update(`${recNo}|${paid}|${refId}`).digest('hex');
+
+      const receiptData = {
+        receiptNo: recNo,
+        receiptDate: new Date().toLocaleDateString('ar-EG'),
+        clinicName: deal ? deal.clinic_name : (qParams.clinicName || 'عيادة النخبة التخصصية'),
+        doctorName: deal ? deal.doctor_name : (qParams.doctorName || 'السيد الدكتور المحترم'),
+        city: deal ? deal.city : (qParams.city || 'أسيوط'),
+        governorate: dist ? dist.governorate : (isAssiut ? 'أسيوط' : 'القاهرة'),
+        clinicPhone: deal ? deal.clinic_phone : (qParams.phone || '01011223344'),
+        tierNameAr: tier.nameAr,
+        distributorName: dist ? dist.name : 'مكتب الوكيل المعتمد',
+        distributorCode: dist ? dist.code : 'MAIN',
+        channelNameAr: channel.nameAr,
+        referenceId: refId,
+        standardPrice: stdPrice,
+        amountPaid: paid,
+        amountPaidInWords: paid.toLocaleString('ar-EG'),
+        isAssiut,
+        sha256: sha
+      };
+
+      const html = generateReceiptHtml(receiptData, AGENT_INFO);
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      return res.end(html);
+    }
+
+    /* ---------------- Commercial Alerts & Executive Digest API (Phase 9) ---------------- */
+    if (req.method === 'GET' && pathname === '/api/alerts/commercial') {
+      const alerts = calculateCommercialAlerts(db);
+      return sendJson(res, 200, { ok: true, alerts });
+    }
+
+    if (req.method === 'GET' && pathname === '/api/reports/weekly-digest') {
+      const sum = getSummaryResponse();
+      const html = generateExecutiveWeeklyDigestHtml(sum, AGENT_INFO);
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      return res.end(html);
+    }
+
+    /* ---------------- R&D Proposals Blueprint v2.0 Exporter (Phase 9) ---------------- */
+    if (req.method === 'GET' && pathname === '/api/proposals/document') {
+      const proposals = db.prepare('SELECT * FROM excellence_proposals ORDER BY created_at ASC').all();
+      const html = generateProposalsDocumentHtml(proposals, AGENT_INFO);
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      return res.end(html);
     }
 
     // Serve static files: support /presentations/, /legal-docs/, and /public/
