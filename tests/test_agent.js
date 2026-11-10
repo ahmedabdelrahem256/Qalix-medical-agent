@@ -537,7 +537,39 @@ function req(method, urlPath, body) {
       wowDemoRes.body.includes('01122166076')
     );
 
-    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/45 PASSED ===`);
+    // 46. Developer Console: System Diagnostics & Health Status
+    const devStatusRes = await req('GET', '/api/dev/status');
+    check('46. لوحة المطور: فحص مؤشرات النظام وقاعدة البيانات والذاكرة والوسائط',
+      devStatusRes.status === 200 &&
+      devStatusRes.body.ok === true &&
+      devStatusRes.body.stats.officialPhone === '01122166076' &&
+      typeof devStatusRes.body.stats.dealsCount === 'number'
+    );
+
+    // 47. Developer Console: Inject Custom WhatsApp Pitch Template
+    const devWaRes = await req('POST', '/api/dev/custom-whatsapp', {
+      title: 'رسالة إقناع مخصصة تجريبية',
+      category: 'متابعة بعد زيارة ميدانية',
+      target: 'أطباء الباطنة والعيادات النشطة',
+      text: 'السلام عليكم دكتور، يسعدنا متابعة جاهزية العيادة لتشغيل شاشة الانتظار ونظام الروشتات'
+    });
+    check('47. لوحة المطور: إضافة رسالة واتساب بيعية مخصصة وحفظها ديناميكياً',
+      devWaRes.status === 200 &&
+      devWaRes.body.ok === true &&
+      devWaRes.body.template.title === 'رسالة إقناع مخصصة تجريبية'
+    );
+
+    // 48. Developer Console: Safe Deals Reset with Automatic Backup Snapshot
+    const resetDealsRes = await req('POST', '/api/dev/reset-deals', {
+      confirmWord: 'CONFIRM'
+    });
+    check('48. لوحة المطور: تصفير الصفقات بأمان مع إنشاء لقطة استعادة احتياطية تلقائية',
+      resetDealsRes.status === 200 &&
+      resetDealsRes.body.ok === true &&
+      typeof resetDealsRes.body.safetyBackup === 'string'
+    );
+
+    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/48 PASSED ===`);
     for (const r of results) console.log(' ✅', r);
   } finally {
     srv.kill('SIGINT');

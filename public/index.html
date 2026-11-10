@@ -286,6 +286,7 @@
         <button class="tab-btn" id="btn-pane-fieldtraining" onclick="openTab('pane-fieldtraining', this)">10. 🎓 التدريب الميداني والجاهزية الفنية</button>
         <button class="tab-btn" id="btn-pane-prescription" onclick="openTab('pane-prescription', this)">11. 🎖️ شرائح التميز والتنبؤ المالي</button>
         <button class="tab-btn" id="btn-pane-audit" onclick="openTab('pane-audit', this)">12. فحص نسخة MEGA</button>
+        <button class="tab-btn" id="btn-pane-devconsole" onclick="openTab('pane-devconsole', this)" style="border: 1px solid rgba(245,158,11,0.5); color: #f59e0b; background: rgba(245,158,11,0.06);">13. 🛠️ لوحة المطور الفائقة</button>
       </nav>
       <div style="display:flex; align-items:center; gap:8px; min-width:250px;">
         <span style="font-size:12px; color:var(--muted); white-space:nowrap;">⚡ انتقال سريع للقسم:</span>
@@ -302,6 +303,7 @@
           <option value="pane-fieldtraining">القسم 10: التدريب الميداني والجاهزية الفنية وحملات واتساب</option>
           <option value="pane-prescription">القسم 11: شرائح تميز الموزعين والتنبؤ المالي للإيرادات</option>
           <option value="pane-audit">القسم 12: فحص واستضافة نسخة العميل (MEGA)</option>
+          <option value="pane-devconsole">القسم 13: 🛠️ لوحة المطور وتصفير البيانات ورفع الفيديوهات</option>
         </select>
       </div>
     </div>
@@ -1304,6 +1306,163 @@
             <strong style="color:var(--emerald);">3. التشغيل الطبي والمالي الكامل</strong>
             <p style="font-size:12px; color:var(--muted);">نجاح الفروع المتعددة، منع تضارب المواعيد (`409`)، فحص التداخلات الدوائية والحساسية، الصيدلية بالباركود، تقفيل الوردية Z-Report، والمراسلات الداخلية المشفرة.</p>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== PANE 13: DEVELOPER & SYSTEM ADMINISTRATION CONSOLE ==================== -->
+    <section id="pane-devconsole" class="pane">
+      <div class="glass" style="border: 1px solid rgba(245, 158, 11, 0.4); background: radial-gradient(circle at top right, rgba(245, 158, 11, 0.08), transparent 70%), var(--card);">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:14px;">
+          <div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span class="badge" style="background:#f59e0b; color:#000; font-weight:800;">🛠️ لوحة المطور الفائقة</span>
+              <span class="badge b-emerald">وضع الإدارة الكاملة · 100% أوفلاين</span>
+            </div>
+            <h2 style="margin:6px 0 2px; font-size:19px; color:#f59e0b;">لوحة المطور والتحكم الفائق (Developer & System Admin Console)</h2>
+            <p style="margin:0; font-size:12.5px; color:var(--muted);">
+              إدارة بيانات المنظومة بالكامل: تصفير الصفقات التجريبية، استعادة ضبط المصنع، رفع الفيديوهات والوسائط الجديدة، وإضافة رسائل واتساب تسويقية مخصصة.
+            </p>
+          </div>
+          <button class="btn btn-sm" style="background:#f59e0b; color:#000; font-weight:bold;" onclick="loadDevStatus()">🔄 تحديث مؤشرات الخادم</button>
+        </div>
+
+        <!-- Health Diagnostic Cards -->
+        <div class="grid-3" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px; margin-bottom:18px;">
+          <div class="sub-card" style="border-right:3px solid var(--sky);">
+            <div style="font-size:11.5px; color:var(--muted);">الصفقات المسجلة:</div>
+            <strong id="devStatDeals" style="font-size:20px; color:var(--sky);">-</strong>
+          </div>
+          <div class="sub-card" style="border-right:3px solid var(--emerald);">
+            <div style="font-size:11.5px; color:var(--muted);">الموزعون المعتمدون:</div>
+            <strong id="devStatDists" style="font-size:20px; color:var(--emerald);">-</strong>
+          </div>
+          <div class="sub-card" style="border-right:3px solid var(--purple);">
+            <div style="font-size:11.5px; color:var(--muted);">سجلات التدقيق الجنائي:</div>
+            <strong id="devStatAudits" style="font-size:20px; color:var(--purple);">-</strong>
+          </div>
+          <div class="sub-card" style="border-right:3px solid var(--amber);">
+            <div style="font-size:11.5px; color:var(--muted);">الفيديوهات المتاحة:</div>
+            <strong id="devStatVideos" style="font-size:20px; color:var(--amber);">-</strong>
+          </div>
+          <div class="sub-card" style="border-right:3px solid var(--rose);">
+            <div style="font-size:11.5px; color:var(--muted);">استهلاك الذاكرة (RAM):</div>
+            <strong id="devStatRam" style="font-size:20px; color:var(--rose);">-</strong>
+          </div>
+        </div>
+
+        <div class="grid-2" style="align-items:stretch; gap:18px;">
+          <!-- Left Column: Safe Data Reset Operations -->
+          <div class="sub-card" style="display:flex; flex-direction:column; justify-content:space-between; background:rgba(15,23,42,0.6); border:1px solid rgba(244,63,94,0.3);">
+            <div>
+              <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+                <h3 style="margin:0; font-size:16px; color:var(--rose);">🧹 مركز تصفير وتطهير البيانات بأمان</h3>
+                <span class="badge b-rose">حماية النسخ الاحتياطي التلقائي</span>
+              </div>
+              <p style="font-size:12px; color:var(--muted); line-height:1.6; margin-top:0;">
+                ⚠️ <strong>صمام أمان رقمي:</strong> أي إجراء تصفير يتم حمايته بأخذ لقطة استعادة فورية (SQLite Snapshot) مشفرة وموثقة في <code>data/backups/</code> تلقائياً قبل الحذف لمنع أي فقدان للبيانات.
+              </p>
+
+              <div style="display:flex; flex-direction:column; gap:12px; margin:16px 0;">
+                <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:10px; padding:12px;">
+                  <div style="font-size:13px; font-weight:bold; color:var(--text); margin-bottom:4px;">1. تصفير الصفقات التجريبية فقط</div>
+                  <div style="font-size:11.5px; color:var(--muted); margin-bottom:8px;">يحذف كافة الصفقات المسجلة للبدء بسجل مبيعات فارغ وجديد تماماً، مع الحفاظ الكامل على الموزعين وبواباتهم.</div>
+                  <button class="btn btn-sm" style="background:#e11d48; color:#fff;" onclick="devResetDeals()">🧹 تصفير الصفقات التجريبية (Reset Deals)</button>
+                </div>
+
+                <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:10px; padding:12px;">
+                  <div style="font-size:13px; font-weight:bold; color:var(--text); margin-bottom:4px;">2. تصفير سجل التدقيق الجنائي</div>
+                  <div style="font-size:11.5px; color:var(--muted); margin-bottom:8px;">يفرغ سجل العمليات وسلسلة الهاش لبدء مراقبة جديدة بعد مرحلة الاختبار والتسليم.</div>
+                  <button class="btn btn-sm" style="background:#ea580c; color:#fff;" onclick="devClearAudits()">🗑️ تصفير سجل التدقيق (Clear Audit Log)</button>
+                </div>
+
+                <div style="background:rgba(244,63,94,0.08); border:1px dashed #f43f5e; border-radius:10px; padding:12px;">
+                  <div style="font-size:13px; font-weight:bold; color:var(--rose); margin-bottom:4px;">3. استعادة ضبط المصنع الكامل (Factory Reset)</div>
+                  <div style="font-size:11.5px; color:var(--muted); margin-bottom:8px;">يعيد المنظومة كأنها مثبتة الآن: يصفر كل شيء ويغرس الموزعين المعتمدين الأوائل بصورة نظيفة.</div>
+                  <button class="btn btn-sm" style="background:#991b1b; color:#fff; font-weight:bold;" onclick="devFactoryReset()">⚠️ استعادة ضبط المصنع بالكامل (Factory Reset)</button>
+                </div>
+              </div>
+            </div>
+            <div id="devResetResult" style="display:none; font-size:12px; padding:10px; border-radius:8px; margin-top:10px;"></div>
+          </div>
+
+          <!-- Right Column: Media & Marketing Video Uploader -->
+          <div class="sub-card" style="display:flex; flex-direction:column; justify-content:space-between; background:rgba(15,23,42,0.6); border:1px solid rgba(14,165,233,0.3);">
+            <div>
+              <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+                <h3 style="margin:0; font-size:16px; color:var(--sky);">🎬 مركز رفع واستبدال الفيديوهات والوسائط</h3>
+                <span class="badge b-sky">دعم MP4 و صور فائقة الدقة</span>
+              </div>
+              <p style="font-size:12px; color:var(--muted); line-height:1.6; margin-top:0;">
+                ارفع فيديو تسويقي جديد بصيغة <code>.mp4</code> أو صور شاشات جديدة ليتم إدراجها فوراً في مشغل الفيديو ومعرض الشاشات وحقيبة التسويق:
+              </p>
+
+              <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:14px;">
+                <div>
+                  <label style="font-size:12px; color:var(--muted);">نوع ملف الوسائط:</label>
+                  <select id="devUploadCategory">
+                    <option value="video" selected>فيديو تسويقي ترويجي (.mp4 / .webm)</option>
+                    <option value="screenshot">صورة شاشة سريرية أو بوستر (.png / .jpg / .webp)</option>
+                  </select>
+                </div>
+                <div>
+                  <label style="font-size:12px; color:var(--muted);">عنوان العرض (اختياري):</label>
+                  <input id="devUploadTitle" placeholder="مثال: فيديو تجربة العيادات في أسيوط 2026" />
+                </div>
+                <div>
+                  <label style="font-size:12px; color:var(--muted);">اختر الملف من جهازك:</label>
+                  <input type="file" id="devUploadFile" accept="video/mp4,video/webm,image/*" style="padding:6px; cursor:pointer;" />
+                </div>
+                <button class="btn btn-sky" style="width:100%; height:44px; font-size:13.5px; font-weight:bold;" onclick="devUploadMedia()">
+                  ⬆️ بدء رفع واستبدال الملف فوراً
+                </button>
+                <div id="devUploadProgress" style="display:none; font-size:12px; color:var(--sky); text-align:center; padding:8px;"></div>
+              </div>
+
+              <!-- Media Explorer Quick List -->
+              <div style="border-top:1px solid var(--border); padding-top:12px;">
+                <div style="font-size:12px; font-weight:bold; color:var(--text); margin-bottom:8px;">📂 قائمة الفيديوهات التسويقية المتاحة حالياً:</div>
+                <div id="devMediaListContainer" style="max-height:140px; overflow-y:auto; font-size:11.5px; display:flex; flex-direction:column; gap:6px;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Custom WhatsApp Script Injector -->
+        <div class="sub-card" style="margin-top:18px; background:rgba(15,23,42,0.6); border:1px solid rgba(16,185,129,0.3);">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+            <h3 style="margin:0; font-size:16px; color:var(--emerald);">💬 إضافة وحقن قوالب رسائل واتساب تسويقية جديدة</h3>
+            <span class="badge b-emerald">تظهر فوراً في كتالوج الواتساب ووثيقة A4</span>
+          </div>
+          <p style="font-size:12px; color:var(--muted); margin-top:0;">
+            أضف نصوص بيعية جديدة من ابتكارك ليتم إدراجها فوراً في كتالوج رسائل الواتساب مع زر الفتح المباشر وزر النسخ:
+          </p>
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:10px; margin-bottom:10px;">
+            <div>
+              <label style="font-size:12px; color:var(--muted);">عنوان الرسالة:</label>
+              <input id="devWaTitle" placeholder="مثال: رسالة استقطاب أطباء العيون" />
+            </div>
+            <div>
+              <label style="font-size:12px; color:var(--muted);">التصنيف:</label>
+              <select id="devWaCat">
+                <option value="استقطاب عيادات" selected>استقطاب عيادات جديدة</option>
+                <option value="إغلاق ومبيعات">إغلاق وحجز مفتاح التفعيل</option>
+                <option value="رد على اعتراضات">رد على اعتراضات الأسعار والنت</option>
+                <option value="متابعة دورية">متابعة ما بعد التثبيت</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:12px; color:var(--muted);">الفئة المستهدفة:</label>
+              <input id="devWaTarget" placeholder="مثال: أطباء الجراحة والمناظير" />
+            </div>
+          </div>
+          <div style="margin-bottom:10px;">
+            <label style="font-size:12px; color:var(--muted);">نص الرسالة البيعية الكامل:</label>
+            <textarea id="devWaText" rows="4" placeholder="اكتب نص الرسالة هنا، وسيكون جاهزاً للإرسال عبر واتساب..." style="width:100%; box-sizing:border-box; padding:10px; border-radius:8px; border:1px solid var(--border); background:rgba(0,0,0,0.3); color:var(--text); font-family:inherit; font-size:12.5px; line-height:1.5;"></textarea>
+          </div>
+          <button class="btn" style="width:100%; height:42px; font-size:13.5px; font-weight:bold;" onclick="devAddCustomWhatsApp()">
+            + حفظ وإدراج الرسالة في كتالوج واتساب فوراً
+          </button>
         </div>
       </div>
     </section>
@@ -2484,6 +2643,176 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
       loadClinicChecklist();
       loadBroadcastCampaigns();
       loadFinancialForecast('balanced');
+      loadDevStatus();
+    }
+
+    /* ==================== DEV CONSOLE JAVASCRIPT ==================== */
+    async function loadDevStatus() {
+      try {
+        const r = await fetch('/api/dev/status');
+        const d = await r.json();
+        if (d.ok && d.stats) {
+          const elDeals = document.getElementById('devStatDeals');
+          const elDists = document.getElementById('devStatDists');
+          const elAudits = document.getElementById('devStatAudits');
+          const elVideos = document.getElementById('devStatVideos');
+          const elRam = document.getElementById('devStatRam');
+          if (elDeals) elDeals.innerText = d.stats.dealsCount;
+          if (elDists) elDists.innerText = d.stats.distributorsCount;
+          if (elAudits) elAudits.innerText = d.stats.auditLogsCount;
+          if (elVideos) elVideos.innerText = d.stats.videosCount;
+          if (elRam) elRam.innerText = d.memoryMB + ' MB';
+        }
+      } catch (_) {}
+      loadDevMediaList();
+    }
+
+    async function loadDevMediaList() {
+      try {
+        const r = await fetch('/api/dev/media-list');
+        const d = await r.json();
+        const container = document.getElementById('devMediaListContainer');
+        if (!container) return;
+        if (!d.ok || !d.media || !d.media.videos || d.media.videos.length === 0) {
+          container.innerHTML = '<span style="color:var(--muted);">لا توجد ملفات فيديو مسجلة.</span>';
+          return;
+        }
+        container.innerHTML = d.media.videos.map(v => `
+          <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03); padding:6px 10px; border-radius:6px; border:1px solid var(--border);">
+            <div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:65%;">
+              <strong style="color:var(--text);">${v.name}</strong>
+              <span style="color:var(--muted); font-size:11px;">(${v.sizeMB} MB)</span>
+            </div>
+            <a href="${v.url}" target="_blank" class="btn btn-sm btn-sky" style="text-decoration:none; padding:3px 8px; font-size:11px;">▶ تشغيل</a>
+          </div>
+        `).join('');
+      } catch (_) {}
+    }
+
+    async function devResetDeals() {
+      const ok = confirm('⚠️ تحذير أمني:\nهل أنت متأكد من رغبتك في تصفير وحذف كافة الصفقات التجريبية؟\n\n(سيتم أخذ لقطة استعادة فورية لقاعدة البيانات تلقائياً قبل الحذف)');
+      if (!ok) return;
+      try {
+        const r = await fetch('/api/dev/reset-deals', { method: 'POST' });
+        const res = await r.json();
+        if (res.ok) {
+          alert('✅ ' + res.message + '\n\n📁 ملف النسخة الاحتياطية: ' + res.safetyBackup);
+          load();
+          loadDevStatus();
+        } else {
+          alert('❌ فشل الإجراء: ' + (res.error || 'خطأ غير معروف'));
+        }
+      } catch (e) {
+        alert('❌ خطأ في الاتصال: ' + e.message);
+      }
+    }
+
+    async function devClearAudits() {
+      const ok = confirm('⚠️ هل أنت متأكد من رغبتك في تصفير سجل التدقيق الجنائي؟\n\n(سيتم حفظ لقطة استعادة تلقائياً قبل الحذف)');
+      if (!ok) return;
+      try {
+        const r = await fetch('/api/dev/clear-audits', { method: 'POST' });
+        const res = await r.json();
+        if (res.ok) {
+          alert('✅ ' + res.message);
+          load();
+          loadDevStatus();
+        } else {
+          alert('❌ فشل الإجراء: ' + (res.error || 'خطأ غير معروف'));
+        }
+      } catch (e) {
+        alert('❌ خطأ في الاتصال: ' + e.message);
+      }
+    }
+
+    async function devFactoryReset() {
+      const ok1 = confirm('⚠️ تحذير بالغ الخطورة:\nأنت على وشك استعادة ضبط المصنع الكامل للمنظومة بالكامل!\n\nسيتم مسح الصفقات والموزعين وسجل العمليات، مع زرع التهيئات الافتراضية الصافية.\n(سيتم أخذ لقطة استعادة أمان فورية لكامل البيانات تلقائياً قبل التصفير)\n\nهل تريد المتابعة؟');
+      if (!ok1) return;
+      const ok2 = confirm('تأكيد نهائي: اضغط موافق لتنفيذ استعادة ضبط المصنع الآن.');
+      if (!ok2) return;
+      try {
+        const r = await fetch('/api/dev/factory-reset', { method: 'POST' });
+        const res = await r.json();
+        if (res.ok) {
+          alert('✅ ' + res.message + '\n\n📁 ملف الأمان: ' + res.safetyBackup);
+          window.location.reload();
+        } else {
+          alert('❌ فشل الإجراء: ' + (res.error || 'خطأ غير معروف'));
+        }
+      } catch (e) {
+        alert('❌ خطأ في الاتصال: ' + e.message);
+      }
+    }
+
+    async function devUploadMedia() {
+      const fileInput = document.getElementById('devUploadFile');
+      if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+        return alert('يرجى اختيار ملف من جهازك أولاً (فيديو MP4 أو صورة).');
+      }
+      const file = fileInput.files[0];
+      const category = document.getElementById('devUploadCategory').value;
+      const customTitle = document.getElementById('devUploadTitle').value.trim();
+      const progressEl = document.getElementById('devUploadProgress');
+      if (progressEl) {
+        progressEl.style.display = 'block';
+        progressEl.innerText = `⏳ جاري رفع الملف: ${file.name} (${(file.size / (1024*1024)).toFixed(2)} MB)... يرجى الانتظار`;
+      }
+
+      try {
+        const filename = (customTitle ? customTitle.replace(/\\s+/g, '_') : '') + '_' + file.name;
+        const uploadUrl = `/api/dev/upload-media?category=${encodeURIComponent(category)}&filename=${encodeURIComponent(filename)}`;
+        const r = await fetch(uploadUrl, {
+          method: 'POST',
+          body: file
+        });
+        const res = await r.json();
+        if (res.ok) {
+          if (progressEl) {
+            progressEl.style.display = 'block';
+            progressEl.style.color = 'var(--emerald)';
+            progressEl.innerText = `✅ تم رفع الملف بنجاح! الحجم: ${res.sizeMB} MB | الرابط: ${res.url}`;
+          }
+          alert(`✅ تم رفع الملف بنجاح!\n\n📁 الاسم: ${res.filename}\n📦 الحجم: ${res.sizeMB} MB\n🔗 تم ربطه بالمنظومة فوراً.`);
+          fileInput.value = '';
+          document.getElementById('devUploadTitle').value = '';
+          loadDevStatus();
+          load();
+        } else {
+          if (progressEl) progressEl.innerText = '❌ فشل الرفع: ' + (res.error || 'خطأ غير معروف');
+          alert('❌ فشل الرفع: ' + (res.error || 'خطأ غير معروف'));
+        }
+      } catch (e) {
+        if (progressEl) progressEl.innerText = '❌ خطأ أثناء الرفع: ' + e.message;
+        alert('❌ خطأ أثناء الرفع: ' + e.message);
+      }
+    }
+
+    async function devAddCustomWhatsApp() {
+      const title = document.getElementById('devWaTitle').value.trim();
+      const category = document.getElementById('devWaCat').value;
+      const target = document.getElementById('devWaTarget').value.trim();
+      const text = document.getElementById('devWaText').value.trim();
+      if (!title || !text) return alert('يرجى إدخال عنوان الرسالة ونصها الكامل.');
+
+      try {
+        const r = await fetch('/api/dev/custom-whatsapp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, category, target, text })
+        });
+        const res = await r.json();
+        if (res.ok) {
+          alert('✅ تم حفظ وإدراج الرسالة بنجاح في كتالوج رسائل الواتساب مع رابط الإرسال المباشر!');
+          document.getElementById('devWaTitle').value = '';
+          document.getElementById('devWaTarget').value = '';
+          document.getElementById('devWaText').value = '';
+          load();
+        } else {
+          alert('❌ خطأ: ' + (res.error || 'فشل الحفظ'));
+        }
+      } catch (e) {
+        alert('❌ خطأ في الاتصال: ' + e.message);
+      }
     }
 
     load();

@@ -29,6 +29,15 @@ const { PROTECTED_TERRITORIES, initializeTerritoryTables, lockClinicLead, getLea
 const { PAYMENT_CHANNELS, generateReceiptHtml } = require('./payment_receipt_engine');
 const { calculateCommercialAlerts, generateExecutiveWeeklyDigestHtml } = require('./executive_digest');
 const { generateProposalsDocumentHtml } = require('./rd_proposals_exporter');
+const {
+  resetDealsOnly,
+  resetAllDataFactory,
+  clearAuditLogsOnly,
+  addCustomWhatsAppTemplate,
+  uploadMediaFileStream,
+  listAllMedia,
+  loadCustomData
+} = require('./dev_console');
 
 const PORT = Number(process.env.PORT) || 4000;
 const HOST = process.env.HOST || '127.0.0.1';
@@ -139,21 +148,20 @@ function logAudit(action, details) {
     .run(at, action, details, prevHash, currHash);
 }
 
-/* Seed initial sample distributors if empty */
-const distCount = db.prepare('SELECT COUNT(*) AS n FROM distributors').get().n;
-if (distCount === 0) {
+function seedInitialData(targetDb) {
+  const dbase = targetDb || db;
   const now = new Date().toISOString();
   const seedDists = [
     { id: 'dist_assiut_01', code: 'QMA-DIST-01', name: 'مكتب النخبة للحلول الطبية (قطاع أسيوط)', phone: '01098765431', gov: 'أسيوط', rate: 20, pin: '1001', notes: 'موزع معتمد لنطاق عيادات ومراكز محافظة أسيوط' },
     { id: 'dist_cairo_02',  code: 'QMA-DIST-02', name: 'شركة ميديكال تك للتوريدات (القاهرة والجيزة)', phone: '01234567892', gov: 'القاهرة الكبرى', rate: 25, pin: '1002', notes: 'موزع مستقل لعيادات مدينة نصر والمعادي والدقي' },
     { id: 'dist_delta_03',  code: 'QMA-DIST-03', name: 'مجموعة الدلتا للأنظمة الطبية (المنصورة وطنطا)', phone: '01145678903', gov: 'الدلتا والإسكندرية', rate: 20, pin: '1003', notes: 'موزع مستقل لقطاع الدلتا' }
   ];
-  const insDist = db.prepare('INSERT INTO distributors(id, code, name, phone, governorate, commission_rate, status, access_pin, notes, created_at) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+  const insDist = dbase.prepare('INSERT INTO distributors(id, code, name, phone, governorate, commission_rate, status, access_pin, notes, created_at) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
   for (const d of seedDists) {
     insDist.run(d.id, d.code, d.name, d.phone, d.gov, d.rate, 'active', d.pin, d.notes, now);
   }
 
-  const insDeal = db.prepare(`INSERT INTO deals(
+  const insDeal = dbase.prepare(`INSERT INTO deals(
     id, deal_no, distributor_id, clinic_name, doctor_name, clinic_phone, city, is_assiut,
     tier, fixed_price, commission_rate, distributor_commission, agent_net_amount,
     hardware_id, status, license_key_ref, notes, created_at, settled_at
@@ -172,6 +180,12 @@ if (distCount === 0) {
     'enterprise', 18500, 25, 4625, 13875, '3C4D5E6F7A8B9C0D1E2F3A4B', 'pending', '', 'بانتظار مراجعة الوكيل وإصدار مفتاح التفعيل', now, ''
   );
   logAudit('system_init', 'تأسيس قاعدة بيانات مشروع Qalix Medical Agent بنظام السعر الثابت ونسب الموزعين');
+}
+
+/* Seed initial sample distributors if empty */
+const distCount = db.prepare('SELECT COUNT(*) AS n FROM distributors').get().n;
+if (distCount === 0) {
+  seedInitialData(db);
 }
 
 /* Seed initial Excellence & #1 Leadership Proposals if empty */
@@ -976,6 +990,72 @@ const server = http.createServer(async (req, res) => {
       const html = generateProposalsDocumentHtml(proposals, AGENT_INFO);
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
       return res.end(html);
+    }
+
+    /* ---------------- Developer & System Administration API (Dev Console) ---------------- */
+    if (req.method === 'POST' && pathname === '/api/dev/reset-deals') {
+      const resData = resetDealsOnly(db);
+      logAudit('dev_reset_deals', 'تصفير صفقات النظام من لوحة المطور مع أخذ لقطة احتياطية');
+      return sendJson(res, 200, resData);
+    }
+
+    if (req.method === 'POST' && pathname === '/api/dev/factory-reset') {
+      const resData = resetAllDataFactory(db, () => seedInitialData(db));
+      logAudit('dev_factory_reset', 'استعادة ضبط المصنع وتصفير قاعدة البيانات من لوحة المطور');
+      return sendJson(res, 200, resData);
+    }
+
+    if (req.method === 'POST' && pathname === '/api/dev/clear-audits') {
+      const resData = clearAuditLogsOnly(db);
+      return sendJson(res, 200, resData);
+    }
+
+    if (req.method === 'POST' && pathname === '/api/dev/custom-whatsapp') {
+      const body = await readJsonBody(req);
+      try {
+        const result = addCustomWhatsAppTemplate(body);
+        logAudit('dev_add_whatsapp', `إضافة قالب واتساب بيعي جديد: ${result.template.title}`);
+        return sendJson(res, 200, result);
+      } catch (err) {
+        return sendJson(res, 400, { error: err.message });
+      }
+    }
+
+    if (req.method === 'POST' && pathname === '/api/dev/upload-media') {
+      const filename = (query && query.filename) || ('upload_' + Date.now() + '.mp4');
+      const category = (query && query.category) || 'video';
+      try {
+        const uploadResult = await uploadMediaFileStream(req, filename, category);
+        logAudit('dev_upload_media', `رفع وسائط تسويقية جديدة (${category}): ${uploadResult.filename}`);
+        return sendJson(res, 200, uploadResult);
+      } catch (err) {
+        return sendJson(res, 500, { error: err.message });
+      }
+    }
+
+    if (req.method === 'GET' && pathname === '/api/dev/media-list') {
+      return sendJson(res, 200, { ok: true, media: listAllMedia() });
+    }
+
+    if (req.method === 'GET' && pathname === '/api/dev/status') {
+      const dealsCount = db.prepare('SELECT COUNT(*) AS c FROM deals').get().c;
+      const distsCount = db.prepare('SELECT COUNT(*) AS c FROM distributors').get().c;
+      let auditsCount = 0;
+      try { auditsCount = db.prepare('SELECT COUNT(*) AS c FROM audit_log').get().c; } catch (_) {}
+      const media = listAllMedia();
+      return sendJson(res, 200, {
+        ok: true,
+        stats: {
+          officialPhone: AGENT_INFO.phone,
+          dealsCount,
+          distributorsCount: distsCount,
+          auditLogsCount: auditsCount,
+          videosCount: media.videos.length,
+          imagesCount: media.images.length
+        },
+        uptimeSeconds: Math.round(process.uptime()),
+        memoryMB: Math.round(process.memoryUsage().rss / 1024 / 1024)
+      });
     }
 
     // Serve static files: support /presentations/, /legal-docs/, and /public/

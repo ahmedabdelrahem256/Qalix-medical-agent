@@ -215,15 +215,16 @@
 | [`server/contract_generator.js`](file:///G:/Qalix%20medical%20agent/server/contract_generator.js) | مولد عقود التوزيع ومحاضر تسليم العيادات الرسمية | **مكتمل** |
 | [`server/financial_ledger.js`](file:///G:/Qalix%20medical%20agent/server/financial_ledger.js) | مولد كشوف الحسابات والتسوية المالية للموزعين المعتمدين | **مكتمل** |
 | [`server/portal_template.js`](file:///G:/Qalix%20medical%20agent/server/portal_template.js) | مولد البوابات المستقلة للموزعين مع أدوات كافة المراحل | **مكتمل** |
-| [`public/index.html`](file:///G:/Qalix%20medical%20agent/public/index.html) | لوحة تحكم الوكيل الزجاجية العصرية (12 قسماً متكاملاً) | **مكتمل ومختبر** |
+| [`server/dev_console.js`](file:///G:/Qalix%20medical%20agent/server/dev_console.js) | لوحة المطور وإدارة النظام: تصفير آمن مع لقطات استعادة ورفع الفيديوهات وقوالب واتساب | **مكتمل (المرحلة 10)** |
+| [`public/index.html`](file:///G:/Qalix%20medical%20agent/public/index.html) | لوحة تحكم الوكيل الزجاجية العصرية (13 قسماً متكاملاً) | **مكتمل ومختبر** |
 | [`distributors_kits/`](file:///G:/Qalix%20medical%20agent/distributors_kits) | بوابات الموزعين المستقلين المولّدة تلقائياً | **مفعل (4 موزعين)** |
-| [`tests/test_agent.js`](file:///G:/Qalix%20medical%20agent/tests/test_agent.js) | حزمة الاختبارات الآلية الشاملة (45/45 اختباراً) | **ناجح 45/45 (100%)** |
+| [`tests/test_agent.js`](file:///G:/Qalix%20medical%20agent/tests/test_agent.js) | حزمة الاختبارات الآلية الشاملة (48/48 اختباراً) | **ناجح 48/48 (100%)** |
 | [`.gitignore`](file:///G:/Qalix%20medical%20agent/.gitignore) | استثناء ملفات التشغيل المؤقتة وفصلها عن Git | **مكتمل** |
 
 ---
 
 ### 📌 ملخص الحالة وجاهزية الاستخدام
 - **المنظومة:** تعمل بكامل طاقتها بنسبة 100% أوفلاين Air-Gapped.
-- **الاختبارات:** 45 اختباراً آلياً ناجحاً (100% Pass Rate).
-- **الهوية:** معتمدة رسمياً باسم «وكيل منظومة كالكس ميديكال الطبية — 01122166076 / 01122166076».
+- **الاختبارات:** 48 اختباراً آلياً ناجحاً (100% Pass Rate).
+- **الهوية:** معتمدة رسمياً باسم «وكيل منظومة كالكس ميديكال الطبية — 01122166076».
 - **المستودع:** متصل ومتزامن مع GitHub: `https://github.com/ahmedabdelrahem256/Qalix-medical-agent`.
