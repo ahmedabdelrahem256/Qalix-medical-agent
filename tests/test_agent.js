@@ -517,7 +517,27 @@ function req(method, urlPath, body) {
       bpRes.body.includes('Qalix Medical v2.0')
     );
 
-    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/43 PASSED ===`);
+    // 44. WhatsApp Sales Pitch Catalog A4 Document
+    const waCatRes = await req('GET', '/api/marketing/whatsapp-catalog');
+    check('44. توليد واستعراض كتالوج رسائل واتساب البيعية وسيناريوهات الاستقطاب بنمط A4 الفاخر',
+      waCatRes.status === 200 &&
+      waCatRes.headers['content-type'] === 'text/html; charset=utf-8' &&
+      typeof waCatRes.body === 'string' &&
+      waCatRes.body.includes('كتالوج رسائل واتساب البيعية') &&
+      waCatRes.body.includes('01122166076')
+    );
+
+    // 45. 5-Minute WOW Live Demo A4 Field Guide
+    const wowDemoRes = await req('GET', '/api/marketing/wow-demo');
+    check('45. توليد واستعراض دليل سيناريو العرض الميداني الحاسم في 5 دقائق بنمط A4 للطباعة',
+      wowDemoRes.status === 200 &&
+      wowDemoRes.headers['content-type'] === 'text/html; charset=utf-8' &&
+      typeof wowDemoRes.body === 'string' &&
+      wowDemoRes.body.includes('سيناريو العرض الميداني الحاسم في 5 دقائق') &&
+      wowDemoRes.body.includes('01122166076')
+    );
+
+    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/45 PASSED ===`);
     for (const r of results) console.log(' ✅', r);
   } finally {
     srv.kill('SIGINT');

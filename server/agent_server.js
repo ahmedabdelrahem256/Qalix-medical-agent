@@ -11,7 +11,7 @@ const crypto = require('node:crypto');
 const { DatabaseSync } = require('node:sqlite');
 const { SPECIALTY_PACKS, getAllPacks, getPackById } = require('./specialty_packs');
 const { processMigration } = require('./data_migrator');
-const { MARKETING_MATERIALS } = require('./marketing_kit');
+const { MARKETING_MATERIALS, renderWhatsAppCatalogA4, renderWowDemoA4 } = require('./marketing_kit');
 const { getLocalNetworkInfo } = require('./network_diagnostics');
 const { generateDistributorContractHtml, generateClinicHandoverHtml } = require('./contract_generator');
 const { generateDistributorStatementHtml } = require('./financial_ledger');
@@ -669,6 +669,18 @@ const server = http.createServer(async (req, res) => {
     /* ---------------- Marketing & Field Kits API (Phase 3) ---------------- */
     if (req.method === 'GET' && pathname === '/api/marketing/materials') {
       return sendJson(res, 200, { ok: true, materials: MARKETING_MATERIALS });
+    }
+
+    if (req.method === 'GET' && pathname === '/api/marketing/whatsapp-catalog') {
+      const html = renderWhatsAppCatalogA4();
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      return res.end(html);
+    }
+
+    if (req.method === 'GET' && pathname === '/api/marketing/wow-demo') {
+      const html = renderWowDemoA4();
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      return res.end(html);
     }
 
     /* ---------------- Network Diagnostics & Mobile QR Access (Phase 4) ---------------- */

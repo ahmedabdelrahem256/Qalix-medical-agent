@@ -825,7 +825,12 @@
               خطة إبهار فورية يتدرب عليها كل موزع: مسح QR ➔ نداء «هدى» ➔ إنذار وارفارين ➔ شات صوتي ➔ فصل الإنترنت!
             </p>
           </div>
-          <span class="badge b-purple">نسبة اقتناع الأطباء +80%</span>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <a href="/api/marketing/wow-demo" target="_blank" class="btn btn-sm" style="text-decoration:none; background:linear-gradient(135deg, #8b5cf6, #7c3aed); color:#fff; display:inline-flex; align-items:center; gap:6px;">
+              📄 استعراض وطباعة سيناريو الـ 5 دقائق (A4)
+            </a>
+            <span class="badge b-purple">نسبة اقتناع الأطباء +80%</span>
+          </div>
         </div>
         <div id="wowStepsGrid" class="grid-3"></div>
       </div>
@@ -836,10 +841,15 @@
           <div>
             <h2 style="margin:0; font-size:18px; color:var(--accent);">💬 كتالوج رسائل واتساب البيعية السريعة (One-Click WhatsApp Scripts)</h2>
             <p style="margin:4px 0 0; font-size:12.5px; color:var(--muted);">
-              نصوص بيعية مدروسة مخصصة للرد على اعتراضات الأطباء، جاهزة للنسخ بنقرة واحدة برقم الوكيل 01122166076:
+              نصوص بيعية مدروسة مخصصة للرد على اعتراضات الأطباء، جاهزة للإرسال المباشر أو النسخ برقم الوكيل 01122166076:
             </p>
           </div>
-          <span class="badge b-emerald">نسخ مباشر بنقرة زر</span>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <a href="/api/marketing/whatsapp-catalog" target="_blank" class="btn btn-sm btn-sky" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
+              📄 فتح واستعراض الكتالوج كاملاً (A4)
+            </a>
+            <span class="badge b-emerald">إرسال مباشر بنقرة زر</span>
+          </div>
         </div>
         <div id="whatsappTemplatesGrid" class="grid-2"></div>
       </div>
@@ -850,7 +860,9 @@
         <div class="glass">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
             <h3 style="margin:0; font-size:16px; color:var(--sky);">🖨️ بطاقة المقارنة البصرية A4 الجاهزة للطباعة</h3>
-            <button class="btn btn-sm btn-sky" onclick="window.print()">🖨️ طباعة بطاقة المقارنة A4</button>
+            <a href="/presentations/بطاقة_عرض_منظومة_كالكس_الطبية_الموحدة.html" target="_blank" class="btn btn-sm btn-sky" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
+              📄 فتح واستعراض بطاقة المقارنة (A4)
+            </a>
           </div>
           <p style="font-size:12.5px; color:var(--muted); margin-top:0;">
             ورقة مغلفة يحملها الموزع في الزيارات الميدانية تبرز تفوق كالكس وتوفير 40,000+ ج.م مقارنة بالأنظمة السحابية:
@@ -1737,7 +1749,14 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
               </div>
               <pre style="background:rgba(15,23,42,0.8); border:1px solid var(--border); border-radius:8px; padding:10px; font-size:11.5px; white-space:pre-wrap; color:var(--text); max-height:160px; overflow-y:auto; line-height:1.5;">${t.text}</pre>
             </div>
-            <button class="btn btn-sm" style="margin-top:8px;" onclick="copyPitchText(${JSON.stringify(t.text).replace(/"/g, '&quot;')})">📋 نسخ نص الرسالة فوراً</button>
+            <div style="display:flex; gap:8px; margin-top:10px;">
+              <a href="https://api.whatsapp.com/send?text=${encodeURIComponent(t.text)}" target="_blank" class="btn btn-sm" style="flex:1; text-decoration:none; text-align:center; display:flex; align-items:center; justify-content:center; gap:4px; background:linear-gradient(135deg, #10b981, #059669); color:#fff;">
+                <span>📲</span> فتح في واتساب
+              </a>
+              <button class="btn btn-sm btn-sky" style="flex:1; display:flex; align-items:center; justify-content:center; gap:4px;" onclick="copyPitchText(${JSON.stringify(t.text).replace(/"/g, '&quot;')})">
+                <span>📋</span> نسخ النص
+              </button>
+            </div>
           </div>
         `).join('');
       }

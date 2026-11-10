@@ -430,6 +430,186 @@ https://wa.me/201122166076`
   ]
 };
 
+const { generateSimpleSvgQr } = require('./network_diagnostics');
+
+function renderWhatsAppCatalogA4() {
+  const qrSvg = generateSimpleSvgQr('https://wa.me/201122166076', 90);
+  const cardsHtml = MARKETING_MATERIALS.whatsAppTemplates.map((t, idx) => `
+    <div class="template-card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-bottom:1px solid #e2e8f0; padding-bottom:6px;">
+        <div>
+          <span class="badge" style="background:#0284c7; color:#fff; font-size:11px; padding:2px 8px; border-radius:6px;">${t.category}</span>
+          <strong style="margin-right:8px; font-size:14px; color:#0f172a;">${t.title}</strong>
+        </div>
+        <span style="font-size:11.5px; color:#64748b;">🎯 الفئة المستهدفة: ${t.target}</span>
+      </div>
+      <pre class="script-box">${t.text}</pre>
+      <div class="no-print" style="display:flex; gap:10px; margin-top:10px; justify-content:flex-end;">
+        <a href="https://api.whatsapp.com/send?text=${encodeURIComponent(t.text)}" target="_blank" class="action-btn wa-btn">
+          📲 فتح وإرسال عبر تطبيق واتساب مباشرة
+        </a>
+        <button onclick="navigator.clipboard.writeText(${JSON.stringify(t.text).replace(/"/g, '&quot;')}); alert('تم نسخ نص الرسالة للحافظة بنجاح!');" class="action-btn copy-btn">
+          📋 نسخ النص
+        </button>
+      </div>
+    </div>
+  `).join('');
+
+  return `<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <title>كتالوج رسائل واتساب البيعية وسيناريوهات الاستقطاب | Qalix Medical</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    @page { size: A4 portrait; margin: 12mm; }
+    body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; background: #f8fafc; color: #0f172a; margin: 0; padding: 24px; direction: rtl; }
+    .doc-container { max-width: 860px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 32px; box-shadow: 0 4px 24px rgba(0,0,0,0.06); }
+    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0284c7; padding-bottom: 16px; margin-bottom: 20px; }
+    .logo-box { display: flex; align-items: center; gap: 12px; }
+    .title-box h1 { margin: 0; font-size: 20px; color: #0284c7; }
+    .title-box p { margin: 4px 0 0; font-size: 12.5px; color: #64748b; }
+    .guidance-box { background: #eff6ff; border-right: 4px solid #0284c7; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 12.5px; color: #1e3a8a; line-height: 1.6; }
+    .template-card { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 16px; margin-bottom: 16px; page-break-inside: avoid; }
+    .script-box { white-space: pre-wrap; font-family: inherit; font-size: 12px; line-height: 1.6; margin: 0; background: #ffffff; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; color: #0f172a; }
+    .action-btn { padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; border: none; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+    .wa-btn { background: #10b981; color: #ffffff; }
+    .copy-btn { background: #e2e8f0; color: #334155; }
+    .footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e2e8f0; padding-top: 16px; margin-top: 24px; font-size: 11.5px; color: #64748b; }
+    @media print {
+      body { background: #fff; padding: 0; }
+      .doc-container { box-shadow: none; border: none; padding: 0; max-width: 100%; }
+      .no-print { display: none !important; }
+      .template-card { border: 1px solid #e2e8f0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="doc-container">
+    <div class="no-print" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; background:#f1f5f9; padding:10px 16px; border-radius:8px;">
+      <span style="font-size:12.5px; color:#475569;">📄 وثيقة رسمية معتمدة قابلة للطباعة A4 أو الحفظ كـ PDF للموزعين الميدانيين</span>
+      <button onclick="window.print()" style="padding:8px 16px; background:#0284c7; color:#fff; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">🖨️ طباعة الكتالوج (A4 / PDF)</button>
+    </div>
+
+    <div class="header">
+      <div class="logo-box">
+        <div style="width:48px; height:48px; border-radius:10px; background:linear-gradient(135deg,#0284c7,#0369a1); display:flex; align-items:center; justify-content:center; color:#fff; font-size:24px;">💬</div>
+        <div class="title-box">
+          <h1>كتالوج رسائل واتساب البيعية وسيناريوهات الاستقطاب الميداني</h1>
+          <p>منظومة كالكس ميديكال الطبية الشاملة · الوكيل الرسمي المعتمد: 01122166076</p>
+        </div>
+      </div>
+      <div>
+        ${qrSvg}
+      </div>
+    </div>
+
+    <div class="guidance-box">
+      <strong>تعليمات الموزع الميداني:</strong> هذه الرسائل صيغت بعناية فائقة لتخاطب اهتمامات الأطباء العملية وتغلق الصفقات بسرعة. اختر الرسالة المناسبة لحالة الطبيب واضغط زر الفتح لإرسالها مباشرة من حساب واتساب الخاص بك.
+    </div>
+
+    ${cardsHtml}
+
+    <div class="footer">
+      <div>
+        <strong>وكيل منظومة كالكس ميديكال — جمهورية مصر العربية</strong><br>
+        هاتف وواتساب الدعم والمبيعات الموحد: 01122166076
+      </div>
+      <div style="text-align:left;">
+        وثيقة معتمدة ومحدثة دورياً · ترخيص دائم مدى الحياة 100% أوفلاين
+      </div>
+    </div>
+  </div>
+</body>
+</html>`;
+}
+
+function renderWowDemoA4() {
+  const qrSvg = generateSimpleSvgQr('https://wa.me/201122166076', 90);
+  const stepsHtml = MARKETING_MATERIALS.fiveMinuteDemo.steps.map(s => `
+    <div class="step-card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <span class="step-badge">الخطوة ${s.step} · ${s.time}</span>
+        <strong style="font-size:14px; color:#0f172a;">${s.title}</strong>
+      </div>
+      <div style="font-size:12.5px; line-height:1.6; margin-bottom:6px;">
+        <strong style="color:#0284c7;">🎯 الإجراء الميداني المطلوب من الموزع:</strong> ${s.action}
+      </div>
+      <div style="font-size:12.5px; line-height:1.6; margin-bottom:6px;">
+        <strong style="color:#10b981;">⚡ ما يحدث على الشاشة:</strong> ${s.whatHappens}
+      </div>
+      <div style="font-size:12px; line-height:1.5; background:#fffbeb; border:1px solid #fef3c7; padding:8px 12px; border-radius:6px; color:#92400e;">
+        <strong>💡 رد فعل الطبيب المتوقع:</strong> ${s.doctorReaction}
+      </div>
+    </div>
+  `).join('');
+
+  return `<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <title>دليل سيناريو العرض الميداني الحاسم في 5 دقائق | Qalix Medical</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    @page { size: A4 portrait; margin: 12mm; }
+    body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; background: #f8fafc; color: #0f172a; margin: 0; padding: 24px; direction: rtl; }
+    .doc-container { max-width: 860px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 32px; box-shadow: 0 4px 24px rgba(0,0,0,0.06); }
+    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #8b5cf6; padding-bottom: 16px; margin-bottom: 20px; }
+    .title-box h1 { margin: 0; font-size: 20px; color: #7c3aed; }
+    .title-box p { margin: 4px 0 0; font-size: 12.5px; color: #64748b; }
+    .step-card { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 16px; margin-bottom: 16px; page-break-inside: avoid; }
+    .step-badge { background: #7c3aed; color: #fff; font-size: 11px; padding: 3px 10px; border-radius: 6px; font-weight: bold; }
+    .footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e2e8f0; padding-top: 16px; margin-top: 24px; font-size: 11.5px; color: #64748b; }
+    @media print {
+      body { background: #fff; padding: 0; }
+      .doc-container { box-shadow: none; border: none; padding: 0; max-width: 100%; }
+      .no-print { display: none !important; }
+      .step-card { border: 1px solid #e2e8f0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="doc-container">
+    <div class="no-print" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; background:#f1f5f9; padding:10px 16px; border-radius:8px;">
+      <span style="font-size:12.5px; color:#475569;">📄 دليل تدريب الموزع الميداني — خطة الإبهار السريع في 5 دقائق</span>
+      <button onclick="window.print()" style="padding:8px 16px; background:#7c3aed; color:#fff; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">🖨️ طباعة الدليل (A4 / PDF)</button>
+    </div>
+
+    <div class="header">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <div style="width:48px; height:48px; border-radius:10px; background:linear-gradient(135deg,#8b5cf6,#6d28d9); display:flex; align-items:center; justify-content:center; color:#fff; font-size:24px;">⏱️</div>
+        <div class="title-box">
+          <h1>سيناريو العرض الميداني الحاسم في 5 دقائق (WOW Demo)</h1>
+          <p>خطة الإبهار الفوري في العيادة · وكيل المنظومة الرسمي: 01122166076</p>
+        </div>
+      </div>
+      <div>
+        ${qrSvg}
+      </div>
+    </div>
+
+    <div style="background:#f5f3ff; border-right:4px solid #7c3aed; padding:12px 16px; border-radius:8px; margin-bottom:20px; font-size:12.5px; color:#5b21b6; line-height:1.6;">
+      <strong>الهدف الميداني:</strong> إقناع الطبيب ومدير المركز بجدارة المنظومة التامة في أول 5 دقائق بدون إسهاب نظري ممل، عبر إجراءات عملية يراها الطبيب بعينيه ويسمعها بأذنيه.
+    </div>
+
+    ${stepsHtml}
+
+    <div class="footer">
+      <div>
+        <strong>منظومة كالكس ميديكال الطبية الشاملة</strong><br>
+        هاتف وواتساب الوكيل المعتمد: 01122166076
+      </div>
+      <div style="text-align:left;">
+        دليل معتمد للموزعين الميدانيين · معدل إغلاق صفقات +80%
+      </div>
+    </div>
+  </div>
+</body>
+</html>`;
+}
+
 module.exports = {
-  MARKETING_MATERIALS
+  MARKETING_MATERIALS,
+  renderWhatsAppCatalogA4,
+  renderWowDemoA4
 };

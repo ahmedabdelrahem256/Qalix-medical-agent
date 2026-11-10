@@ -133,17 +133,28 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
 
     <!-- 5. One-Click WhatsApp Sales Pitch -->
     <div class="card">
-      <h3 style="margin-top:0; color:var(--accent);">5. رسائل واتساب البيعية الجاهزة للإرسال للأطباء</h3>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+        <h3 style="margin:0; color:var(--accent);">5. رسائل واتساب البيعية الجاهزة للإرسال للأطباء</h3>
+        <a href="/api/marketing/whatsapp-catalog" target="_blank" style="text-decoration:none;">
+          <button type="button" style="background:#0284c7; color:white; font-size:12px; padding:6px 12px; border-radius:6px; cursor:pointer; border:none;">📄 فتح كتالوج الرسائل كاملاً (A4)</button>
+        </a>
+      </div>
       <div class="grid">
         <div class="sub-card">
           <strong style="color:var(--sky);">رسالة التعارف والتجربة المجانية 14 يوماً</strong>
           <p style="font-size:12px; color:var(--muted); margin:4px 0;">جاهزة بنقرة واحدة متضمنة كود الموزع ${dist.code} ورابط التجربة.</p>
-          <button onclick="copyPitch(1)" style="width:100%; margin-top:6px;">نسخ الرسالة للواتساب</button>
+          <div style="display:flex; gap:8px; margin-top:8px;">
+            <button onclick="openPitchWhatsApp(1)" style="flex:1; background:linear-gradient(135deg,#10b981,#059669); color:white; border:none; padding:8px; border-radius:6px; font-weight:bold; cursor:pointer;">📲 فتح في واتساب</button>
+            <button onclick="copyPitch(1)" style="flex:1; background:#f1f5f9; color:#334155; border:1px solid #cbd5e1; padding:8px; border-radius:6px; font-weight:bold; cursor:pointer;">📋 نسخ النص</button>
+          </div>
         </div>
         <div class="sub-card">
           <strong style="color:var(--amber);">الرد على اعتراض النظام السحابي (Cloud SaaS)</strong>
           <p style="font-size:12px; color:var(--muted); margin:4px 0;">تفنيد تكلفة 50 ألف جنيه وتوقف العيادة عند انقطاع الإنترنت وسرية الإيرادات.</p>
-          <button onclick="copyPitch(2)" class="btn-amber" style="width:100%; margin-top:6px;">نسخ الرسالة للواتساب</button>
+          <div style="display:flex; gap:8px; margin-top:8px;">
+            <button onclick="openPitchWhatsApp(2)" style="flex:1; background:linear-gradient(135deg,#10b981,#059669); color:white; border:none; padding:8px; border-radius:6px; font-weight:bold; cursor:pointer;">📲 فتح في واتساب</button>
+            <button onclick="copyPitch(2)" class="btn-amber" style="flex:1; border:none; padding:8px; border-radius:6px; font-weight:bold; cursor:pointer;">📋 نسخ النص</button>
+          </div>
         </div>
       </div>
     </div>
@@ -247,13 +258,21 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
       alert('تم توليد ونسخ رسالة طلب التفعيل! يمكنك إرسالها الآن لواتساب الوكيل 01122166076');
     }
 
-    function copyPitch(id) {
-      let t = '';
+    function getPitchText(id) {
       if (id === 1) {
-        t = \`السلام عليكم دكتورنا العزيز 🌹\\nمع حضرتك الموزع المعتمد لمنظومة "كالكس ميديكال" الطبية (${dist.code}).\\n\\nحبينا نهدي عيادتكم نسخة تجريبية كاملة مجانية لمدة 14 يوماً من أحدث منظومة طبية في مصر:\\n✅ تعمل 100% بدون نت لحماية خصوصية وسرية أرباحك.\\n✅ شاشة انتظار ونداء صوتي ذكي يفتح على موبايل المريض.\\n✅ فاحص تداخلات دوائية وحماية للمريض.\\n✅ محادثات داخلية صوتية بين العيادة والاستقبال.\\n\\nرابط تثبيت النسخة التجريبية:\\n${agentInfo.megaTrialUrl}\\n(دخول: admin / كلمة سر: Qalix@11)\\n\\nلأي استفسار أو طلب زيارة لتثبيتها لحضرتك مجاناً تواصل معنا أو مع وكيل المنظومة الرسمي: 01122166076\`;
+        return \`السلام عليكم دكتورنا العزيز 🌹\\nمع حضرتك الموزع المعتمد لمنظومة "كالكس ميديكال" الطبية (${dist.code}).\\n\\nحبينا نهدي عيادتكم نسخة تجريبية كاملة مجانية لمدة 14 يوماً من أحدث منظومة طبية في مصر:\\n✅ تعمل 100% بدون نت لحماية خصوصية وسرية أرباحك.\\n✅ شاشة انتظار ونداء صوتي ذكي يفتح على موبايل المريض.\\n✅ فاحص تداخلات دوائية وحماية للمريض.\\n✅ محادثات داخلية صوتية بين العيادة والاستقبال.\\n\\nرابط تثبيت النسخة التجريبية:\\n${agentInfo.megaTrialUrl}\\n(دخول: admin / كلمة سر: Qalix@11)\\n\\nلأي استفسار أو طلب زيارة لتثبيتها لحضرتك مجاناً تواصل معنا أو مع وكيل المنظومة الرسمي: 01122166076\`;
       } else {
-        t = \`دكتورنا العزيز، ليه تدفع أكثر من 50,000 جنيه في 3 سنوات لاشتراكات البرامج السحابية، ولو النت فصل العيادة تقف، وإيرادك مكشوف على سيرفرات برة؟\\n\\nفي "كالكس ميديكال" ترخيص دائم مدى الحياة بدفعة واحدة بدون أي اشتراك شهري، وتعمل 100% أوفلاين وقاعدتها مشفرة عسكرياً جوة جهازك.\\nللتجربة المجانية 14 يوماً تواصل مع وكيل المنظومة: 01122166076\`;
+        return \`دكتورنا العزيز، ليه تدفع أكثر من 50,000 جنيه في 3 سنوات لاشتراكات البرامج السحابية، ولو النت فصل العيادة تقف، وإيرادك مكشوف على سيرفرات برة؟\\n\\nفي "كالكس ميديكال" ترخيص دائم مدى الحياة بدفعة واحدة بدون أي اشتراك شهري، وتعمل 100% أوفلاين وقاعدتها مشفرة عسكرياً جوة جهازك.\\nللتجربة المجانية 14 يوماً تواصل مع وكيل المنظومة: 01122166076\`;
       }
+    }
+
+    function openPitchWhatsApp(id) {
+      const text = encodeURIComponent(getPitchText(id));
+      window.open('https://api.whatsapp.com/send?text=' + text, '_blank');
+    }
+
+    function copyPitch(id) {
+      const t = getPitchText(id);
       if (navigator.clipboard) navigator.clipboard.writeText(t);
       alert('تم نسخ الرسالة بنجاح! جاهزة للإرسال في واتساب.');
     }
