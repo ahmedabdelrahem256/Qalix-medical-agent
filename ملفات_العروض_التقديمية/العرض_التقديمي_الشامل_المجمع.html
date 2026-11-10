@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>منظومة كالكس الطبية — العرض التقديمي</title>
+<style>
+@font-face { font-family: 'Cairo'; font-weight: 200 1000; src: url('../public/fonts/cairo-arabic.woff2') format('woff2'); unicode-range: U+0600-06FF, U+0750-077F, U+FB50-FDFF, U+FE70-FEFF; }
+@font-face { font-family: 'Cairo'; font-weight: 200 1000; src: url('../public/fonts/cairo-latin.woff2') format('woff2'); unicode-range: U+0000-00FF, U+2000-206F, U+20AC; }
+:root {
+  --navy: #0B1A2E; --navy2: #12263f; --ink: #0f172a; --muted: #64748b; --line: #e2e8f0;
+  --teal: #0EA5A4; --blue: #2563EB; --amber: #F59E0B; --green: #10B981; --red: #EF4444; --paper: #F8FAFC;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: #0a1120; font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif; color: var(--ink); }
+.deck { display: flex; flex-direction: column; align-items: center; gap: 28px; padding: 28px 0 80px; }
+.slide { width: 1280px; height: 720px; position: relative; overflow: hidden; background: #fff; border-radius: 14px; box-shadow: 0 20px 60px rgba(0,0,0,.45); padding: 48px 64px 70px; display: flex; flex-direction: column; }
+.slide.dark { background: radial-gradient(1200px 600px at 85% -10%, #133a5c 0%, transparent 60%), radial-gradient(900px 500px at 0% 110%, #0d4f52 0%, transparent 55%), var(--navy); color: #fff; }
+.kicker { font-size: 15px; font-weight: 800; color: var(--teal); letter-spacing: .3px; margin-bottom: 10px; }
+.dark .kicker { color: #5eead4; }
+h1 { font-size: 50px; line-height: 1.25; font-weight: 900; }
+h2 { font-size: 38px; line-height: 1.3; font-weight: 900; margin-bottom: 18px; }
+h3 { font-size: 20px; font-weight: 800; margin-bottom: 6px; }
+p.lead { font-size: 21px; line-height: 1.75; color: var(--muted); max-width: 980px; }
+.dark p.lead { color: #cbd5e1; }
+.grad { background: linear-gradient(90deg, #5eead4, #60a5fa); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.foot { position: absolute; bottom: 22px; left: 64px; right: 64px; display: flex; justify-content: space-between; font-size: 12.5px; color: #94a3b8; }
+.dark .foot { color: #64748b; }
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand img { width: 46px; height: 46px; border-radius: 11px; }
+.brand b { font-size: 18px; }
+.brand small { display: block; font-size: 12.5px; color: #94a3b8; }
+.shot { border-radius: 12px; border: 1px solid var(--line); box-shadow: 0 18px 40px rgba(15,23,42,.18); display: block; object-fit: cover; object-position: top right; }
+.dark .shot { border-color: rgba(255,255,255,.12); box-shadow: 0 24px 60px rgba(0,0,0,.5); }
+.grid { display: grid; gap: 18px; }
+.card { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; }
+.card p { font-size: 15.5px; line-height: 1.7; color: #475569; }
+.dark .card { background: rgba(255,255,255,.05); border-color: rgba(255,255,255,.1); }
+.dark .card p { color: #cbd5e1; }
+.ico { font-size: 26px; margin-bottom: 6px; display: block; }
+.pill { display: inline-block; font-size: 12.5px; font-weight: 800; padding: 3px 12px; border-radius: 999px; background: rgba(14,165,164,.12); color: #0f766e; margin-left: 6px; }
+.pill.blue { background: rgba(37,99,235,.1); color: #1d4ed8; }
+.pill.amber { background: rgba(245,158,11,.15); color: #b45309; }
+.flow { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin: 6px 0 22px; }
+.flow div { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 12px 10px; text-align: center; font-size: 14px; font-weight: 700; position: relative; }
+.flow div b { display: block; font-size: 24px; margin-bottom: 4px; }
+.flow div:not(:last-child)::after { content: '←'; position: absolute; left: -12px; top: 50%; transform: translateY(-50%); color: var(--teal); font-weight: 900; }
+table.price { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 15px; }
+table.price th, table.price td { padding: 7px 12px; border-bottom: 1px solid var(--line); text-align: center; }
+table.price th:first-child, table.price td:first-child { text-align: right; color: #334155; font-weight: 700; }
+table.price thead th { font-size: 17px; background: var(--navy); color: #fff; }
+table.price thead th:first-child { border-radius: 0 12px 0 0; background: var(--navy); color: #fff; }
+table.price thead th:last-child { border-radius: 12px 0 0 0; }
+table.price thead th.star { background: linear-gradient(135deg, var(--teal), var(--blue)); }
+.yes { color: var(--green); font-weight: 900; }
+.no { color: #cbd5e1; font-weight: 900; }
+.price-row td { font-size: 22px; font-weight: 900; color: var(--ink); }
+.price-row td small { display: block; font-size: 12.5px; font-weight: 700; color: var(--muted); }
+.check li { list-style: none; font-size: 17px; line-height: 1.6; margin-bottom: 10px; padding-right: 30px; position: relative; }
+.check li::before { content: '✔'; position: absolute; right: 0; top: 1px; color: var(--teal); font-weight: 900; }
+.dark .check li { color: #e2e8f0; }
+.num { font-size: 46px; font-weight: 900; line-height: 1; }
+.big-cta { display: inline-block; margin-top: 18px; background: linear-gradient(135deg, var(--teal), var(--blue)); color: #fff; font-weight: 900; font-size: 22px; padding: 14px 30px; border-radius: 14px; }
+.nav { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: rgba(15,23,42,.85); color: #e2e8f0; border: 1px solid rgba(255,255,255,.12); padding: 8px 14px; border-radius: 999px; font-size: 13px; display: flex; gap: 10px; align-items: center; z-index: 9; }
+.nav button { background: #1e293b; color: #fff; border: 0; border-radius: 999px; padding: 6px 14px; font-family: inherit; font-weight: 800; cursor: pointer; }
+@media screen and (max-width: 1320px) { .deck { zoom: calc(100vw / 1340px); } }
+@page { size: 1280px 720px; margin: 0; }
+@media print {
+  html, body { background: #fff; }
+  .deck { padding: 0; gap: 0; zoom: 1 !important; }
+  .slide { border-radius: 0; box-shadow: none; page-break-after: always; break-after: page; }
+  .nav { display: none; }
+}
+body.present .deck { padding: 0; gap: 0; }
+body.present .slide { display: none; border-radius: 0; }
+body.present .slide.on { display: flex; position: fixed; inset: 0; margin: auto; transform-origin: center; }
+</style>
+</head>
+<body>
+<div class="deck">
+
+<!-- 1 الغلاف -->
+<section class="slide dark">
+  <div class="brand"><img src="../public/img/qalix-app-icon.svg" alt=""><div><b>كالكس ميديكال</b><small>Qalix Medical v1.0</small></div></div>
+  <div style="display:grid;grid-template-columns:1.05fr 1fr;gap:40px;align-items:center;flex:1">
+    <div>
+      <div class="kicker">منظومة كالكس الطبية الشاملة</div>
+      <h1>إدارة عيادتك كاملة<br><span class="grad">على جهازك، بدون إنترنت</span></h1>
+      <p class="lead" style="margin-top:16px">المواعيد وصالة الانتظار والملف الطبي والروشتة والفواتير والصيدلية والتقارير — في نظام واحد يعمل داخل العيادة، وبيانات مرضاك مشفرة ولا تغادر جهازك.</p>
+      <div style="margin-top:22px"><span class="pill">ترخيص دائم</span><span class="pill blue">بدون اشتراك شهري</span><span class="pill amber">تجربة مجانية 14 يوماً</span></div>
+    </div>
+    <img class="shot" src="صور/dashboard.jpg" alt="لوحة التحكم" style="width:100%;height:420px">
+  </div>
+  <div class="foot"><span>منصة كالكس — مصر</span><span dir="ltr">1 / 10</span></div>
+</section>
+
+<!-- 2 المشكلة -->
+<section class="slide">
+  <div class="kicker">ما الذي يعطل العيادة كل يوم؟</div>
+  <h2>العيادة لا تخسر بسبب الطب… بل بسبب الإدارة</h2>
+  <div class="grid" style="grid-template-columns:repeat(2,1fr);margin-top:10px">
+    <div class="card"><span class="ico">🪑</span><h3>زحام وأسئلة متكررة في صالة الانتظار</h3><p>"دوري امتى؟" عشرات المرات يومياً، والسكرتارية تنادي بالصوت وتنسى الترتيب.</p></div>
+    <div class="card"><span class="ico">📂</span><h3>ملفات ورقية تضيع وتاريخ مرضي غير متاح</h3><p>الطبيب لا يرى الزيارات السابقة والحساسية الدوائية في لحظة الكشف.</p></div>
+    <div class="card"><span class="ico">☁️</span><h3>برامج سحابية باشتراك شهري</h3><p>تتوقف مع انقطاع الإنترنت، وبيانات المرضى وأرباح العيادة على سيرفرات خارجية.</p></div>
+    <div class="card"><span class="ico">💸</span><h3>حسابات وخزينة بلا رقابة</h3><p>صعوبة معرفة إيراد اليوم الفعلي، وفروقات الدرج، ومستحقات التأمين المعلقة.</p></div>
+  </div>
+  <div class="foot"><span>منظومة كالكس الطبية</span><span dir="ltr">2 / 10</span></div>
+</section>
+
+<!-- 3 يوم في العيادة -->
+<section class="slide">
+  <div class="kicker">يوم كامل في العيادة — من الحجز حتى تقفيل الخزينة</div>
+  <h2>كل خطوة في مكانها، وكل موظف يرى ما يخصه فقط</h2>
+  <div class="flow">
+    <div><b>📅</b>حجز الموعد<br><small>منع تعارض المواعيد</small></div>
+    <div><b>🎫</b>الحضور والتذكرة<br><small>رقم دور تلقائي</small></div>
+    <div><b>📢</b>النداء الصوتي<br><small>على شاشة الصالة</small></div>
+    <div><b>🩺</b>الكشف والروشتة<br><small>طباعة A4 أو 80mm</small></div>
+    <div><b>💳</b>الفاتورة والصيدلية<br><small>باركود ومخزون</small></div>
+    <div><b>💰</b>تقفيل الخزينة<br><small>تقرير Z-Report</small></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1.25fr 1fr;gap:22px;height:330px">
+    <img class="shot" src="صور/tv.jpg" alt="شاشة الانتظار" style="width:100%;height:100%">
+    <img class="shot" src="صور/rx.jpg" alt="الروشتة" style="width:100%;height:100%;object-position:center">
+  </div>
+  <div class="foot"><span>شاشة صالة الانتظار مع نداء صوتي عربي يعمل بدون إنترنت</span><span dir="ltr">3 / 10</span></div>
+</section>
+
+<!-- 4 الملف الطبي -->
+<section class="slide">
+  <div style="display:grid;grid-template-columns:1fr 1.15fr;gap:36px;flex:1;align-items:center">
+    <div>
+      <div class="kicker">الملف الطبي والروشتة</div>
+      <h2>تاريخ المريض كاملاً أمام الطبيب في ثانية</h2>
+      <ul class="check">
+        <li>زيارات وتشخيص وعلامات حيوية وروشتات ومرفقات وصور أشعة.</li>
+        <li>سجلات تخصصية: مخطط أسنان، قياسات العيون، متابعة الحمل، نمو الأطفال، التغذية.</li>
+        <li>تنبيه فوري عند تعارض دواء مع حساسية المريض أو مع دواء آخر ضمن قائمة التداخلات الشائعة <small style="color:var(--muted)">(أداة مساعدة — القرار للطبيب)</small>.</li>
+        <li>خط زمني يجمع الزيارات والتحاليل والفواتير، وبطاقة مريض برمز QR.</li>
+        <li>تحاليل وأشعة بطلب ونتيجة وملصقات أنابيب العينات.</li>
+      </ul>
+    </div>
+    <img class="shot" src="صور/timeline.jpg" alt="الخط الزمني للمريض" style="width:100%;height:500px;object-position:center">
+  </div>
+  <div class="foot"><span>منظومة كالكس الطبية</span><span dir="ltr">4 / 10</span></div>
+</section>
+
+<!-- 5 المريض على هاتفه -->
+<section class="slide dark">
+  <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:40px;flex:1;align-items:center">
+    <div>
+      <div class="kicker">بوابة المريض — باقة التخصصي والمؤسسات</div>
+      <h2>المريض يتابع دوره من هاتفه… عبر واي فاي العيادة</h2>
+      <ul class="check">
+        <li>يمسح رمز QR فيرى رقمه ومن أمامه، ويصله تنبيه واهتزاز عند حلول دوره.</li>
+        <li>حجز موعد ذاتي من الهاتف داخل شبكة العيادة.</li>
+        <li>استعراض روشتاته السابقة برقم الهاتف + رقم الملف المطبوع على بطاقته (حماية للخصوصية).</li>
+        <li>تذكير المواعيد برسالة واتساب جاهزة بضغطة واحدة من جهاز الاستقبال.</li>
+      </ul>
+    </div>
+    <div style="display:flex;gap:18px;justify-content:center">
+      <img class="shot" src="صور/phone-track.jpg" alt="" style="width:230px;height:500px;border-radius:26px">
+      <img class="shot" src="صور/phone-book.jpg" alt="" style="width:230px;height:500px;border-radius:26px;margin-top:40px">
+    </div>
+  </div>
+  <div class="foot"><span>بدون تطبيقات ولا متاجر — صفحة تفتح من متصفح الهاتف</span><span dir="ltr">5 / 10</span></div>
+</section>
+
+<!-- 6 المالية -->
+<section class="slide">
+  <div style="display:grid;grid-template-columns:1fr 1.2fr;gap:36px;flex:1;align-items:center">
+    <div>
+      <div class="kicker">المالية والتقارير</div>
+      <h2>اعرف دخل عيادتك الحقيقي كل يوم</h2>
+      <ul class="check">
+        <li>فواتير نقدي وبطاقة وتحويل وتأمين، مع المتبقي على المريض.</li>
+        <li>صيدلية داخلية ونقطة بيع بالباركود، وتنبيه نقص المخزون وقرب انتهاء الصلاحية.</li>
+        <li>تقفيل الوردية: النقدية المتوقعة مقابل الفعلية والفارق.</li>
+        <li>مصروفات، عمولات الإحالات، أسرّة وإقامة داخلية.</li>
+        <li><b>المؤسسات:</b> مطالبات شركات التأمين وتقارير ذكاء الأعمال وتعدد الفروع.</li>
+      </ul>
+    </div>
+    <img class="shot" src="صور/reports.jpg" alt="التقارير" style="width:100%;height:480px">
+  </div>
+  <div class="foot"><span>منظومة كالكس الطبية</span><span dir="ltr">6 / 10</span></div>
+</section>
+
+<!-- 7 الأمان -->
+<section class="slide dark">
+  <div class="kicker">الأمان والخصوصية</div>
+  <h2>بيانات مرضاك ملكك… ومشفرة داخل عيادتك</h2>
+  <div class="grid" style="grid-template-columns:repeat(3,1fr);margin-top:6px">
+    <div class="card"><span class="ico">🔌</span><h3>يعمل بدون إنترنت</h3><p>الخادم على كمبيوتر العيادة، والأجهزة تتصل عبر راوتر العيادة فقط. لا سحابة ولا تتبع.</p></div>
+    <div class="card"><span class="ico">🔐</span><h3>تشفير AES-256</h3><p>أسماء المرضى والتشخيص والروشتات والمرفقات مشفرة داخل قاعدة البيانات، ومفتاحها مقفل على جهاز العيادة.</p></div>
+    <div class="card"><span class="ico">🗝️</span><h3>مفتاح استرجاع لك وحدك</h3><p>يُطبع عند التسليم ويحفظه الطبيب. لا يملك المطور نسخة منه، وبه تُفتح البيانات على جهاز جديد.</p></div>
+    <div class="card"><span class="ico">👥</span><h3>7 أدوار صلاحيات</h3><p>مدير، طبيب، استقبال، محاسب، تمريض، معمل، صيدلي — كل موظف يرى ما يخصه فقط.</p></div>
+    <div class="card"><span class="ico">🛡️</span><h3>سجل تدقيق لا يُعدَّل خفية</h3><p>كل عملية مختومة ببصمة رقمية؛ أي تعديل أو حذف لاحق في السجل يظهر فوراً.</p></div>
+    <div class="card"><span class="ico">💾</span><h3>نسخ احتياطي تلقائي</h3><p>نسخة مشفرة كل يوم تلقائياً، وتنزيل نسخة على فلاشة من المتصفح، واستعادة آمنة تحفظ البيانات الحالية.</p></div>
+  </div>
+  <div class="foot"><span>لا كلمة مرور افتراضية ولا حساب خفي · صيانة المطوّر بتوقيع رقمي لمرة واحدة وبحضوركم · قفل تلقائي عند ترك الجهاز</span><span dir="ltr">7 / 10</span></div>
+</section>
+
+<!-- 8 الباقات -->
+<section class="slide">
+  <div class="kicker">الباقات والأسعار — ترخيص دائم يُدفع مرة واحدة</div>
+  <h2 style="margin-bottom:12px">اختر الباقة المناسبة لحجم منشأتك</h2>
+  <table class="price">
+    <thead><tr><th></th><th>الأساسي<br><small style="font-weight:600">Solo Lite</small></th><th class="star">التخصصي ⭐<br><small style="font-weight:600">Specialty Pro</small></th><th>المؤسسات<br><small style="font-weight:600">Enterprise</small></th></tr></thead>
+    <tbody>
+      <tr><td>الأطباء والمستخدمون</td><td>طبيب واحد · مستخدمان</td><td>طبيبان · 5 مستخدمين</td><td>بلا حدود</td></tr>
+      <tr><td>المواعيد، الملف الطبي، الروشتة، الفواتير، الصيدلية، التقارير</td><td class="yes">✔</td><td class="yes">✔</td><td class="yes">✔</td></tr>
+      <tr><td>السجلات التخصصية وتنبيه التداخلات الدوائية والتشفير</td><td class="yes">✔</td><td class="yes">✔</td><td class="yes">✔</td></tr>
+      <tr><td>شاشة صالة الانتظار والنداء الصوتي</td><td class="no">—</td><td class="yes">✔</td><td class="yes">✔</td></tr>
+      <tr><td>بوابة المريض وتتبع الدور بالـ QR وتذكير واتساب</td><td class="no">—</td><td class="yes">✔</td><td class="yes">✔</td></tr>
+      <tr><td>مطالبات التأمين، ذكاء الأعمال، الفروع المتعددة</td><td class="no">—</td><td class="no">—</td><td class="yes">✔</td></tr>
+      <tr><td>الدعم الفني المجاني</td><td>3 أشهر</td><td>12 شهراً</td><td>12 شهراً</td></tr>
+      <tr class="price-row"><td>السعر</td><td>4,500 ج.م</td><td style="color:#0f766e">8,500 ج.م</td><td>18,500 ج.م</td></tr>
+    </tbody>
+  </table>
+  <div style="margin-top:14px;display:flex;gap:14px;align-items:center">
+    <span class="pill amber" style="font-size:15px;padding:6px 16px">🏛️ عرض منشآت محافظة أسيوط: خصم 40% ← 2,700 · 5,100 · 11,100 ج.م</span>
+    <span style="color:var(--muted);font-size:14px">الأسعار لا تشمل الأجهزة (كمبيوتر، شاشة، طابعة، راوتر).</span>
+  </div>
+  <div class="foot"><span>منظومة كالكس الطبية</span><span dir="ltr">8 / 10</span></div>
+</section>
+
+<!-- 9 التسليم -->
+<section class="slide">
+  <div class="kicker">من التعاقد إلى التشغيل</div>
+  <h2>تسليم في يوم واحد، ودعم بعده</h2>
+  <div class="grid" style="grid-template-columns:repeat(4,1fr);margin-top:8px">
+    <div class="card"><div class="num" style="color:var(--teal)">1</div><h3 style="margin-top:8px">التجربة</h3><p>نسخة كاملة تعمل 14 يوماً على جهاز عيادتك. ما تسجله أثناء التجربة يبقى بعد التفعيل.</p></div>
+    <div class="card"><div class="num" style="color:var(--blue)">2</div><h3 style="margin-top:8px">التثبيت</h3><p>تثبيت بدون إنترنت ولا برامج إضافية، وربط هواتف الاستقبال وشاشة الصالة بالراوتر.</p></div>
+    <div class="card"><div class="num" style="color:var(--amber)">3</div><h3 style="margin-top:8px">التدريب</h3><p>تدريب الطبيب والسكرتارية على الحجز والكشف والفاتورة والنسخ الاحتياطي أثناء التسليم.</p></div>
+    <div class="card"><div class="num" style="color:var(--green)">4</div><h3 style="margin-top:8px">التفعيل والعقد</h3><p>مفتاح ترخيص دائم موقّع، وعقد وشهادة ودليل مطبوع، ومفتاح الاسترجاع. والتحديثات لاحقاً على فلاشة موقّعة لا تلمس بياناتك.</p></div>
+  </div>
+  <img class="shot" src="صور/security.jpg" alt="" style="width:100%;height:230px;margin-top:20px;object-position:right 15%">
+  <div class="foot"><span>منظومة كالكس الطبية</span><span dir="ltr">9 / 10</span></div>
+</section>
+
+<!-- 10 تواصل -->
+<section class="slide dark" style="justify-content:center;align-items:center;text-align:center">
+  <img src="../public/img/qalix-app-icon.svg" alt="" style="width:92px;height:92px;border-radius:22px;margin-bottom:18px">
+  <h1 style="font-size:48px">جرّب كالكس في عيادتك <span class="grad">14 يوماً مجاناً</span></h1>
+  <p class="lead" style="margin:14px auto 0">بدون التزام. إذا قررت الشراء نفعّل الترخيص الدائم وتبقى كل بياناتك كما هي.</p>
+  <div class="grid" style="grid-template-columns:repeat(3,auto);gap:16px;margin-top:30px;justify-content:center">
+    <div class="card" style="text-align:center;min-width:250px"><small style="color:#94a3b8">المبيعات والتعاقد (واتساب)</small><div style="font-size:26px;font-weight:900;direction:ltr">0112 216 6704</div></div>
+    <div class="card" style="text-align:center;min-width:250px"><small style="color:#94a3b8">الدعم الفني والتشغيل</small><div style="font-size:26px;font-weight:900;direction:ltr">0112 216 6076</div></div>
+    <div class="card" style="text-align:center;min-width:250px"><small style="color:#94a3b8">تابعنا على فيسبوك</small><div style="font-size:22px;font-weight:900">منصة كالكس</div></div>
+  </div>
+  <div class="foot"><span>فريق عمل منصة كالكس — مصر</span><span dir="ltr">10 / 10</span></div>
+</section>
+
+</div>
+<div class="nav" id="nav"><button onclick="present()">▶ وضع العرض</button><button onclick="print()">🖨 PDF</button><span>الأسهم للتنقل · Esc للخروج</span></div>
+<script>
+let cur = 0;
+const slides = [...document.querySelectorAll('.slide')];
+function fit() {
+  const s = Math.min(innerWidth / 1280, innerHeight / 720);
+  slides.forEach(x => x.style.transform = document.body.classList.contains('present') ? `scale(${s})` : '');
+}
+function show(i) { cur = Math.max(0, Math.min(slides.length - 1, i)); slides.forEach((x, k) => x.classList.toggle('on', k === cur)); fit(); }
+function present() { document.body.classList.add('present'); document.documentElement.requestFullscreen?.().catch(() => {}); show(cur); }
+addEventListener('keydown', e => {
+  if (!document.body.classList.contains('present')) return;
+  if (['ArrowLeft', 'PageDown', ' ', 'Enter'].includes(e.key)) show(cur + 1);
+  if (['ArrowRight', 'PageUp', 'Backspace'].includes(e.key)) show(cur - 1);
+  if (e.key === 'Escape') { document.body.classList.remove('present'); slides.forEach(x => { x.classList.remove('on'); x.style.transform = ''; }); }
+});
+addEventListener('click', e => { if (document.body.classList.contains('present') && !e.target.closest('.nav')) show(cur + 1); });
+addEventListener('resize', fit);
+</script>
+</body>
+</html>

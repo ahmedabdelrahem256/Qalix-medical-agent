@@ -439,7 +439,48 @@ function req(method, urlPath, body) {
       fcRes.body.forecast.forecastSvgChart.includes('<svg')
     );
 
-    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/35 PASSED ===`);
+    // 36. Marketing & Presentation Catalog API (Phase 8)
+    const presRes = await req('GET', '/api/marketing/presentation-assets');
+    check('36. استرجاع كتالوج مواد العروض التقديمية وإعلانات فيسبوك الـ 3 ومعرض الشاشات الحية الـ 8',
+      presRes.status === 200 &&
+      presRes.body.ok === true &&
+      Array.isArray(presRes.body.facebookCampaigns) &&
+      presRes.body.facebookCampaigns.length === 3 &&
+      Array.isArray(presRes.body.clinicalGallery) &&
+      presRes.body.clinicalGallery.length === 8 &&
+      Array.isArray(presRes.body.presentationCollateral) &&
+      Array.isArray(presRes.body.marketingVideos)
+    );
+
+    // 37. Legal & Handover Documents API (Phase 8)
+    const legalRes = await req('GET', '/api/legal/delivery-documents');
+    check('37. استرجاع حزمة الوثائق القانونية والتسليم السيادي الـ 6 (EULA, SLA, محضر التسليم، شهادة الضمان)',
+      legalRes.status === 200 &&
+      legalRes.body.ok === true &&
+      Array.isArray(legalRes.body.documents) &&
+      legalRes.body.documents.length === 6 &&
+      legalRes.body.documents.some(d => d.id === 'handover_receipt') &&
+      legalRes.body.documents.some(d => d.id === 'sovereign_warranty')
+    );
+
+    // 38. Static Image Serving for Presentations & Screenshots (Phase 8)
+    const imgStaticRes = await req('GET', '/presentations/%D8%B5%D9%88%D8%B1/dashboard.jpg');
+    check('38. استضافة وخدمة صور شاشات المنظومة الحية عالية الدقة بنوع MIME سليم وسرعة استجابة ميكروثانية',
+      imgStaticRes.status === 200 &&
+      imgStaticRes.headers['content-type'] === 'image/jpeg' &&
+      Number(imgStaticRes.headers['content-length']) > 50000
+    );
+
+    // 39. Static Legal Document HTML Serving (Phase 8)
+    const docStaticRes = await req('GET', '/legal-docs/' + encodeURIComponent('شهادة_الضمان_والتسليم_السيادي.html'));
+    check('39. استضافة وخدمة الوثائق القانونية ومحاضر التسليم بصيغة HTML مجهزة للطباعة الفورية',
+      docStaticRes.status === 200 &&
+      docStaticRes.headers['content-type'] === 'text/html; charset=utf-8' &&
+      typeof docStaticRes.body === 'string' &&
+      docStaticRes.body.includes('شهادة تسليم وضمان منظومة كـالـكـس السيادية')
+    );
+
+    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/39 PASSED ===`);
     for (const r of results) console.log(' ✅', r);
   } finally {
     srv.kill('SIGINT');

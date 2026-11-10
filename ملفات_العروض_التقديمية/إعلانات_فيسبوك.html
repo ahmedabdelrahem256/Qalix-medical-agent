@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>منظومة كالكس الطبية — إعلانات فيسبوك</title>
+<!-- المصدر الوحيد لصور إعلانات فيسبوك: كل إطار يُصوَّر PNG بمقاس 1080×1080 (منشور) أو 1080×1920 (قصة/ريلز) -->
+<style>
+@font-face { font-family: 'Cairo'; font-weight: 200 1000; src: url('../public/fonts/cairo-arabic.woff2') format('woff2'); unicode-range: U+0600-06FF, U+0750-077F, U+FB50-FDFF, U+FE70-FEFF; }
+@font-face { font-family: 'Cairo'; font-weight: 200 1000; src: url('../public/fonts/cairo-latin.woff2') format('woff2'); unicode-range: U+0000-00FF, U+2000-206F; }
+:root { --navy: #0B1A2E; --teal: #0EA5A4; --blue: #2563EB; --amber: #F59E0B; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: #111827; font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif; }
+.wrap { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; padding: 24px; align-items: flex-start; }
+.ad { position: relative; overflow: hidden; color: #fff; display: flex; flex-direction: column;
+  background: radial-gradient(520px 380px at 100% 0%, #134e6f 0%, transparent 60%), radial-gradient(420px 360px at 0% 100%, #0d5c5b 0%, transparent 60%), var(--navy); }
+.sq { width: 540px; height: 540px; padding: 30px 32px; }
+.st { width: 540px; height: 960px; padding: 44px 38px; }
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand img { width: 40px; height: 40px; border-radius: 10px; }
+.brand b { font-size: 16px; } .brand small { display: block; font-size: 11px; color: #94a3b8; }
+.kicker { margin-top: 18px; display: inline-block; align-self: flex-start; font-size: 14px; font-weight: 800; color: #5eead4; background: rgba(94,234,212,.1); border: 1px solid rgba(94,234,212,.35); border-radius: 999px; padding: 4px 14px; }
+h1 { font-weight: 900; line-height: 1.25; margin-top: 10px; }
+.sq h1 { font-size: 34px; } .st h1 { font-size: 46px; margin-top: 18px; }
+.grad { background: linear-gradient(90deg, #5eead4, #60a5fa); -webkit-background-clip: text; background-clip: text; color: transparent; }
+p { color: #cbd5e1; line-height: 1.7; }
+.sq p { font-size: 16px; margin-top: 8px; } .st p { font-size: 19px; margin-top: 14px; }
+.shot { border-radius: 14px; border: 1px solid rgba(255,255,255,.15); box-shadow: 0 24px 50px rgba(0,0,0,.5); overflow: hidden; background: #0f172a; }
+.shot img { width: 100%; height: 100%; object-fit: cover; object-position: top right; display: block; }
+.phone { border-radius: 26px; border: 6px solid #1f2937; overflow: hidden; box-shadow: 0 26px 50px rgba(0,0,0,.55); background: #fff; }
+.phone img { width: 100%; height: 100%; object-fit: cover; object-position: top; display: block; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chips span { font-size: 14px; font-weight: 800; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.14); border-radius: 12px; padding: 6px 12px; }
+.st .chips span { font-size: 17px; padding: 9px 14px; }
+.cta { margin-top: auto; background: linear-gradient(135deg, var(--teal), var(--blue)); border-radius: 16px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; }
+.cta b { font-size: 18px; } .cta span { font-size: 22px; font-weight: 900; direction: ltr; }
+.st .cta { flex-direction: column; gap: 4px; padding: 16px; text-align: center; }
+.st .cta b { font-size: 22px; } .st .cta span { font-size: 28px; }
+.price { display: flex; flex-direction: column; gap: 10px; }
+.price div { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); border-radius: 14px; padding: 10px 16px; }
+.price div.star { background: linear-gradient(135deg, rgba(14,165,164,.35), rgba(37,99,235,.35)); border-color: rgba(94,234,212,.5); }
+.price b { font-size: 18px; } .compact { gap: 7px; } .compact div { padding: 4px 14px; line-height: 1.5; } .compact em { font-size: 19px; } .price em { font-style: normal; font-size: 22px; font-weight: 900; }
+.offer { background: rgba(245,158,11,.15); border: 1px dashed var(--amber); border-radius: 12px; padding: 8px 12px; font-size: 15px; font-weight: 800; color: #fcd34d; text-align: center; }
+.big-x { font-size: 15px; color: #fca5a5; font-weight: 800; }
+@page { margin: 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ١) بدون إنترنت + الخصوصية -->
+  <section class="ad sq" id="ad1-square">
+    <div class="brand"><img src="../public/img/qalix-app-icon.svg" alt=""><div><b>منظومة كالكس الطبية</b><small>Qalix Medical</small></div></div>
+    <span class="kicker">🔌 بدون إنترنت</span>
+    <h1>النت فصل؟<br><span class="grad">عيادتك شغالة عادي</span></h1>
+    <p>كل العيادة على جهازك أنت: مواعيد، ملف طبي، روشتة، فواتير وصيدلية — وبيانات المرضى مشفرة.</p>
+    <div class="shot" style="height:170px;margin-top:14px"><img src="صور/dashboard.jpg" alt=""></div>
+    <div class="cta" style="margin-top:14px"><b>جرّبها 14 يوماً مجاناً</b><span>0112 216 6704</span></div>
+  </section>
+  <section class="ad st" id="ad1-story">
+    <div class="brand"><img src="../public/img/qalix-app-icon.svg" alt=""><div><b>منظومة كالكس الطبية</b><small>Qalix Medical</small></div></div>
+    <span class="kicker">🔌 بدون إنترنت</span>
+    <h1>النت فصل؟<br><span class="grad">عيادتك شغالة عادي</span></h1>
+    <p>كل العيادة على جهازك أنت — مش على سيرفر حد تاني. وبيانات مرضاك مشفرة ومعاها نسخة احتياطية كل يوم.</p>
+    <div class="shot" style="height:300px;margin-top:22px"><img src="صور/dashboard.jpg" alt=""></div>
+    <div class="chips" style="margin-top:22px"><span>🔐 تشفير AES-256</span><span>💾 نسخة احتياطية يومية</span><span>👥 صلاحيات لكل موظف</span></div>
+    <div class="cta"><b>جرّبها في عيادتك 14 يوماً مجاناً</b><span>0112 216 6704</span></div>
+  </section>
+
+  <!-- ٢) صالة الانتظار -->
+  <section class="ad sq" id="ad2-square">
+    <div class="brand"><img src="../public/img/qalix-app-icon.svg" alt=""><div><b>منظومة كالكس الطبية</b><small>Qalix Medical</small></div></div>
+    <span class="kicker">📢 صالة انتظار هادية</span>
+    <h1>خلاص… مفيش<br><span class="grad">«دوري امتى؟»</span></h1>
+    <div style="display:flex;gap:16px;align-items:flex-end;margin-top:14px">
+      <div class="shot" style="flex:1;height:160px"><img src="صور/tv.jpg" alt=""></div>
+      <div class="phone" style="width:96px;height:180px;border-width:4px;border-radius:16px"><img src="صور/phone-track.jpg" alt=""></div>
+    </div>
+    <p>نداء صوتي عربي على تلفزيون الصالة، والمريض يتابع دوره من موبايله.</p>
+    <div class="cta" style="margin-top:10px"><b>جرّبها 14 يوماً مجاناً</b><span>0112 216 6704</span></div>
+  </section>
+  <section class="ad st" id="ad2-story">
+    <div class="brand"><img src="../public/img/qalix-app-icon.svg" alt=""><div><b>منظومة كالكس الطبية</b><small>Qalix Medical</small></div></div>
+    <span class="kicker">📢 صالة انتظار هادية</span>
+    <h1 style="font-size:42px">خلاص يا دكتور…<br>مفيش <span class="grad" style="white-space:nowrap">«دوري امتى؟»</span></h1>
+    <p>المريض بيتنادى بالاسم والرقم بصوت عربي على تلفزيون الصالة، وبيتابع رقمه ومين قبله من موبايله على واي فاي العيادة.</p>
+    <div class="phone" style="width:250px;height:480px;margin:24px auto 0"><img src="صور/phone-track.jpg" alt=""></div>
+    <div class="cta"><b>جرّبها في عيادتك 14 يوماً مجاناً</b><span>0112 216 6704</span></div>
+  </section>
+
+  <!-- ٣) ترخيص دائم والأسعار -->
+  <section class="ad sq" id="ad3-square">
+    <div class="brand"><img src="../public/img/qalix-app-icon.svg" alt=""><div><b>منظومة كالكس الطبية</b><small>Qalix Medical</small></div></div>
+    <span class="kicker">💎 ترخيص دائم · بدون اشتراك شهري</span>
+    <h1 style="font-size:31px">ادفع مرة واحدة… <span class="grad">والنظام ملكك</span></h1>
+    <div class="price compact" style="margin-top:10px">
+      <div><b>الأساسي</b><em>4,500 ج.م</em></div>
+      <div class="star"><b>التخصصي ⭐</b><em>8,500 ج.م</em></div>
+      <div><b>المؤسسات</b><em>18,500 ج.م</em></div>
+    </div>
+    <div class="offer" style="margin-top:10px">🏛️ عيادات ومراكز محافظة أسيوط: خصم 40%</div>
+    <div class="cta" style="margin-top:10px"><b>تواصل واتساب</b><span>0112 216 6704</span></div>
+  </section>
+  <section class="ad st" id="ad3-story">
+    <div class="brand"><img src="../public/img/qalix-app-icon.svg" alt=""><div><b>منظومة كالكس الطبية</b><small>Qalix Medical</small></div></div>
+    <span class="kicker">💎 ترخيص دائم</span>
+    <h1>ادفع مرة واحدة…<br><span class="grad">والنظام ملكك</span></h1>
+    <p>بدون اشتراك شهري، وبدون سيرفرات خارجية. يشمل التثبيت والتدريب والدعم الفني.</p>
+    <div class="price" style="margin-top:22px">
+      <div><b>الأساسي<br><small style="font-size:13px;color:#94a3b8">طبيب واحد · مستخدمان</small></b><em>4,500 ج.م</em></div>
+      <div class="star"><b>التخصصي ⭐<br><small style="font-size:13px;color:#cbd5e1">طبيبان · شاشة النداء · بوابة المريض</small></b><em>8,500 ج.م</em></div>
+      <div><b>المؤسسات<br><small style="font-size:13px;color:#94a3b8">بلا حدود · تأمين · تقارير · فروع</small></b><em>18,500 ج.م</em></div>
+    </div>
+    <div class="offer" style="margin-top:16px;font-size:17px">🏛️ عيادات ومراكز محافظة أسيوط: خصم 40%<br>2,700 · 5,100 · 11,100 ج.م</div>
+    <p style="font-size:14px;text-align:center">الأسعار لا تشمل الأجهزة.</p>
+    <div class="cta"><b>جرّبها في عيادتك 14 يوماً مجاناً</b><span>0112 216 6704</span></div>
+  </section>
+
+</div>
+</body>
+</html>

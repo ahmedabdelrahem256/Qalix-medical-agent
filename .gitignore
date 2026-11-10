@@ -7,6 +7,9 @@ data/.test_run/
 *.db-shm
 *.db-wal
 
+# Large marketing video binaries (served locally from disk)
+*.mp4
+
 # OS files
 Thumbs.db
 Desktop.ini

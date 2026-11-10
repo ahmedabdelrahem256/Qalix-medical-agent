@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>دليل المبيعات والتسعير والتسليم — منظومة كالكس الطبية</title>
+<!-- مولّد من ../دليل_المبيعات_والتسعير_والتسليم.md (المصدر الوحيد) -->
+<style>
+@font-face { font-family: 'Cairo'; font-weight: 200 1000; src: url('../public/fonts/cairo-arabic.woff2') format('woff2'); unicode-range: U+0600-06FF, U+0750-077F, U+FB50-FDFF, U+FE70-FEFF; }
+@font-face { font-family: 'Cairo'; font-weight: 200 1000; src: url('../public/fonts/cairo-latin.woff2') format('woff2'); unicode-range: U+0000-00FF, U+2000-206F; }
+body { font-family: 'Cairo','Segoe UI',Tahoma,sans-serif; color:#0f172a; background:#f1f5f9; margin:0; }
+main { max-width: 900px; margin: 24px auto; background:#fff; padding: 36px 44px; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.08); line-height: 1.85; font-size: 15px; }
+h1 { font-size: 26px; color:#0B1A2E; border-bottom: 3px solid #0EA5A4; padding-bottom: 10px; }
+h2 { font-size: 20px; color:#0B1A2E; margin-top: 30px; border-right: 5px solid #0EA5A4; padding-right: 10px; }
+table { width:100%; border-collapse: collapse; margin: 12px 0; font-size: 14px; }
+th, td { border: 1px solid #e2e8f0; padding: 7px 10px; vertical-align: top; }
+th { background:#0B1A2E; color:#fff; }
+tr:nth-child(even) td { background:#f8fafc; }
+blockquote { background:#f0fdfa; border-right: 4px solid #0EA5A4; margin: 12px 0; padding: 8px 14px; color:#134e4a; }
+pre { background:#0B1A2E; color:#e2e8f0; padding: 14px 16px; border-radius: 10px; white-space: pre-wrap; font-family: 'Cairo', monospace; font-size: 14px; }
+code { background:#e2e8f0; padding: 1px 6px; border-radius: 4px; font-size: 13px; }
+pre code { background: none; padding: 0; }
+@page { size: A4; margin: 14mm; }
+@media print { body { background:#fff; } main { box-shadow:none; margin:0; padding:0; max-width:none; } h2 { break-after: avoid; } table, pre { break-inside: avoid; } }
+</style>
+</head>
+<body><main>
+<h1>دليل المبيعات والتسعير والتسليم — منظومة كالكس الطبية الشاملة (Qalix Medical v1.0)</h1>
+<blockquote>
+<p>مرجع داخلي لفريق المبيعات والتسليم. كل ما في هذا الدليل مطابق لما تفعله المنظومة فعلاً — لا تعِد العميل بشيء غير مذكور هنا.
+آخر تحديث: نوفمبر 2026.</p>
+</blockquote>
+<p><strong>خطوط التواصل الرسمية</strong></p>
+<ul>
+<li>المبيعات والتعاقد (واتساب): 01122166704</li>
+<li>الدعم الفني والتشغيل: 01122166076</li>
+<li>صفحة فيسبوك (الإعلانات والتواصل): https://www.facebook.com/profile.php?id=61596117518854</li>
+</ul>
+<blockquote>
+<p><strong>سياسة:</strong> اسم المطوّر وبياناته الشخصية لا تظهر في أي مادة تسويقية أو مستند يُسلََّم للعميل — خطوط المبيعات والدعم فقط، والجهة تُذكر باسم «فريق عمل منصة كالكس — مصر». أسيوط تُذكر فقط مع عرض خصم 40%، وليس كعنوان.</p>
+</blockquote>
+<hr />
+<h2>0. مسار الصفقة من الإعلان حتى التسليم (خطوة بخطوة)</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">#</th>
+<th style="text-align: left;">المرحلة</th>
+<th style="text-align: left;">ماذا تفعل</th>
+<th style="text-align: left;">الأداة / الملف</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">جذب العميل</td>
+<td style="text-align: left;">انشر الإعلانات الثلاثة والفيديو على صفحة فيسبوك بزر «رسالة واتساب»</td>
+<td style="text-align: left;"><code>ملفات_العروض_التقديمية/إعلانات_فيسبوك/</code> و<code>فيديو_تسويقي/</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">أول رد (خلال ساعة)</td>
+<td style="text-align: left;">الرسالة (أ) من القسم 8 + صورة البطاقة PNG + اقتراح موعد عرض</td>
+<td style="text-align: left;"><code>بطاقة_عرض_منظومة_كالكس_الطبية_الموحدة.png</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">3</td>
+<td style="text-align: left;">العرض في العيادة (5 دقائق)</td>
+<td style="text-align: left;">سيناريو القسم 5 على اللابتوب ببيانات العرض</td>
+<td style="text-align: left;"><code>العرض_التقديمي_الشامل_المجمع</code> + <code>11-تفعيل-وضع-العرض-التجريبي.bat</code> (جهاز المطوّر فقط)</td>
+</tr>
+<tr>
+<td style="text-align: left;">4</td>
+<td style="text-align: left;">التجربة المجانية (14 يوماً)</td>
+<td style="text-align: left;">تثبيت على جهاز العيادة <strong>بدون مفتاح ترخيص</strong> — ما يسجله الطبيب يبقى بعد التفعيل</td>
+<td style="text-align: left;"><code>Releases\Qalix_Medical_v1.0.zip</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">5</td>
+<td style="text-align: left;">المتابعة</td>
+<td style="text-align: left;">الرسالة (ج) بعد 3–5 أيام، وحل أي ملاحظة فوراً</td>
+<td style="text-align: left;">القسم 8</td>
+</tr>
+<tr>
+<td style="text-align: left;">6</td>
+<td style="text-align: left;">عرض السعر الرسمي</td>
+<td style="text-align: left;">اختر الباقة، وعلّم «منشأة في محافظة أسيوط» إن انطبق، ثم اطبع PDF وأرسله</td>
+<td style="text-align: left;"><code>E:\Qalix\Marketing\Qalix-Quotation-Generator.html</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">7</td>
+<td style="text-align: left;">الاتفاق والعربون</td>
+<td style="text-align: left;">اتفق على المبلغ وطريقة الدفع وموعد التسليم</td>
+<td style="text-align: left;">—</td>
+</tr>
+<tr>
+<td style="text-align: left;">8</td>
+<td style="text-align: left;">إصدار الترخيص وحقيبة العميل</td>
+<td style="text-align: left;"><code>15-إصدار-نسخة-عميل-وتجهيز-التسليم.bat</code> ← [6]: ترخيص موقّع + عقد + شهادة + دليل + <strong>محضر التسليم وإيصال السداد</strong></td>
+<td style="text-align: left;"><code>packages\clients\&lt;العميل&gt;\</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">9</td>
+<td style="text-align: left;">يوم التسليم</td>
+<td style="text-align: left;">خطوات القسم 7، ثم يوقّع الطرفان العقد والمحضر (نسختان) ويُسلَّم مفتاح الاسترجاع</td>
+<td style="text-align: left;"><code>محضر_التسليم_وإيصال_السداد.html</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">10</td>
+<td style="text-align: left;">بعد البيع</td>
+<td style="text-align: left;">الرسالة (د)، ومتابعة بعد أسبوع وبعد شهر، وطلب توصية لزميل</td>
+<td style="text-align: left;">—</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>قواعد ثابتة:</strong> لا يظهر اسم المطوّر أو رقمه الخاص في أي مادة أو مستند للعميل. الجهة: «فريق عمل منصة كالكس — مصر». أسيوط تُذكر فقط مع عرض خصم 40%.</p>
+</blockquote>
+<hr />
+<h2>1. ماذا نبيع؟ (في جملة واحدة)</h2>
+<p>نظام إدارة عيادات ومراكز طبية يعمل <strong>داخل العيادة على جهازها</strong>، بدون إنترنت وبدون اشتراك شهري، ويغطي: المواعيد، صالة الانتظار والنداء الصوتي، الملف الطبي والروشتة، الفواتير والصيدلية والمخزون، التقارير — وبيانات المرضى <strong>مشفرة</strong> داخل قاعدة البيانات.</p>
+<h2>2. نقاط القوة الحقيقية (استخدمها بهذا النص)</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">النقطة</th>
+<th style="text-align: left;">ما نقوله للطبيب</th>
+<th style="text-align: left;">الدليل أثناء العرض</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">بدون إنترنت</td>
+<td style="text-align: left;">"النظام على جهاز العيادة، والهواتف والشاشة متصلة بالراوتر فقط. لو النت فصل العيادة شغالة."</td>
+<td style="text-align: left;">افصل الواي فاي عن الإنترنت واستمر في العمل</td>
+</tr>
+<tr>
+<td style="text-align: left;">خصوصية وتشفير</td>
+<td style="text-align: left;">"بيانات مرضاك مشفرة على جهازك، ومفتاح الاسترجاع معاك انت بس — حتى احنا ما عندناش نسخة."</td>
+<td style="text-align: left;">الإعدادات ← تشفير بيانات المرضى</td>
+</tr>
+<tr>
+<td style="text-align: left;">صالة انتظار منظمة</td>
+<td style="text-align: left;">"المريض بيتنادى بالاسم والرقم على تلفزيون الصالة، وبيتابع دوره من موبايله."</td>
+<td style="text-align: left;">شاشة الانتظار ← نداء</td>
+</tr>
+<tr>
+<td style="text-align: left;">ملف طبي كامل</td>
+<td style="text-align: left;">"تاريخ المريض والحساسية والروشتات السابقة قدامك في ثانية، والنظام ينبهك لو في تعارض دوائي معروف."</td>
+<td style="text-align: left;">ملف مريض ← الخط الزمني / روشتة فيها وارفارين + أسبرين</td>
+</tr>
+<tr>
+<td style="text-align: left;">حسابات واضحة</td>
+<td style="text-align: left;">"تعرف دخل اليوم الفعلي وفرق الدرج قبل ما تقفل."</td>
+<td style="text-align: left;">تقفيل الخزينة Z-Report</td>
+</tr>
+<tr>
+<td style="text-align: left;">نسخة احتياطية تلقائية</td>
+<td style="text-align: left;">"كل يوم النظام بياخد نسخة احتياطية مشفرة لوحده، وتقدر تنزّل نسخة على فلاشة من المتصفح بضغطة."</td>
+<td style="text-align: left;">الإعدادات ← النسخ الاحتياطي</td>
+</tr>
+<tr>
+<td style="text-align: left;">لا أبواب خلفية</td>
+<td style="text-align: left;">"النظام بيتسلم بكلمة مرور مصنع لازم تغيّرها أول ما تدخل، ومفيش حساب خفي. حتى احنا ما نقدرش ندخل إلا وانت قدام الشاشة، والدخول بيتسجل."</td>
+<td style="text-align: left;">شاشة الدخول ← تغيير كلمة المرور الإجباري</td>
+</tr>
+<tr>
+<td style="text-align: left;">تحديثات بدون إنترنت</td>
+<td style="text-align: left;">"التحديثات بتوصلك على فلاشة موقّعة رقمياً، بتتطبق في دقيقة وما بتلمسش بياناتك."</td>
+<td style="text-align: left;">—</td>
+</tr>
+<tr>
+<td style="text-align: left;">ترخيص دائم</td>
+<td style="text-align: left;">"تدفع مرة واحدة، والنظام بتاعك. الصيانة بعد فترة الدعم اختيارية."</td>
+<td style="text-align: left;">—</td>
+</tr>
+</tbody>
+</table>
+<p><strong>ممنوع قوله:</strong> "معتمد من وزارة الصحة"، "يمنع الأخطاء الطبية"، "سرعة 3ms"، "يقلل التخلف 70%"، "يعمل بدون كهرباء" (الصحيح: يعمل على UPS أو لابتوب لأنه خفيف). فحص التداخلات <strong>أداة مساعدة لقائمة التداخلات الشائعة</strong> والقرار للطبيب.</p>
+<h2>3. الباقات والأسعار الرسمية (ترخيص دائم)</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;"></th>
+<th style="text-align: center;">الأساسي (Solo Lite)</th>
+<th style="text-align: center;">التخصصي (Specialty Pro) ⭐</th>
+<th style="text-align: center;">المؤسسات (Enterprise)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">الأطباء والمستخدمون</td>
+<td style="text-align: center;">طبيب واحد · مستخدمان</td>
+<td style="text-align: center;">طبيبان · 5 مستخدمين</td>
+<td style="text-align: center;">بلا حدود</td>
+</tr>
+<tr>
+<td style="text-align: left;">المواعيد، الملف الطبي، الروشتة، الفواتير، الصيدلية، المخزون، التقارير، التشفير، السجلات التخصصية، تنبيه التداخلات</td>
+<td style="text-align: center;">✔</td>
+<td style="text-align: center;">✔</td>
+<td style="text-align: center;">✔</td>
+</tr>
+<tr>
+<td style="text-align: left;">شاشة صالة الانتظار والنداء الصوتي</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">✔</td>
+<td style="text-align: center;">✔</td>
+</tr>
+<tr>
+<td style="text-align: left;">بوابة المريض وتتبع الدور بالـ QR وتذكير واتساب</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">✔</td>
+<td style="text-align: center;">✔</td>
+</tr>
+<tr>
+<td style="text-align: left;">مطالبات التأمين، تقارير ذكاء الأعمال، الفروع المتعددة</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">✔</td>
+</tr>
+<tr>
+<td style="text-align: left;">الدعم الفني المجاني</td>
+<td style="text-align: center;">3 أشهر</td>
+<td style="text-align: center;">12 شهراً</td>
+<td style="text-align: center;">12 شهراً</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>السعر</strong></td>
+<td style="text-align: center;"><strong>4,500 ج.م</strong></td>
+<td style="text-align: center;"><strong>8,500 ج.م</strong></td>
+<td style="text-align: center;"><strong>18,500 ج.م</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;">عرض منشآت محافظة أسيوط (خصم 40%)</td>
+<td style="text-align: center;">2,700 ج.م</td>
+<td style="text-align: center;">5,100 ج.م</td>
+<td style="text-align: center;">11,100 ج.م</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>الأسعار تشمل التثبيت والتدريب، ولا تشمل الأجهزة (كمبيوتر، شاشة، طابعة، راوتر).</li>
+<li>الترقية من باقة لأخرى: يُدفع الفرق ويُصدر مفتاح جديد، وتبقى البيانات كما هي.</li>
+<li>مصدر الأسعار الوحيد في الأدوات: <code>scripts/pricing.js</code> (أداة إصدار نسخ العملاء تقرأ منه).</li>
+</ul>
+<h2>4. التجربة المجانية (14 يوماً)</h2>
+<ul>
+<li>أي نسخة تُثبت بدون مفتاح ترخيص تعمل تلقائياً <strong>14 يوماً</strong> بكل خصائص التخصصي تقريباً (طبيبان، 5 مستخدمين، الشاشة، البوابة، التأمين والتقارير).</li>
+<li>بعد انتهاء التجربة تُقفل العمليات ولا يُحذف أي شيء. عند الشراء: لصق مفتاح الترخيص من شارة الباقة أعلى الشاشة → تعود العمليات فوراً بنفس البيانات.</li>
+<li>لا توجد أداة منفصلة لتفعيل التجربة — التثبيت نفسه هو التجربة.</li>
+</ul>
+<h2>5. سيناريو العرض في العيادة (5 دقائق)</h2>
+<ol>
+<li><strong>بدون إنترنت:</strong> افتح المنظومة على اللابتوب والواي فاي غير متصل بالإنترنت. تنقّل بين المرضى والمواعيد.</li>
+<li><strong>صالة الانتظار:</strong> شاشة الانتظار ← "نداء ودخول" لمريض. يسمع الطبيب النداء العربي، ثم "وضع شاشة صالة الانتظار".</li>
+<li><strong>هاتف المريض:</strong> امسح رمز QR من الإعدادات بهاتف الطبيب وافتح تتبع الدور.</li>
+<li><strong>الروشتة:</strong> زيارة جديدة → اكتب "وارفارين" ثم "أسبرين" → يظهر تنبيه التداخل → اطبع الروشتة.</li>
+<li><strong>الأمان:</strong> الإعدادات ← بطاقة التشفير والنسخ الاحتياطي. "بياناتك مشفرة، وبتتاخد لها نسخة كل يوم لوحدها، ومفتاح الاسترجاع ليك انت بس."</li>
+<li><strong>الإغلاق:</strong> "تحب نبدأ بالتجربة المجانية في عيادتك من النهارده؟ ولا نثبّت الباقة التخصصية مباشرة؟"</li>
+</ol>
+<blockquote>
+<p>لتحميل بيانات العرض على جهاز المطور فقط: <code>11-تفعيل-وضع-العرض-التجريبي.bat</code> (يمسح البيانات الحالية — لا تشغّله على جهاز عميل). الدخول: admin / admin12345.</p>
+</blockquote>
+<h2>6. الرد على الاعتراضات</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">الاعتراض</th>
+<th style="text-align: left;">الرد</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">"أنا مرتاح بالورق"</td>
+<td style="text-align: left;">"الورق بيضيع وقت السكرتارية في البحث، ومفيش تاريخ مرضي فوري. جرّب 14 يوم ببلاش، ولو ما فرقش معاك ما تدفعش."</td>
+</tr>
+<tr>
+<td style="text-align: left;">"البرامج السحابية أرخص"</td>
+<td style="text-align: left;">"السحابي اشتراك كل شهر طول العمر، وبيقف لما النت يقف، وبيانات مرضاك على سيرفر غيرك. هنا تدفع مرة والبيانات على جهازك ومشفرة."</td>
+</tr>
+<tr>
+<td style="text-align: left;">"لو الجهاز باظ؟"</td>
+<td style="text-align: left;">"النظام بياخد نسخة احتياطية مشفرة كل يوم لوحده، وتقدر تنزّل نسخة على فلاشة بضغطة. وعلى جهاز جديد البيانات بتتفتح بمفتاح الاسترجاع اللي بنطبعه لك يوم التسليم."</td>
+</tr>
+<tr>
+<td style="text-align: left;">"انتو كشركة تقدروا تشوفوا بيانات مرضايا؟"</td>
+<td style="text-align: left;">"لا. مفيش كلمة سر عندنا ولا حساب خفي. دخول الصيانة بيحتاج رمز بيظهر على شاشة عيادتك انت، صالح مرة واحدة، وبيتسجل في سجل العمليات اللي تقدر تراجعه."</td>
+</tr>
+<tr>
+<td style="text-align: left;">"السكرتيرة مش شاطرة كمبيوتر"</td>
+<td style="text-align: left;">"الواجهة عربي وبسيطة، وبندربها أثناء التسليم على الحجز والتذكرة والفاتورة."</td>
+</tr>
+<tr>
+<td style="text-align: left;">"السعر غالي"</td>
+<td style="text-align: left;">"قارنه باشتراك سنة واحدة في أي برنامج سحابي. وابدأ بالأساسي وترقّى بعدين بالفرق بس."</td>
+</tr>
+</tbody>
+</table>
+<h2>7. خطوات التسليم (يوم التسليم)</h2>
+<p><strong>قبل الذهاب للعميل (على جهاز المطور):</strong>
+1. أصدر حزمة العميل: داخل مجلد المنظومة شغّل <code>15-إصدار-نسخة-عميل-وتجهيز-التسليم.bat</code> ← الخيار [6]. تُنشأ الحزمة في <code>packages/clients/</code> ومعها: مفتاح الترخيص مثبت، عقد، شهادة ترخيص، دليل تشغيل.
+2. اطبع العقد (نسختان) والشهادة ودليل التشغيل.
+3. انسخ مجلد الحزمة على فلاشة.</p>
+<p><strong>في العيادة:</strong>
+1. انسخ المجلد على جهاز الخادم (الكمبيوتر الذي سيبقى يعمل طوال اليوم) وشغّل <code>Setup-QalixMedical.bat</code> بصلاحية المسؤول. يُثبت في <code>C:\QalixMedical</code> مع اختصار سطح المكتب. لا يحتاج إنترنت ولا Node.js.
+2. افتح المنظومة → ادخل بحساب المصنع <code>admin</code> / <code>Qalix@11</code> → تظهر شاشة إجبارية يكتب فيها الطبيب اسمه وكلمة مرور جديدة يختارها بنفسه (لا تعرفها أنت). بعدها تتوقف كلمة المصنع نهائياً. أي مستخدم يضيفه المدير يُلزم أيضاً بتغيير كلمته عند أول دخول.
+3. <strong>مفتاح الاسترجاع:</strong> تظهر شاشة المفتاح → اطبعها فوراً وسلّمها للطبيب، واشرح أنها الطريقة الوحيدة لفتح البيانات على جهاز آخر. لا تصوّرها ولا تحتفظ بنسخة.
+4. تأكد أن شارة الباقة أعلى الشاشة تُظهر الباقة المشتراة (وليست "تجربة مجانية").
+5. الإعدادات: اسم العيادة والهاتف والعنوان. المستخدمون: حساب لكل موظف بدوره.
+6. الشبكة: شغّل <code>04-فتح-جدار-الحماية-للهواتف.bat</code>، ثم امسح QR الإعدادات من هاتف الاستقبال، وافتح شاشة الانتظار على تلفزيون الصالة.
+7. النسخ الاحتياطي: شغّل <code>04-نسخ-احتياطي-فوري.bat</code> أمام الطبيب، واختاروا كلمة مرور للنسخ، وانسخ الملف على فلاشة العيادة.
+8. تدريب 20–30 دقيقة: حجز → حضور وتذكرة → نداء → زيارة وروشتة → فاتورة → تقفيل الوردية.
+9. توقيع العقد وتسليم الشهادة ودليل التشغيل.</p>
+<p><strong>التحديثات وإيقاف التراخيص (بدون إنترنت):</strong>
+1. على جهاز المطور: لوحة أدوات المنظومة <code>00-لوحة-أدوات-المطور.bat</code> ← [17]، اكتب رقم الإصدار الجديد (مثل 1.0.1). يُنشأ ملف موقّع في <code>E:\Qalix\Releases\Updates\</code>.
+2. انسخه على فلاشة، وعند العميل: أوقف الخادم (02) ثم شغّل <code>12-تطبيق-تحديث-موقع.bat</code>. يتحقق من توقيعك وبصمة كل ملف، ولا يلمس البيانات، ويحفظ نسخة رجوع.
+3. لإيقاف ترخيص (عميل لم يسدد مثلاً): ألغه من مركز التراخيص في بوابة المطور، ثم [17] واكتب <code>revoke</code>، وطبّق الملف عند العميل. كل حزمة تحديث تحمل أيضاً قائمة الإلغاء الأحدث تلقائياً.</p>
+<p><strong>دخول المطوّر للصيانة (بلا كلمة سر ثابتة ولا باب خلفي):</strong>
+1. عند العميل: شاشة الدخول ← «دخول المطوّر (صيانة)» ← يظهر رمز تحدٍّ يبدأ بـ <code>QLX-DEV:</code> (صالح 10 دقائق).
+2. على جهازك: لوحة الأدوات ← [18] والصق الرمز (أو <code>node scripts/sign-dev-access.js "الرمز"</code>). يُوقَّع بمفتاحك الخاص الذي لا يغادر جهازك.
+3. الصق التوقيع الناتج عند العميل ← تدخل بصلاحية مدير لجلسة صيانة مؤقتة (لا تُحفظ كمستخدم، وتنتهي بإعادة تشغيل الخادم)، وتُسجَّل في سجل التدقيق.
+4. لا يعمل التوقيع على نسخة أخرى ولا مرة ثانية. ولا يفتح البيانات المقفلة على جهاز جديد — ذلك يحتاج مفتاح الاسترجاع الذي مع الطبيب وحده.</p>
+<h2>8. رسائل جاهزة</h2>
+<p><strong>أ) أول تواصل (واتساب):</strong></p>
+<pre><code>السلام عليكم دكتور [الاسم]،
+معاك [اسمك] من منصة كالكس.
+عملنا نظام لإدارة العيادات بيشتغل على جهاز العيادة نفسه بدون إنترنت وبدون اشتراك شهري: مواعيد، شاشة نداء لصالة الانتظار، ملف طبي وروشتة، فواتير وصيدلية.
+بيانات المرضى مشفرة على جهاز حضرتك ومحدش يقدر يوصلها غيرك.
+ممكن أعرض عليك العرض في 10 دقايق في العيادة، أو أركّب لحضرتك نسخة تجريبية مجانية 14 يوم؟
+</code></pre>
+<p><strong>ب) بعد العرض:</strong></p>
+<pre><code>شكراً دكتور على وقتك النهارده 🌿
+ملخص اللي شفناه: نظام كامل للعيادة بيشتغل بدون إنترنت، شاشة نداء لصالة الانتظار، ملف طبي وروشتة، وفواتير وتقفيل خزينة — وبيانات المرضى مشفرة على جهازك.
+مرفق بطاقة الباقات والأسعار. الترخيص دائم ويُدفع مرة واحدة.
+تحب نحدد ميعاد التركيب أو نبدأ بالتجربة المجانية 14 يوم؟
+المبيعات: 01122166704
+</code></pre>
+<p><strong>ج) بعد 3–5 أيام من التجربة:</strong></p>
+<pre><code>السلام عليكم دكتور، إزاي التجربة مع السكرتارية وصالة الانتظار؟
+لو مناسبة لحضرتك نفعّل الترخيص الدائم النهارده وكل البيانات اللي اتسجلت هتفضل زي ما هي.
+</code></pre>
+<p><strong>د) بعد التسليم:</strong></p>
+<pre><code>مبروك تشغيل منظومة كالكس في عيادتكم ✨
+تذكير مهم: احتفظوا بورقة &quot;مفتاح الاسترجاع&quot; في مكان آمن خارج الجهاز، وخذوا نسخة احتياطية أسبوعياً على الفلاشة.
+الدعم الفني: 01122166076
+</code></pre>
+<p><strong>هـ) منشور فيسبوك:</strong></p>
+<pre><code>عيادتك كلها في نظام واحد… على جهازك، بدون إنترنت 🩺
+✔ مواعيد بدون تعارض وتذكرة دور
+✔ شاشة نداء صوتي لصالة الانتظار والمريض يتابع دوره من موبايله
+✔ ملف طبي كامل وروشتة مطبوعة وتنبيه الحساسية والتداخلات الدوائية
+✔ فواتير وصيدلية بالباركود وتقفيل الخزينة
+✔ بيانات المرضى مشفرة على جهاز العيادة
+✔ نسخة احتياطية تلقائية كل يوم
+💎 ترخيص دائم يُدفع مرة واحدة — بدون اشتراك شهري
+🏛️ خصم 40% لعيادات ومراكز محافظة أسيوط
+جرّبها في عيادتك 14 يوم مجاناً — واتساب: 01122166704
+</code></pre>
+<h2>9. ملفات التسويق</h2>
+<p>موجودة في <code>ملفات_العروض_التقديمية/</code> (المصدر HTML، والـ PDF والصور مولّدة منه):</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">الملف</th>
+<th style="text-align: left;">الاستخدام</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">العرض_التقديمي_الشامل_المجمع (HTML / PDF)</td>
+<td style="text-align: left;">عرض 10 شرائح على اللابتوب أو الشاشة (زر "وضع العرض") أو إرسال PDF</td>
+</tr>
+<tr>
+<td style="text-align: left;">بطاقة_عرض_منظومة_كالكس_الطبية_الموحدة (PDF / PNG)</td>
+<td style="text-align: left;">بطاقة A4 للطباعة، والصورة PNG للواتساب</td>
+</tr>
+<tr>
+<td style="text-align: left;">عرض_هاتف_الطبيب (PDF + 3 صور PNG)</td>
+<td style="text-align: left;">حالات واتساب ومنشورات فيسبوك وإنستجرام بمقاس الهاتف</td>
+</tr>
+<tr>
+<td style="text-align: left;">دليل_المبيعات_والتسعير_والتسليم</td>
+<td style="text-align: left;">هذا الدليل</td>
+</tr>
+<tr>
+<td style="text-align: left;">إعلانات_فيسبوك (صور + نصوص)</td>
+<td style="text-align: left;">3 إعلانات بمقاس المنشور 1080×1080 والقصة 1080×1920، مع النص والعنوان الجاهز لكل إعلان</td>
+</tr>
+<tr>
+<td style="text-align: left;">فيديو_تسويقي (MP4)</td>
+<td style="text-align: left;">فيديو قصير عمودي لـ Reels والقصص وحالات واتساب، وفيديو مربع للمنشورات</td>
+</tr>
+</tbody>
+</table>
+<p>لتحديث ملفات PDF بعد أي تعديل: <code>07-توليد-عروض-الأسعار-PDF.bat</code> على جهاز المطور.</p>
+</main></body></html>

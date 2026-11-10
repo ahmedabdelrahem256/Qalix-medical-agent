@@ -31,6 +31,8 @@ const PORT = Number(process.env.PORT) || 4000;
 const HOST = process.env.HOST || '127.0.0.1';
 const ROOT = path.join(__dirname, '..');
 const PUBLIC_DIR = path.join(ROOT, 'public');
+const PRESENTATIONS_DIR = path.join(ROOT, 'ملفات_العروض_التقديمية');
+const LEGAL_DOCS_DIR = path.join(ROOT, 'الوثائق_القانونية_والتسليم');
 const DATA_DIR = process.env.DATA_DIR || path.join(ROOT, 'data');
 const KITS_DIR = path.join(ROOT, 'distributors_kits');
 
@@ -49,7 +51,11 @@ const AGENT_INFO = {
   titleAr: 'وكيل منظومة كالكس ميديكال الطبية',
   phone: '01122166076',
   intlPhone: '+201122166076',
+  salesHotline: '01122166704',
+  supportHotline: '01122166076',
+  facebookPageUrl: 'https://www.facebook.com/profile.php?id=61596117518854',
   whatsappUrl: 'https://wa.me/201122166076',
+  whatsappSalesUrl: 'https://wa.me/201122166704',
   megaTrialUrl: 'https://mega.nz/file/T6hxgRaK#j7_5EtTGN3TJcgxoOHd_eP-JENFmXHgaxXNlrKO6qGI',
   packageSha256: '0f7ff4448eb11ee1385332edf4233f0b6cc9964f490782800de78efc2b8499f7'
 };
@@ -451,7 +457,12 @@ function getSummaryResponse() {
 const server = http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
-    const pathname = decodeURIComponent(url.pathname);
+    let pathname = url.pathname;
+    try {
+      pathname = decodeURIComponent(url.pathname);
+    } catch {
+      pathname = url.pathname;
+    }
 
     if (req.method === 'GET' && pathname === '/api/bootstrap') {
       return sendJson(res, 200, getSummaryResponse());
@@ -861,14 +872,90 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, 200, { ok: true, forecast, scenarios: SCENARIOS });
     }
 
-    // Serve static files
-    let rel = pathname === '/' ? '/index.html' : pathname;
-    const filePath = path.resolve(PUBLIC_DIR, '.' + rel);
-    if (!filePath.startsWith(PUBLIC_DIR)) return sendJson(res, 403, { error: 'Forbidden' });
+    /* ---------------- Presentations & Marketing Catalog API (Phase 8) ---------------- */
+    if (req.method === 'GET' && pathname === '/api/marketing/presentation-assets') {
+      return sendJson(res, 200, {
+        ok: true,
+        facebookCampaigns: MARKETING_MATERIALS.facebookCampaigns || [],
+        clinicalGallery: MARKETING_MATERIALS.clinicalGallery || [],
+        presentationCollateral: MARKETING_MATERIALS.presentationCollateral || [],
+        marketingVideos: MARKETING_MATERIALS.marketingVideos || []
+      });
+    }
+
+    /* ---------------- Legal & Handover Documents API (Phase 8) ---------------- */
+    if (req.method === 'GET' && pathname === '/api/legal/delivery-documents') {
+      return sendJson(res, 200, {
+        ok: true,
+        documents: MARKETING_MATERIALS.legalHandoverDocs || []
+      });
+    }
+
+    // Serve static files: support /presentations/, /legal-docs/, and /public/
+    let filePath = null;
+    let baseDir = null;
+
+    if (pathname.startsWith('/presentations/')) {
+      const sub = pathname.slice('/presentations/'.length);
+      baseDir = PRESENTATIONS_DIR;
+      filePath = path.resolve(PRESENTATIONS_DIR, sub);
+    } else if (pathname.startsWith('/legal-docs/')) {
+      const sub = pathname.slice('/legal-docs/'.length);
+      baseDir = LEGAL_DOCS_DIR;
+      filePath = path.resolve(LEGAL_DOCS_DIR, sub);
+    } else {
+      let rel = pathname === '/' ? '/index.html' : pathname;
+      baseDir = PUBLIC_DIR;
+      filePath = path.resolve(PUBLIC_DIR, '.' + rel);
+    }
+
+    if (!filePath.startsWith(baseDir)) return sendJson(res, 403, { error: 'Forbidden' });
+
     if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
       const ext = path.extname(filePath).toLowerCase();
-      const mime = ext === '.html' ? 'text/html; charset=utf-8' : ext === '.js' ? 'text/javascript; charset=utf-8' : ext === '.css' ? 'text/css; charset=utf-8' : 'application/octet-stream';
-      res.writeHead(200, { 'Content-Type': mime, 'Cache-Control': 'no-cache' });
+      const mimeTypes = {
+        '.html': 'text/html; charset=utf-8',
+        '.css': 'text/css; charset=utf-8',
+        '.js': 'text/javascript; charset=utf-8',
+        '.json': 'application/json; charset=utf-8',
+        '.png': 'image/png',
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.svg': 'image/svg+xml',
+        '.webp': 'image/webp',
+        '.pdf': 'application/pdf',
+        '.mp4': 'video/mp4',
+        '.woff2': 'font/woff2',
+        '.woff': 'font/woff',
+        '.md': 'text/markdown; charset=utf-8',
+        '.txt': 'text/plain; charset=utf-8'
+      };
+      const mime = mimeTypes[ext] || 'application/octet-stream';
+      const stat = fs.statSync(filePath);
+
+      // Simple Range header handling for video playback
+      const range = req.headers.range;
+      if (range && ext === '.mp4') {
+        const parts = range.replace(/bytes=/, '').split('-');
+        const start = parseInt(parts[0], 10);
+        const end = parts[1] ? parseInt(parts[1], 10) : stat.size - 1;
+        const chunksize = (end - start) + 1;
+        const fileStream = fs.createReadStream(filePath, { start, end });
+        res.writeHead(206, {
+          'Content-Range': `bytes ${start}-${end}/${stat.size}`,
+          'Accept-Ranges': 'bytes',
+          'Content-Length': chunksize,
+          'Content-Type': mime
+        });
+        return fileStream.pipe(res);
+      }
+
+      res.writeHead(200, {
+        'Content-Type': mime,
+        'Content-Length': stat.size,
+        'Cache-Control': 'no-cache',
+        'Accept-Ranges': 'bytes'
+      });
       return fs.createReadStream(filePath).pipe(res);
     }
 
