@@ -9,6 +9,9 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const { DatabaseSync } = require('node:sqlite');
+const { SPECIALTY_PACKS, getAllPacks, getPackById } = require('./specialty_packs');
+const { processMigration } = require('./data_migrator');
+const { MARKETING_MATERIALS } = require('./marketing_kit');
 
 const PORT = Number(process.env.PORT) || 4000;
 const HOST = process.env.HOST || '127.0.0.1';
@@ -313,111 +316,9 @@ function calculateDealFinancials(tierId, isAssiut, commissionRate) {
   };
 }
 
+const { generateStandaloneDistributorPortalHtml: genPortal } = require('./portal_template');
 function generateStandaloneDistributorPortalHtml(dist) {
-  return `<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>حقيبة الموزع المستقل: ${dist.name} | Qalix Medical Agent</title>
-  <style>
-    :root { --bg: #0b1120; --card: #111827; --border: #1f2937; --text: #f9fafb; --muted: #9ca3af; --accent: #10b981; --blue: #0ea5e9; --amber: #f59e0b; }
-    * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
-    body { margin: 0; padding: 24px; background: var(--bg); color: var(--text); line-height: 1.6; }
-    .container { max-width: 1080px; margin: 0 auto; }
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 20px; }
-    .badge { display: inline-block; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; background: rgba(16,185,129,0.15); color: var(--accent); border: 1px solid rgba(16,185,129,0.3); }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
-    input, select, textarea { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border); background: #0f172a; color: var(--text); font-size: 13px; margin-top: 4px; }
-    button { cursor: pointer; padding: 11px 18px; border-radius: 10px; border: none; font-weight: 700; font-size: 13px; background: var(--accent); color: #052e16; width: 100%; }
-    table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    th, td { padding: 10px; border-bottom: 1px solid var(--border); text-align: right; }
-    th { color: var(--muted); background: #0f172a; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="card">
-      <span class="badge">بوابة الموزع المستقل المعتمد · Qalix Medical Agent</span>
-      <h1 style="margin: 10px 0 4px; font-size: 22px;">${dist.name} (${dist.code})</h1>
-      <p style="margin: 0; color: var(--muted); font-size: 13px;">
-        النطاق الجغرافي: <strong>${dist.governorate}</strong> · نسبة العمولة الثابتة من كل عملية بيع: <strong style="color:var(--accent)">${dist.commission_rate}%</strong> · بإشراف وكيل منظومة كالكس ميديكال الطبية: <strong dir="ltr">01122166076</strong>
-      </p>
-    </div>
-
-    <div class="grid">
-      <div class="card">
-        <h3 style="margin-top:0; color:var(--accent);">1. جدول الأسعار الرسمية الثابتة وعمولتك الفورية (${dist.commission_rate}%)</h3>
-        <table>
-          <thead>
-            <tr><th>الباقة</th><th>السعر الرسمي</th><th>عمولتك (${dist.commission_rate}%)</th><th>صافي التوريد للوكيل</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>الباقة الأساسية</td><td>4,500 ج.م</td><td style="color:var(--accent);font-weight:bold;">${Math.round(4500 * dist.commission_rate / 100)} ج.م</td><td>${4500 - Math.round(4500 * dist.commission_rate / 100)} ج.م</td></tr>
-            <tr><td>الباقة التخصصية</td><td>8,500 ج.م</td><td style="color:var(--accent);font-weight:bold;">${Math.round(8500 * dist.commission_rate / 100)} ج.م</td><td>${8500 - Math.round(8500 * dist.commission_rate / 100)} ج.م</td></tr>
-            <tr><td>باقة المراكز الكبرى</td><td>18,500 ج.م</td><td style="color:var(--accent);font-weight:bold;">${Math.round(18500 * dist.commission_rate / 100)} ج.م</td><td>${18500 - Math.round(18500 * dist.commission_rate / 100)} ج.م</td></tr>
-            <tr><td>الأساسية (خصم أسيوط 40%)</td><td>2,700 ج.م</td><td style="color:var(--amber);font-weight:bold;">${Math.round(2700 * dist.commission_rate / 100)} ج.م</td><td>${2700 - Math.round(2700 * dist.commission_rate / 100)} ج.م</td></tr>
-            <tr><td>التخصصية (خصم أسيوط 40%)</td><td>5,100 ج.م</td><td style="color:var(--amber);font-weight:bold;">${Math.round(5100 * dist.commission_rate / 100)} ج.م</td><td>${5100 - Math.round(5100 * dist.commission_rate / 100)} ج.م</td></tr>
-            <tr><td>المراكز (خصم أسيوط 40%)</td><td>11,100 ج.م</td><td style="color:var(--amber);font-weight:bold;">${Math.round(11100 * dist.commission_rate / 100)} ج.م</td><td>${11100 - Math.round(11100 * dist.commission_rate / 100)} ج.م</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="card">
-        <h3 style="margin-top:0; color:var(--blue);">2. مولّد طلب إصدار ترخيص عيادة للوكيل (01122166076)</h3>
-        <div style="display:grid; gap:10px;">
-          <div><label style="font-size:12px;">اسم العيادة / المركز الطبي:</label><input id="cName" placeholder="مثال: عيادة الشفاء التخصصية" /></div>
-          <div><label style="font-size:12px;">اسم الطبيب وهاتفه:</label><input id="dName" placeholder="مثال: د. أحمد سامي - 010..." /></div>
-          <div><label style="font-size:12px;">بصمة جهاز العيادة (Hardware ID من شاشة التفعيل):</label><input id="hwId" placeholder="24 حرفاً ورقماً" dir="ltr" /></div>
-          <div>
-            <label style="font-size:12px;">الباقة المتعاقد عليها:</label>
-            <select id="tierSel">
-              <option value="basic|4500">الباقة الأساسية (4,500 ج.م)</option>
-              <option value="pro|8500" selected>الباقة التخصصية (8,500 ج.م)</option>
-              <option value="ent|18500">باقة المراكز الكبرى (18,500 ج.م)</option>
-              <option value="basic_as|2700">الأساسية - عرض أسيوط (2,700 ج.م)</option>
-              <option value="pro_as|5100">التخصصية - عرض أسيوط (5,100 ج.م)</option>
-              <option value="ent_as|11100">المراكز - عرض أسيوط (11,100 ج.م)</option>
-            </select>
-          </div>
-          <button onclick="genRequest()">توليد رسالة طلب التفعيل للوكيل (نسخ واتساب)</button>
-          <textarea id="outMsg" rows="5" readonly placeholder="ستظهر رسالة الطلب الجاهزة هنا..."></textarea>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <h3 style="margin-top:0;">3. رابط النسخة التجريبية للعملاء (14 يوماً بكامل المزايا)</h3>
-      <p style="font-size:13px; color:var(--muted);">أرسل هذا الرابط لأي طبيب لتثبيت النسخة وتجربتها فوراً (حساب المصنع: <code>admin</code> / كلمة المرور: <code>Qalix@11</code>):</p>
-      <input readonly value="${AGENT_INFO.megaTrialUrl}" dir="ltr" onclick="this.select()" />
-    </div>
-  </div>
-  <script>
-    const rate = ${Number(dist.commission_rate)};
-    function genRequest() {
-      const c = document.getElementById('cName').value.trim() || 'غير محدد';
-      const d = document.getElementById('dName').value.trim() || 'غير محدد';
-      const hw = document.getElementById('hwId').value.trim() || 'غير محدد';
-      const [tCode, pStr] = document.getElementById('tierSel').value.split('|');
-      const price = Number(pStr);
-      const comm = Math.round(price * rate / 100);
-      const net = price - comm;
-      const msg = \`طلب إصدار ترخيص جديد — Qalix Medical Agent
-• كود الموزع: ${dist.code} (${dist.name})
-• المنشأة الطبية: \${c}
-• الطبيب والهاتف: \${d}
-• بصمة الجهاز (HWID): \${hw}
-• السعر الرسمي الثابت: \${price} ج.م
-• عمولة الموزع (\${rate}%): \${comm} ج.م
-• صافي التوريد للوكيل (01122166076): \${net} ج.م\`;
-      const box = document.getElementById('outMsg');
-      box.value = msg;
-      box.select();
-      if (navigator.clipboard) navigator.clipboard.writeText(msg);
-    }
-  <\/script>
-</body>
-</html>`;
+  return genPortal(dist, AGENT_INFO);
 }
 
 /* ---------------- REST API Handler ---------------- */
@@ -510,6 +411,8 @@ function getSummaryResponse() {
     agent: AGENT_INFO,
     pricing: OFFICIAL_PRICING,
     competitors: COMPETITORS_CATALOG,
+    specialtyPacks: getAllPacks(),
+    marketing: MARKETING_MATERIALS,
     kpis: {
       activeDistributors: distributors.filter(d => d.status === 'active').length,
       totalDistributors: distributors.length,
@@ -520,7 +423,8 @@ function getSummaryResponse() {
       totalAgentNetRevenue,
       pendingAgentNetRevenue,
       proposalsCount: proposals.length,
-      competitorsCount: COMPETITORS_CATALOG.length
+      competitorsCount: COMPETITORS_CATALOG.length,
+      specialtyPacksCount: Object.keys(SPECIALTY_PACKS).length
     },
     distributors: enrichedDistributors,
     deals,
@@ -677,6 +581,65 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, 200, { ok: true, summary: getSummaryResponse() });
     }
 
+    /* ---------------- Specialty Packs API (Phase 3) ---------------- */
+    if (req.method === 'GET' && pathname === '/api/specialty-packs') {
+      return sendJson(res, 200, { ok: true, packs: getAllPacks() });
+    }
+
+    if (req.method === 'GET' && pathname.startsWith('/api/specialty-packs/') && pathname.endsWith('/download')) {
+      const id = pathname.split('/')[3];
+      const pack = getPackById(id);
+      if (!pack) return sendJson(res, 404, { error: 'حزمة التخصص غير موجودة' });
+      const format = url.searchParams.get('format') || 'json';
+      if (format === 'csv') {
+        let csv = '\uFEFFType,Code,NameOrTrade,GenericOrDept,Price,NotesOrDosage\n';
+        for (const s of pack.services) {
+          csv += `"service","${s.code}","${s.name.replace(/"/g, '""')}","${s.department.replace(/"/g, '""')}",${s.price},"${(s.notes || '').replace(/"/g, '""')}"\n`;
+        }
+        for (const d of pack.drugs) {
+          csv += `"drug","","${d.tradeName.replace(/"/g, '""')}","${d.genericName.replace(/"/g, '""')}",${d.defaultPrice},"${(d.dosageGuide || '').replace(/"/g, '""')}"\n`;
+        }
+        res.writeHead(200, {
+          'Content-Type': 'text/csv; charset=utf-8',
+          'Content-Disposition': `attachment; filename="Qalix-Specialty-${pack.id}.csv"`
+        });
+        return res.end(csv);
+      }
+      const dataStr = JSON.stringify(pack, null, 2);
+      res.writeHead(200, {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Content-Disposition': `attachment; filename="Qalix-Specialty-${pack.id}.json"`
+      });
+      return res.end(dataStr);
+    }
+
+    if (req.method === 'GET' && pathname.startsWith('/api/specialty-packs/')) {
+      const id = pathname.split('/')[3];
+      const pack = getPackById(id);
+      if (!pack) return sendJson(res, 404, { error: 'حزمة التخصص غير موجودة' });
+      return sendJson(res, 200, { ok: true, pack });
+    }
+
+    /* ---------------- Data Migration Tool API (Phase 3) ---------------- */
+    if (req.method === 'POST' && pathname === '/api/tools/migrate-data') {
+      const body = await readJsonBody(req);
+      const type = String(body.type || 'patients').trim();
+      const rawText = String(body.rawText || '').trim();
+      const delimiter = body.delimiter || undefined;
+      if (!rawText) return sendJson(res, 400, { error: 'يرجى لصق أو كتابة نص البيانات المراد تحويلها' });
+
+      const migrationResult = processMigration(type, rawText, delimiter);
+      if (!migrationResult.ok) return sendJson(res, 400, { error: migrationResult.error });
+
+      logAudit('migrate_data', `تحويل بيانات خارجية (${type}): تم استيراد ${migrationResult.successfulCount} سجل بنجاح`);
+      return sendJson(res, 200, migrationResult);
+    }
+
+    /* ---------------- Marketing & Field Kits API (Phase 3) ---------------- */
+    if (req.method === 'GET' && pathname === '/api/marketing/materials') {
+      return sendJson(res, 200, { ok: true, materials: MARKETING_MATERIALS });
+    }
+
     // Serve static files
     let rel = pathname === '/' ? '/index.html' : pathname;
     const filePath = path.resolve(PUBLIC_DIR, '.' + rel);
@@ -703,3 +666,10 @@ server.listen(PORT, HOST, () => {
   console.log(`  - Database (SQLite WAL):  ${dbPath}`);
   console.log(`=============================================================`);
 });
+
+function gracefulShutdown() {
+  try { db.close(); } catch (_) {}
+  process.exit(0);
+}
+process.on('SIGINT', gracefulShutdown);
+process.on('SIGTERM', gracefulShutdown);

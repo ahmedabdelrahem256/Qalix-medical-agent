@@ -5,18 +5,40 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>حقيبة الموزع المستقل: مكتب الصعيد للأنظمة الطبية | Qalix Medical Agent</title>
   <style>
-    :root { --bg: #0b1120; --card: #111827; --border: #1f2937; --text: #f9fafb; --muted: #9ca3af; --accent: #10b981; --blue: #0ea5e9; --amber: #f59e0b; }
+    :root {
+      --bg: #0b1120;
+      --card: #111827;
+      --card2: #1e293b;
+      --border: #1f2937;
+      --text: #f9fafb;
+      --muted: #9ca3af;
+      --accent: #10b981;
+      --blue: #0ea5e9;
+      --amber: #f59e0b;
+      --rose: #f43f5e;
+      --purple: #a855f7;
+    }
     * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
     body { margin: 0; padding: 24px; background: var(--bg); color: var(--text); line-height: 1.6; }
-    .container { max-width: 1080px; margin: 0 auto; }
+    .container { max-width: 1100px; margin: 0 auto; }
     .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 20px; }
+    .sub-card { background: var(--card2); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 12px; }
     .badge { display: inline-block; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; background: rgba(16,185,129,0.15); color: var(--accent); border: 1px solid rgba(16,185,129,0.3); }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
     input, select, textarea { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border); background: #0f172a; color: var(--text); font-size: 13px; margin-top: 4px; }
-    button { cursor: pointer; padding: 11px 18px; border-radius: 10px; border: none; font-weight: 700; font-size: 13px; background: var(--accent); color: #052e16; width: 100%; }
+    button { cursor: pointer; padding: 10px 16px; border-radius: 10px; border: none; font-weight: 700; font-size: 13px; background: var(--accent); color: #052e16; transition: 0.2s; }
+    button:hover { opacity: 0.9; }
+    .btn-blue { background: var(--blue); color: #082f49; }
+    .btn-amber { background: var(--amber); color: #451a03; }
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
     th, td { padding: 10px; border-bottom: 1px solid var(--border); text-align: right; }
     th { color: var(--muted); background: #0f172a; }
+    @media print {
+      body { background: white; color: black; padding: 0; }
+      .no-print { display: none !important; }
+      .card { border: 1px solid #ccc; background: white; color: black; page-break-inside: avoid; }
+      th { background: #f0f0f0; color: black; }
+    }
   </style>
 </head>
 <body>
@@ -70,10 +92,61 @@
       </div>
     </div>
 
+    <!-- 3. Trial Link & Quick Demo -->
     <div class="card">
-      <h3 style="margin-top:0;">3. رابط النسخة التجريبية للعملاء (14 يوماً بكامل المزايا)</h3>
-      <p style="font-size:13px; color:var(--muted);">أرسل هذا الرابط لأي طبيب لتثبيت النسخة وتجربتها فوراً (حساب المصنع: <code>admin</code> / كلمة المرور: <code>Qalix@11</code>):</p>
+      <h3 style="margin-top:0; color:var(--amber);">3. رابط النسخة التجريبية للعملاء (14 يوماً بكامل المزايا)</h3>
+      <p style="font-size:13px; color:var(--muted); margin-bottom:8px;">أرسل هذا الرابط لأي طبيب لتثبيت النسخة وتجربتها فوراً (حساب المصنع: <code>admin</code> / كلمة المرور: <code>Qalix@11</code>):</p>
       <input readonly value="https://mega.nz/file/T6hxgRaK#j7_5EtTGN3TJcgxoOHd_eP-JENFmXHgaxXNlrKO6qGI" dir="ltr" onclick="this.select()" />
+    </div>
+
+    <!-- 4. 5-Minute WOW Live Demo Script -->
+    <div class="card">
+      <h3 style="margin-top:0; color:var(--purple);">4. سيناريو العرض الميداني في 5 دقائق (The 5-Minute WOW Live Demo)</h3>
+      <p style="font-size:13px; color:var(--muted);">خطوات العرض السريع أمام الطبيب أو السكرتيرة لإغلاق الاقتناع الفوري:</p>
+      <div class="sub-card">
+        <strong style="color:var(--sky);">الدقيقة 1: مسح الـ QR والنداء الصوتي الذكي</strong>
+        <p style="margin:4px 0 0; font-size:12.5px;">امسح QR بالهاتف ليفتح دور المريض على الشبكة المحلية، واضغط استدعاء لسماع النداء الصوتي العربي باسم المريض.</p>
+      </div>
+      <div class="sub-card">
+        <strong style="color:var(--rose);">الدقيقة 2: صمام أمان التداخلات الدوائية</strong>
+        <p style="margin:4px 0 0; font-size:12.5px;">اكتب Warfarin مع Aspirin أو Ketolac في الروشتة لتظهر شاشة التنبيه الدوائي الفوري بحماية المريض من النزيف.</p>
+      </div>
+      <div class="sub-card">
+        <strong style="color:var(--accent);">الدقيقة 3: الشات الداخلي المشفر بالصوت والنص</strong>
+        <p style="margin:4px 0 0; font-size:12.5px;">أرسل تسجيلاً صوتياً من هاتفك للاستقبال يثبت التواصل السلس داخل العيادة بدون أجهزة إنتركم وبدون إنترنت.</p>
+      </div>
+      <div class="sub-card">
+        <strong style="color:var(--amber);">الدقيقة 4: فصل كابل الإنترنت تماماً</strong>
+        <p style="margin:4px 0 0; font-size:12.5px;">افصل الإنترنت وأجرِ كشفاً وطباعة روشتة لإثبات أن المنظومة تعمل 100% بدون توقف وبسرية عسكرية.</p>
+      </div>
+      <div class="sub-card">
+        <strong style="color:var(--emerald);">الدقيقة 5: المقارنة المالية وإغلاق التجربة الفورية</strong>
+        <p style="margin:4px 0 0; font-size:12.5px;">قارن تكلفة كالكس (ترخيص دائم) مع اشتراكات السحابة (50,000+ ج.م في 3 سنين)، وابدأ تثبيت تجربة الـ 14 يوماً فوراً.</p>
+      </div>
+    </div>
+
+    <!-- 5. One-Click WhatsApp Sales Pitch -->
+    <div class="card">
+      <h3 style="margin-top:0; color:var(--accent);">5. رسائل واتساب البيعية الجاهزة للإرسال للأطباء</h3>
+      <div class="grid">
+        <div class="sub-card">
+          <strong style="color:var(--sky);">رسالة التعارف والتجربة المجانية 14 يوماً</strong>
+          <p style="font-size:12px; color:var(--muted); margin:4px 0;">جاهزة بنقرة واحدة متضمنة كود الموزع QMA-DIST-04 ورابط التجربة.</p>
+          <button onclick="copyPitch(1)" style="width:100%; margin-top:6px;">نسخ الرسالة للواتساب</button>
+        </div>
+        <div class="sub-card">
+          <strong style="color:var(--amber);">الرد على اعتراض النظام السحابي (Cloud SaaS)</strong>
+          <p style="font-size:12px; color:var(--muted); margin:4px 0;">تفنيد تكلفة 50 ألف جنيه وتوقف العيادة عند انقطاع الإنترنت وسرية الإيرادات.</p>
+          <button onclick="copyPitch(2)" class="btn-amber" style="width:100%; margin-top:6px;">نسخ الرسالة للواتساب</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. Printable A4 Battle Card Button -->
+    <div class="card no-print">
+      <h3 style="margin-top:0; color:var(--blue);">6. بطاقة المقارنة التنافسية المطبوعة (A4 Battle Card)</h3>
+      <p style="font-size:13px; color:var(--muted);">اطبع بطاقة المقارنة الملونة على ورق A4 وضعها في ملف الزيارات الميدانية لكل عيادة:</p>
+      <button onclick="window.print()" class="btn-blue" style="max-width:280px;">🖨️ طباعة بطاقة المقارنة A4 الآن</button>
     </div>
   </div>
   <script>
@@ -98,6 +171,18 @@
       box.value = msg;
       box.select();
       if (navigator.clipboard) navigator.clipboard.writeText(msg);
+      alert('تم توليد ونسخ رسالة طلب التفعيل! يمكنك إرسالها الآن لواتساب الوكيل 01122166076');
+    }
+
+    function copyPitch(id) {
+      let t = '';
+      if (id === 1) {
+        t = `السلام عليكم دكتورنا العزيز 🌹\nمع حضرتك الموزع المعتمد لمنظومة "كالكس ميديكال" الطبية (QMA-DIST-04).\n\nحبينا نهدي عيادتكم نسخة تجريبية كاملة مجانية لمدة 14 يوماً من أحدث منظومة طبية في مصر:\n✅ تعمل 100% بدون نت لحماية خصوصية وسرية أرباحك.\n✅ شاشة انتظار ونداء صوتي ذكي يفتح على موبايل المريض.\n✅ فاحص تداخلات دوائية وحماية للمريض.\n✅ محادثات داخلية صوتية بين العيادة والاستقبال.\n\nرابط تثبيت النسخة التجريبية:\nhttps://mega.nz/file/T6hxgRaK#j7_5EtTGN3TJcgxoOHd_eP-JENFmXHgaxXNlrKO6qGI\n(دخول: admin / كلمة سر: Qalix@11)\n\nلأي استفسار أو طلب زيارة لتثبيتها لحضرتك مجاناً تواصل معنا أو مع وكيل المنظومة الرسمي: 01122166076`;
+      } else {
+        t = `دكتورنا العزيز، ليه تدفع أكثر من 50,000 جنيه في 3 سنوات لاشتراكات البرامج السحابية، ولو النت فصل العيادة تقف، وإيرادك مكشوف على سيرفرات برة؟\n\nفي "كالكس ميديكال" ترخيص دائم مدى الحياة بدفعة واحدة بدون أي اشتراك شهري، وتعمل 100% أوفلاين وقاعدتها مشفرة عسكرياً جوة جهازك.\nللتجربة المجانية 14 يوماً تواصل مع وكيل المنظومة: 01122166076`;
+      }
+      if (navigator.clipboard) navigator.clipboard.writeText(t);
+      alert('تم نسخ الرسالة بنجاح! جاهزة للإرسال في واتساب.');
     }
   </script>
 </body>

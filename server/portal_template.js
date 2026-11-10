@@ -1,0 +1,200 @@
+/* Standalone Distributor Portal Generator (Phase 3)
+ * 100% Offline Air-Gapped · Zero External Dependencies · Official Agent: 01122166076
+ */
+'use strict';
+
+function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
+  return `<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>حقيبة الموزع المستقل: ${dist.name} | Qalix Medical Agent</title>
+  <style>
+    :root {
+      --bg: #0b1120;
+      --card: #111827;
+      --card2: #1e293b;
+      --border: #1f2937;
+      --text: #f9fafb;
+      --muted: #9ca3af;
+      --accent: #10b981;
+      --blue: #0ea5e9;
+      --amber: #f59e0b;
+      --rose: #f43f5e;
+      --purple: #a855f7;
+    }
+    * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
+    body { margin: 0; padding: 24px; background: var(--bg); color: var(--text); line-height: 1.6; }
+    .container { max-width: 1100px; margin: 0 auto; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 20px; }
+    .sub-card { background: var(--card2); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 12px; }
+    .badge { display: inline-block; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; background: rgba(16,185,129,0.15); color: var(--accent); border: 1px solid rgba(16,185,129,0.3); }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+    input, select, textarea { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border); background: #0f172a; color: var(--text); font-size: 13px; margin-top: 4px; }
+    button { cursor: pointer; padding: 10px 16px; border-radius: 10px; border: none; font-weight: 700; font-size: 13px; background: var(--accent); color: #052e16; transition: 0.2s; }
+    button:hover { opacity: 0.9; }
+    .btn-blue { background: var(--blue); color: #082f49; }
+    .btn-amber { background: var(--amber); color: #451a03; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { padding: 10px; border-bottom: 1px solid var(--border); text-align: right; }
+    th { color: var(--muted); background: #0f172a; }
+    @media print {
+      body { background: white; color: black; padding: 0; }
+      .no-print { display: none !important; }
+      .card { border: 1px solid #ccc; background: white; color: black; page-break-inside: avoid; }
+      th { background: #f0f0f0; color: black; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <span class="badge">بوابة الموزع المستقل المعتمد · Qalix Medical Agent</span>
+      <h1 style="margin: 10px 0 4px; font-size: 22px;">${dist.name} (${dist.code})</h1>
+      <p style="margin: 0; color: var(--muted); font-size: 13px;">
+        النطاق الجغرافي: <strong>${dist.governorate}</strong> · نسبة العمولة الثابتة من كل عملية بيع: <strong style="color:var(--accent)">${dist.commission_rate}%</strong> · بإشراف وكيل منظومة كالكس ميديكال الطبية: <strong dir="ltr">01122166076</strong>
+      </p>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h3 style="margin-top:0; color:var(--accent);">1. جدول الأسعار الرسمية الثابتة وعمولتك الفورية (${dist.commission_rate}%)</h3>
+        <table>
+          <thead>
+            <tr><th>الباقة</th><th>السعر الرسمي</th><th>عمولتك (${dist.commission_rate}%)</th><th>صافي التوريد للوكيل</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>الباقة الأساسية</td><td>4,500 ج.م</td><td style="color:var(--accent);font-weight:bold;">${Math.round(4500 * dist.commission_rate / 100)} ج.م</td><td>${4500 - Math.round(4500 * dist.commission_rate / 100)} ج.م</td></tr>
+            <tr><td>الباقة التخصصية</td><td>8,500 ج.م</td><td style="color:var(--accent);font-weight:bold;">${Math.round(8500 * dist.commission_rate / 100)} ج.م</td><td>${8500 - Math.round(8500 * dist.commission_rate / 100)} ج.م</td></tr>
+            <tr><td>باقة المراكز الكبرى</td><td>18,500 ج.م</td><td style="color:var(--accent);font-weight:bold;">${Math.round(18500 * dist.commission_rate / 100)} ج.م</td><td>${18500 - Math.round(18500 * dist.commission_rate / 100)} ج.م</td></tr>
+            <tr><td>الأساسية (خصم أسيوط 40%)</td><td>2,700 ج.م</td><td style="color:var(--amber);font-weight:bold;">${Math.round(2700 * dist.commission_rate / 100)} ج.م</td><td>${2700 - Math.round(2700 * dist.commission_rate / 100)} ج.م</td></tr>
+            <tr><td>التخصصية (خصم أسيوط 40%)</td><td>5,100 ج.م</td><td style="color:var(--amber);font-weight:bold;">${Math.round(5100 * dist.commission_rate / 100)} ج.م</td><td>${5100 - Math.round(5100 * dist.commission_rate / 100)} ج.م</td></tr>
+            <tr><td>المراكز (خصم أسيوط 40%)</td><td>11,100 ج.م</td><td style="color:var(--amber);font-weight:bold;">${Math.round(11100 * dist.commission_rate / 100)} ج.م</td><td>${11100 - Math.round(11100 * dist.commission_rate / 100)} ج.م</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-top:0; color:var(--blue);">2. مولّد طلب إصدار ترخيص عيادة للوكيل (01122166076)</h3>
+        <div style="display:grid; gap:10px;">
+          <div><label style="font-size:12px;">اسم العيادة / المركز الطبي:</label><input id="cName" placeholder="مثال: عيادة الشفاء التخصصية" /></div>
+          <div><label style="font-size:12px;">اسم الطبيب وهاتفه:</label><input id="dName" placeholder="مثال: د. أحمد سامي - 010..." /></div>
+          <div><label style="font-size:12px;">بصمة جهاز العيادة (Hardware ID من شاشة التفعيل):</label><input id="hwId" placeholder="24 حرفاً ورقماً" dir="ltr" /></div>
+          <div>
+            <label style="font-size:12px;">الباقة المتعاقد عليها:</label>
+            <select id="tierSel">
+              <option value="basic|4500">الباقة الأساسية (4,500 ج.م)</option>
+              <option value="pro|8500" selected>الباقة التخصصية (8,500 ج.م)</option>
+              <option value="ent|18500">باقة المراكز الكبرى (18,500 ج.م)</option>
+              <option value="basic_as|2700">الأساسية - عرض أسيوط (2,700 ج.م)</option>
+              <option value="pro_as|5100">التخصصية - عرض أسيوط (5,100 ج.م)</option>
+              <option value="ent_as|11100">المراكز - عرض أسيوط (11,100 ج.م)</option>
+            </select>
+          </div>
+          <button onclick="genRequest()">توليد رسالة طلب التفعيل للوكيل (نسخ واتساب)</button>
+          <textarea id="outMsg" rows="5" readonly placeholder="ستظهر رسالة الطلب الجاهزة هنا..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Trial Link & Quick Demo -->
+    <div class="card">
+      <h3 style="margin-top:0; color:var(--amber);">3. رابط النسخة التجريبية للعملاء (14 يوماً بكامل المزايا)</h3>
+      <p style="font-size:13px; color:var(--muted); margin-bottom:8px;">أرسل هذا الرابط لأي طبيب لتثبيت النسخة وتجربتها فوراً (حساب المصنع: <code>admin</code> / كلمة المرور: <code>Qalix@11</code>):</p>
+      <input readonly value="${agentInfo.megaTrialUrl}" dir="ltr" onclick="this.select()" />
+    </div>
+
+    <!-- 4. 5-Minute WOW Live Demo Script -->
+    <div class="card">
+      <h3 style="margin-top:0; color:var(--purple);">4. سيناريو العرض الميداني في 5 دقائق (The 5-Minute WOW Live Demo)</h3>
+      <p style="font-size:13px; color:var(--muted);">خطوات العرض السريع أمام الطبيب أو السكرتيرة لإغلاق الاقتناع الفوري:</p>
+      <div class="sub-card">
+        <strong style="color:var(--sky);">الدقيقة 1: مسح الـ QR والنداء الصوتي الذكي</strong>
+        <p style="margin:4px 0 0; font-size:12.5px;">امسح QR بالهاتف ليفتح دور المريض على الشبكة المحلية، واضغط استدعاء لسماع النداء الصوتي العربي باسم المريض.</p>
+      </div>
+      <div class="sub-card">
+        <strong style="color:var(--rose);">الدقيقة 2: صمام أمان التداخلات الدوائية</strong>
+        <p style="margin:4px 0 0; font-size:12.5px;">اكتب Warfarin مع Aspirin أو Ketolac في الروشتة لتظهر شاشة التنبيه الدوائي الفوري بحماية المريض من النزيف.</p>
+      </div>
+      <div class="sub-card">
+        <strong style="color:var(--accent);">الدقيقة 3: الشات الداخلي المشفر بالصوت والنص</strong>
+        <p style="margin:4px 0 0; font-size:12.5px;">أرسل تسجيلاً صوتياً من هاتفك للاستقبال يثبت التواصل السلس داخل العيادة بدون أجهزة إنتركم وبدون إنترنت.</p>
+      </div>
+      <div class="sub-card">
+        <strong style="color:var(--amber);">الدقيقة 4: فصل كابل الإنترنت تماماً</strong>
+        <p style="margin:4px 0 0; font-size:12.5px;">افصل الإنترنت وأجرِ كشفاً وطباعة روشتة لإثبات أن المنظومة تعمل 100% بدون توقف وبسرية عسكرية.</p>
+      </div>
+      <div class="sub-card">
+        <strong style="color:var(--emerald);">الدقيقة 5: المقارنة المالية وإغلاق التجربة الفورية</strong>
+        <p style="margin:4px 0 0; font-size:12.5px;">قارن تكلفة كالكس (ترخيص دائم) مع اشتراكات السحابة (50,000+ ج.م في 3 سنين)، وابدأ تثبيت تجربة الـ 14 يوماً فوراً.</p>
+      </div>
+    </div>
+
+    <!-- 5. One-Click WhatsApp Sales Pitch -->
+    <div class="card">
+      <h3 style="margin-top:0; color:var(--accent);">5. رسائل واتساب البيعية الجاهزة للإرسال للأطباء</h3>
+      <div class="grid">
+        <div class="sub-card">
+          <strong style="color:var(--sky);">رسالة التعارف والتجربة المجانية 14 يوماً</strong>
+          <p style="font-size:12px; color:var(--muted); margin:4px 0;">جاهزة بنقرة واحدة متضمنة كود الموزع ${dist.code} ورابط التجربة.</p>
+          <button onclick="copyPitch(1)" style="width:100%; margin-top:6px;">نسخ الرسالة للواتساب</button>
+        </div>
+        <div class="sub-card">
+          <strong style="color:var(--amber);">الرد على اعتراض النظام السحابي (Cloud SaaS)</strong>
+          <p style="font-size:12px; color:var(--muted); margin:4px 0;">تفنيد تكلفة 50 ألف جنيه وتوقف العيادة عند انقطاع الإنترنت وسرية الإيرادات.</p>
+          <button onclick="copyPitch(2)" class="btn-amber" style="width:100%; margin-top:6px;">نسخ الرسالة للواتساب</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. Printable A4 Battle Card Button -->
+    <div class="card no-print">
+      <h3 style="margin-top:0; color:var(--blue);">6. بطاقة المقارنة التنافسية المطبوعة (A4 Battle Card)</h3>
+      <p style="font-size:13px; color:var(--muted);">اطبع بطاقة المقارنة الملونة على ورق A4 وضعها في ملف الزيارات الميدانية لكل عيادة:</p>
+      <button onclick="window.print()" class="btn-blue" style="max-width:280px;">🖨️ طباعة بطاقة المقارنة A4 الآن</button>
+    </div>
+  </div>
+  <script>
+    const rate = ${Number(dist.commission_rate)};
+    function genRequest() {
+      const c = document.getElementById('cName').value.trim() || 'غير محدد';
+      const d = document.getElementById('dName').value.trim() || 'غير محدد';
+      const hw = document.getElementById('hwId').value.trim() || 'غير محدد';
+      const [tCode, pStr] = document.getElementById('tierSel').value.split('|');
+      const price = Number(pStr);
+      const comm = Math.round(price * rate / 100);
+      const net = price - comm;
+      const msg = \`طلب إصدار ترخيص جديد — Qalix Medical Agent
+• كود الموزع: ${dist.code} (${dist.name})
+• المنشأة الطبية: \${c}
+• الطبيب والهاتف: \${d}
+• بصمة الجهاز (HWID): \${hw}
+• السعر الرسمي الثابت: \${price} ج.م
+• عمولة الموزع (\${rate}%): \${comm} ج.م
+• صافي التوريد للوكيل (01122166076): \${net} ج.م\`;
+      const box = document.getElementById('outMsg');
+      box.value = msg;
+      box.select();
+      if (navigator.clipboard) navigator.clipboard.writeText(msg);
+      alert('تم توليد ونسخ رسالة طلب التفعيل! يمكنك إرسالها الآن لواتساب الوكيل 01122166076');
+    }
+
+    function copyPitch(id) {
+      let t = '';
+      if (id === 1) {
+        t = \`السلام عليكم دكتورنا العزيز 🌹\\nمع حضرتك الموزع المعتمد لمنظومة "كالكس ميديكال" الطبية (${dist.code}).\\n\\nحبينا نهدي عيادتكم نسخة تجريبية كاملة مجانية لمدة 14 يوماً من أحدث منظومة طبية في مصر:\\n✅ تعمل 100% بدون نت لحماية خصوصية وسرية أرباحك.\\n✅ شاشة انتظار ونداء صوتي ذكي يفتح على موبايل المريض.\\n✅ فاحص تداخلات دوائية وحماية للمريض.\\n✅ محادثات داخلية صوتية بين العيادة والاستقبال.\\n\\nرابط تثبيت النسخة التجريبية:\\n${agentInfo.megaTrialUrl}\\n(دخول: admin / كلمة سر: Qalix@11)\\n\\nلأي استفسار أو طلب زيارة لتثبيتها لحضرتك مجاناً تواصل معنا أو مع وكيل المنظومة الرسمي: 01122166076\`;
+      } else {
+        t = \`دكتورنا العزيز، ليه تدفع أكثر من 50,000 جنيه في 3 سنوات لاشتراكات البرامج السحابية، ولو النت فصل العيادة تقف، وإيرادك مكشوف على سيرفرات برة؟\\n\\nفي "كالكس ميديكال" ترخيص دائم مدى الحياة بدفعة واحدة بدون أي اشتراك شهري، وتعمل 100% أوفلاين وقاعدتها مشفرة عسكرياً جوة جهازك.\\nللتجربة المجانية 14 يوماً تواصل مع وكيل المنظومة: 01122166076\`;
+      }
+      if (navigator.clipboard) navigator.clipboard.writeText(t);
+      alert('تم نسخ الرسالة بنجاح! جاهزة للإرسال في واتساب.');
+    }
+  </script>
+</body>
+</html>`;
+}
+
+module.exports = {
+  generateStandaloneDistributorPortalHtml
+};

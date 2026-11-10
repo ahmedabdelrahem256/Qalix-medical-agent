@@ -160,10 +160,73 @@ function req(method, urlPath, body) {
       compRes.body.competitors.every(c => c.pros.length > 0 && c.cons.length > 0 && c.qalixWinEdge && c.salesPitchAr)
     );
 
-    console.log('=== QALIX MEDICAL AGENT TESTS: 11/11 PASSED ===');
+    // 12. Verify Specialty Turnkey Packs API (Phase 3)
+    const packsRes = await req('GET', '/api/specialty-packs');
+    check('12. التحقق من كتالوج حزم التخصصات الجاهزة للاستيراد (أسنان، أطفال، باطنة/قلب، نساء وتوليد، عيون)',
+      packsRes.status === 200 &&
+      Array.isArray(packsRes.body.packs) &&
+      packsRes.body.packs.length === 5 &&
+      packsRes.body.packs.every(p => p.id && p.nameAr && p.stats.drugsCount > 0 && p.stats.servicesCount > 0)
+    );
+
+    // 13. Download Specialty Pack in JSON and CSV formats
+    const packJsonRes = await req('GET', '/api/specialty-packs/dental/download?format=json');
+    const packCsvRes = await req('GET', '/api/specialty-packs/dental/download?format=csv');
+    check('13. تنزيل حزمة تخصصية بصيغة JSON و CSV مهيأة للاستيراد الفوري بالعيادة',
+      packJsonRes.status === 200 &&
+      packJsonRes.body.id === 'dental' &&
+      Array.isArray(packJsonRes.body.services) &&
+      packJsonRes.body.services.length >= 20 &&
+      packCsvRes.status === 200 &&
+      typeof packCsvRes.body === 'string' &&
+      packCsvRes.body.includes('DENT-01')
+    );
+
+    // 14. Test Legacy Excel/CSV Data Migration Engine
+    const sampleCsv = `اسم المريض,رقم الهاتف,العمر,النوع,العنوان,التاريخ المرضي
+محمد محمود أحمد,01012345678,45,ذكر,أسيوط - ديروط,حساسية بنسلين وضغط مرتفع
+منى عبد الله سالم,01287654321,32,أنثى,القاهرة - مدينة نصر,لا يوجد`;
+    const migRes = await req('POST', '/api/tools/migrate-data', {
+      type: 'patients',
+      rawText: sampleCsv
+    });
+    check('14. اختبار محول هجرة بيانات Excel/CSV وتنقية سجلات المرضى والأدوية أوفلاين',
+      migRes.status === 200 &&
+      migRes.body.ok === true &&
+      migRes.body.successfulCount === 2 &&
+      migRes.body.data[0].name === 'محمد محمود أحمد' &&
+      migRes.body.data[0].gender === 'ذكر' &&
+      migRes.body.data[1].gender === 'أنثى'
+    );
+
+    // 15. Verify Marketing Materials & 5-Minute WOW Live Demo Kit
+    const mktRes = await req('GET', '/api/marketing/materials');
+    check('15. التحقق من حقيبة التسويق الميداني وسيناريو الـ 5 دقائق ورسائل واتساب وبطاقة A4',
+      mktRes.status === 200 &&
+      mktRes.body.materials &&
+      mktRes.body.materials.fiveMinuteDemo.steps.length === 5 &&
+      Array.isArray(mktRes.body.materials.whatsAppTemplates) &&
+      mktRes.body.materials.whatsAppTemplates.length >= 4 &&
+      mktRes.body.materials.battleCardData.comparisonPoints.length >= 7
+    );
+
+    // 16. Verify Standalone Distributor Portal includes Phase 3 Field Kit
+    const kitV3Res = await req('GET', `/api/distributors/${distId}/kit`);
+    check('16. التحقق من احتواء بوابة الموزع المستقلة على أدوات المرحلة 3 (العرض، رسائل واتساب، وبطاقة A4)',
+      kitV3Res.status === 200 &&
+      typeof kitV3Res.body === 'string' &&
+      kitV3Res.body.includes('سيناريو العرض الميداني في 5 دقائق') &&
+      kitV3Res.body.includes('رسائل واتساب البيعية') &&
+      kitV3Res.body.includes('01122166076')
+    );
+
+    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/16 PASSED ===`);
     for (const r of results) console.log(' ✅', r);
   } finally {
-    srv.kill();
-    fs.rmSync(TEST_DATA_DIR, { recursive: true, force: true });
+    srv.kill('SIGINT');
+    await new Promise(r => setTimeout(r, 600));
+    try {
+      fs.rmSync(TEST_DATA_DIR, { recursive: true, force: true });
+    } catch (_) {}
   }
 })();

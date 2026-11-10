@@ -1,0 +1,13 @@
+# Dependencies
+node_modules/
+
+# Local & Test Runtime Artifacts
+.local_temp/
+data/.test_run/
+*.db-shm
+*.db-wal
+
+# OS files
+Thumbs.db
+Desktop.ini
+.DS_Store

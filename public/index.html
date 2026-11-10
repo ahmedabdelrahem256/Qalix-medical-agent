@@ -263,16 +263,24 @@
           <div id="kpiPropsCount" style="font-size:20px; font-weight:800; color:var(--purple); margin-top:4px;">12 محور ارتقاء</div>
           <div style="font-size:12px; color:var(--muted);">5 أركان: المنظومة · العرض · البيع · المتابعة · الإدارة</div>
         </div>
+        <div class="sub-card">
+          <div style="font-size:12px; color:var(--muted);">حزم التخصصات الجاهزة (Phase 3)</div>
+          <div id="kpiPacksCount" style="font-size:20px; font-weight:800; color:var(--sky); margin-top:4px;">5 حزم طبية</div>
+          <div style="font-size:12px; color:var(--muted);">أسنان · أطفال · قلب · نساء · عيون</div>
+        </div>
       </div>
     </header>
 
     <!-- Navigation Bar with Tabs & Quick Section Dropdown -->
     <div class="nav-bar">
       <nav class="tabs">
-        <button class="tab-btn active" id="btn-pane-agent" onclick="openTab('pane-agent', this)">1. إدارة الوكيل والموزعين المستقلين والصفقات</button>
-        <button class="tab-btn" id="btn-pane-excellence" onclick="openTab('pane-excellence', this)">2. 🏆 ركن التطوير والارتقاء والريادة (المركز #1 طبياً)</button>
-        <button class="tab-btn" id="btn-pane-market" onclick="openTab('pane-market', this)">3. ⚔️ نافذة المنظومات المنافسة (المزايا والعيوب والمقارنة مع كالكس)</button>
-        <button class="tab-btn" id="btn-pane-audit" onclick="openTab('pane-audit', this)">4. نتيجة استضافة واختبار نسخة العميل (MEGA)</button>
+        <button class="tab-btn active" id="btn-pane-agent" onclick="openTab('pane-agent', this)">1. إدارة الوكيل والموزعين</button>
+        <button class="tab-btn" id="btn-pane-excellence" onclick="openTab('pane-excellence', this)">2. 🏆 ركن الريادة (#1)</button>
+        <button class="tab-btn" id="btn-pane-market" onclick="openTab('pane-market', this)">3. ⚔️ المنظومات المنافسة</button>
+        <button class="tab-btn" id="btn-pane-specialty" onclick="openTab('pane-specialty', this)">4. 📦 حزم التخصصات الجاهزة</button>
+        <button class="tab-btn" id="btn-pane-migrator" onclick="openTab('pane-migrator', this)">5. 🔄 أداة هجرة Excel</button>
+        <button class="tab-btn" id="btn-pane-fieldkit" onclick="openTab('pane-fieldkit', this)">6. 🖨️ حقيبة العرض والتسويق</button>
+        <button class="tab-btn" id="btn-pane-audit" onclick="openTab('pane-audit', this)">7. فحص نسخة MEGA</button>
       </nav>
       <div style="display:flex; align-items:center; gap:8px; min-width:250px;">
         <span style="font-size:12px; color:var(--muted); white-space:nowrap;">⚡ انتقال سريع للقسم:</span>
@@ -280,7 +288,10 @@
           <option value="pane-agent">القسم 1: إدارة الوكيل والموزعين والصفقات</option>
           <option value="pane-excellence">القسم 2: ركن التطوير والارتقاء (#1 طبياً)</option>
           <option value="pane-market">القسم 3: نافذة المنظومات المنافسة والمقارنة</option>
-          <option value="pane-audit">القسم 4: فحص واستضافة نسخة العميل (MEGA)</option>
+          <option value="pane-specialty">القسم 4: حزم التخصصات الجاهزة للاستيراد</option>
+          <option value="pane-migrator">القسم 5: أداة هجرة شيتات Excel القديمة</option>
+          <option value="pane-fieldkit">القسم 6: حقيبة العرض الميداني والمواد التسويقية</option>
+          <option value="pane-audit">القسم 7: فحص واستضافة نسخة العميل (MEGA)</option>
         </select>
       </div>
     </div>
@@ -600,6 +611,184 @@
       </div>
     </section>
 
+    <!-- ==================== PANE 4: SPECIALTY TURNKEY PACKS (PHASE 3) ==================== -->
+    <section id="pane-specialty" class="pane">
+      <div class="glass">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
+          <div>
+            <h2 style="margin:0; font-size:18px; color:var(--sky);">📦 مكتبة حزم التخصصات الجاهزة للاستيراد الفوري (Turnkey Starter Packs)</h2>
+            <p style="margin:4px 0 0; font-size:12.5px; color:var(--muted);">
+              قوالب بيانات تشغيلية مجهزة بأسعار 2026 المصرية (أسنان، أطفال، باطنة/قلب، نساء وتوليد، عيون) يستوردها الموزع للعيادة في ثوانٍ لتبدأ العمل فوراً!
+            </p>
+          </div>
+          <span class="badge b-emerald">5 حزم تخصصية كاملة · تنزيل JSON / CSV</span>
+        </div>
+
+        <div id="specialtyPacksContainer" class="grid-3" style="margin-bottom:20px;"></div>
+
+        <!-- Specialty Pack Details Viewer -->
+        <div id="packDetailBox" class="sub-card" style="display:none; margin-top:16px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <h3 id="packDetailTitle" style="margin:0; font-size:16px; color:var(--sky);"></h3>
+            <button class="btn btn-sm btn-sky" onclick="document.getElementById('packDetailBox').style.display='none'">إغلاق المعاينة ✕</button>
+          </div>
+          <div class="grid-2">
+            <div>
+              <h4 style="margin:0 0 8px; color:var(--emerald); font-size:13px;">💉 عينة الأدوية والبروتوكولات التخصصية:</h4>
+              <div id="packDrugsList" style="max-height:220px; overflow-y:auto; font-size:12px; border:1px solid var(--border); border-radius:8px; padding:8px;"></div>
+            </div>
+            <div>
+              <h4 style="margin:0 0 8px; color:var(--sky); font-size:13px;">🩺 عينة الخدمات والإجراءات السريرية والأسعار:</h4>
+              <div id="packServicesList" style="max-height:220px; overflow-y:auto; font-size:12px; border:1px solid var(--border); border-radius:8px; padding:8px;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== PANE 5: LEGACY EXCEL & CSV DATA MIGRATOR (PHASE 3) ==================== -->
+    <section id="pane-migrator" class="pane">
+      <div class="glass">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
+          <div>
+            <h2 style="margin:0; font-size:18px; color:var(--emerald);">🔄 أداة هجرة بيانات ملفات Excel و CSV القديمة للعيادات</h2>
+            <p style="margin:4px 0 0; font-size:12.5px; color:var(--muted);">
+              كسر أكبر عائق بيعي لدى الأطباء: تحويل آلاف المرضى والأدوية والخدمات القديمة إلى بنية استيراد كالكس الطبية أوفلاين في ثوانٍ.
+            </p>
+          </div>
+          <span class="badge b-sky">100% Client/Offline Processing</span>
+        </div>
+
+        <div class="grid-2">
+          <!-- Input Card -->
+          <div class="sub-card">
+            <h3 style="margin-top:0; font-size:14px; color:var(--text);">1. إدخال أو لصق بيانات الجدول (Excel / CSV / Tab):</h3>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:8px;">
+              <div>
+                <label style="font-size:12px; color:var(--muted);">نوع البيانات المراد هجرتها:</label>
+                <select id="migType" onchange="loadSampleMigData(this.value)">
+                  <option value="patients">سجلات المرضى (Patients)</option>
+                  <option value="drugs">قائمة الأدوية والصيدلية (Drugs)</option>
+                  <option value="services">لائحة الخدمات والأسعار (Services)</option>
+                </select>
+              </div>
+              <div style="display:flex; align-items:flex-end;">
+                <button class="btn btn-sm btn-sky" style="width:100%;" onclick="loadSampleMigData(document.getElementById('migType').value)">📋 تحميل نموذج تجريبي</button>
+              </div>
+            </div>
+            <textarea id="migInput" rows="9" placeholder="انسخ الجدول من ملف Excel والصقه هنا مباشرة (أو الصق نص CSV)..."></textarea>
+            <button class="btn" style="width:100%; margin-top:10px;" onclick="runMigrationProcess()">🚀 بدء فحص وتنقية وتحويل البيانات فوراً</button>
+          </div>
+
+          <!-- Output Preview Card -->
+          <div class="sub-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <h3 style="margin:0; font-size:14px; color:var(--text);">2. المعاينة ونتائج التنقية والتقرير:</h3>
+              <div id="migStatsBadge"></div>
+            </div>
+            <div id="migSummaryReport" style="font-size:12.5px; color:var(--muted); min-height:45px; margin-bottom:8px;">
+              الصق البيانات واضغط زر التحويل لبدء المعالجة الذكية ورسم الأعمدة التلقائي.
+            </div>
+            <div id="migPreviewContainer" style="max-height:200px; overflow-y:auto; border:1px solid var(--border); border-radius:10px; margin-bottom:10px; font-size:12px;"></div>
+            <div style="display:flex; gap:10px;">
+              <button id="btnExportJson" class="btn btn-sm btn-sky" style="flex:1; display:none;" onclick="exportMigratedJson()">⬇ تنزيل ملف الاستيراد (.json)</button>
+              <button id="btnCopyJson" class="btn btn-sm" style="flex:1; display:none;" onclick="copyMigratedJson()">📋 نسخ البيانات الجاهزة</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== PANE 6: FIELD SALES KIT & MARKETING ARSENAL (PHASE 3) ==================== -->
+    <section id="pane-fieldkit" class="pane">
+      <!-- 5-Minute WOW Live Demo Script -->
+      <div class="glass">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
+          <div>
+            <h2 style="margin:0; font-size:18px; color:var(--purple);">⏱️ سيناريو العرض الميداني الحاسم في 5 دقائق (The 5-Minute WOW Demo)</h2>
+            <p style="margin:4px 0 0; font-size:12.5px; color:var(--muted);">
+              خطة إبهار فورية يتدرب عليها كل موزع: مسح QR ➔ نداء «هدى» ➔ إنذار وارفارين ➔ شات صوتي ➔ فصل الإنترنت!
+            </p>
+          </div>
+          <span class="badge b-purple">نسبة اقتناع الأطباء +80%</span>
+        </div>
+        <div id="wowStepsGrid" class="grid-3"></div>
+      </div>
+
+      <!-- One-Click WhatsApp Sales Pitch Arsenal -->
+      <div class="glass">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
+          <div>
+            <h2 style="margin:0; font-size:18px; color:var(--accent);">💬 كتالوج رسائل واتساب البيعية السريعة (One-Click WhatsApp Scripts)</h2>
+            <p style="margin:4px 0 0; font-size:12.5px; color:var(--muted);">
+              نصوص بيعية مدروسة مخصصة للرد على اعتراضات الأطباء، جاهزة للنسخ بنقرة واحدة برقم الوكيل 01122166076:
+            </p>
+          </div>
+          <span class="badge b-emerald">نسخ مباشر بنقرة زر</span>
+        </div>
+        <div id="whatsappTemplatesGrid" class="grid-2"></div>
+      </div>
+
+      <!-- Printable A4 Battle Card Preview & Distributor Earnings Simulator -->
+      <div class="grid-2">
+        <!-- Printable A4 Battle Card -->
+        <div class="glass">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <h3 style="margin:0; font-size:16px; color:var(--sky);">🖨️ بطاقة المقارنة البصرية A4 الجاهزة للطباعة</h3>
+            <button class="btn btn-sm btn-sky" onclick="window.print()">🖨️ طباعة بطاقة المقارنة A4</button>
+          </div>
+          <p style="font-size:12.5px; color:var(--muted); margin-top:0;">
+            ورقة مغلفة يحملها الموزع في الزيارات الميدانية تبرز تفوق كالكس وتوفير 40,000+ ج.م مقارنة بالأنظمة السحابية:
+          </p>
+          <div id="battleCardSummary" style="border:1px solid var(--border); border-radius:10px; padding:12px; font-size:12px; background:rgba(15,23,42,0.6);"></div>
+        </div>
+
+        <!-- Distributor Tier & Commission Calculator -->
+        <div class="glass">
+          <h3 style="margin-top:0; font-size:16px; color:var(--amber);">🧮 محاكي أرباح الموزع المستقل وشرائح التميز</h3>
+          <p style="font-size:12.5px; color:var(--muted);">
+            احسب أرباحك الشهرية المتوقعة بناءً على عدد الصفقات ونظام الترقية التلقائي:
+          </p>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:10px;">
+            <div>
+              <label style="font-size:11.5px; color:var(--muted);">عدد مبيعات الباقة الأساسية (4,500 ج.م):</label>
+              <input type="number" id="calcBasic" min="0" value="3" oninput="calcDistEarnings()" />
+            </div>
+            <div>
+              <label style="font-size:11.5px; color:var(--muted);">عدد مبيعات الباقة التخصصية (8,500 ج.م):</label>
+              <input type="number" id="calcPro" min="0" value="5" oninput="calcDistEarnings()" />
+            </div>
+            <div>
+              <label style="font-size:11.5px; color:var(--muted);">عدد باقات المراكز الكبرى (18,500 ج.م):</label>
+              <input type="number" id="calcEnt" min="0" value="1" oninput="calcDistEarnings()" />
+            </div>
+            <div>
+              <label style="font-size:11.5px; color:var(--muted);">نسبة عمولة الموزع الأساسية:</label>
+              <select id="calcBaseRate" onchange="calcDistEarnings()">
+                <option value="20" selected>20% (الشريحة البرونزية)</option>
+                <option value="22">22% (الشريحة الفضية - 5+ صفقات)</option>
+                <option value="25">25% (الشريحة الذهبية - 10+ صفقات)</option>
+              </select>
+            </div>
+          </div>
+          <div class="sub-card" style="background:rgba(16,185,129,0.08); border:1px solid var(--emerald); padding:12px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+              <span>إجمالي المبيعات المحققة:</span>
+              <strong id="calcTotalGross" style="color:var(--text);">0 ج.م</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+              <span>أرباح وعمولة الموزع الفورية:</span>
+              <strong id="calcDistTotal" style="color:var(--amber); font-size:15px;">0 ج.م</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between;">
+              <span>صافي إيراد الوكيل (01122166076):</span>
+              <strong id="calcAgentTotal" style="color:var(--emerald); font-size:15px;">0 ج.م</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- ==================== PANE 4: LIVE HOSTED CLIENT PACKAGE AUDIT ==================== -->
     <section id="pane-audit" class="pane">
       <div class="glass">
@@ -843,10 +1032,217 @@
       `).join('');
     }
 
+    let lastMigratedResult = null;
+    let loadedPacksCache = [];
+
+    async function loadSpecialtyPacks() {
+      try {
+        const r = await fetch('/api/specialty-packs');
+        const d = await r.json();
+        if (!d.ok) return;
+        loadedPacksCache = d.packs;
+        const container = document.getElementById('specialtyPacksContainer');
+        if (!container) return;
+        container.innerHTML = d.packs.map(p => `
+          <div class="sub-card" style="display:flex; flex-direction:column; justify-content:space-between; gap:10px;">
+            <div>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <span style="font-size:24px;">${p.icon}</span>
+                <span class="badge b-sky">${p.stats.drugsCount} دواء · ${p.stats.servicesCount} خدمة</span>
+              </div>
+              <h3 style="margin:0 0 4px; font-size:15px; color:var(--text);">${p.nameAr}</h3>
+              <p style="margin:0; font-size:12px; color:var(--muted); line-height:1.5;">${p.description}</p>
+            </div>
+            <div style="border-top:1px solid var(--border); padding-top:8px; display:flex; gap:6px; flex-wrap:wrap;">
+              <button class="btn btn-sm btn-sky" style="flex:1;" onclick="viewPackDetails('${p.id}')">معاينة المحتوى</button>
+              <a href="/api/specialty-packs/${p.id}/download?format=json" class="btn btn-sm" style="text-decoration:none; flex:1; text-align:center;">⬇ JSON</a>
+              <a href="/api/specialty-packs/${p.id}/download?format=csv" class="btn btn-sm btn-amber" style="text-decoration:none; flex:1; text-align:center;">⬇ CSV</a>
+            </div>
+          </div>
+        `).join('');
+      } catch (e) {
+        console.error('Error loading packs:', e);
+      }
+    }
+
+    async function viewPackDetails(id) {
+      try {
+        const r = await fetch('/api/specialty-packs/' + id);
+        const d = await r.json();
+        if (!d.ok || !d.pack) return;
+        const p = d.pack;
+        document.getElementById('packDetailTitle').innerText = p.icon + ' ' + p.nameAr;
+        document.getElementById('packDrugsList').innerHTML = p.drugs.map(dr =>
+          `<div style="padding:4px 0; border-bottom:1px dashed rgba(255,255,255,0.08);">
+            <strong>${dr.tradeName}</strong> (${dr.genericName} - ${dr.form})
+            <div style="color:var(--muted); font-size:11px;">${dr.dosageGuide || ''} — سعر: ${dr.defaultPrice} ج.م</div>
+          </div>`
+        ).join('');
+        document.getElementById('packServicesList').innerHTML = p.services.map(sr =>
+          `<div style="padding:4px 0; border-bottom:1px dashed rgba(255,255,255,0.08); display:flex; justify-content:space-between;">
+            <div><strong>${sr.name}</strong> <span style="color:var(--muted); font-size:11px;">(${sr.department})</span></div>
+            <div style="color:var(--emerald); font-weight:bold;">${sr.price} ج.م</div>
+          </div>`
+        ).join('');
+        document.getElementById('packDetailBox').style.display = 'block';
+        document.getElementById('packDetailBox').scrollIntoView({ behavior: 'smooth' });
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    const SAMPLE_MIG_DATA = {
+      patients: "اسم المريض,رقم الهاتف,العمر,النوع,العنوان,التاريخ المرضي\nمحمد عبد الرحيم,01011223344,45,ذكر,أسيوط - ديروط,حساسية بنسلين وضغط مرتفع\nفاطمة محمود إبراهيم,01233445566,32,أنثى,القاهرة - المعادي,حامل في الشهر السادس\nكريم عادل فتحي,01144556677,9,ذكر,سوهاج - طهطا,ربو شعبي وحساسية صدر",
+      drugs: "اسم_الدواء,المادة_الفعالة,الشكل_الدوائي,التركيز,السعر,التصنيف\nأوجمنتين أقراص,Amoxicillin + Clavulanate,أقراص,1000 mg,135,مضاد حيوي\nكونكور أقراص,Bisoprolol,أقراص,5 mg,56,ضغط وقلب\nكتافلام أقراص,Diclofenac Potassium,أقراص,50 mg,58,مسكن ومضاد التهاب",
+      services: "اسم_الخدمة,القسم,السعر,ملاحظات\nكشف باطنة عام,العيادة العامة,300,شامل فحص العلامات الحيوية\nرسم قلب رقمي,تخطيط قلب,150,12 قناة رقمية مع التقرير\nموجات صوتية إيكو,إيكو قلب,650,فحص العضلة والصمامات"
+    };
+
+    function loadSampleMigData(type) {
+      document.getElementById('migInput').value = SAMPLE_MIG_DATA[type] || SAMPLE_MIG_DATA.patients;
+    }
+
+    async function runMigrationProcess() {
+      const type = document.getElementById('migType').value;
+      const rawText = document.getElementById('migInput').value.trim();
+      if (!rawText) return alert('يرجى لصق بيانات الجدول أولاً');
+      const r = await fetch('/api/tools/migrate-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type, rawText })
+      });
+      const res = await r.json();
+      if (!res.ok) return alert(res.error || 'فشلت معالجة البيانات');
+      lastMigratedResult = res;
+
+      document.getElementById('migStatsBadge').innerHTML = `
+        <span class="badge b-emerald">تم تحويل ${res.successfulCount} سجل بنجاح</span>
+        ${res.errorsCount > 0 ? `<span class="badge b-rose">${res.errorsCount} سطر بها أخطاء</span>` : ''}
+      `;
+      document.getElementById('migSummaryReport').innerHTML = `
+        <strong>الأعمدة المكتشفة تلقائياً:</strong> <code>${(res.detectedHeaders || []).join(' | ')}</code><br>
+        <strong>عدد السجلات الصالحة:</strong> ${res.successfulCount} سجل تم تنقيتها ومطابقتها لبنية كالكس الطبية.
+      `;
+
+      const prev = document.getElementById('migPreviewContainer');
+      const sample = res.data.slice(0, 15);
+      if (type === 'patients') {
+        prev.innerHTML = '<table style="width:100%;"><thead><tr><th>كود الملف</th><th>الاسم</th><th>الهاتف</th><th>النوع</th><th>العمر</th></tr></thead><tbody>' +
+          sample.map(p => `<tr><td>${p.fileNo}</td><td><strong>${p.name}</strong></td><td>${p.phone}</td><td>${p.gender}</td><td>${p.age || '—'}</td></tr>`).join('') +
+          '</tbody></table>';
+      } else if (type === 'drugs') {
+        prev.innerHTML = '<table style="width:100%;"><thead><tr><th>الكود</th><th>الاسم التجاري</th><th>العلمي</th><th>السعر</th></tr></thead><tbody>' +
+          sample.map(d => `<tr><td>${d.code}</td><td><strong>${d.tradeName}</strong></td><td>${d.genericName}</td><td>${d.price} ج.م</td></tr>`).join('') +
+          '</tbody></table>';
+      } else {
+        prev.innerHTML = '<table style="width:100%;"><thead><tr><th>الكود</th><th>الخدمة</th><th>القسم</th><th>السعر</th></tr></thead><tbody>' +
+          sample.map(s => `<tr><td>${s.code}</td><td><strong>${s.name}</strong></td><td>${s.department}</td><td>${s.price} ج.م</td></tr>`).join('') +
+          '</tbody></table>';
+      }
+
+      document.getElementById('btnExportJson').style.display = 'inline-block';
+      document.getElementById('btnCopyJson').style.display = 'inline-block';
+    }
+
+    function exportMigratedJson() {
+      if (!lastMigratedResult || !lastMigratedResult.data) return;
+      const str = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(lastMigratedResult.data, null, 2));
+      const a = document.createElement('a');
+      a.setAttribute('href', str);
+      a.setAttribute('download', `Qalix-Migrated-${lastMigratedResult.type}.json`);
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+
+    function copyMigratedJson() {
+      if (!lastMigratedResult || !lastMigratedResult.data) return;
+      navigator.clipboard.writeText(JSON.stringify(lastMigratedResult.data, null, 2));
+      alert('تم نسخ البيانات المحولة بصيغة JSON إلى الحافظة!');
+    }
+
+    function renderMarketingMaterials(mkt) {
+      if (!mkt) return;
+      const wowGrid = document.getElementById('wowStepsGrid');
+      if (wowGrid && mkt.fiveMinuteDemo) {
+        wowGrid.innerHTML = mkt.fiveMinuteDemo.steps.map(s => `
+          <div class="sub-card">
+            <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+              <span class="badge b-purple">الخطوة ${s.step}</span>
+              <span style="font-size:11.5px; color:var(--sky); font-weight:bold;">${s.time}</span>
+            </div>
+            <h4 style="margin:4px 0; font-size:13.5px; color:var(--text);">${s.title}</h4>
+            <div style="font-size:12px; color:var(--muted); margin-bottom:6px;"><strong>الإجراء:</strong> ${s.action}</div>
+            <div style="font-size:12px; color:var(--emerald);"><strong>ما يحدث:</strong> ${s.whatHappens}</div>
+            <div style="font-size:11.5px; color:var(--amber); margin-top:4px; border-top:1px dashed var(--border); padding-top:4px;">
+              <strong>رد فعل الطبيب:</strong> ${s.doctorReaction}
+            </div>
+          </div>
+        `).join('');
+      }
+
+      const waGrid = document.getElementById('whatsappTemplatesGrid');
+      if (waGrid && mkt.whatsAppTemplates) {
+        waGrid.innerHTML = mkt.whatsAppTemplates.map(t => `
+          <div class="sub-card" style="display:flex; flex-direction:column; justify-content:space-between;">
+            <div>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <h4 style="margin:0; font-size:13.5px; color:var(--accent);">${t.title}</h4>
+                <span class="badge b-emerald">${t.category}</span>
+              </div>
+              <pre style="background:rgba(15,23,42,0.8); border:1px solid var(--border); border-radius:8px; padding:10px; font-size:11.5px; white-space:pre-wrap; color:var(--text); max-height:160px; overflow-y:auto; line-height:1.5;">${t.text}</pre>
+            </div>
+            <button class="btn btn-sm" style="margin-top:8px;" onclick="copyPitchText(${JSON.stringify(t.text).replace(/"/g, '&quot;')})">📋 نسخ نص الرسالة فوراً</button>
+          </div>
+        `).join('');
+      }
+
+      const bcSummary = document.getElementById('battleCardSummary');
+      if (bcSummary && mkt.battleCardData) {
+        bcSummary.innerHTML = `
+          <div style="font-weight:bold; color:var(--sky); margin-bottom:8px;">${mkt.battleCardData.title}</div>
+          <table style="width:100%; font-size:11.5px;">
+            <thead><tr><th>الميزة / وجه المقارنة</th><th>منظومة كالكس ميديكال</th><th>الأنظمة المنافسة</th></tr></thead>
+            <tbody>
+              ${mkt.battleCardData.comparisonPoints.map(p => `
+                <tr>
+                  <td><strong>${p.feature}</strong></td>
+                  <td style="color:var(--emerald); font-weight:bold;">${p.qalix}</td>
+                  <td style="color:var(--rose);">${p.competitors}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+      }
+    }
+
+    function copyPitchText(txt) {
+      if (navigator.clipboard) navigator.clipboard.writeText(txt);
+      alert('تم نسخ الرسالة بنجاح! جاهزة للإرسال عبر واتساب للأطباء.');
+    }
+
+    function calcDistEarnings() {
+      const b = Number(document.getElementById('calcBasic').value) || 0;
+      const p = Number(document.getElementById('calcPro').value) || 0;
+      const e = Number(document.getElementById('calcEnt').value) || 0;
+      const r = Number(document.getElementById('calcBaseRate').value) || 20;
+
+      const gross = (b * 4500) + (p * 8500) + (e * 18500);
+      const distComm = Math.round(gross * (r / 100));
+      const agentNet = gross - distComm;
+
+      document.getElementById('calcTotalGross').innerText = fmt(gross);
+      document.getElementById('calcDistTotal').innerText = fmt(distComm) + ' (' + r + '%)';
+      document.getElementById('calcAgentTotal').innerText = fmt(agentNet);
+    }
+
     async function load() {
       const r = await fetch('/api/bootstrap');
       const data = await r.json();
       render(data);
+      loadSpecialtyPacks();
+      if (data.marketing) renderMarketingMaterials(data.marketing);
+      calcDistEarnings();
     }
 
     async function createDistributor() {
