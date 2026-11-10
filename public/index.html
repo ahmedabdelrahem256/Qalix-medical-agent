@@ -283,7 +283,8 @@
         <button class="tab-btn" id="btn-pane-contracts" onclick="openTab('pane-contracts', this)">7. 📄 العقود ومحاضر التسليم</button>
         <button class="tab-btn" id="btn-pane-quotations" onclick="openTab('pane-quotations', this)">8. 📋 عروض الأسعار والدليل الميداني</button>
         <button class="tab-btn" id="btn-pane-retention" onclick="openTab('pane-retention', this)">9. 🤝 ما بعد البيع والنسخ الاحتياطي</button>
-        <button class="tab-btn" id="btn-pane-audit" onclick="openTab('pane-audit', this)">10. فحص نسخة MEGA</button>
+        <button class="tab-btn" id="btn-pane-fieldtraining" onclick="openTab('pane-fieldtraining', this)">10. 🎓 التدريب الميداني والجاهزية الفنية</button>
+        <button class="tab-btn" id="btn-pane-audit" onclick="openTab('pane-audit', this)">11. فحص نسخة MEGA</button>
       </nav>
       <div style="display:flex; align-items:center; gap:8px; min-width:250px;">
         <span style="font-size:12px; color:var(--muted); white-space:nowrap;">⚡ انتقال سريع للقسم:</span>
@@ -297,7 +298,8 @@
           <option value="pane-contracts">القسم 7: العقود ومحاضر التسليم وكشوف الحساب</option>
           <option value="pane-quotations">القسم 8: عروض الأسعار الرسمية والرد على الاعتراضات</option>
           <option value="pane-retention">القسم 9: متابعة ما بعد البيع ورضاء العيادات والنسخ الاحتياطي</option>
-          <option value="pane-audit">القسم 10: فحص واستضافة نسخة العميل (MEGA)</option>
+          <option value="pane-fieldtraining">القسم 10: التدريب الميداني والجاهزية الفنية وحملات واتساب</option>
+          <option value="pane-audit">القسم 11: فحص واستضافة نسخة العميل (MEGA)</option>
         </select>
       </div>
     </div>
@@ -397,7 +399,20 @@
         </div>
       </div>
 
-            <!-- Independent Distributors Table -->
+            <!-- Visual Analytics & SVG Charts (Phase 6) -->
+      <div class="glass" style="margin-bottom:18px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <h3 style="margin:0; font-size:17px; color:var(--sky);">📊 لوحة التحليلات والمؤشرات البصرية المباشرة (Pure SVG Zero-Dependency)</h3>
+          <span class="badge b-emerald">مخططات بيانية تفاعلية أوفلاين 100%</span>
+        </div>
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:14px;" id="svgChartsRow">
+          <div id="chartTierContainer" class="sub-card" style="padding:10px;"></div>
+          <div id="chartGeoContainer" class="sub-card" style="padding:10px;"></div>
+          <div id="chartWaterfallContainer" class="sub-card" style="padding:10px;"></div>
+        </div>
+      </div>
+
+      <!-- Independent Distributors Table -->
       <div class="glass">
         <h3 style="margin-top:0;">سجل الموزعين المستقلين التابعين للوكيل (01122166076)</h3>
         <div style="overflow-x:auto;">
@@ -965,7 +980,95 @@
       </div>
     </section>
 
-    <!-- ==================== PANE 10: LIVE HOSTED CLIENT PACKAGE AUDIT ==================== -->
+    <!-- ==================== PANE 10: DISTRIBUTOR FIELD TRAINING & CLINIC AUDIT CHECKLIST (PHASE 6) ==================== -->
+    <section id="pane-fieldtraining" class="pane">
+      <div class="grid-3" style="margin-bottom:18px;">
+        <!-- Module 1: Distributor Certification Simulator & Exam -->
+        <div class="glass">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <h2 style="margin:0; font-size:16.5px; color:var(--sky);">🎓 محاكي التدريب وامتحان الاعتماد</h2>
+            <span class="badge b-emerald">اعتماد 100%</span>
+          </div>
+          <p style="font-size:12px; color:var(--muted); margin-top:0;">
+            برنامج تدريبي وتأهيلي للموزعين في حماية الأسعار الثابتة، استخراج HWID، وإتقان سيناريو الـ 5 دقائق:
+          </p>
+          <div style="margin-bottom:12px;">
+            <label style="font-size:11.5px; color:var(--muted);">اختر الموزع المتقدم للامتحان:</label>
+            <select id="examDistSelect" style="padding:6px 10px; font-size:12px;"></select>
+          </div>
+          <div id="examQuestionsContainer" style="display:flex; flex-direction:column; gap:10px; max-height:350px; overflow-y:auto; padding-right:4px;">
+            <!-- Rendered dynamically -->
+          </div>
+          <div style="margin-top:12px; display:flex; justify-content:space-between; align-items:center;">
+            <button class="btn btn-sky" onclick="submitExamAnswers()">📝 تصحيح الامتحان والاعتماد</button>
+            <span id="examScoreBadge" style="font-size:12px; font-weight:bold;"></span>
+          </div>
+          <div id="certLinkContainer" style="margin-top:10px; display:none;">
+            <a id="certLinkBtn" href="#" target="_blank" class="btn btn-amber" style="text-decoration:none; display:block; text-align:center;">🏅 فتح وطباعة شهادة الاعتماد المعتمدة (A4)</a>
+          </div>
+        </div>
+
+        <!-- Module 2: Clinic Pre-Installation Checklist -->
+        <div class="glass">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <h2 style="margin:0; font-size:16.5px; color:var(--emerald);">📋 قائمة الفحص والجاهزية الفنية (Checklist)</h2>
+            <span id="checklistScoreBadge" class="badge b-sky">10 معايير فنية</span>
+          </div>
+          <p style="font-size:12px; color:var(--muted); margin-top:0;">
+            فحص توافق عتاد العيادة (Windows، RAM، الراوتر، الطابعة، وفلاشة الباك اب) قبل التشغيل:
+          </p>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:10px;">
+            <div>
+              <label style="font-size:11px; color:var(--muted);">اسم الطبيب:</label>
+              <input id="chkDoctor" placeholder="د. أحمد صلاح" value="د. " style="padding:6px 8px; font-size:12px;" />
+            </div>
+            <div>
+              <label style="font-size:11px; color:var(--muted);">اسم العيادة:</label>
+              <input id="chkClinic" placeholder="مركز الشفاء الطبي" style="padding:6px 8px; font-size:12px;" />
+            </div>
+          </div>
+          <div id="clinicChecklistContainer" style="display:flex; flex-direction:column; gap:6px; max-height:330px; overflow-y:auto; padding-right:4px;">
+            <!-- Rendered dynamically -->
+          </div>
+          <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="btn btn-emerald" onclick="evaluateChecklistAction()">⚡ تقييم الجاهزية</button>
+            <button class="btn btn-sky" onclick="openClinicAuditReport()">🖨️ طباعة تقرير الجاهزية A4</button>
+          </div>
+        </div>
+
+        <!-- Module 3: WhatsApp Broadcast Campaigns Studio -->
+        <div class="glass">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <h2 style="margin:0; font-size:16.5px; color:var(--purple);">📢 استوديو حملات الواتساب الميدانية</h2>
+            <span class="badge b-purple">رسائل موجهة للأطباء</span>
+          </div>
+          <p style="font-size:12px; color:var(--muted); margin-top:0;">
+            إرسال حملات ترويجية احترافية ومباشرة للأطباء مع إمكانية التخصيص التلقائي:
+          </p>
+          <div style="margin-bottom:10px;">
+            <label style="font-size:11.5px; color:var(--muted);">اختر الحملة الترويجية:</label>
+            <select id="campSelect" onchange="onCampaignChange(this.value)" style="padding:6px 10px; font-size:12px;"></select>
+          </div>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:10px;">
+            <div>
+              <label style="font-size:11px; color:var(--muted);">اسم الطبيب المستهدف:</label>
+              <input id="campDoctor" placeholder="د. طارق محمود" value="د. " style="padding:6px 8px; font-size:12px;" />
+            </div>
+            <div>
+              <label style="font-size:11px; color:var(--muted);">رقم واتساب الطبيب:</label>
+              <input id="campPhone" placeholder="010..." dir="ltr" style="padding:6px 8px; font-size:12px;" />
+            </div>
+          </div>
+          <textarea id="campPreviewText" rows="6" style="width:100%; font-size:11.5px; background:rgba(15,23,42,0.8); border:1px solid var(--border); border-radius:8px; padding:8px; color:var(--text); line-height:1.5;"></textarea>
+          <div style="margin-top:10px; display:flex; gap:8px;">
+            <button class="btn btn-emerald" style="width:100%;" onclick="openCampaignWhatsApp()">📲 إرسال الحملة عبر واتساب</button>
+            <button class="btn btn-sm" onclick="copyCampaignText()">📋 نسخ النص</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== PANE 11: LIVE HOSTED CLIENT PACKAGE AUDIT ==================== -->
     <section id="pane-audit" class="pane">
       <div class="glass">
         <h2 style="margin-top:0;">تقرير استضافة واختبار نسخة العميل الحية من رابط MEGA (18 / 18 ناجح)</h2>
@@ -1172,6 +1275,13 @@
       sel.innerHTML = data.distributors.filter(d => d.status === 'active').map(d =>
         `<option value="${d.id}">${d.name} (${d.code} — عمولة ${d.commission_rate}%)</option>`
       ).join('');
+
+      const exDist = document.getElementById('examDistSelect');
+      if (exDist) {
+        exDist.innerHTML = data.distributors.map(d =>
+          `<option value="${d.id}">${d.name} (${d.code})</option>`
+        ).join('');
+      }
 
       document.getElementById('distRows').innerHTML = data.distributors.map(d => `
         <tr>
@@ -1628,6 +1738,161 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
       } catch (e) { console.error(e); }
     }
 
+    /* ---------------- Phase 6 Interactive Handlers ---------------- */
+    async function loadVisualAnalyticsCharts() {
+      try {
+        const r = await fetch('/api/analytics/charts');
+        const j = await r.json();
+        if (!j.ok || !j.charts) return;
+        const cTier = document.getElementById('chartTierContainer');
+        const cGeo = document.getElementById('chartGeoContainer');
+        const cWater = document.getElementById('chartWaterfallContainer');
+        if (cTier) cTier.innerHTML = j.charts.barChartSvg;
+        if (cGeo) cGeo.innerHTML = j.charts.donutChartSvg;
+        if (cWater) cWater.innerHTML = j.charts.waterfallChartSvg;
+      } catch (e) { console.error(e); }
+    }
+
+    let allExamQuestions = [];
+    async function loadTrainingModules() {
+      try {
+        const r = await fetch('/api/training/modules');
+        const j = await r.json();
+        if (!j.ok) return;
+        allExamQuestions = j.questions || [];
+        const cont = document.getElementById('examQuestionsContainer');
+        if (!cont) return;
+        cont.innerHTML = allExamQuestions.map((q, qIdx) => `
+          <div class="sub-card" style="padding:8px 10px; border-right:3px solid var(--sky);">
+            <div style="font-size:12px; font-weight:bold; color:var(--text); margin-bottom:6px;">س${qIdx + 1}: ${q.question}</div>
+            <div style="display:flex; flex-direction:column; gap:4px;">
+              ${q.options.map((opt, optIdx) => `
+                <label style="font-size:11.5px; color:var(--muted); display:flex; align-items:center; gap:6px; cursor:pointer;">
+                  <input type="radio" name="exam_${q.id}" value="${optIdx}" ${optIdx === 0 ? 'checked' : ''} style="cursor:pointer;" />
+                  <span>${opt.text}</span>
+                </label>
+              `).join('')}
+            </div>
+          </div>
+        `).join('');
+      } catch (e) { console.error(e); }
+    }
+
+    async function submitExamAnswers() {
+      const distId = document.getElementById('examDistSelect').value;
+      const answers = {};
+      for (const q of allExamQuestions) {
+        const sel = document.querySelector(`input[name="exam_${q.id}"]:checked`);
+        if (sel) answers[q.id] = Number(sel.value);
+      }
+      const r = await fetch('/api/training/submit-exam', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ distributorId: distId, answers })
+      });
+      const j = await r.json();
+      if (!j.ok || !j.result) return;
+      const badge = document.getElementById('examScoreBadge');
+      const certBox = document.getElementById('certLinkContainer');
+      const certBtn = document.getElementById('certLinkBtn');
+      if (j.result.passed) {
+        badge.innerHTML = `<span class="badge b-emerald">ناجح بنسبة 100% (${j.result.score}/${j.result.total}) — معتمد رسمياً</span>`;
+        if (distId) {
+          certBtn.href = `/api/training/certificate/${distId}`;
+          certBox.style.display = 'block';
+        }
+      } else {
+        badge.innerHTML = `<span class="badge b-amber">النتيجة: ${j.result.percentage}% (${j.result.score}/${j.result.total}) — يلزم 100% للاعتماد</span>`;
+        certBox.style.display = 'none';
+      }
+    }
+
+    let allCheckpoints = [];
+    async function loadClinicChecklist() {
+      try {
+        const r = await fetch('/api/checklist/pre-install');
+        const j = await r.json();
+        if (!j.ok) return;
+        allCheckpoints = j.checkpoints || [];
+        const cont = document.getElementById('clinicChecklistContainer');
+        if (!cont) return;
+        cont.innerHTML = allCheckpoints.map(c => `
+          <label style="display:flex; align-items:flex-start; gap:8px; background:rgba(15,23,42,0.6); padding:6px 8px; border-radius:6px; cursor:pointer;">
+            <input type="checkbox" id="chk_${c.id}" value="${c.id}" checked onchange="evaluateChecklistAction()" style="margin-top:3px; cursor:pointer;" />
+            <div style="font-size:11.5px;">
+              <strong style="color:var(--text);">${c.title}</strong>
+              <div style="color:var(--muted); font-size:10.5px;">${c.desc}</div>
+            </div>
+          </label>
+        `).join('');
+      } catch (e) { console.error(e); }
+    }
+
+    function getSelectedChecklistIds() {
+      return allCheckpoints.filter(c => {
+        const el = document.getElementById(`chk_${c.id}`);
+        return el && el.checked;
+      }).map(c => c.id);
+    }
+
+    async function evaluateChecklistAction() {
+      const checkedIds = getSelectedChecklistIds();
+      const r = await fetch('/api/checklist/evaluate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ checkedIds })
+      });
+      const j = await r.json();
+      if (!j.ok || !j.evaluation) return;
+      const b = document.getElementById('checklistScoreBadge');
+      if (b) {
+        b.innerText = `${j.evaluation.percentage}% جاهزية (${j.evaluation.passedCount}/${j.evaluation.total})`;
+        b.className = `badge ${j.evaluation.status === 'optimal' ? 'b-emerald' : (j.evaluation.status === 'good' ? 'b-amber' : 'b-rose')}`;
+      }
+    }
+
+    function openClinicAuditReport() {
+      const doc = encodeURIComponent(document.getElementById('chkDoctor').value.trim() || 'السيد الدكتور المحترم');
+      const cln = encodeURIComponent(document.getElementById('chkClinic').value.trim() || 'العيادة التخصصية');
+      const checked = getSelectedChecklistIds().join(',');
+      window.open(`/api/checklist/report?doctorName=${doc}&clinicName=${cln}&checked=${checked}`, '_blank');
+    }
+
+    let allCampaigns = [];
+    async function loadBroadcastCampaigns() {
+      try {
+        const r = await fetch('/api/broadcast/campaigns');
+        const j = await r.json();
+        if (!j.ok) return;
+        allCampaigns = j.campaigns || [];
+        const sel = document.getElementById('campSelect');
+        if (!sel) return;
+        sel.innerHTML = allCampaigns.map(c => `<option value="${c.id}">${c.emoji} ${c.name}</option>`).join('');
+        onCampaignChange(allCampaigns[0] ? allCampaigns[0].id : '');
+      } catch (e) { console.error(e); }
+    }
+
+    function onCampaignChange(campId) {
+      const camp = allCampaigns.find(c => c.id === campId) || allCampaigns[0];
+      if (!camp) return;
+      const doc = document.getElementById('campDoctor').value.trim();
+      const txt = camp.bodyTemplate ? camp.bodyTemplate({ doctorName: doc }) : '';
+      document.getElementById('campPreviewText').value = txt;
+    }
+
+    function openCampaignWhatsApp() {
+      const txt = document.getElementById('campPreviewText').value;
+      const ph = document.getElementById('campPhone').value.replace(/[^0-9]/g, '');
+      const url = ph ? `https://wa.me/2${ph}?text=${encodeURIComponent(txt)}` : `https://wa.me/201122166076?text=${encodeURIComponent(txt)}`;
+      window.open(url, '_blank');
+    }
+
+    function copyCampaignText() {
+      const txt = document.getElementById('campPreviewText').value;
+      if (navigator.clipboard) navigator.clipboard.writeText(txt);
+      alert('تم نسخ نص الحملة بنجاح!');
+    }
+
     async function load() {
       const r = await fetch('/api/summary');
       const data = await r.json();
@@ -1637,6 +1902,10 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
       loadObjectionsPlaybook();
       loadAfterSalesDeals();
       loadSnapshotsList();
+      loadVisualAnalyticsCharts();
+      loadTrainingModules();
+      loadClinicChecklist();
+      loadBroadcastCampaigns();
     }
 
     load();

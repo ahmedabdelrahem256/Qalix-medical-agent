@@ -44,6 +44,7 @@ function req(method, urlPath, body) {
         resolve();
       }
     });
+    srv.stderr.on('data', d => console.error('SRV STDERR:', String(d)));
   });
 
   const results = [];
@@ -323,7 +324,69 @@ function req(method, urlPath, body) {
       { status: expRes.status, bodyType: typeof expRes.body, body: expRes.body }
     );
 
-    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/25 PASSED ===`);
+    // 26. Pure Zero-Dependency SVG Visual Analytics Charts (Phase 6)
+    const chartsRes = await req('GET', '/api/analytics/charts');
+    check('26. توليد مخططات التحليلات البصرية الصافية (Pure SVG: الأعمدة، الدونات، والتدفق النقدي)',
+      chartsRes.status === 200 &&
+      chartsRes.body.ok === true &&
+      typeof chartsRes.body.charts.barChartSvg === 'string' &&
+      chartsRes.body.charts.barChartSvg.includes('<svg') &&
+      typeof chartsRes.body.charts.donutChartSvg === 'string' &&
+      chartsRes.body.charts.donutChartSvg.includes('<svg') &&
+      typeof chartsRes.body.charts.waterfallChartSvg === 'string' &&
+      chartsRes.body.charts.waterfallChartSvg.includes('<svg')
+    );
+
+    // 27. Distributor Training Modules & Exam Curriculum (Phase 6)
+    const trainRes = await req('GET', '/api/training/modules');
+    check('27. استرجاع مناهج التدريب الـ 6 وأسئلة امتحان تأهيل الموزعين الميدانيين (Phase 6)',
+      trainRes.status === 200 &&
+      trainRes.body.ok === true &&
+      Array.isArray(trainRes.body.modules) &&
+      trainRes.body.modules.length === 6 &&
+      Array.isArray(trainRes.body.questions) &&
+      trainRes.body.questions.length === 6
+    );
+
+    // 28. Training Exam Simulation Evaluation & 100% Score (Phase 6)
+    const examRes = await req('POST', '/api/training/submit-exam', {
+      distributorId: distId,
+      answers: { q1: 0, q2: 0, q3: 0, q4: 0, q5: 0, q6: 0 }
+    });
+    check('28. تصحيح امتحان محاكاة المبيعات واجتياز الاعتماد بنسبة 100% وإصدار التوثيق',
+      examRes.status === 200 &&
+      examRes.body.ok === true &&
+      examRes.body.result.passed === true &&
+      examRes.body.result.score === 6 &&
+      examRes.body.result.percentage === 100
+    );
+
+    // 29. Printable A4 Accredited Distributor Certificate (Phase 6)
+    const certRes = await req('GET', `/api/training/certificate/${distId}`);
+    check('29. إصدار شهادة اعتماد الموزع الميداني الرسمية A4 برمز التحقق وبصمة الهاش الجنائية',
+      certRes.status === 200 &&
+      typeof certRes.body === 'string' &&
+      certRes.body.includes('شـــهادة اعــتـماد مـوزع مـيـدانـي مـعـتـمـد') &&
+      certRes.body.includes('01122166076') &&
+      certRes.body.includes('QMA-CERT-')
+    );
+
+    // 30. Clinic Go-Live Readiness Inspector & WhatsApp Broadcast Studio (Phase 6)
+    const chkEvalRes = await req('POST', '/api/checklist/evaluate', {
+      checkedIds: ['os_compat', 'ram_disk', 'network_wifi', 'printer_ready', 'backup_media', 'power_settings', 'desktop_icons', 'migration_check', 'sample_print', 'staff_training']
+    });
+    const bcastRes = await req('GET', '/api/broadcast/campaigns');
+    check('30. فحص الجاهزية الفنية للعيادات (10/10 Optimal) واستوديو حملات الواتساب الميدانية',
+      chkEvalRes.status === 200 &&
+      chkEvalRes.body.evaluation.percentage === 100 &&
+      chkEvalRes.body.evaluation.status === 'optimal' &&
+      bcastRes.status === 200 &&
+      Array.isArray(bcastRes.body.campaigns) &&
+      bcastRes.body.campaigns.length >= 4 &&
+      bcastRes.body.campaigns.some(c => c.id === 'camp_assiut_support')
+    );
+
+    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/30 PASSED ===`);
     for (const r of results) console.log(' ✅', r);
   } finally {
     srv.kill('SIGINT');

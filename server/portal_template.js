@@ -203,6 +203,9 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
         <a href="/api/distributors/${dist.id}/statement" target="_blank" style="text-decoration:none;">
           <button type="button" style="background:#8b5cf6; color:white;">💼 استخراج كشف الحساب المالي وسلسلة التدقيق</button>
         </a>
+        <a href="/api/training/certificate/${dist.id}" target="_blank" style="text-decoration:none;">
+          <button type="button" style="background:#d97706; color:white;">🏅 شهادة الاعتماد الميداني الرسمي (A4 Certificate)</button>
+        </a>
       </div>
     </div>
   </div>
@@ -216,8 +219,7 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
       const url = \`/api/quotations/generate?doctor_name=\${doc}&clinic_name=\${cln}&specialty=\${spec}&tier=\${tier}&governorate=\${gov}&assiut=\${isAssiut}\`;
       window.open(url, '_blank');
     }
-  </div>
-  <script>
+
     const rate = ${Number(dist.commission_rate)};
     function genRequest() {
       const c = document.getElementById('cName').value.trim() || 'غير محدد';

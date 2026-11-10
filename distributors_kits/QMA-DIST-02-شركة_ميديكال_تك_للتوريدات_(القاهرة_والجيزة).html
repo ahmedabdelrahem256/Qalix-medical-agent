@@ -197,6 +197,9 @@
         <a href="/api/distributors/dist_cairo_02/statement" target="_blank" style="text-decoration:none;">
           <button type="button" style="background:#8b5cf6; color:white;">💼 استخراج كشف الحساب المالي وسلسلة التدقيق</button>
         </a>
+        <a href="/api/training/certificate/dist_cairo_02" target="_blank" style="text-decoration:none;">
+          <button type="button" style="background:#d97706; color:white;">🏅 شهادة الاعتماد الميداني الرسمي (A4 Certificate)</button>
+        </a>
       </div>
     </div>
   </div>
@@ -210,8 +213,7 @@
       const url = `/api/quotations/generate?doctor_name=${doc}&clinic_name=${cln}&specialty=${spec}&tier=${tier}&governorate=${gov}&assiut=${isAssiut}`;
       window.open(url, '_blank');
     }
-  </div>
-  <script>
+
     const rate = 25;
     function genRequest() {
       const c = document.getElementById('cName').value.trim() || 'غير محدد';

@@ -19,6 +19,10 @@ const { generateQuotationData, generateQuotationHtml } = require('./quotation_en
 const { getAllObjections, getObjectionById } = require('./objection_playbook');
 const { calculateDealTimeline, RETENTION_MILESTONES } = require('./after_sales_tracker');
 const { createDatabaseSnapshot, listDatabaseSnapshots, exportFullSystemJson } = require('./backup_manager');
+const { getAnalyticsPayload } = require('./visual_analytics');
+const { TRAINING_MODULES, EXAM_QUESTIONS, evaluateExam, generateAccreditationCertificateHtml } = require('./distributor_training_simulator');
+const { AUDIT_CHECKPOINTS, evaluateClinicChecklist, generateClinicAuditReportHtml } = require('./clinic_audit_checklist');
+const { getAllCampaigns, composeCampaignMessage } = require('./broadcast_composer');
 
 const PORT = Number(process.env.PORT) || 4000;
 const HOST = process.env.HOST || '127.0.0.1';
@@ -733,6 +737,74 @@ const server = http.createServer(async (req, res) => {
         'Content-Disposition': `attachment; filename="Qalix-Agent-FullBackup-${new Date().toISOString().split('T')[0]}.json"`
       });
       return res.end(exportData.jsonStr);
+    }
+
+    /* ---------------- Visual Analytics Charts API (Phase 6) ---------------- */
+    if (req.method === 'GET' && pathname === '/api/analytics/charts') {
+      const deals = db.prepare('SELECT * FROM deals').all();
+      const distributors = db.prepare('SELECT * FROM distributors').all();
+      const sum = getSummaryResponse();
+      const charts = getAnalyticsPayload(deals, distributors, sum.kpis);
+      return sendJson(res, 200, { ok: true, charts });
+    }
+
+    /* ---------------- Distributor Training Simulator & Accreditation API (Phase 6) ---------------- */
+    if (req.method === 'GET' && pathname === '/api/training/modules') {
+      return sendJson(res, 200, { ok: true, modules: TRAINING_MODULES, questions: EXAM_QUESTIONS });
+    }
+
+    if (req.method === 'POST' && pathname === '/api/training/submit-exam') {
+      const body = await readJsonBody(req);
+      const distId = String(body.distributorId || '');
+      const answers = body.answers || {};
+      const evalResult = evaluateExam(answers);
+
+      if (distId && evalResult.passed) {
+        logAudit('distributor_accredited', `اجتياز محاكاة التدريب الميداني والاعتماد الرسمي للموزع ${distId} بنسبة 100%`);
+      }
+
+      return sendJson(res, 200, { ok: true, result: evalResult });
+    }
+
+    if (req.method === 'GET' && pathname.startsWith('/api/training/certificate/')) {
+      const distId = pathname.split('/')[4];
+      const dist = db.prepare('SELECT * FROM distributors WHERE id = ?').get(distId);
+      if (!dist) return sendJson(res, 404, { error: 'الموزع غير موجود' });
+      const html = generateAccreditationCertificateHtml(dist);
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      return res.end(html);
+    }
+
+    /* ---------------- Clinic Audit & Go-Live Checklist API (Phase 6) ---------------- */
+    if (req.method === 'GET' && pathname === '/api/checklist/pre-install') {
+      return sendJson(res, 200, { ok: true, checkpoints: AUDIT_CHECKPOINTS });
+    }
+
+    if (req.method === 'POST' && pathname === '/api/checklist/evaluate') {
+      const body = await readJsonBody(req);
+      const checkedIds = Array.isArray(body.checkedIds) ? body.checkedIds : [];
+      const evalResult = evaluateClinicChecklist(checkedIds);
+      return sendJson(res, 200, { ok: true, evaluation: evalResult });
+    }
+
+    if (req.method === 'GET' && pathname === '/api/checklist/report') {
+      const qParams = Object.fromEntries(url.searchParams.entries());
+      const checkedIds = (qParams.checked || '').split(',').filter(Boolean);
+      const evalResult = evaluateClinicChecklist(checkedIds);
+      const html = generateClinicAuditReportHtml(qParams, evalResult);
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      return res.end(html);
+    }
+
+    /* ---------------- WhatsApp Broadcast Campaigns API (Phase 6) ---------------- */
+    if (req.method === 'GET' && pathname === '/api/broadcast/campaigns') {
+      return sendJson(res, 200, { ok: true, campaigns: getAllCampaigns() });
+    }
+
+    if (req.method === 'POST' && pathname === '/api/broadcast/compose') {
+      const body = await readJsonBody(req);
+      const composed = composeCampaignMessage(body.campaignId, body.vars || {});
+      return sendJson(res, 200, { ok: true, message: composed });
     }
 
     // Serve static files
