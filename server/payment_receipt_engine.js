@@ -1,6 +1,6 @@
 /* Official Payment Receipt & Commission Clearance Engine (Phase 9)
  * Official printable A4 receipt vouchers for clinic transactions & distributor commission payouts.
- * 100% Offline Air-Gapped · Zero External Dependencies · Agent: 01122166076 / 01122166704
+ * 100% Offline Air-Gapped · Zero External Dependencies · Agent: 01122166076 / 01122166076
  */
 'use strict';
 
@@ -128,7 +128,7 @@ function generateReceiptHtml(receiptData, agentInfo) {
   <div class="signatures">
     <div class="sign-box">
       <div style="font-weight:bold; margin-bottom:30px;">توقيع وخاتم وكيل المنظومة المعتمد:</div>
-      <div style="font-size:11px; color:#64748b;">مكتب وكيل منظومة كالكس الطبية (01122166076 / 01122166704)</div>
+      <div style="font-size:11px; color:#64748b;">مكتب وكيل منظومة كالكس الطبية (01122166076 / 01122166076)</div>
     </div>
     <div class="sign-box">
       <div style="font-weight:bold; margin-bottom:30px;">توقيع مستلم الخدمة / الطبيب المسؤول:</div>
@@ -137,7 +137,7 @@ function generateReceiptHtml(receiptData, agentInfo) {
   </div>
 
   <div class="footer">
-    صدر هذا السند إلكترونياً من منصة كالكس الطبية — خط المبيعات: 01122166704 | خط الوكيل والدعم الفني: 01122166076
+    صدر هذا السند إلكترونياً من منصة كالكس الطبية — خط المبيعات: 01122166076 | خط الوكيل والدعم الفني: 01122166076
   </div>
 </div>
 </body>

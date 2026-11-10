@@ -1,6 +1,6 @@
 /* R&D Proposals & Qalix Medical v2.0 Requirements Exporter (Phase 9)
  * Official printable A4 document compiling all clinic feedback & feature proposals for the development team.
- * 100% Offline Air-Gapped · Zero External Dependencies · Agent: 01122166076 / 01122166704
+ * 100% Offline Air-Gapped · Zero External Dependencies · Agent: 01122166076 / 01122166076
  */
 'use strict';
 
@@ -87,7 +87,7 @@ function generateProposalsDocumentHtml(proposalsList, agentInfo) {
   }).join('')}
 
   <div style="border-top:1.5px solid #0f172a; padding-top:14px; margin-top:24px; display:flex; justify-content:space-between; font-size:11.5px; color:#475569;">
-    <div>جهة الإصدار: <b>مكتب وكيل منظومة كالكس الطبية (01122166076 / 01122166704)</b></div>
+    <div>جهة الإصدار: <b>مكتب وكيل منظومة كالكس الطبية (01122166076 / 01122166076)</b></div>
     <div>المستودع الرسمي: <b>GitHub / Qalix-medical-agent</b></div>
   </div>
 </div>

@@ -54,11 +54,11 @@ const AGENT_INFO = {
   titleAr: 'وكيل منظومة كالكس ميديكال الطبية',
   phone: '01122166076',
   intlPhone: '+201122166076',
-  salesHotline: '01122166704',
+  salesHotline: '01122166076',
   supportHotline: '01122166076',
   facebookPageUrl: 'https://www.facebook.com/profile.php?id=61596117518854',
   whatsappUrl: 'https://wa.me/201122166076',
-  whatsappSalesUrl: 'https://wa.me/201122166704',
+  whatsappSalesUrl: 'https://wa.me/201122166076',
   megaTrialUrl: 'https://mega.nz/file/T6hxgRaK#j7_5EtTGN3TJcgxoOHd_eP-JENFmXHgaxXNlrKO6qGI',
   packageSha256: '0f7ff4448eb11ee1385332edf4233f0b6cc9964f490782800de78efc2b8499f7'
 };

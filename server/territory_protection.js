@@ -1,6 +1,6 @@
 /* Territory & Lead Protection Engine (Phase 9)
  * Prevents distributor collisions, locks clinic leads for 14 days, and assigns Egyptian regional territories.
- * 100% Offline Air-Gapped · Zero External Dependencies · Agent: 01122166076 / 01122166704
+ * 100% Offline Air-Gapped · Zero External Dependencies · Agent: 01122166076 / 01122166076
  */
 'use strict';
 

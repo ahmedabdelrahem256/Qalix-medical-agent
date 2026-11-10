@@ -1,6 +1,6 @@
 /* Commercial Deals & Executive Weekly Digest Engine (Phase 9)
  * Automated commercial alerts, pipeline monitoring, and executive weekly financial digests.
- * 100% Offline Air-Gapped · Zero External Dependencies · Agent: 01122166076 / 01122166704
+ * 100% Offline Air-Gapped · Zero External Dependencies · Agent: 01122166076 / 01122166076
  */
 'use strict';
 
@@ -204,7 +204,7 @@ function generateExecutiveWeeklyDigestHtml(summaryData, agentInfo) {
   </table>
 
   <div style="font-size:11px; color:#64748b; text-align:center; border-top:1px solid #cbd5e1; padding-top:10px; margin-top:20px;">
-    تقرير صادر من لوحة تحكم وكيل منظومة كالكس الطبية (01122166076 / 01122166704) — خاضع للتدقيق الجنائي المشفر.
+    تقرير صادر من لوحة تحكم وكيل منظومة كالكس الطبية (01122166076 / 01122166076) — خاضع للتدقيق الجنائي المشفر.
   </div>
 </div>
 </body>
