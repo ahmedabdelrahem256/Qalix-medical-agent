@@ -311,74 +311,101 @@
       <!-- Commercial Alerts & Pipeline Bar (Phase 9) -->
       <div id="commercialAlertsBanner" style="display:none; margin-bottom:16px;"></div>
 
-      <div class="grid-2">
+      <div class="grid-2" style="align-items:stretch; margin-bottom:22px;">
         <!-- Create Independent Distributor -->
-        <div class="glass">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-            <h2 style="margin:0; font-size:17px;">إضافة موزع مستقل جديد وتوليد حقيبته المستقلة</h2>
-            <span class="badge b-emerald">يولّد ملف بوابة مستقل للموزع</span>
+        <div class="glass" style="display:flex; flex-direction:column; justify-content:space-between; margin-bottom:0;">
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <h2 style="margin:0; font-size:17px;">إضافة موزع مستقل جديد وتوليد حقيبته المستقلة</h2>
+              <span class="badge b-emerald">يولّد ملف بوابة مستقل للموزع</span>
+            </div>
+            <p style="font-size:12.5px; color:var(--muted); margin-top:0; min-height:36px; line-height:1.5;">
+              كل موزع يعمل كوحدة مستقلة لبيع النسخ بالسعر الثابت، مع احتساب عمولته تلقائياً، وإصدار مفتاح الترخيص مركزياً من الوكيل (01122166076).
+            </p>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:16px;">
+              <div>
+                <label style="font-size:12px; color:var(--muted);">اسم الموزع / المكتب المستقل:</label>
+                <input id="dName" placeholder="مثال: مكتب الصعيد للأنظمة الطبية" />
+              </div>
+              <div>
+                <label style="font-size:12px; color:var(--muted);">رقم هاتف الموزع:</label>
+                <input id="dPhone" placeholder="010..." dir="ltr" />
+              </div>
+              <div>
+                <label style="font-size:12px; color:var(--muted);">المحافظة / النطاق الجغرافي:</label>
+                <input id="dGov" placeholder="مثال: أسيوط والصعيد" />
+              </div>
+              <div>
+                <label style="font-size:12px; color:var(--muted);">المدينة / المركز التابع له:</label>
+                <input id="dCity" placeholder="مثال: مدينة أسيوط / ديروط / منفلوط" />
+              </div>
+              <div>
+                <label style="font-size:12px; color:var(--muted);">الشريحة التعاقدية الافتتاحية:</label>
+                <select id="dTierSelect" onchange="document.getElementById('dRate').value = this.value">
+                  <option value="20" selected>شريحة برونزية قياسية (عمولة 20%)</option>
+                  <option value="22">شريحة فضية متقدمة (عمولة 22%)</option>
+                  <option value="25">شريحة ذهبية متميزة (عمولة 25%)</option>
+                  <option value="28">شريحة امتياز إقليمي بلاتينيوم (28%)</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size:12px; color:var(--muted);">نسبة عمولة الموزع من السعر الثابت (%):</label>
+                <input id="dRate" type="number" min="5" max="45" value="20" />
+              </div>
+            </div>
           </div>
-          <p style="font-size:12.5px; color:var(--muted); margin-top:0;">
-            كل موزع يعمل كوحدة مستقلة بذاتها لبيع أكبر عدد من النسخ بالسعر الرسمي الثابت، ويحصل على نسبته المحددة تلقائياً، بينما يصدر مفتاح التفعيل مركزياً من الوكيل (`01122166076`).
-          </p>
-          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:12px;">
-            <div>
-              <label style="font-size:12px; color:var(--muted);">اسم الموزع / المكتب المستقل:</label>
-              <input id="dName" placeholder="مثال: مكتب الصعيد للأنظمة الطبية" />
-            </div>
-            <div>
-              <label style="font-size:12px; color:var(--muted);">رقم هاتف الموزع:</label>
-              <input id="dPhone" placeholder="010..." dir="ltr" />
-            </div>
-            <div>
-              <label style="font-size:12px; color:var(--muted);">المحافظة / النطاق الجغرافي:</label>
-              <input id="dGov" placeholder="مثال: سوهاج وقنا" />
-            </div>
-            <div>
-              <label style="font-size:12px; color:var(--muted);">نسبة عمولة الموزع من السعر الثابت (%):</label>
-              <input id="dRate" type="number" min="5" max="45" value="20" />
-            </div>
-          </div>
-          <button class="btn" style="width:100%;" onclick="createDistributor()">+ اعتماد الموزع وتوليد بوابته المستقلة فوراً</button>
+          <button class="btn" style="width:100%; height:46px; font-size:13.5px; font-weight:700; margin-top:auto; display:flex; align-items:center; justify-content:center; gap:8px;" onclick="createDistributor()">
+            <span>+</span> اعتماد الموزع وتوليد بوابته المستقلة فوراً
+          </button>
         </div>
 
         <!-- Register New Deal via Distributor -->
-        <div class="glass">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-            <h2 style="margin:0; font-size:17px;">تسجيل بيعة عيادة جديدة عبر موزع (بالسعر الثابت)</h2>
-            <span class="badge b-sky">حساب تلقائي للنسبة وصافي الوكيل</span>
+        <div class="glass" style="display:flex; flex-direction:column; justify-content:space-between; margin-bottom:0;">
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <h2 style="margin:0; font-size:17px;">تسجيل بيعة عيادة جديدة عبر موزع (بالسعر الثابت)</h2>
+              <span class="badge b-sky">حساب تلقائي للنسبة وصافي الوكيل</span>
+            </div>
+            <p style="font-size:12.5px; color:var(--muted); margin-top:0; min-height:36px; line-height:1.5;">
+              توثيق بيع ترخيص عيادة جديد، مع الاحتساب التلقائي لعمولة الموزع، وتوريد صافي حصة الوكيل، وتجهيز بصمة HWID لإصدار الترخيص.
+            </p>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:16px;">
+              <div>
+                <label style="font-size:12px; color:var(--muted);">الموزع القائم بالبيع:</label>
+                <select id="dlDist"></select>
+              </div>
+              <div>
+                <label style="font-size:12px; color:var(--muted);">الباقة (سعر رسمي ثابت):</label>
+                <select id="dlTier">
+                  <option value="basic">الأساسية (4,500 ج.م / أسيوط 2,700)</option>
+                  <option value="professional" selected>التخصصية (8,500 ج.م / أسيوط 5,100)</option>
+                  <option value="enterprise">المراكز الكبرى (18,500 ج.م / أسيوط 11,100)</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size:12px; color:var(--muted);">اسم العيادة / المركز الطبي:</label>
+                <input id="dlClinic" placeholder="مثال: عيادة الحياة التخصصية" />
+              </div>
+              <div>
+                <label style="font-size:12px; color:var(--muted);">اسم الطبيب وهاتفه:</label>
+                <input id="dlDoctor" placeholder="د. محمد علي - 010..." />
+              </div>
+              <div>
+                <label style="font-size:12px; color:var(--muted);">بصمة جهاز العيادة (Hardware ID):</label>
+                <input id="dlHwid" placeholder="تُنسخ من نافذة التفعيل بالعيادة" dir="ltr" />
+              </div>
+              <div>
+                <label style="font-size:12px; color:var(--muted);">المبادرة والتخفيض الإقليمي:</label>
+                <label for="dlAssiut" style="display:flex; align-items:center; gap:10px; height:38px; padding:0 12px; background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:10px; cursor:pointer; font-size:12.5px; user-select:none; box-sizing:border-box;">
+                  <input type="checkbox" id="dlAssiut" style="width:18px; height:18px; accent-color:var(--sky); cursor:pointer;" />
+                  <span style="font-weight:600; color:var(--text);">تطبيق خصم محافظة أسيوط (40%)</span>
+                </label>
+              </div>
+            </div>
           </div>
-          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:12px;">
-            <div>
-              <label style="font-size:12px; color:var(--muted);">الموزع القائم بالبيع:</label>
-              <select id="dlDist"></select>
-            </div>
-            <div>
-              <label style="font-size:12px; color:var(--muted);">الباقة (سعر رسمي ثابت):</label>
-              <select id="dlTier">
-                <option value="basic">الأساسية (4,500 ج.م / أسيوط 2,700)</option>
-                <option value="professional" selected>التخصصية (8,500 ج.م / أسيوط 5,100)</option>
-                <option value="enterprise">المراكز الكبرى (18,500 ج.م / أسيوط 11,100)</option>
-              </select>
-            </div>
-            <div>
-              <label style="font-size:12px; color:var(--muted);">اسم العيادة / المركز الطبي:</label>
-              <input id="dlClinic" placeholder="مثال: عيادة الحياة التخصصية" />
-            </div>
-            <div>
-              <label style="font-size:12px; color:var(--muted);">اسم الطبيب وهاتفه:</label>
-              <input id="dlDoctor" placeholder="د. محمد علي - 010..." />
-            </div>
-            <div>
-              <label style="font-size:12px; color:var(--muted);">بصمة جهاز العيادة (Hardware ID):</label>
-              <input id="dlHwid" placeholder="تُنسخ من نافذة التفعيل بالعيادة" dir="ltr" />
-            </div>
-            <div style="display:flex; align-items:center; gap:8px; padding-top:18px;">
-              <input type="checkbox" id="dlAssiut" style="width:18px; height:18px;" />
-              <label for="dlAssiut" style="font-size:12.5px; cursor:pointer;">تطبيق خصم محافظة أسيوط (40%)</label>
-            </div>
-          </div>
-          <button class="btn btn-sky" style="width:100%;" onclick="createDeal()">تسجيل الصفقة وحساب عمولة الموزع وصافي الوكيل</button>
+          <button class="btn btn-sky" style="width:100%; height:46px; font-size:13.5px; font-weight:700; margin-top:auto; display:flex; align-items:center; justify-content:center; gap:8px;" onclick="createDeal()">
+            <span>⚡</span> تسجيل الصفقة وحساب عمولة الموزع وصافي الوكيل
+          </button>
         </div>
       </div>
 
@@ -1774,7 +1801,9 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
     async function createDistributor() {
       const name = document.getElementById('dName').value.trim();
       const phone = document.getElementById('dPhone').value.trim();
-      const governorate = document.getElementById('dGov').value.trim();
+      const city = document.getElementById('dCity') ? document.getElementById('dCity').value.trim() : '';
+      let governorate = document.getElementById('dGov').value.trim();
+      if (city) governorate = governorate ? (governorate + ' - ' + city) : city;
       const commissionRate = Number(document.getElementById('dRate').value);
       if (!name || !phone) return alert('أدخل اسم الموزع ورقم هاتفه');
       const r = await fetch('/api/distributors', {
@@ -1787,6 +1816,7 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
       document.getElementById('dName').value = '';
       document.getElementById('dPhone').value = '';
       document.getElementById('dGov').value = '';
+      if (document.getElementById('dCity')) document.getElementById('dCity').value = '';
       render(j.summary);
     }
 
