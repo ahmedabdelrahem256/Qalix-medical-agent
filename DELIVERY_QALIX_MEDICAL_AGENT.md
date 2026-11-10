@@ -176,7 +176,6 @@
 | [`server/marketing_kit.js`](file:///G:/Qalix%20medical%20agent/server/marketing_kit.js) | حقيبة العرض الميداني وإعلانات فيسبوك ومعرض الشاشات | **مكتمل (المرحلة 8)** |
 | [`ملفات_العروض_التقديمية/`](file:///G:/Qalix%20medical%20agent/ملفات_العروض_التقديمية) | مجلد ملفات العروض التقديمية والبوستات والشاشات والفيديوهات | **مفهرس ومدمج (المرحلة 8)** |
 | [`الوثائق_القانونية_والتسليم/`](file:///G:/Qalix%20medical%20agent/الوثائق_القانونية_والتسليم) | حزمة العقود ومحاضر التسليم وشهادات الضمان السيادية | **مفهرس ومدمج (المرحلة 8)** |
-| [`server/rx_brand_designer.js`](file:///G:/Qalix%20medical%20agent/server/rx_brand_designer.js) | مصمم الروشتات الطبية وقوالب التخصصات A4 و A5 المطبوعة | **مكتمل** |
 | [`server/commission_hierarchy.js`](file:///G:/Qalix%20medical%20agent/server/commission_hierarchy.js) | سلم شرائح تميز الموزعين ونظام الامتياز الإقليمي وخطاب A4 | **مكتمل** |
 | [`server/financial_forecast.js`](file:///G:/Qalix%20medical%20agent/server/financial_forecast.js) | المحاكي التنبؤي لإيرادات الوكيل لـ 12 شهراً مع مخطط SVG | **مكتمل** |
 | [`server/visual_analytics.js`](file:///G:/Qalix%20medical%20agent/server/visual_analytics.js) | محرك المخططات البيانية SVG الصافية التفاعلية | **مكتمل** |

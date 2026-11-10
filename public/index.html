@@ -284,7 +284,7 @@
         <button class="tab-btn" id="btn-pane-quotations" onclick="openTab('pane-quotations', this)">8. 📋 عروض الأسعار والدليل الميداني</button>
         <button class="tab-btn" id="btn-pane-retention" onclick="openTab('pane-retention', this)">9. 🤝 ما بعد البيع والنسخ الاحتياطي</button>
         <button class="tab-btn" id="btn-pane-fieldtraining" onclick="openTab('pane-fieldtraining', this)">10. 🎓 التدريب الميداني والجاهزية الفنية</button>
-        <button class="tab-btn" id="btn-pane-prescription" onclick="openTab('pane-prescription', this)">11. 💊 مصمم الروشتات والامتياز والتنبؤ المالي</button>
+        <button class="tab-btn" id="btn-pane-prescription" onclick="openTab('pane-prescription', this)">11. 🎖️ شرائح التميز والتنبؤ المالي</button>
         <button class="tab-btn" id="btn-pane-audit" onclick="openTab('pane-audit', this)">12. فحص نسخة MEGA</button>
       </nav>
       <div style="display:flex; align-items:center; gap:8px; min-width:250px;">
@@ -300,7 +300,7 @@
           <option value="pane-quotations">القسم 8: عروض الأسعار الرسمية والرد على الاعتراضات</option>
           <option value="pane-retention">القسم 9: متابعة ما بعد البيع ورضاء العيادات والنسخ الاحتياطي</option>
           <option value="pane-fieldtraining">القسم 10: التدريب الميداني والجاهزية الفنية وحملات واتساب</option>
-          <option value="pane-prescription">القسم 11: مصمم الروشتات الطبية وشرائح الامتياز والتنبؤ المالي</option>
+          <option value="pane-prescription">القسم 11: شرائح تميز الموزعين والتنبؤ المالي للإيرادات</option>
           <option value="pane-audit">القسم 12: فحص واستضافة نسخة العميل (MEGA)</option>
         </select>
       </div>
@@ -1155,65 +1155,20 @@
       </div>
     </section>
 
-    <!-- ==================== PANE 11: PRESCRIPTION DESIGNER, FRANCHISE HIERARCHY & FORECASTING (PHASE 7) ==================== -->
+    <!-- ==================== PANE 11: DISTRIBUTOR HIERARCHY & FINANCIAL FORECASTING (PHASE 7) ==================== -->
     <section id="pane-prescription" class="pane">
-      <div class="grid-3" style="margin-bottom:18px;">
-        <!-- Module A: Medical Prescription Designer & Specialty Templates -->
+      <div class="grid-2" style="margin-bottom:18px;">
+        <!-- Module A: Distributor Tier Progression Ladder -->
         <div class="glass">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <h2 style="margin:0; font-size:16px; color:var(--emerald);">💊 مصمم الروشتات الطبية المخصصة</h2>
-            <span class="badge b-emerald">A4 / A5 مع باركود</span>
-          </div>
-          <p style="font-size:12px; color:var(--muted); margin-top:0;">
-            أظهر للطبيب كيف تبدو روشتة عيادته باسمه وشعاره وقائمة أدويته التخصصية:
-          </p>
-          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:8px;">
-            <div>
-              <label style="font-size:11px; color:var(--muted);">التخصص الطبي:</label>
-              <select id="rxSpecSelect" onchange="onRxSpecChange(this.value)" style="padding:6px; font-size:11.5px;">
-                <option value="dental">طب الأسنان 🦷</option>
-                <option value="pediatrics">طب الأطفال 👶</option>
-                <option value="internal_cardio" selected>الباطنة والقلب ❤️</option>
-                <option value="obgyn">النساء والتوليد 🤰</option>
-                <option value="ophthalmology">طب العيون 👁️</option>
-              </select>
-            </div>
-            <div>
-              <label style="font-size:11px; color:var(--muted);">مقاس الورق:</label>
-              <select id="rxPaperSize" style="padding:6px; font-size:11.5px;">
-                <option value="A4" selected>مقاس A4 ليزر قياسي</option>
-                <option value="A5">مقاس A5 مدمج (نصف A4)</option>
-              </select>
-            </div>
-          </div>
-          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:8px;">
-            <div>
-              <label style="font-size:11px; color:var(--muted);">اسم الطبيب:</label>
-              <input id="rxDocName" value="د. محمد مصطفى عبد الرحمن" style="padding:6px 8px; font-size:12px;" />
-            </div>
-            <div>
-              <label style="font-size:11px; color:var(--muted);">اسم العيادة / المركز:</label>
-              <input id="rxClinicName" value="مركز الصفوة الطبي التخصصي" style="padding:6px 8px; font-size:12px;" />
-            </div>
-          </div>
-          <div style="margin-bottom:10px;">
-            <label style="font-size:11px; color:var(--muted);">اللقب والدرجات العلمية:</label>
-            <input id="rxDocTitle" value="استشاري أمراض الباطنة والقلب والسكر — ماجستير القلب والأوعية الدموية" style="padding:6px 8px; font-size:12px;" />
-          </div>
-          <button class="btn btn-emerald" style="width:100%;" onclick="openPrescriptionLivePreview()">🖨️ فتح ومعاينة وطباعة الروشتة الطبية</button>
-        </div>
-
-        <!-- Module B: Distributor Tier Progression Ladder -->
-        <div class="glass">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <h2 style="margin:0; font-size:16px; color:var(--amber);">🎖️ سلم شرائح التميز ونظام الامتياز الإقليمي</h2>
+            <h2 style="margin:0; font-size:16px; color:var(--amber);">🎖️ سلم شرائح التميز ونظام الامتياز الإقليمي للموزعين</h2>
             <span class="badge b-amber">عمولات من 20% لـ 28%</span>
           </div>
           <p style="font-size:12px; color:var(--muted); margin-top:0;">
-            نظام الترقية التلقائي لحجم مبيعات الموزعين مع حوافز حصرية للمناطق:
+            نظام الترقية التلقائي لحجم مبيعات الموزعين المستقلين وحوافز الاستقرار وحماية النطاقات الجغرافية:
           </p>
           <div style="margin-bottom:8px;">
-            <label style="font-size:11.5px; color:var(--muted);">اختر الموزع لعرض ملف الترقية:</label>
+            <label style="font-size:11.5px; color:var(--muted);">اختر الموزع لعرض ملف الترقية والعمولة:</label>
             <select id="tierDistSelect" onchange="loadDistributorTierProfile(this.value)" style="padding:6px 10px; font-size:12px;"></select>
           </div>
           <div id="distTierCard" class="sub-card" style="padding:10px; margin-bottom:10px;">
@@ -1222,14 +1177,14 @@
           <a id="tierLetterBtn" href="#" target="_blank" class="btn btn-sky" style="text-decoration:none; display:none; text-align:center;">📜 طباعة خطاب الترقية الرسمي المعتمد (A4)</a>
         </div>
 
-        <!-- Module C: 12-Month Financial Forecasting Simulator -->
+        <!-- Module B: 12-Month Financial Forecasting Simulator -->
         <div class="glass">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <h2 style="margin:0; font-size:16px; color:var(--sky);">📈 المحاكي التنبؤي لإيرادات الوكيل (12 شهراً)</h2>
+            <h2 style="margin:0; font-size:16px; color:var(--sky);">📈 المحاكي التنبؤي لإيرادات الوكيل وعمولات الموزعين (12 شهراً)</h2>
             <span class="badge b-sky">توقعات التدفق النقدي</span>
           </div>
           <p style="font-size:12px; color:var(--muted); margin-top:0;">
-            محاكاة نمو المبيعات وصافي الإيرادات وعمولات الموزعين عبر السيناريوهات المختلفة:
+            محاكاة نمو المبيعات وصافي الإيرادات المحصلة للوكيل وعمولات الموزعين المستقلين عبر السيناريوهات الميدانية:
           </p>
           <div style="margin-bottom:8px;">
             <label style="font-size:11.5px; color:var(--muted);">اختر سيناريو التوسع الميداني:</label>
@@ -2080,31 +2035,7 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
       alert('تم نسخ نص الحملة بنجاح!');
     }
 
-    /* ---------------- Phase 7 Interactive Handlers ---------------- */
-    let rxPresets = {};
-    async function loadRxPresets() {
-      try {
-        const r = await fetch('/api/rx-designer/templates');
-        const j = await r.json();
-        if (j.ok && j.presets) rxPresets = j.presets;
-      } catch (e) { console.error(e); }
-    }
-
-    function onRxSpecChange(specId) {
-      const p = rxPresets[specId];
-      if (!p) return;
-      document.getElementById('rxDocTitle').value = `${p.defaultHeaderTitle} — ${p.defaultDegrees}`;
-    }
-
-    function openPrescriptionLivePreview() {
-      const spec = document.getElementById('rxSpecSelect').value;
-      const size = document.getElementById('rxPaperSize').value;
-      const doc = encodeURIComponent(document.getElementById('rxDocName').value.trim());
-      const cln = encodeURIComponent(document.getElementById('rxClinicName').value.trim());
-      const title = encodeURIComponent(document.getElementById('rxDocTitle').value.trim());
-      window.open(`/api/rx-designer/preview?specialty=${spec}&paperSize=${size}&doctorName=${doc}&clinicName=${cln}&doctorTitle=${title}`, '_blank');
-    }
-
+    /* ---------------- Phase 7 Interactive Handlers (Tier Hierarchy & Forecasting) ---------------- */
     async function loadDistributorTierProfile(distId) {
       if (!distId) return;
       try {
@@ -2349,7 +2280,6 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
       loadTrainingModules();
       loadClinicChecklist();
       loadBroadcastCampaigns();
-      loadRxPresets();
       loadFinancialForecast('balanced');
     }
 

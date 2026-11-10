@@ -386,25 +386,18 @@ function req(method, urlPath, body) {
       bcastRes.body.campaigns.some(c => c.id === 'camp_assiut_support')
     );
 
-    // 31. Medical Prescription Templates Retrieval (Phase 7)
+    // 31. Architectural Boundary Verification: Clinical features are strictly kept as proposals, not active tools in agent dashboard
     const rxTemplRes = await req('GET', '/api/rx-designer/templates');
-    check('31. استرجاع قوالب الروشتات الطبية التخصصية الـ 5 (أسنان، أطفال، قلب، نساء، عيون)',
-      rxTemplRes.status === 200 &&
-      rxTemplRes.body.ok === true &&
-      rxTemplRes.body.presets &&
-      rxTemplRes.body.presets.dental &&
-      rxTemplRes.body.presets.internal_cardio
+    check('31. التحقق من عزل النطاق البرمجي: لوحة الوكيل مقتصرة على الإدارة والتسويق دون أدوات طبية داخلية (404)',
+      rxTemplRes.status === 404
     );
 
-    // 32. Render Printable Medical Prescription HTML (Phase 7)
-    const rxRenderRes = await req('GET', `/api/rx-designer/preview?specialty=internal_cardio&paperSize=A4&doctorName=${encodeURIComponent('د. حسام عادل')}&clinicName=${encodeURIComponent('مركز القلب الدولي')}`);
-    check('32. توليد ومعاينة الروشتة الطبية المخصصة A4 مع الباركود والتشخيص وقائمة الأدوية',
-      rxRenderRes.status === 200 &&
-      typeof rxRenderRes.body === 'string' &&
-      rxRenderRes.body.includes('د. حسام عادل') &&
-      rxRenderRes.body.includes('مركز القلب الدولي') &&
-      rxRenderRes.body.includes('01122166076') &&
-      rxRenderRes.body.includes('℞')
+    // 32. Proposals Repository for Product Enhancement
+    const bootRes = await req('GET', '/api/bootstrap');
+    check('32. التحقق من بنك مقترحات الارتقاء وتطوير المنظومة وحفظ الأفكار السريرية كأهداف تطويرية',
+      bootRes.status === 200 &&
+      Array.isArray(bootRes.body.proposals) &&
+      bootRes.body.proposals.length >= 12
     );
 
     // 33. Distributor Commission Hierarchy Tiers & Profile Calculation (Phase 7)
