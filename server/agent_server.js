@@ -23,6 +23,9 @@ const { getAnalyticsPayload } = require('./visual_analytics');
 const { TRAINING_MODULES, EXAM_QUESTIONS, evaluateExam, generateAccreditationCertificateHtml } = require('./distributor_training_simulator');
 const { AUDIT_CHECKPOINTS, evaluateClinicChecklist, generateClinicAuditReportHtml } = require('./clinic_audit_checklist');
 const { getAllCampaigns, composeCampaignMessage } = require('./broadcast_composer');
+const { SPECIALTY_RX_PRESETS, getSpecialtyRxPresets, renderPrescriptionHtml } = require('./rx_brand_designer');
+const { COMMISSION_TIERS, calculateDistributorTier, getDistributorHierarchyProfile, generateTierPromotionLetterHtml } = require('./commission_hierarchy');
+const { SCENARIOS, calculate12MonthForecast } = require('./financial_forecast');
 
 const PORT = Number(process.env.PORT) || 4000;
 const HOST = process.env.HOST || '127.0.0.1';
@@ -805,6 +808,57 @@ const server = http.createServer(async (req, res) => {
       const body = await readJsonBody(req);
       const composed = composeCampaignMessage(body.campaignId, body.vars || {});
       return sendJson(res, 200, { ok: true, message: composed });
+    }
+
+    /* ---------------- Medical Prescription Designer API (Phase 7) ---------------- */
+    if (req.method === 'GET' && pathname === '/api/rx-designer/templates') {
+      return sendJson(res, 200, { ok: true, presets: getSpecialtyRxPresets() });
+    }
+
+    if (req.method === 'POST' && pathname === '/api/rx-designer/render') {
+      const body = await readJsonBody(req);
+      const html = renderPrescriptionHtml(body);
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      return res.end(html);
+    }
+
+    if (req.method === 'GET' && pathname === '/api/rx-designer/preview') {
+      const qParams = Object.fromEntries(url.searchParams.entries());
+      const html = renderPrescriptionHtml(qParams);
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      return res.end(html);
+    }
+
+    /* ---------------- Distributor Tier Progression & Regional Franchise (Phase 7) ---------------- */
+    if (req.method === 'GET' && pathname === '/api/hierarchy/tiers') {
+      return sendJson(res, 200, { ok: true, tiers: COMMISSION_TIERS });
+    }
+
+    if (req.method === 'GET' && pathname.startsWith('/api/hierarchy/distributor/') && !pathname.endsWith('/letter')) {
+      const distId = pathname.split('/')[4];
+      const dist = db.prepare('SELECT * FROM distributors WHERE id = ?').get(distId);
+      if (!dist) return sendJson(res, 404, { error: 'الموزع غير موجود' });
+      const deals = db.prepare('SELECT * FROM deals').all();
+      const profile = getDistributorHierarchyProfile(dist, deals);
+      return sendJson(res, 200, { ok: true, profile });
+    }
+
+    if (req.method === 'GET' && pathname.startsWith('/api/hierarchy/distributor/') && pathname.endsWith('/letter')) {
+      const distId = pathname.split('/')[4];
+      const dist = db.prepare('SELECT * FROM distributors WHERE id = ?').get(distId);
+      if (!dist) return sendJson(res, 404, { error: 'الموزع غير موجود' });
+      const deals = db.prepare('SELECT * FROM deals').all();
+      const profile = getDistributorHierarchyProfile(dist, deals);
+      const html = generateTierPromotionLetterHtml(profile, AGENT_INFO);
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      return res.end(html);
+    }
+
+    /* ---------------- Financial Forecasting & 12-Month Projections (Phase 7) ---------------- */
+    if (req.method === 'GET' && pathname === '/api/financial/forecast') {
+      const scenKey = url.searchParams.get('scenario') || 'balanced';
+      const forecast = calculate12MonthForecast(scenKey);
+      return sendJson(res, 200, { ok: true, forecast, scenarios: SCENARIOS });
     }
 
     // Serve static files

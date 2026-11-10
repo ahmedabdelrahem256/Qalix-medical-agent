@@ -206,6 +206,12 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
         <a href="/api/training/certificate/${dist.id}" target="_blank" style="text-decoration:none;">
           <button type="button" style="background:#d97706; color:white;">🏅 شهادة الاعتماد الميداني الرسمي (A4 Certificate)</button>
         </a>
+        <a href="/api/hierarchy/distributor/${dist.id}/letter" target="_blank" style="text-decoration:none;">
+          <button type="button" style="background:#0ea5e9; color:white;">🎖️ خطاب شريحة التميز التجاري (A4)</button>
+        </a>
+        <a href="/api/rx-designer/preview" target="_blank" style="text-decoration:none;">
+          <button type="button" style="background:#10b981; color:#052e16;">💊 نماذج الروشتات التخصصية (A4/A5)</button>
+        </a>
       </div>
     </div>
   </div>

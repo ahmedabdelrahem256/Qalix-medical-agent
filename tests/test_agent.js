@@ -386,7 +386,60 @@ function req(method, urlPath, body) {
       bcastRes.body.campaigns.some(c => c.id === 'camp_assiut_support')
     );
 
-    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/30 PASSED ===`);
+    // 31. Medical Prescription Templates Retrieval (Phase 7)
+    const rxTemplRes = await req('GET', '/api/rx-designer/templates');
+    check('31. استرجاع قوالب الروشتات الطبية التخصصية الـ 5 (أسنان، أطفال، قلب، نساء، عيون)',
+      rxTemplRes.status === 200 &&
+      rxTemplRes.body.ok === true &&
+      rxTemplRes.body.presets &&
+      rxTemplRes.body.presets.dental &&
+      rxTemplRes.body.presets.internal_cardio
+    );
+
+    // 32. Render Printable Medical Prescription HTML (Phase 7)
+    const rxRenderRes = await req('GET', `/api/rx-designer/preview?specialty=internal_cardio&paperSize=A4&doctorName=${encodeURIComponent('د. حسام عادل')}&clinicName=${encodeURIComponent('مركز القلب الدولي')}`);
+    check('32. توليد ومعاينة الروشتة الطبية المخصصة A4 مع الباركود والتشخيص وقائمة الأدوية',
+      rxRenderRes.status === 200 &&
+      typeof rxRenderRes.body === 'string' &&
+      rxRenderRes.body.includes('د. حسام عادل') &&
+      rxRenderRes.body.includes('مركز القلب الدولي') &&
+      rxRenderRes.body.includes('01122166076') &&
+      rxRenderRes.body.includes('℞')
+    );
+
+    // 33. Distributor Commission Hierarchy Tiers & Profile Calculation (Phase 7)
+    const hierRes = await req('GET', `/api/hierarchy/distributor/${distId}`);
+    check('33. حساب وتصنيف الموزع ضمن شرائح التميز (Bronze, Silver, Gold, Platinum) وحوافز الترقية',
+      hierRes.status === 200 &&
+      hierRes.body.ok === true &&
+      hierRes.body.profile &&
+      hierRes.body.profile.currentTier &&
+      hierRes.body.profile.currentTier.commissionRate >= 20
+    );
+
+    // 34. Generate Official Distributor Tier Promotion Letter A4 (Phase 7)
+    const letterRes = await req('GET', `/api/hierarchy/distributor/${distId}/letter`);
+    check('34. إصدار خطاب ترقية واعتماد شريحة التميز التجاري A4 برمز التحقق وبصمة الوكيل',
+      letterRes.status === 200 &&
+      typeof letterRes.body === 'string' &&
+      letterRes.body.includes('خــطـاب تـرقــيـة واعــتـمـاد شــريـحـة الـتـمـيـز الـتـجـاري') &&
+      letterRes.body.includes('01122166076')
+    );
+
+    // 35. 12-Month Financial Forecasting Simulator & SVG Projection (Phase 7)
+    const fcRes = await req('GET', '/api/financial/forecast?scenario=balanced');
+    check('35. محاكاة المسار التنبؤي لإيرادات الوكيل وعمولات الموزعين لـ 12 شهراً ورسم SVG',
+      fcRes.status === 200 &&
+      fcRes.body.ok === true &&
+      fcRes.body.forecast &&
+      fcRes.body.forecast.months.length === 12 &&
+      fcRes.body.forecast.annualGrossSales > 0 &&
+      fcRes.body.forecast.annualAgentNetRevenue > 0 &&
+      typeof fcRes.body.forecast.forecastSvgChart === 'string' &&
+      fcRes.body.forecast.forecastSvgChart.includes('<svg')
+    );
+
+    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/35 PASSED ===`);
     for (const r of results) console.log(' ✅', r);
   } finally {
     srv.kill('SIGINT');

@@ -1,6 +1,6 @@
 # وثيقة التسليم والتوثيق المرحلي — مشروع Qalix Medical Agent
 ## Qalix Medical Agent — Official Agent & Independent Distributors Command System
-**تاريخ التحديث:** 2026-11-10 · **الحالة:** المرحلة 6 مكتملة ومختبرة 100% (30/30 اختبار آلي ناجح + 18/18 اختبار لنسخة العميل)  
+**تاريخ التحديث:** 2026-11-10 · **الحالة:** المرحلة 7 مكتملة ومختبرة 100% (35/35 اختبار آلي ناجح + 18/18 اختبار لنسخة العميل)  
 **المسار المعتمد على ويندوز:** `G:\Qalix medical agent`  
 **مستودع GitHub الرسمي:** [Qalix-medical-agent](https://github.com/ahmedabdelrahem256/Qalix-medical-agent)  
 **الهوية الرسمية المعتمدة:** وكيل منظومة كالكس ميديكال الطبية  
@@ -108,19 +108,43 @@
    - إضافة **القسم 10: التدريب الميداني والجاهزية الفنية وحملات واتساب**.
    - إضافة رابط استخراج شهادة الاعتماد الرسمية داخل بوابات الموزعين المستقلين (`distributors_kits/`).
 
+#### 🔹 المرحلة 7: مصمم الروشتات الطبية المخصصة + سلم شرائح التميز والامتياز الإقليمي + التنبؤ المالي لـ 12 شهراً
+**التاريخ:** 2026-11-10 · **الحالة:** مكتملة ومختبرة 100% (35/35 اختبار آلي ناجح)
+1. **مصمم الروشتات الطبية وقوالب التخصصات ([`server/rx_brand_designer.js`](file:///G:/Qalix%20medical%20agent/server/rx_brand_designer.js)):**
+   - تصميم ومعاينة وطباعة روشتات علاجية فاخرة بمقاسات A4 و A5 ليزرية ومدمجة.
+   - تضمين ترويسة الطبيب (الاسم، الألقاب والدرجات العلمية، الشعار، التخصص، العناوين، والهواتف)، باركود التحقق الرقمي، التشخيص الطبي، جدول الأدوية والجرعات، وإرشادات المريض وميعاد الاستشارة.
+   - قوالب جاهزة للتخصصات الـ 5 (أسنان، أطفال، قلب وباطنة، نساء، عيون).
+   - مسارات API: `GET /api/rx-designer/templates`، `POST /api/rx-designer/render`، و `GET /api/rx-designer/preview`.
+2. **محرك شرائح تميز الموزعين والامتياز الإقليمي ([`server/commission_hierarchy.js`](file:///G:/Qalix%20medical%20agent/server/commission_hierarchy.js)):**
+   - 4 شرائح تصاعدية (Bronze 20%، Silver 22%، Gold 25%، و Platinum Franchise 28%).
+   - حساب آلي للترقيات، المبيعات المحققة، وعدد الصفقات المتبقية للشريحة التالية.
+   - إصدار **خطاب ترقية واعتماد شريحة التميز التجاري A4** موثق برمز التحقق وبصمة الوكيل.
+   - مسارات API: `GET /api/hierarchy/tiers`، `GET /api/hierarchy/distributor/:id`، و `GET /api/hierarchy/distributor/:id/letter`.
+3. **المحاكي التنبؤي لإيرادات الوكيل لـ 12 شهراً ([`server/financial_forecast.js`](file:///G:/Qalix%20medical%20agent/server/financial_forecast.js)):**
+   - محاكاة 3 سيناريوهات للتوسع (متحفظ 5 عيادات/شهر، متوازن رسمي 12 عيادة/شهر، توسعي 25 عيادة/شهر).
+   - حساب الإيرادات السنوية، مخصصات عمولات الموزعين، وصافي أرباح الوكيل المحصلة، مع تقدير عقود الصيانة السنوية للسنة الثانية.
+   - توليد مخطط بياني SVG متجاوب يوضح مسار التدفق النقدي شهراً بشهر.
+   - مسار API: `GET /api/financial/forecast`.
+4. **تحديث اللوحة الرئيسية والبوابات ([`public/index.html`](file:///G:/Qalix%20medical%20agent/public/index.html) و [`server/portal_template.js`](file:///G:/Qalix%20medical%20agent/server/portal_template.js)):**
+   - إضافة **القسم 11: مصمم الروشتات الطبية وشرائح الامتياز والتنبؤ المالي**.
+   - إتاحة معاينة الروشتات وخطابات الترقية مباشرة داخل بوابات الموزعين المستقلين (`distributors_kits/`).
+
 ---
 
 ### 3. فهرس ملفات المشروع المعتمدة (`G:\Qalix medical agent`)
 | المسار | الوصف الوظيفي | الحالة |
 | :--- | :--- | :--- |
-| [`DELIVERY_QALIX_MEDICAL_AGENT.md`](file:///G:/Qalix%20medical%20agent/DELIVERY_QALIX_MEDICAL_AGENT.md) | وثيقة التسليم الرسمية المحدثة للمشروع | **محدث (المرحلة 6)** |
+| [`DELIVERY_QALIX_MEDICAL_AGENT.md`](file:///G:/Qalix%20medical%20agent/DELIVERY_QALIX_MEDICAL_AGENT.md) | وثيقة التسليم الرسمية المحدثة للمشروع | **محدث (المرحلة 7)** |
 | [`START_QALIX_MEDICAL_AGENT.bat`](file:///G:/Qalix%20medical%20agent/START_QALIX_MEDICAL_AGENT.bat) | مشغل ويندوز المباشر من المسار `G:\Qalix medical agent` | **مكتمل** |
 | [`DEPLOY_TO_G_DRIVE.ps1`](file:///G:/Qalix%20medical%20agent/DEPLOY_TO_G_DRIVE.ps1) | سكربت النشر والبناء التلقائي في `G:\` | **مكتمل** |
 | [`server/agent_server.js`](file:///G:/Qalix%20medical%20agent/server/agent_server.js) | خادم الوكيل والموزعين والـ REST API (Node.js + SQLite WAL) | **مكتمل ومختبر 100%** |
-| [`server/visual_analytics.js`](file:///G:/Qalix%20medical%20agent/server/visual_analytics.js) | محرك المخططات البيانية SVG الصافية التفاعلية (أعمدة، دونات، تدفق نقدي) | **مكتمل (المرحلة 6)** |
-| [`server/distributor_training_simulator.js`](file:///G:/Qalix%20medical%20agent/server/distributor_training_simulator.js) | محاكي التدريب الميداني وامتحان الاعتماد وشهادات الموزعين A4 | **مكتمل (المرحلة 6)** |
-| [`server/clinic_audit_checklist.js`](file:///G:/Qalix%20medical%20agent/server/clinic_audit_checklist.js) | مفتش الجاهزية الفنية للعيادات وقائمة الـ 10 معايير وتقرير A4 | **مكتمل (المرحلة 6)** |
-| [`server/broadcast_composer.js`](file:///G:/Qalix%20medical%20agent/server/broadcast_composer.js) | استوديو حملات الواتساب الميدانية وروابط wa.me المباشرة | **مكتمل (المرحلة 6)** |
+| [`server/rx_brand_designer.js`](file:///G:/Qalix%20medical%20agent/server/rx_brand_designer.js) | مصمم الروشتات الطبية وقوالب التخصصات A4 و A5 المطبوعة | **مكتمل (المرحلة 7)** |
+| [`server/commission_hierarchy.js`](file:///G:/Qalix%20medical%20agent/server/commission_hierarchy.js) | سلم شرائح تميز الموزعين ونظام الامتياز الإقليمي وخطاب A4 | **مكتمل (المرحلة 7)** |
+| [`server/financial_forecast.js`](file:///G:/Qalix%20medical%20agent/server/financial_forecast.js) | المحاكي التنبؤي لإيرادات الوكيل لـ 12 شهراً مع مخطط SVG | **مكتمل (المرحلة 7)** |
+| [`server/visual_analytics.js`](file:///G:/Qalix%20medical%20agent/server/visual_analytics.js) | محرك المخططات البيانية SVG الصافية التفاعلية (أعمدة، دونات، تدفق نقدي) | **مكتمل** |
+| [`server/distributor_training_simulator.js`](file:///G:/Qalix%20medical%20agent/server/distributor_training_simulator.js) | محاكي التدريب الميداني وامتحان الاعتماد وشهادات الموزعين A4 | **مكتمل** |
+| [`server/clinic_audit_checklist.js`](file:///G:/Qalix%20medical%20agent/server/clinic_audit_checklist.js) | مفتش الجاهزية الفنية للعيادات وقائمة الـ 10 معايير وتقرير A4 | **مكتمل** |
+| [`server/broadcast_composer.js`](file:///G:/Qalix%20medical%20agent/server/broadcast_composer.js) | استوديو حملات الواتساب الميدانية وروابط wa.me المباشرة | **مكتمل** |
 | [`server/quotation_engine.js`](file:///G:/Qalix%20medical%20agent/server/quotation_engine.js) | مولد عروض الأسعار والتوريد الرسمية المعتمدة A4 بالباركود والخصومات | **مكتمل** |
 | [`server/objection_playbook.js`](file:///G:/Qalix%20medical%20agent/server/objection_playbook.js) | دليل التعامل مع اعتراضات الأطباء والردود المقنعة والتحركات الميدانية | **مكتمل** |
 | [`server/after_sales_tracker.js`](file:///G:/Qalix%20medical%20agent/server/after_sales_tracker.js) | محرك متابعة ما بعد البيع ومحطات الرضاء والتنبيهات المباشرة | **مكتمل** |
@@ -131,16 +155,16 @@
 | [`server/network_diagnostics.js`](file:///G:/Qalix%20medical%20agent/server/network_diagnostics.js) | فحص عناوين الشبكة المحلية وتوليد QR للموبايل بدون إنترنت | **مكتمل** |
 | [`server/contract_generator.js`](file:///G:/Qalix%20medical%20agent/server/contract_generator.js) | مولد عقود التوزيع ومحاضر تسليم العيادات الرسمية القابلة للطباعة | **مكتمل** |
 | [`server/financial_ledger.js`](file:///G:/Qalix%20medical%20agent/server/financial_ledger.js) | مولد كشوف الحسابات والتسوية المالية للموزعين المعتمدين | **مكتمل** |
-| [`server/portal_template.js`](file:///G:/Qalix%20medical%20agent/server/portal_template.js) | مولد البوابات المستقلة للموزعين مع أدوات المراحل 3، 4، 5، و 6 | **مكتمل** |
-| [`public/index.html`](file:///G:/Qalix%20medical%20agent/public/index.html) | لوحة تحكم الوكيل الزجاجية العصرية (11 قسماً متكاملاً ومخططات SVG) | **مكتمل ومختبر** |
+| [`server/portal_template.js`](file:///G:/Qalix%20medical%20agent/server/portal_template.js) | مولد البوابات المستقلة للموزعين مع أدوات كافة المراحل | **مكتمل** |
+| [`public/index.html`](file:///G:/Qalix%20medical%20agent/public/index.html) | لوحة تحكم الوكيل الزجاجية العصرية (12 قسماً متكاملاً) | **مكتمل ومختبر** |
 | [`distributors_kits/`](file:///G:/Qalix%20medical%20agent/distributors_kits) | بوابات الموزعين المستقلين المولّدة تلقائياً | **مفعل (4 موزعين)** |
-| [`tests/test_agent.js`](file:///G:/Qalix%20medical%20agent/tests/test_agent.js) | حزمة الاختبارات الآلية الشاملة (30/30 اختباراً) | **ناجح 30/30 (100%)** |
+| [`tests/test_agent.js`](file:///G:/Qalix%20medical%20agent/tests/test_agent.js) | حزمة الاختبارات الآلية الشاملة (35/35 اختباراً) | **ناجح 35/35 (100%)** |
 | [`.gitignore`](file:///G:/Qalix%20medical%20agent/.gitignore) | استثناء ملفات التشغيل المؤقتة وفصلها عن Git | **مكتمل** |
 
 ---
 
 ### 📌 ملخص الحالة وجاهزية الاستخدام
 - **المنظومة:** تعمل بكامل طاقتها بنسبة 100% أوفلاين Air-Gapped.
-- **الاختبارات:** 30 اختباراً آلياً ناجحاً (100% Pass Rate).
+- **الاختبارات:** 35 اختباراً آلياً ناجحاً (100% Pass Rate).
 - **الهوية:** معتمدة رسمياً باسم «وكيل منظومة كالكس ميديكال الطبية — 01122166076».
 - **المستودع:** متصل ومتزامن مع GitHub: `https://github.com/ahmedabdelrahem256/Qalix-medical-agent`.
