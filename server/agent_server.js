@@ -15,6 +15,10 @@ const { MARKETING_MATERIALS } = require('./marketing_kit');
 const { getLocalNetworkInfo } = require('./network_diagnostics');
 const { generateDistributorContractHtml, generateClinicHandoverHtml } = require('./contract_generator');
 const { generateDistributorStatementHtml } = require('./financial_ledger');
+const { generateQuotationData, generateQuotationHtml } = require('./quotation_engine');
+const { getAllObjections, getObjectionById } = require('./objection_playbook');
+const { calculateDealTimeline, RETENTION_MILESTONES } = require('./after_sales_tracker');
+const { createDatabaseSnapshot, listDatabaseSnapshots, exportFullSystemJson } = require('./backup_manager');
 
 const PORT = Number(process.env.PORT) || 4000;
 const HOST = process.env.HOST || '127.0.0.1';
@@ -677,6 +681,58 @@ const server = http.createServer(async (req, res) => {
       const html = generateDistributorStatementHtml(dist, deals, AGENT_INFO);
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
       return res.end(html);
+    }
+
+    /* ---------------- Official Quotation Generator (Phase 5) ---------------- */
+    if (req.method === 'GET' && pathname === '/api/quotations/generate') {
+      const qParams = Object.fromEntries(url.searchParams.entries());
+      const quoData = generateQuotationData(qParams, OFFICIAL_PRICING);
+      const html = generateQuotationHtml(quoData);
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      return res.end(html);
+    }
+
+    if (req.method === 'GET' && pathname === '/api/quotations/data') {
+      const qParams = Object.fromEntries(url.searchParams.entries());
+      const quoData = generateQuotationData(qParams, OFFICIAL_PRICING);
+      return sendJson(res, 200, { ok: true, quotation: quoData });
+    }
+
+    /* ---------------- Doctor Objections Playbook (Phase 5) ---------------- */
+    if (req.method === 'GET' && pathname === '/api/playbook/objections') {
+      return sendJson(res, 200, { ok: true, playbook: getAllObjections() });
+    }
+
+    /* ---------------- After-Sales Success & Retention Tracker (Phase 5) ---------------- */
+    if (req.method === 'GET' && pathname === '/api/after-sales/milestones') {
+      return sendJson(res, 200, { ok: true, milestones: RETENTION_MILESTONES });
+    }
+
+    if (req.method === 'GET' && pathname === '/api/after-sales/deals') {
+      const deals = db.prepare("SELECT * FROM deals WHERE status = 'completed' ORDER BY created_at DESC").all();
+      const enriched = deals.map(d => calculateDealTimeline(d));
+      return sendJson(res, 200, { ok: true, deals: enriched });
+    }
+
+    /* ---------------- Database Snapshots & Backup Manager (Phase 5) ---------------- */
+    if (req.method === 'POST' && pathname === '/api/backup/create') {
+      const snapshot = createDatabaseSnapshot(db, DATA_DIR);
+      logAudit('backup_created', `إنشاء نقطة استعادة جديدة لقاعدة بيانات الوكيل: ${snapshot.filename} (بصمة: ${snapshot.sha256.substring(0, 12)}...)`);
+      return sendJson(res, 201, { ok: true, snapshot });
+    }
+
+    if (req.method === 'GET' && pathname === '/api/backup/list') {
+      const snapshots = listDatabaseSnapshots(DATA_DIR);
+      return sendJson(res, 200, { ok: true, snapshots });
+    }
+
+    if (req.method === 'GET' && pathname === '/api/backup/export-data') {
+      const exportData = exportFullSystemJson(db);
+      res.writeHead(200, {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Content-Disposition': `attachment; filename="Qalix-Agent-FullBackup-${new Date().toISOString().split('T')[0]}.json"`
+      });
+      return res.end(exportData.jsonStr);
     }
 
     // Serve static files

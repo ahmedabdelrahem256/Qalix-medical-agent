@@ -281,7 +281,9 @@
         <button class="tab-btn" id="btn-pane-migrator" onclick="openTab('pane-migrator', this)">5. 🔄 أداة هجرة Excel</button>
         <button class="tab-btn" id="btn-pane-fieldkit" onclick="openTab('pane-fieldkit', this)">6. 🖨️ حقيبة العرض والتسويق</button>
         <button class="tab-btn" id="btn-pane-contracts" onclick="openTab('pane-contracts', this)">7. 📄 العقود ومحاضر التسليم</button>
-        <button class="tab-btn" id="btn-pane-audit" onclick="openTab('pane-audit', this)">8. فحص نسخة MEGA</button>
+        <button class="tab-btn" id="btn-pane-quotations" onclick="openTab('pane-quotations', this)">8. 📋 عروض الأسعار والدليل الميداني</button>
+        <button class="tab-btn" id="btn-pane-retention" onclick="openTab('pane-retention', this)">9. 🤝 ما بعد البيع والنسخ الاحتياطي</button>
+        <button class="tab-btn" id="btn-pane-audit" onclick="openTab('pane-audit', this)">10. فحص نسخة MEGA</button>
       </nav>
       <div style="display:flex; align-items:center; gap:8px; min-width:250px;">
         <span style="font-size:12px; color:var(--muted); white-space:nowrap;">⚡ انتقال سريع للقسم:</span>
@@ -293,7 +295,9 @@
           <option value="pane-migrator">القسم 5: أداة هجرة شيتات Excel القديمة</option>
           <option value="pane-fieldkit">القسم 6: حقيبة العرض الميداني والمواد التسويقية</option>
           <option value="pane-contracts">القسم 7: العقود ومحاضر التسليم وكشوف الحساب</option>
-          <option value="pane-audit">القسم 8: فحص واستضافة نسخة العميل (MEGA)</option>
+          <option value="pane-quotations">القسم 8: عروض الأسعار الرسمية والرد على الاعتراضات</option>
+          <option value="pane-retention">القسم 9: متابعة ما بعد البيع ورضاء العيادات والنسخ الاحتياطي</option>
+          <option value="pane-audit">القسم 10: فحص واستضافة نسخة العميل (MEGA)</option>
         </select>
       </div>
     </div>
@@ -854,7 +858,114 @@
       </div>
     </section>
 
-    <!-- ==================== PANE 4: LIVE HOSTED CLIENT PACKAGE AUDIT ==================== -->
+    <!-- ==================== PANE 8: OFFICIAL QUOTATIONS & FIELD OBJECTIONS PLAYBOOK (PHASE 5) ==================== -->
+    <section id="pane-quotations" class="pane">
+      <div class="grid-2">
+        <!-- Section A: Official Printable Quotation Generator -->
+        <div class="glass">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <h2 style="margin:0; font-size:17px; color:var(--sky);">📄 مولد عروض الأسعار الرسمية المعتمدة (A4 Printable)</h2>
+            <span class="badge b-emerald">توليد فوري مع رمز QR</span>
+          </div>
+          <p style="font-size:12.5px; color:var(--muted); margin-top:0;">
+            أصدر عرض سعر رسمي وتوريد معتمد موجهاً مباشرة للطبيب أو إدارة المركز، بالأسعار الرسمية الثابتة وضمان الوكيل (01122166076) وحزم التخصصات المشمولة.
+          </p>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:12px;">
+            <div>
+              <label style="font-size:12px; color:var(--muted);">اسم الطبيب:</label>
+              <input id="qDocName" placeholder="د. محمد مصطفى" value="د. " />
+            </div>
+            <div>
+              <label style="font-size:12px; color:var(--muted);">اسم المركز / العيادة:</label>
+              <input id="qClinicName" placeholder="عيادة الصفوة التخصصية" />
+            </div>
+            <div>
+              <label style="font-size:12px; color:var(--muted);">التخصص الطبي المعتمد:</label>
+              <select id="qSpecialty">
+                <option value="dental">طب وجراحة الأسنان 🦷</option>
+                <option value="pediatrics">طب الأطفال وحديثي الولادة 👶</option>
+                <option value="internal_cardio" selected>الباطنة وأمراض القلب ❤️</option>
+                <option value="obgyn">النساء والتوليد والحقن المجهري 🤰</option>
+                <option value="ophthalmology">طب وجراحة العيون 👁️</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:12px; color:var(--muted);">الباقة المطلوبة:</label>
+              <select id="qTier">
+                <option value="basic">الباقة الأساسية (4,500 ج.م / أسيوط 2,700 ج.م)</option>
+                <option value="professional" selected>الباقة التخصصية (8,500 ج.م / أسيوط 5,100 ج.م)</option>
+                <option value="enterprise">باقة المراكز الكبرى (18,500 ج.م / أسيوط 11,100 ج.م)</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:12px; color:var(--muted);">المحافظة / النطاق الجغرافي:</label>
+              <input id="qGovernorate" placeholder="أسيوط / القاهرة / الإسكندرية..." value="أسيوط" />
+            </div>
+            <div style="display:flex; align-items:center; gap:8px; padding-top:16px;">
+              <input type="checkbox" id="qAssiutCheck" checked style="width:18px; height:18px; cursor:pointer;" />
+              <label for="qAssiutCheck" style="font-size:12.5px; font-weight:bold; color:var(--amber); cursor:pointer;">تطبيق عرض أسيوط والصعيد (خصم 40%)</label>
+            </div>
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button class="btn btn-sky" onclick="openQuotationPreview()" style="font-size:13px;">🖨️ فتح وطباعة عرض السعر المعتمد (A4)</button>
+          </div>
+        </div>
+
+        <!-- Section B: Doctor Objections & Field Playbook -->
+        <div class="glass">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <h2 style="margin:0; font-size:17px; color:var(--amber);">🛡️ دليل التعامل مع اعتراضات الأطباء (Field Playbook)</h2>
+            <span class="badge b-amber">8 اعتراضات ميدانية وحلولها</span>
+          </div>
+          <p style="font-size:12.5px; color:var(--muted); margin-top:0;">
+            أقوى الردود البيعية المجهزة علمياً وعملياً للتعامل الفوري مع أي اعتراض يبديه الطبيب أثناء المقابلة الميدانية:
+          </p>
+          <div id="objectionsListContainer" style="display:flex; flex-direction:column; gap:10px; max-height:480px; overflow-y:auto; padding-right:4px;">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== PANE 9: AFTER-SALES RETENTION & BACKUP MANAGER (PHASE 5) ==================== -->
+    <section id="pane-retention" class="pane">
+      <div class="grid-2">
+        <!-- Section A: After-Sales Milestones & Customer Success -->
+        <div class="glass">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <h2 style="margin:0; font-size:17px; color:var(--emerald);">🤝 متابعة ما بعد البيع وسجل رضاء العيادات</h2>
+            <span class="badge b-emerald">ضمان 12 شهراً · تنبيهات واتساب</span>
+          </div>
+          <p style="font-size:12.5px; color:var(--muted); margin-top:0;">
+            جدول المتابعة التلقائي لكل عيادة بعد الاستلام لضمان استقرار التشغيل، جمع تقييمات الرضاء، وتجديد الدعم السنوي:
+          </p>
+          <div id="afterSalesDealsContainer" style="display:flex; flex-direction:column; gap:12px;">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+
+        <!-- Section B: Agent Database Backup Snapshots & Exporter -->
+        <div class="glass">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <h2 style="margin:0; font-size:17px; color:var(--purple);">💾 إدارة النسخ الاحتياطي والأرشفة الذاتية لقاعدة الوكيل</h2>
+            <span class="badge b-purple">SQLite WAL Snapshot + JSON</span>
+          </div>
+          <p style="font-size:12.5px; color:var(--muted); margin-top:0;">
+            أخذ نقاط استعادة لحظية مشفرة لقاعدة بيانات `agent.db` مع فحص سلامة التجزئة (SHA-256) وتصدير كامل السجلات:
+          </p>
+          <div style="display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
+            <button class="btn btn-purple" onclick="createAgentDbSnapshot()">📸 إنشاء نقطة استعادة جديدة فوراً</button>
+            <a href="/api/backup/export-data" class="btn btn-sky" style="text-decoration:none;">📥 تصدير كامل البيانات (JSON Dump)</a>
+          </div>
+          <h4 style="margin:0 0 8px; font-size:13.5px; color:var(--text);">سجل نقاط الاستعادة المحفوظة على القرص:</h4>
+          <div id="snapshotsListContainer" style="max-height:300px; overflow-y:auto;">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== PANE 10: LIVE HOSTED CLIENT PACKAGE AUDIT ==================== -->
     <section id="pane-audit" class="pane">
       <div class="glass">
         <h2 style="margin-top:0;">تقرير استضافة واختبار نسخة العميل الحية من رابط MEGA (18 / 18 ناجح)</h2>
@@ -1406,6 +1517,126 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
       const r = await fetch(`/api/deals/${id}/settle`, { method: 'POST' });
       const j = await r.json();
       if (j.summary) render(j.summary);
+      loadAfterSalesDeals();
+    }
+
+    /* ---------------- Phase 5 Interactive Handlers ---------------- */
+    function openQuotationPreview() {
+      const doc = encodeURIComponent(document.getElementById('qDocName').value.trim() || 'السيد الدكتور المحترم');
+      const cln = encodeURIComponent(document.getElementById('qClinicName').value.trim() || 'العيادة التخصصية');
+      const spec = document.getElementById('qSpecialty').value;
+      const tier = document.getElementById('qTier').value;
+      const gov = encodeURIComponent(document.getElementById('qGovernorate').value.trim() || 'أسيوط');
+      const isAssiut = document.getElementById('qAssiutCheck').checked;
+      const url = `/api/quotations/generate?doctor_name=${doc}&clinic_name=${cln}&specialty=${spec}&tier=${tier}&governorate=${gov}&assiut=${isAssiut}`;
+      window.open(url, '_blank');
+    }
+
+    async function loadObjectionsPlaybook() {
+      try {
+        const r = await fetch('/api/playbook/objections');
+        const j = await r.json();
+        if (!j.ok || !j.playbook) return;
+        const cont = document.getElementById('objectionsListContainer');
+        if (!cont) return;
+        cont.innerHTML = j.playbook.map(o => `
+          <div class="sub-card" style="border-right:3px solid var(--amber);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+              <strong style="color:var(--text); font-size:13px;">«${o.objection}»</strong>
+              <span class="badge b-amber">${o.tag}</span>
+            </div>
+            <div style="font-size:12px; color:var(--emerald); line-height:1.5; margin-bottom:6px;">
+              <strong>الرد المفحم:</strong> ${o.killerResponse}
+            </div>
+            <div style="font-size:11.5px; color:var(--sky); margin-bottom:6px;">
+              <strong>الحركة الميدانية:</strong> ${o.actionStep}
+            </div>
+            <div style="text-align:left;">
+              <button class="btn btn-sm" onclick="copyPitchText(${JSON.stringify(o.suggestedWaSnippet).replace(/"/g, '&quot;')})">📋 نسخ رد الواتساب</button>
+            </div>
+          </div>
+        `).join('');
+      } catch (e) { console.error(e); }
+    }
+
+    async function loadAfterSalesDeals() {
+      try {
+        const r = await fetch('/api/after-sales/deals');
+        const j = await r.json();
+        if (!j.ok || !j.deals) return;
+        const cont = document.getElementById('afterSalesDealsContainer');
+        if (!cont) return;
+        if (j.deals.length === 0) {
+          cont.innerHTML = '<div style="color:var(--muted); font-size:12px;">لا توجد صفقات مكتملة حالياً. بعد تسوية أول صفقة ستظهر خطة المتابعة تلقائياً.</div>';
+          return;
+        }
+        cont.innerHTML = j.deals.map(d => `
+          <div class="sub-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <h4 style="margin:0; font-size:14px; color:var(--sky);">${d.clinicName} (د. ${d.doctorName})</h4>
+              <span class="badge ${d.warrantyStatus === 'active' ? 'b-emerald' : 'b-amber'}">الضمان: ${d.warrantyDaysLeft} يوماً متبقية</span>
+            </div>
+            <div style="font-size:12px; color:var(--muted); margin-bottom:8px;">
+              تاريخ التسليم: ${d.deliveryDate.split('T')[0]} · مر على التشغيل: ${d.daysSinceDelivery} يوماً · الباقة: ${d.packageTier}
+            </div>
+            <div style="display:flex; flex-direction:column; gap:6px;">
+              ${d.milestones.map(m => `
+                <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(15,23,42,0.6); padding:6px 10px; border-radius:6px; font-size:11.5px;">
+                  <span>
+                    <strong style="color:${m.status === 'due' ? 'var(--amber)' : (m.status === 'upcoming' ? 'var(--sky)' : 'var(--muted)')};">${m.titleAr}</strong>
+                    <span style="color:var(--muted); margin-right:4px;">(${m.description})</span>
+                  </span>
+                  <a href="${m.waUrl}" target="_blank" class="btn btn-sm btn-emerald" style="text-decoration:none; white-space:nowrap; padding:3px 8px; font-size:11px;">📲 إرسال واتساب</a>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `).join('');
+      } catch (e) { console.error(e); }
+    }
+
+    async function createAgentDbSnapshot() {
+      try {
+        const r = await fetch('/api/backup/create', { method: 'POST' });
+        const j = await r.json();
+        if (j.error) return alert(j.error);
+        alert(`تم إنشاء نقطة الاستعادة بنجاح!\nالملف: ${j.snapshot.filename}\nبصمة SHA-256: ${j.snapshot.sha256.substring(0, 16)}...`);
+        loadSnapshotsList();
+      } catch (e) { alert('فشل إنشاء نقطة الاستعادة: ' + e.message); }
+    }
+
+    async function loadSnapshotsList() {
+      try {
+        const r = await fetch('/api/backup/list');
+        const j = await r.json();
+        if (!j.ok || !j.snapshots) return;
+        const cont = document.getElementById('snapshotsListContainer');
+        if (!cont) return;
+        if (j.snapshots.length === 0) {
+          cont.innerHTML = '<div style="color:var(--muted); font-size:12px;">لا توجد نقاط استعادة حتى الآن. اضغط الزر أعلاه لإنشاء أول نقطة.</div>';
+          return;
+        }
+        cont.innerHTML = '<table style="width:100%; font-size:11.5px;"><thead><tr><th>اسم الملف</th><th>التاريخ</th><th>الحجم</th><th>بصمة التجزئة</th></tr></thead><tbody>' +
+          j.snapshots.map(s => `
+            <tr>
+              <td style="font-family:monospace; color:var(--sky);">${s.filename}</td>
+              <td>${s.createdAt.split('T')[0]}</td>
+              <td>${Math.round(s.sizeBytes / 1024)} KB</td>
+              <td style="font-family:monospace; color:var(--muted);" title="${s.sha256}">${s.sha256.substring(0, 14)}...</td>
+            </tr>
+          `).join('') + '</tbody></table>';
+      } catch (e) { console.error(e); }
+    }
+
+    async function load() {
+      const r = await fetch('/api/summary');
+      const data = await r.json();
+      render(data);
+      loadSpecialtyPacks();
+      loadMarketingMaterials();
+      loadObjectionsPlaybook();
+      loadAfterSalesDeals();
+      loadSnapshotsList();
     }
 
     load();

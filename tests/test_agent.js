@@ -47,7 +47,8 @@ function req(method, urlPath, body) {
   });
 
   const results = [];
-  const check = (name, cond) => {
+  const check = (name, cond, details) => {
+    if (!cond && details) console.error('DEBUG DETAILS FOR:', name, details);
     assert.ok(cond, name);
     results.push(name);
   };
@@ -262,7 +263,67 @@ function req(method, urlPath, body) {
       stmtRes.body.includes('01122166076')
     );
 
-    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/20 PASSED ===`);
+    // 21. Generate Printable Official Quotation HTML & Data (Phase 5)
+    const quoRes = await req('GET', `/api/quotations/generate?doctor_name=${encodeURIComponent('د. أحمد صلاح')}&clinic_name=${encodeURIComponent('مركز الشفاء التخصصي')}&specialty=dental&tier=professional&governorate=${encodeURIComponent('أسيوط')}&assiut=true`);
+    check('21. توليد عرض السعر الرسمي المعتمد A4 بخصم أسيوط 40% والرمز الرقمي (Phase 5)',
+      quoRes.status === 200 &&
+      typeof quoRes.body === 'string' &&
+      quoRes.body.includes('عــرض ســعـر وتـوريــد رســمـي مـعـتـمـد') &&
+      quoRes.body.includes('د. أحمد صلاح') &&
+      quoRes.body.includes('مركز الشفاء التخصصي') &&
+      quoRes.body.includes('01122166076') &&
+      quoRes.body.includes('5,100'),
+      { status: quoRes.status, bodyLen: typeof quoRes.body === 'string' ? quoRes.body.length : null, bodySub: typeof quoRes.body === 'string' ? quoRes.body.substring(0, 300) : quoRes.body }
+    );
+
+    // 22. Field Objections Playbook with Killer Responses & WA Snippets (Phase 5)
+    const objRes = await req('GET', '/api/playbook/objections');
+    check('22. التحقق من كتيب الرد على اعتراضات الأطباء (8 سيناريوهات ميدانية ورسائل واتساب)',
+      objRes.status === 200 &&
+      objRes.body.ok === true &&
+      Array.isArray(objRes.body.playbook) &&
+      objRes.body.playbook.length === 8 &&
+      objRes.body.playbook.some(o => o.id === 'price_too_high') &&
+      objRes.body.playbook.some(o => o.id === 'internet_issues')
+    );
+
+    // 23. After-Sales Retention Milestones & Customer Success Timeline (Phase 5)
+    const afsRes = await req('GET', '/api/after-sales/milestones');
+    const afsDealsRes = await req('GET', '/api/after-sales/deals');
+    check('23. التحقق من محرك متابعة ما بعد البيع ومحطات الرضاء (اليوم 3، 14، 3 شهور، 6 شهور، سنة)',
+      afsRes.status === 200 &&
+      Array.isArray(afsRes.body.milestones) &&
+      afsRes.body.milestones.length === 5 &&
+      afsDealsRes.status === 200 &&
+      Array.isArray(afsDealsRes.body.deals) &&
+      afsDealsRes.body.deals.length > 0 &&
+      afsDealsRes.body.deals[0].milestones.length === 5
+    );
+
+    // 24. SQLite Database Snapshot Creation & SHA-256 Integrity Verification (Phase 5)
+    const snapRes = await req('POST', '/api/backup/create');
+    const snapListRes = await req('GET', '/api/backup/list');
+    check('24. إنشاء نقطة استعادة لحظية لقاعدة الوكيل SQLite WAL والتحقق من بصمة SHA-256',
+      snapRes.status === 201 &&
+      snapRes.body.ok === true &&
+      snapRes.body.snapshot.sha256.length === 64 &&
+      snapListRes.status === 200 &&
+      snapListRes.body.snapshots.length > 0
+    );
+
+    // 25. Full System Data Export in JSON Format (Phase 5)
+    const expRes = await req('GET', '/api/backup/export-data');
+    check('25. تصدير كامل بيانات المنظومة وسجل التدقيق في ملف JSON موثق بالبصمة المشفرة',
+      expRes.status === 200 &&
+      typeof expRes.body === 'object' &&
+      expRes.body.agentPhone === '01122166076' &&
+      expRes.body.summary &&
+      expRes.body.summary.distributorsCount >= 1 &&
+      expRes.body.summary.dealsCount >= 1,
+      { status: expRes.status, bodyType: typeof expRes.body, body: expRes.body }
+    );
+
+    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/25 PASSED ===`);
     for (const r of results) console.log(' ✅', r);
   } finally {
     srv.kill('SIGINT');
