@@ -11,7 +11,7 @@ const crypto = require('node:crypto');
 const { DatabaseSync } = require('node:sqlite');
 const { SPECIALTY_PACKS, getAllPacks, getPackById } = require('./specialty_packs');
 const { processMigration } = require('./data_migrator');
-const { MARKETING_MATERIALS, renderWhatsAppCatalogA4, renderWowDemoA4 } = require('./marketing_kit');
+const { MARKETING_MATERIALS, renderWhatsAppCatalogA4, renderWowDemoA4, renderBattleCardA4 } = require('./marketing_kit');
 const { getLocalNetworkInfo } = require('./network_diagnostics');
 const { generateDistributorContractHtml, generateClinicHandoverHtml } = require('./contract_generator');
 const { generateDistributorStatementHtml } = require('./financial_ledger');
@@ -46,7 +46,7 @@ const PUBLIC_DIR = path.join(ROOT, 'public');
 const PRESENTATIONS_DIR = path.join(ROOT, 'ملفات_العروض_التقديمية');
 const LEGAL_DOCS_DIR = path.join(ROOT, 'الوثائق_القانونية_والتسليم');
 const DATA_DIR = process.env.DATA_DIR || path.join(ROOT, 'data');
-const KITS_DIR = path.join(ROOT, 'distributors_kits');
+const KITS_DIR = process.env.DATA_DIR ? path.join(DATA_DIR, 'kits') : path.join(ROOT, 'distributors_kits');
 
 fs.mkdirSync(DATA_DIR, { recursive: true });
 fs.mkdirSync(KITS_DIR, { recursive: true });
@@ -360,6 +360,15 @@ function generateStandaloneDistributorPortalHtml(dist) {
   return genPortal(dist, AGENT_INFO);
 }
 
+function writeDistributorKitFile(dist) {
+  if (!dist || !dist.code || !dist.name) return null;
+  if (!fs.existsSync(KITS_DIR)) fs.mkdirSync(KITS_DIR, { recursive: true });
+  const kitHtml = generateStandaloneDistributorPortalHtml(dist);
+  const kitFile = path.join(KITS_DIR, `${dist.code}-${dist.name.replace(/\s+/g, '_')}.html`);
+  fs.writeFileSync(kitFile, kitHtml, 'utf8');
+  return kitFile;
+}
+
 /* ---------------- REST API Handler ---------------- */
 function sendJson(res, status, data) {
   const body = Buffer.from(JSON.stringify(data));
@@ -510,9 +519,7 @@ const server = http.createServer(async (req, res) => {
         .run(id, code, name, phone, governorate, commissionRate, 'active', pin, notes, now);
 
       const distObj = db.prepare('SELECT * FROM distributors WHERE id = ?').get(id);
-      const kitHtml = generateStandaloneDistributorPortalHtml(distObj);
-      const kitFile = path.join(KITS_DIR, `${code}-${name.replace(/\s+/g, '_')}.html`);
-      fs.writeFileSync(kitFile, kitHtml, 'utf8');
+      const kitFile = writeDistributorKitFile(distObj);
 
       logAudit('create_distributor', `اعتماد موزع مستقل جديد: ${name} (${code}) بنسبة ${commissionRate}%`);
       return sendJson(res, 200, { ok: true, distributor: distObj, kitFile, summary: getSummaryResponse() });
@@ -527,6 +534,8 @@ const server = http.createServer(async (req, res) => {
       const status = body.status || dist.status;
       const rate = body.commissionRate !== undefined ? Math.max(5, Math.min(45, Number(body.commissionRate))) : dist.commission_rate;
       db.prepare('UPDATE distributors SET status = ?, commission_rate = ? WHERE id = ?').run(status, rate, id);
+      const updatedDist = db.prepare('SELECT * FROM distributors WHERE id = ?').get(id);
+      writeDistributorKitFile(updatedDist);
       logAudit('update_distributor', `تحديث بيانات الموزع ${dist.code}: الحالة=${status}, النسبة=${rate}%`);
       return sendJson(res, 200, { ok: true, summary: getSummaryResponse() });
     }
@@ -693,6 +702,14 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === 'GET' && pathname === '/api/marketing/wow-demo') {
       const html = renderWowDemoA4();
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      return res.end(html);
+    }
+
+    if (req.method === 'GET' && pathname === '/api/marketing/battle-card') {
+      const distId = url.searchParams.get('distId');
+      const dist = distId ? db.prepare('SELECT * FROM distributors WHERE id = ?').get(distId) : null;
+      const html = renderBattleCardA4(dist);
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
       return res.end(html);
     }
@@ -1058,7 +1075,7 @@ const server = http.createServer(async (req, res) => {
       });
     }
 
-    // Serve static files: support /presentations/, /legal-docs/, and /public/
+    // Serve static files: support /presentations/, /legal-docs/, /distributors_kits/, and /public/
     let filePath = null;
     let baseDir = null;
 
@@ -1070,6 +1087,14 @@ const server = http.createServer(async (req, res) => {
       const sub = pathname.slice('/legal-docs/'.length);
       baseDir = LEGAL_DOCS_DIR;
       filePath = path.resolve(LEGAL_DOCS_DIR, sub);
+    } else if (pathname.startsWith('/distributors_kits/')) {
+      const sub = pathname.slice('/distributors_kits/'.length);
+      baseDir = KITS_DIR;
+      filePath = path.resolve(KITS_DIR, sub);
+    } else if (pathname.startsWith('/public/')) {
+      const sub = pathname.slice('/public/'.length);
+      baseDir = PUBLIC_DIR;
+      filePath = path.resolve(PUBLIC_DIR, sub);
     } else {
       let rel = pathname === '/' ? '/index.html' : pathname;
       baseDir = PUBLIC_DIR;
@@ -1132,6 +1157,13 @@ const server = http.createServer(async (req, res) => {
     return sendJson(res, 500, { error: e.message || 'Server error' });
   }
 });
+
+try {
+  const allDists = db.prepare('SELECT * FROM distributors').all();
+  for (const d of allDists) writeDistributorKitFile(d);
+} catch (e) {
+  console.error('Warning syncing distributor kits on startup:', e.message);
+}
 
 server.listen(PORT, HOST, () => {
   console.log(`=============================================================`);

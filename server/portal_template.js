@@ -3,7 +3,10 @@
  */
 'use strict';
 
+const { renderBattleCardA4 } = require('./marketing_kit');
+
 function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
+  const battleCardB64 = Buffer.from(renderBattleCardA4(dist), 'utf8').toString('base64');
   return `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -162,8 +165,11 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
     <!-- 6. Printable A4 Battle Card Button -->
     <div class="card no-print">
       <h3 style="margin-top:0; color:var(--blue);">6. بطاقة المقارنة التنافسية المطبوعة (A4 Battle Card)</h3>
-      <p style="font-size:13px; color:var(--muted);">اطبع بطاقة المقارنة الملونة على ورق A4 وضعها في ملف الزيارات الميدانية لكل عيادة:</p>
-      <button onclick="window.print()" class="btn-blue" style="max-width:280px;">🖨️ طباعة بطاقة المقارنة A4 الآن</button>
+      <p style="font-size:13px; color:var(--muted);">اطبع بطاقة المقارنة الملونة على ورق A4 منفصلة تماماً (توضح توفير 40,000+ ج.م مقابل الأنظمة السحابية) وضعها في ملف الزيارات الميدانية:</p>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button onclick="printBattleCardA4(true)" class="btn-blue" style="max-width:280px;">🖨️ طباعة بطاقة المقارنة A4 الآن</button>
+        <button onclick="printBattleCardA4(false)" style="background:#0f172a; color:#38bdf8; border:1px solid #38bdf8; max-width:240px;">👁️ معاينة بطاقة المقارنة A4</button>
+      </div>
     </div>
 
     <!-- 7. Official Quotation Generator for Distributors (Phase 5) -->
@@ -224,13 +230,47 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
     </div>
   </div>
   <script>
+    const API_BASE = (window.location.protocol === 'file:') ? 'http://127.0.0.1:4000' : '';
+    const BATTLE_CARD_B64 = "${battleCardB64}";
+
+    function printBattleCardA4(autoPrint) {
+      try {
+        const binStr = atob(BATTLE_CARD_B64);
+        const bytes = new Uint8Array(binStr.length);
+        for (let i = 0; i < binStr.length; i++) bytes[i] = binStr.charCodeAt(i);
+        const html = new TextDecoder('utf-8').decode(bytes);
+        const w = window.open('', '_blank');
+        if (!w) {
+          alert('يرجى السماح للنوافذ المنبثقة (Popups) لفتح بطاقة المقارنة للطباعة.');
+          return;
+        }
+        w.document.open();
+        w.document.write(html);
+        w.document.close();
+        if (autoPrint) {
+          setTimeout(() => { try { w.focus(); w.print(); } catch (_) {} }, 350);
+        }
+      } catch (err) {
+        alert('تعذر فتح بطاقة المقارنة: ' + err.message);
+      }
+    }
+
+    // Automatically resolve local /api/ links when the kit HTML is opened offline via file://
+    if (API_BASE) {
+      document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('a[href^="/api/"]').forEach(a => {
+          a.setAttribute('href', API_BASE + a.getAttribute('href'));
+        });
+      });
+    }
+
     function openQuotation(isAssiut) {
       const doc = encodeURIComponent(document.getElementById('quoDoctor').value.trim() || 'السيد الدكتور المحترم');
       const cln = encodeURIComponent(document.getElementById('quoClinic').value.trim() || 'العيادة التخصصية');
       const spec = document.getElementById('quoSpecialty').value;
       const tier = document.getElementById('quoTier').value;
       const gov = isAssiut ? 'أسيوط' : encodeURIComponent('${dist.governorate}');
-      const url = \`/api/quotations/generate?doctor_name=\${doc}&clinic_name=\${cln}&specialty=\${spec}&tier=\${tier}&governorate=\${gov}&assiut=\${isAssiut}\`;
+      const url = API_BASE + \`/api/quotations/generate?doctor_name=\${doc}&clinic_name=\${cln}&specialty=\${spec}&tier=\${tier}&governorate=\${gov}&assiut=\${isAssiut}\`;
       window.open(url, '_blank');
     }
 

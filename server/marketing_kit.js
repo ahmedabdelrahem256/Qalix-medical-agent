@@ -608,8 +608,133 @@ function renderWowDemoA4() {
 </html>`;
 }
 
+function renderBattleCardA4(distributor) {
+  const qrSvg = generateSimpleSvgQr('https://wa.me/201122166076', 84);
+  const bc = MARKETING_MATERIALS.battleCardData;
+  const rowsHtml = bc.comparisonPoints.map(p => `
+    <tr>
+      <td style="font-weight:700; color:#0f172a; background:#f8fafc;">${p.feature}</td>
+      <td style="color:#065f46; font-weight:700; background:#ecfdf5;">✔ ${p.qalix}</td>
+      <td style="color:#9f1239; background:#fff1f2;">✖ ${p.competitors}</td>
+    </tr>
+  `).join('');
+
+  const distLine = distributor
+    ? `الموزع المعتمد: <strong>${distributor.name} (${distributor.code})</strong>`
+    : `وكيل منظومة كالكس ميديكال الطبية المعتمد`;
+
+  return `<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <title>بطاقة المقارنة التنافسية (A4 Battle Card) | Qalix Medical</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    @page { size: A4 portrait; margin: 10mm; }
+    * { box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; background: #f1f5f9; color: #0f172a; margin: 0; padding: 20px; direction: rtl; }
+    .sheet { max-width: 820px; margin: 0 auto; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 14px; padding: 26px 28px; box-shadow: 0 8px 30px rgba(0,0,0,0.08); }
+    .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; background: #e2e8f0; padding: 10px 14px; border-radius: 8px; }
+    .hero { display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, #0f172a, #0284c7); color: #fff; padding: 18px 22px; border-radius: 12px; margin-bottom: 16px; }
+    .hero h1 { margin: 0; font-size: 20px; line-height: 1.4; }
+    .hero p { margin: 4px 0 0; font-size: 12.5px; color: #bae6fd; }
+    .savings-banner { background: #fffbeb; border: 2px dashed #f59e0b; border-radius: 10px; padding: 12px 16px; text-align: center; margin-bottom: 16px; color: #92400e; }
+    .savings-banner strong { font-size: 15px; display: block; margin-bottom: 2px; }
+    table { width: 100%; border-collapse: collapse; font-size: 12.2px; margin-bottom: 16px; }
+    th, td { padding: 9px 10px; border: 1px solid #cbd5e1; text-align: right; line-height: 1.5; }
+    thead th { background: #0f172a; color: #ffffff; font-size: 13px; }
+    thead th.qalix-col { background: #059669; }
+    thead th.comp-col { background: #be123c; }
+    .pricing-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+    .tier-box { border: 1px solid #cbd5e1; border-radius: 10px; padding: 10px 12px; text-align: center; background: #f8fafc; }
+    .tier-box.featured { border: 2px solid #0284c7; background: #f0f9ff; }
+    .tier-box b { display: block; font-size: 13.5px; color: #0f172a; }
+    .tier-box .price { font-size: 18px; font-weight: 900; color: #059669; margin: 4px 0; }
+    .tier-box small { font-size: 11px; color: #64748b; display: block; }
+    .assiut-box { background: #ecfdf5; border: 1px solid #10b981; border-radius: 8px; padding: 8px 12px; text-align: center; font-size: 12px; color: #065f46; font-weight: 700; margin-bottom: 14px; }
+    .footer { display: flex; justify-content: space-between; align-items: center; border-top: 2px solid #0f172a; padding-top: 12px; font-size: 12px; color: #334155; }
+    @media print {
+      body { background: #ffffff; padding: 0; }
+      .sheet { box-shadow: none; border: none; padding: 0; max-width: 100%; }
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="sheet">
+    <div class="toolbar no-print">
+      <span style="font-size:12.5px; color:#334155; font-weight:bold;">⚔️ بطاقة المقارنة التنافسية (صفحة A4 واحدة مغلفة للزيارات الميدانية)</span>
+      <button onclick="window.print()" style="padding:8px 18px; background:#0284c7; color:#fff; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:13px;">🖨️ طباعة بطاقة المقارنة (A4 / PDF)</button>
+    </div>
+
+    <div class="hero">
+      <div>
+        <h1>⚔️ ${bc.title}</h1>
+        <p>${bc.subtitle}</p>
+      </div>
+      <div style="background:#fff; padding:4px; border-radius:8px;">
+        ${qrSvg}
+      </div>
+    </div>
+
+    <div class="savings-banner">
+      <strong>💰 لماذا يختار الأطباء منظومة كالكس؟ توفير يتجاوز 40,000+ ج.م خلال 3 سنوات!</strong>
+      <span>توقف عن دفع اشتراكات شهرية متجددة وامتلك نظام عيادتك بالكامل دفعة واحدة مدى الحياة — 100% أوفلاين بدون إنترنت.</span>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width:22%;">وجه المقارنة الحاسم</th>
+          <th class="qalix-col" style="width:42%;">★ منظومة كالكس الطبية (Qalix Medical v1.0)</th>
+          <th class="comp-col" style="width:36%;">الأنظمة السحابية والمنافسون</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rowsHtml}
+      </tbody>
+    </table>
+
+    <div class="pricing-strip">
+      <div class="tier-box">
+        <b>الباقة الأساسية</b>
+        <div class="price">4,500 ج.م</div>
+        <small>ترخيص دائم · طبيب واحد · مستخدمان</small>
+      </div>
+      <div class="tier-box featured">
+        <b>الباقة التخصصية ⭐ الأكثر مبيعاً</b>
+        <div class="price" style="color:#0284c7;">8,500 ج.م</div>
+        <small>دائم · شاشة الانتظار + النداء الصوتي + QR</small>
+      </div>
+      <div class="tier-box">
+        <b>باقة المراكز الكبرى</b>
+        <div class="price">18,500 ج.م</div>
+        <small>أطباء وفروع غير محدودة + ذكاء الأعمال</small>
+      </div>
+    </div>
+
+    <div class="assiut-box">
+      🏛️ مبادرة دعم عيادات محافظة أسيوط (خصم 40%): الأساسية 2,700 ج.م · التخصصية 5,100 ج.م · المراكز 11,100 ج.م
+    </div>
+
+    <div class="footer">
+      <div>
+        <div style="margin-bottom:2px;">${distLine}</div>
+        <div>المبيعات والاشتراكات والدعم الفني المعتمد (واتساب واتصال): <strong dir="ltr" style="font-size:14px; color:#0284c7;">01122166076</strong></div>
+      </div>
+      <div style="text-align:left;">
+        <strong>تجربة مجانية 14 يوماً بكامل المزايا</strong><br/>
+        <span style="font-size:11px; color:#64748b;">تشفير عسكري AES-256 · بدون إنترنت</span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`;
+}
+
 module.exports = {
   MARKETING_MATERIALS,
   renderWhatsAppCatalogA4,
-  renderWowDemoA4
+  renderWowDemoA4,
+  renderBattleCardA4
 };

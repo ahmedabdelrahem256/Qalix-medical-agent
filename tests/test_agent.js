@@ -569,7 +569,42 @@ function req(method, urlPath, body) {
       typeof resetDealsRes.body.safetyBackup === 'string'
     );
 
-    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/48 PASSED ===`);
+    // 49. Standalone A4 Competitive Battle Card API
+    const battleRes = await req('GET', '/api/marketing/battle-card');
+    check('49. توليد بطاقة المقارنة التنافسية A4 مستقلة وتبرز التوفير (+40,000 ج.م)',
+      battleRes.status === 200 &&
+      battleRes.headers['content-type'] === 'text/html; charset=utf-8' &&
+      typeof battleRes.body === 'string' &&
+      battleRes.body.includes('بطاقة المقارنة التنافسية') &&
+      battleRes.body.includes('40,000') &&
+      battleRes.body.includes('01122166076')
+    );
+
+    // 50. Distributor Portal Isolated Battle Card Printing (never prints full kit)
+    const sampleDistId = b1.body.distributors[0].id;
+    const portalKitRes = await req('GET', `/api/distributors/${sampleDistId}/kit`);
+    check('50. عزل طباعة بطاقة المقارنة داخل حقيبة الموزع (طباعة مستقلة بدل صفحة الموزع)',
+      portalKitRes.status === 200 &&
+      typeof portalKitRes.body === 'string' &&
+      !portalKitRes.body.includes('onclick="window.print()"') &&
+      portalKitRes.body.includes('printBattleCardA4(true)') &&
+      portalKitRes.body.includes('BATTLE_CARD_B64') &&
+      portalKitRes.body.includes("window.location.protocol === 'file:'")
+    );
+
+    // 51. Verify /public/ assets & presentations static serving (zero 404 font/icon links)
+    const fontRes = await req('GET', '/public/fonts/cairo-arabic.woff2');
+    const iconRes = await req('GET', '/public/img/qalix-app-icon.svg');
+    const presCardRes = await req('GET', encodeURI('/presentations/بطاقة_عرض_منظومة_كالكس_الطبية_الموحدة.html'));
+    const eulaRes = await req('GET', encodeURI('/legal-docs/عقد_ترخيص_الاستخدام_EULA.html'));
+    check('51. سلامة مسارات الخطوط والأيقونات وملفات العروض والوثائق القانونية عبر الخادم (HTTP 200)',
+      fontRes.status === 200 &&
+      iconRes.status === 200 &&
+      presCardRes.status === 200 &&
+      eulaRes.status === 200
+    );
+
+    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/51 PASSED ===`);
     for (const r of results) console.log(' ✅', r);
   } finally {
     srv.kill('SIGINT');
