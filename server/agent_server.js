@@ -231,6 +231,32 @@ if (propCount === 0) {
   }
 }
 
+// Always ensure post-launch R&D follow-up proposals exist (idempotent across existing & fresh DBs)
+{
+  const nowProp = new Date().toISOString();
+  const insFollowupProp = db.prepare('INSERT OR IGNORE INTO excellence_proposals(id, pillar, title, description, impact, priority, status, created_at) VALUES(?, ?, ?, ?, ?, ?, ?, ?)');
+  insFollowupProp.run(
+    'prop_13',
+    'presentation',
+    'تحديث ومونتاج ملفات الفيديو التسويقية وفق التسعيرة الموحدة وعزل الوكيل',
+    'إعادة مونتاج وتحديث التعليق الصوتي والنصوص الظاهرة في الفيديوهات التسويقية الأربعة (مقاس 4:5 والعمودي 9:16 بصوت سلمى داخل مجلد ملفات_العروض_التقديمية/فيديو_تسويقي) لإزالة أي إشارة قديمة لعرض أسيوط 40% والاعتماد على السعر الرسمي الموحد (4,500 / 8,500 / 18,500 ج.م) والتواصل عبر الموزع المعتمد فقط.',
+    'توحيد الرسالة التسويقية الميدانية 100%',
+    'أولوية عالية',
+    'مقترح للتنفيذ في المونتاج',
+    nowProp
+  );
+  insFollowupProp.run(
+    'prop_14',
+    'management',
+    'تجديد الأرشيف الشامل وعزل النسخ الاحتياطية وخصوصية المستودع',
+    'إنشاء نسخة أرشيف مضغوطة محدثة بدلاً من الأرشيف التاريخي القديم (Qalix_Medical_Agent_Backup_20261110.zip) لتكون نظيفة بالكامل من عرض أسيوط 40% ومن الرقم القديم، مع ضبط مستودع الكود كـ Private وفصل قاعدة البيانات الحية وملفات الموزعين عن تتبع Git العام.',
+    'حماية خصوصية البيانات والنسخ الاحتياطية',
+    'أولوية عالية',
+    'معتمد للتنفيذ',
+    nowProp
+  );
+}
+
 /* ---------------- Competitors & Market Comparison Catalog (Egypt 2026) ---------------- */
 const COMPETITORS_CATALOG = [
   {

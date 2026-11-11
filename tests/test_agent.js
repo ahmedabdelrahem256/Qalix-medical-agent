@@ -140,9 +140,12 @@ function req(method, urlPath, body) {
       audits.length >= 4 && audits[0].curr_hash.length === 64
     );
 
-    // 9. Verify 5-Pillar Excellence & #1 Leadership Proposals
-    check('9. التحقق من ركن اقتراحات التطوير والارتقاء (12 محوراً عبر الأركان الخمسة: المنظومة، العرض، البيع، المتابعة، الإدارة)',
-      Array.isArray(b1.body.proposals) && b1.body.proposals.length >= 12
+    // 9. Verify 5-Pillar Excellence & #1 Leadership Proposals (including Video & Archive follow-up proposals)
+    check('9. التحقق من ركن اقتراحات التطوير والارتقاء (14 محوراً تشمل تحديث الفيديوهات والأرشيف عبر الأركان الخمسة)',
+      Array.isArray(b1.body.proposals) &&
+      b1.body.proposals.length >= 14 &&
+      b1.body.proposals.some(p => p.id === 'prop_13') &&
+      b1.body.proposals.some(p => p.id === 'prop_14')
     );
 
     // 10. Add a new proposal to Excellence Hub
