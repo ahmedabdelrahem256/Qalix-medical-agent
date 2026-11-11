@@ -588,7 +588,8 @@ function writeDistributorKitFile(dist) {
   if (!dist || !dist.code || !dist.name) return null;
   if (!fs.existsSync(KITS_DIR)) fs.mkdirSync(KITS_DIR, { recursive: true });
   const kitHtml = generateStandaloneDistributorPortalHtml(dist);
-  const kitFile = path.join(KITS_DIR, `${dist.code}-${dist.name.replace(/\s+/g, '_')}.html`);
+  const safeName = String(dist.name).replace(/[<>:"/\\|?*\s]+/g, '_');
+  const kitFile = path.join(KITS_DIR, `${dist.code}-${safeName}.html`);
   fs.writeFileSync(kitFile, kitHtml, 'utf8');
   return kitFile;
 }
@@ -733,9 +734,15 @@ const server = http.createServer(async (req, res) => {
       const notes = String(body.notes || '').trim();
       if (!name || !phone) return sendJson(res, 400, { error: 'اسم الموزع ورقم الهاتف مطلوبان' });
 
-      const count = db.prepare('SELECT COUNT(*) AS n FROM distributors').get().n + 1;
+      const existingCodes = db.prepare('SELECT code FROM distributors').all();
+      let maxSeq = 0;
+      for (const row of existingCodes) {
+        const m = String(row.code || '').match(/QMA-DIST-(\d+)/i);
+        if (m) maxSeq = Math.max(maxSeq, Number(m[1]) || 0);
+      }
+      const nextSeq = Math.max(maxSeq + 1, existingCodes.length + 1);
       const id = 'dist_' + crypto.randomBytes(6).toString('hex');
-      const code = `QMA-DIST-${String(count).padStart(2, '0')}`;
+      const code = `QMA-DIST-${String(nextSeq).padStart(2, '0')}`;
       const pin = String(Math.floor(1000 + Math.random() * 9000));
       const now = new Date().toISOString();
 
@@ -1402,7 +1409,12 @@ const server = http.createServer(async (req, res) => {
       filePath = path.resolve(PUBLIC_DIR, '.' + rel);
     }
 
-    if (!filePath.startsWith(baseDir)) return sendJson(res, 403, { error: 'Forbidden' });
+    const resolvedBase = path.resolve(baseDir);
+    const normFile = filePath.toLowerCase();
+    const normBase = resolvedBase.toLowerCase();
+    if (normFile !== normBase && !normFile.startsWith(normBase + path.sep)) {
+      return sendJson(res, 403, { error: 'Forbidden' });
+    }
 
     if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
       const ext = path.extname(filePath).toLowerCase();
@@ -1434,8 +1446,12 @@ const server = http.createServer(async (req, res) => {
       const range = req.headers.range;
       if (range && ext === '.mp4' && !forceDownload) {
         const parts = range.replace(/bytes=/, '').split('-');
-        const start = parseInt(parts[0], 10);
-        const end = parts[1] ? parseInt(parts[1], 10) : stat.size - 1;
+        const start = Math.max(0, parseInt(parts[0], 10) || 0);
+        const end = parts[1] ? Math.min(stat.size - 1, parseInt(parts[1], 10)) : stat.size - 1;
+        if (Number.isNaN(end) || start >= stat.size || start > end) {
+          res.writeHead(416, { 'Content-Range': `bytes */${stat.size}` });
+          return res.end();
+        }
         const chunksize = (end - start) + 1;
         const fileStream = fs.createReadStream(filePath, { start, end });
         res.writeHead(206, {

@@ -895,7 +895,27 @@ function req(method, urlPath, body) {
       }
     );
 
-    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/62 PASSED ===`);
+    // 63. Security Hardening: XSS Escaping in Quotation/Checklist + Path Traversal Guard (403/404)
+    const xssQuoRes = await req('GET', '/api/quotations/generate?doctor_name=' + encodeURIComponent('<script>alert(1)</script>') + '&clinic_name=' + encodeURIComponent('Clinic "Test"'));
+    const xssAuditRes = await req('GET', '/api/checklist/report?doctorName=' + encodeURIComponent('<img src=x onerror=alert(1)>'));
+    const travRes = await req('GET', '/public/%2e%2e/%2e%2e/server/agent_server.js');
+    check('63. فحص الحماية الأمنية: تنقية مدخلات HTML ومنع اجتياز المسارات (Path Traversal)',
+      xssQuoRes.status === 200 &&
+      !xssQuoRes.body.includes('<script>alert(1)</script>') &&
+      xssQuoRes.body.includes('&lt;script&gt;alert(1)&lt;/script&gt;') &&
+      xssAuditRes.status === 200 &&
+      !xssAuditRes.body.includes('<img src=x onerror=alert(1)>') &&
+      xssAuditRes.body.includes('&lt;img src=x onerror=alert(1)&gt;') &&
+      (travRes.status === 403 || travRes.status === 404) &&
+      !JSON.stringify(travRes.body).includes('http.createServer'),
+      {
+        quoEscaped: xssQuoRes.body.includes('&lt;script&gt;'),
+        auditEscaped: xssAuditRes.body.includes('&lt;img'),
+        travStatus: travRes.status
+      }
+    );
+
+    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/63 PASSED ===`);
     for (const r of results) console.log(' ✅', r);
   } finally {
     srv.kill('SIGINT');

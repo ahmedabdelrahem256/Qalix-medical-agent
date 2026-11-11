@@ -8,15 +8,19 @@ const crypto = require('node:crypto');
 const { SPECIALTY_PACKS } = require('./specialty_packs');
 const { generateSimpleSvgQr } = require('./network_diagnostics');
 
+function escapeHtml(s) {
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
 function generateQuotationData(params, pricingCatalog) {
-  const doctorName = (params.doctor_name || 'السيد الدكتور المحترم').trim();
-  const clinicName = (params.clinic_name || 'العيادة التخصصية').trim();
+  const doctorName = escapeHtml((params.doctor_name || 'السيد الدكتور المحترم').trim());
+  const clinicName = escapeHtml((params.clinic_name || 'العيادة التخصصية').trim());
   const specialtyId = params.specialty || 'dental';
   const tierKey = params.tier || 'professional';
-  const governorate = (params.governorate || 'القاهرة').trim();
-  const distributorName = (params.distributor_name || '').trim();
-  const distributorCode = (params.distributor_code || '').trim();
-  const distributorPhone = (params.distributor_phone || '').trim();
+  const governorate = escapeHtml((params.governorate || 'القاهرة').trim());
+  const distributorName = escapeHtml((params.distributor_name || '').trim());
+  const distributorCode = escapeHtml((params.distributor_code || '').trim());
+  const distributorPhone = escapeHtml((params.distributor_phone || '').trim());
   const isAssiut = false;
   
   const tier = pricingCatalog[tierKey] || pricingCatalog.professional;

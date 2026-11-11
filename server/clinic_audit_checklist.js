@@ -56,11 +56,15 @@ function evaluateClinicChecklist(checkedIds = []) {
   };
 }
 
+function escapeHtml(s) {
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
 function generateClinicAuditReportHtml(params, evalResult) {
-  const doctorName = (params.doctorName || 'السيد الدكتور المحترم').trim();
-  const clinicName = (params.clinicName || 'العيادة التخصصية').trim();
-  const inspectorName = (params.inspectorName || 'الموزع المعتمد').trim();
-  const inspectorPhone = (params.inspectorPhone || '').trim();
+  const doctorName = escapeHtml((params.doctorName || 'السيد الدكتور المحترم').trim());
+  const clinicName = escapeHtml((params.clinicName || 'العيادة التخصصية').trim());
+  const inspectorName = escapeHtml((params.inspectorName || 'الموزع المعتمد').trim());
+  const inspectorPhone = escapeHtml((params.inspectorPhone || '').trim());
   const dateStr = new Date().toISOString().split('T')[0];
   const auditSerial = `QMA-AUD-${dateStr.replace(/-/g, '')}-${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
   const qrSvg = generateSimpleSvgQr(`AUDIT:${auditSerial}|CLINIC:${clinicName}|STATUS:${evalResult.status}|DIST:${inspectorName}`);
