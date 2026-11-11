@@ -624,6 +624,8 @@ function req(method, urlPath, body) {
       onboardRes.body.includes('استمارة بيانات الموزع الجديد') &&
       onboardRes.body.includes('sendToAgentWhatsApp') &&
       onboardRes.body.includes('201122166076') &&
+      !onboardRes.body.includes('appNationalId') &&
+      !onboardRes.body.includes('إثبات الهوية / السجل') &&
       onboardDlRes.status === 200 &&
       String(onboardDlRes.headers['content-disposition'] || '').includes('Qalix-New-Distributor-Onboarding-Card.html')
     );

@@ -317,11 +317,7 @@ function renderDistributorOnboardingCardHtml(agentInfo) {
             <option value="10 عيادات فأكثر شهرياً (الشريحة الذهبية 25%)">10 عيادات فأكثر شهرياً (الشريحة الذهبية 25%)</option>
           </select>
         </div>
-        <div>
-          <label>رقم البطاقة أو السجل التجاري (اختياري للتوثيق):</label>
-          <input id="appNationalId" placeholder="اختياري — يُستخدم عند تحرير عقد التوزيع الرسمي" dir="ltr" />
-        </div>
-        <div>
+        <div style="grid-column: 1 / -1;">
           <label>رابط صفحة الفيسبوك أو الموقع الإلكتروني (إن وُجد):</label>
           <input id="appSocial" placeholder="اختياري..." dir="ltr" />
         </div>
@@ -363,7 +359,6 @@ function renderDistributorOnboardingCardHtml(agentInfo) {
       const city = document.getElementById('appCity').value.trim();
       const exp = document.getElementById('appExp').value;
       const target = document.getElementById('appTarget').value;
-      const natId = document.getElementById('appNationalId').value.trim() || 'سيُقدّم عند التعاقد';
       const social = document.getElementById('appSocial').value.trim() || 'لا يوجد';
       const notes = document.getElementById('appNotes').value.trim() || 'لا توجد ملاحظات إضافية';
       const agreed = document.getElementById('appAgree').checked;
@@ -386,7 +381,6 @@ function renderDistributorOnboardingCardHtml(agentInfo) {
         '🗺️ *المدينة / النطاق المطلوب:* ' + city,
         '💼 *الخبرة / النشاط:* ' + exp,
         '🎯 *المستهدف الشهري:* ' + target,
-        '🪪 *إثبات الهوية / السجل:* ' + natId,
         '🌐 *الصفحة / الموقع:* ' + social,
         '📝 *ملاحظات الخطة:* ' + notes,
         '✅ *إقرار الالتزام بالسعر الرسمي وحوكمة التفعيل:* موافق',
