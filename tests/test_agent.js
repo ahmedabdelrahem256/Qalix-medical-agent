@@ -1004,7 +1004,22 @@ function req(method, urlPath, body) {
       }
     );
 
-    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/67 PASSED ===`);
+    // 68. Distributor-to-Agent Direct Remittance, Lead Lock, Replies & License WhatsApp Flow
+    check('68. دعم إرسال الردود وطلبات الحجز وتوريد المبالغ من بوابة الموزع لواتساب الوكيل مباشرة',
+      kitRefreshed.body.includes('sendRequestToAgentWa()') &&
+      kitRefreshed.body.includes('sendDistributorFeedbackToAgentWa()') &&
+      kitRefreshed.body.includes('id="payChannel"') &&
+      kitRefreshed.body.includes('id="distAgentActionType"') &&
+      kitRefreshed.body.includes('wa.me/201122166076'),
+      {
+        hasSendReqWa: kitRefreshed.body.includes('sendRequestToAgentWa()'),
+        hasFeedbackWa: kitRefreshed.body.includes('sendDistributorFeedbackToAgentWa()'),
+        hasPayChannel: kitRefreshed.body.includes('id="payChannel"'),
+        hasActionType: kitRefreshed.body.includes('id="distAgentActionType"')
+      }
+    );
+
+    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/68 PASSED ===`);
     for (const r of results) console.log(' ✅', r);
   } finally {
     srv.kill('SIGINT');

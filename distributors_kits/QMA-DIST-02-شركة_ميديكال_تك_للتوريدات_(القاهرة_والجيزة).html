@@ -75,7 +75,7 @@
       </div>
 
       <div class="card">
-        <h3 style="margin-top:0; color:var(--blue);">2. مولّد طلب إصدار ترخيص عيادة للوكيل (01122166076)</h3>
+        <h3 style="margin-top:0; color:var(--blue);">2. مولّد طلب إصدار ترخيص وتوريد المبلغ للوكيل (01122166076)</h3>
         <div style="display:grid; gap:10px;">
           <div><label style="font-size:12px;">اسم العيادة / المركز الطبي:</label><input id="cName" placeholder="مثال: عيادة الشفاء التخصصية" /></div>
           <div><label style="font-size:12px;">اسم الطبيب وهاتفه:</label><input id="dName" placeholder="مثال: د. أحمد سامي - 010..." /></div>
@@ -88,9 +88,67 @@
               <option value="ent|18500">باقة المراكز الكبرى (18,500 ج.م)</option>
             </select>
           </div>
-          <button onclick="genRequest()">توليد رسالة طلب التفعيل للوكيل (نسخ واتساب)</button>
-          <textarea id="outMsg" rows="5" readonly placeholder="ستظهر رسالة الطلب الجاهزة هنا..."></textarea>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+            <div>
+              <label style="font-size:12px;">قناة توريد صافي المبلغ للوكيل:</label>
+              <select id="payChannel">
+                <option value="إنستاباي (InstaPay)">⚡ إنستاباي (InstaPay)</option>
+                <option value="فودافون كاش (Vodafone Cash)">📱 فودافون كاش</option>
+                <option value="تحويل بنكي رسمي">🏛️ تحويل بنكي رسمي</option>
+                <option value="سداد وتوريد نقدي">💵 توريد نقدي</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:12px;">رقم مرجع التحويل / العملية:</label>
+              <input id="payRef" placeholder="مثال: IPN-849201" dir="ltr" />
+            </div>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button type="button" onclick="sendRequestToAgentWa()" style="flex:1; background:linear-gradient(135deg,#10b981,#059669); color:#fff;">📲 إرسال الطلب والتوريد لواتساب الوكيل (01122166076)</button>
+            <button type="button" onclick="genRequest()" class="btn-blue" style="flex:1; color:#fff;">📋 توليد ونسخ النص فقط</button>
+          </div>
+          <textarea id="outMsg" rows="6" readonly placeholder="ستظهر رسالة الطلب وتفاصيل التوريد الجاهزة هنا..."></textarea>
         </div>
+      </div>
+    </div>
+
+    <!-- Agent-Distributor Direct Hub: Replies, Lead Lock Requests & Remittances -->
+    <div class="card no-print">
+      <h3 style="margin-top:0; color:var(--sky);">مركز الردود السريعة، طلبات الحجز، وإشعارات توريد المبالغ إلى الوكيل (01122166076)</h3>
+      <p style="font-size:12.5px; color:var(--muted); margin-top:-4px; margin-bottom:12px;">
+        أرسل من هنا مباشرة أي رد على رسائل الوكيل، أو اطلب حجز عيادة جديدة (14 يوماً)، أو أرسل إشعار تحويل وتوريد مبالغ مالية للوكيل بنقرة واحدة (أوفلاين بالكامل عبر واتساب):
+      </p>
+      <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+        <div>
+          <label style="font-size:12px;">نوع المراسلة / الطلب للوكيل:</label>
+          <select id="distAgentActionType" onchange="toggleDistAgentFields()">
+            <option value="remittance">💸 إشعار توريد مالي / تحويل صافي الوكيل</option>
+            <option value="leadlock">🔒 طلب حجز وتأمين عيادة (14 يوماً Lead Lock)</option>
+            <option value="reply">💬 رد على رسالة الوكيل / متابعة صفقة</option>
+            <option value="support">🛠️ طلب دعم فني أو استشارة ميدانية</option>
+            <option value="report">📊 تقرير زيارة عيادة / اعتراض طبيب</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:12px;" id="distAgentSubjectLbl">اسم العيادة / عنوان المراسلة:</label>
+          <input id="distAgentSubject" placeholder="مثال: عيادة النور التخصصية - أسيوط" />
+        </div>
+        <div id="distAgentAmountWrap">
+          <label style="font-size:12px;">المبلغ المورد للوكيل (ج.م):</label>
+          <input id="distAgentAmount" type="number" placeholder="مثال: 6205" dir="ltr" />
+        </div>
+        <div id="distAgentChannelWrap">
+          <label style="font-size:12px;">وسيلة التحويل ورقم المرجع:</label>
+          <input id="distAgentRemitRef" placeholder="مثال: إنستاباي - مرجع 552190" />
+        </div>
+      </div>
+      <div style="margin-top:10px;">
+        <label style="font-size:12px;">التفاصيل / الرد / الملاحظات للوكيل:</label>
+        <textarea id="distAgentBody" rows="3" placeholder="اكتب ردك للوكيل أو تفاصيل الطلب أو بيانات الطبيب (الاسم والهاتف والعنوان)..."></textarea>
+      </div>
+      <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+        <button type="button" onclick="sendDistributorFeedbackToAgentWa()" style="background:linear-gradient(135deg,#10b981,#059669); color:#fff;">📲 إرسال لواتساب الوكيل (01122166076) فوراً</button>
+        <button type="button" onclick="copyDistributorFeedbackMsg()" class="btn-amber">📋 نسخ نص الرسالة</button>
       </div>
     </div>
 
@@ -758,27 +816,96 @@
     }
 
     const rate = 32;
-    function genRequest() {
+    function buildRequestText() {
       const c = document.getElementById('cName').value.trim() || 'غير محدد';
       const d = document.getElementById('dName').value.trim() || 'غير محدد';
       const hw = document.getElementById('hwId').value.trim() || 'غير محدد';
-      const [tCode, pStr] = document.getElementById('tierSel').value.split('|');
+      const [, pStr] = document.getElementById('tierSel').value.split('|');
+      const ch = document.getElementById('payChannel')?.value || 'إنستاباي (InstaPay)';
+      const pref = document.getElementById('payRef')?.value.trim() || 'سيُرفق إيصال التحويل بالمحادثة';
       const price = Number(pStr);
       const comm = Math.round(price * rate / 100);
       const net = price - comm;
-      const msg = `طلب إصدار ترخيص جديد — Qalix Medical Agent
+      return `طلب إصدار ترخيص وتأكيد توريد — Qalix Medical Agent
 • كود الموزع: QMA-DIST-02 (شركة ميديكال تك للتوريدات (القاهرة والجيزة))
 • المنشأة الطبية: ${c}
 • الطبيب والهاتف: ${d}
 • بصمة الجهاز (HWID): ${hw}
 • السعر الرسمي الثابت: ${price} ج.م
 • عمولة الموزع (${rate}%): ${comm} ج.م
-• صافي التوريد للوكيل (01122166076): ${net} ج.م`;
+• صافي التوريد للوكيل (01122166076): ${net} ج.م
+• قناة السداد والتوريد: ${ch}
+• مرجع التحويل: ${pref}`;
+    }
+
+    function genRequest() {
+      const msg = buildRequestText();
       const box = document.getElementById('outMsg');
       box.value = msg;
       box.select();
-      if (navigator.clipboard) navigator.clipboard.writeText(msg);
-      alert('تم توليد ونسخ رسالة طلب التفعيل! يمكنك إرسالها الآن لواتساب الوكيل 01122166076');
+      if (navigator.clipboard) navigator.clipboard.writeText(msg).catch(() => {});
+      alert('تم توليد ونسخ رسالة طلب التفعيل والتوريد! يمكنك إرسالها الآن لواتساب الوكيل 01122166076');
+    }
+
+    function sendRequestToAgentWa() {
+      const msg = buildRequestText();
+      const box = document.getElementById('outMsg');
+      if (box) box.value = msg;
+      if (navigator.clipboard) navigator.clipboard.writeText(msg).catch(() => {});
+      window.open('https://wa.me/201122166076?text=' + encodeURIComponent(msg), '_blank');
+    }
+
+    function toggleDistAgentFields() {
+      const type = document.getElementById('distAgentActionType')?.value || 'remittance';
+      const isRemit = type === 'remittance';
+      const amtWrap = document.getElementById('distAgentAmountWrap');
+      const chWrap = document.getElementById('distAgentChannelWrap');
+      if (amtWrap) amtWrap.style.display = isRemit ? 'block' : 'none';
+      if (chWrap) chWrap.style.display = isRemit ? 'block' : 'none';
+    }
+
+    function buildDistributorFeedbackMsg() {
+      const typeEl = document.getElementById('distAgentActionType');
+      const type = typeEl ? typeEl.value : 'remittance';
+      const typeLabel = typeEl?.options[typeEl.selectedIndex]?.text || 'مراسلة من الموزع للوكيل';
+      const subj = (document.getElementById('distAgentSubject')?.value || '').trim();
+      const amt = (document.getElementById('distAgentAmount')?.value || '').trim();
+      const remitRef = (document.getElementById('distAgentRemitRef')?.value || '').trim();
+      const body = (document.getElementById('distAgentBody')?.value || '').trim();
+      if (!subj && !body && !amt) {
+        alert('يرجى كتابة موضوع المراسلة أو التفاصيل أو المبلغ المورد أولاً.');
+        return null;
+      }
+      const lines = [
+        `📩 *${typeLabel}*`,
+        `• الموزع المرسل: شركة ميديكال تك للتوريدات (القاهرة والجيزة) (QMA-DIST-02) · 01234567892`,
+        `• المحافظة: القاهرة الكبرى`
+      ];
+      if (subj) lines.push(`• العنوان / العيادة: ${subj}`);
+      if (type === 'remittance') {
+        if (amt) lines.push(`• المبلغ المورد للوكيل: ${amt} ج.م`);
+        if (remitRef) lines.push(`• قناة ومرجع التحويل: ${remitRef}`);
+      }
+      if (body) lines.push(`• التفاصيل والرد:\n${body}`);
+      lines.push(`• التاريخ: ${new Date().toLocaleString('ar-EG')}`);
+      return lines.join('\n');
+    }
+
+    function sendDistributorFeedbackToAgentWa() {
+      const msg = buildDistributorFeedbackMsg();
+      if (!msg) return;
+      if (navigator.clipboard) navigator.clipboard.writeText(msg).catch(() => {});
+      window.open('https://wa.me/201122166076?text=' + encodeURIComponent(msg), '_blank');
+    }
+
+    function copyDistributorFeedbackMsg() {
+      const msg = buildDistributorFeedbackMsg();
+      if (!msg) return;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(msg).then(() => {
+          alert('تم نسخ نص الرسالة للوكيل بنجاح!');
+        });
+      }
     }
 
     function getPitchText(id) {
