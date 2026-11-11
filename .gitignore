@@ -10,6 +10,10 @@ data/systems/
 data/exports/
 data/systems.json
 data/custom_dev_data.json
+data/install.json
+data/.trial_clock.json
+data/license.json
+data/manager_hub.db*
 exports/
 *.db
 *.db-shm
