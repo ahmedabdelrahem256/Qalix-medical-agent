@@ -36,14 +36,16 @@ function copyDirFiltered(src, dest, skipNames = new Set()) {
   }
 }
 
-function generateWindowsOneClickInstallBat({ appShortcutName = 'Qalix Agents Platform', installFolderName = 'QalixAgentsPlatform', launchBatName = 'START_AGENT_PANEL.bat' } = {}) {
+function generateWindowsOneClickInstallBat({ appShortcutName = 'Qalix Agents & Distributors Management', installFolderName = 'QalixAgentsPlatform', launchBatName = 'START_AGENT_PANEL.bat', iconRelPath = 'public\\img\\qalix-agents.ico' } = {}) {
+  const safeBannerName = String(appShortcutName).replace(/&/g, '^&');
   return [
     '@echo off',
     'chcp 65001 >nul',
     'cd /d "%~dp0"',
-    `title ${appShortcutName} - Windows Installer (32-bit / 64-bit)`,
+    `title كالكس لإدارة الوكلاء والموزعين - ${safeBannerName} (32-bit / 64-bit)`,
     'echo ============================================================================',
-    `echo   ${appShortcutName} - One-Click Windows Installer`,
+    'echo   كالكس لإدارة الوكلاء والموزعين',
+    `echo   ${safeBannerName} - One-Click Windows Installer`,
     'echo   Supports Windows 32-bit and 64-bit (100%% Offline, No Admin Required)',
     'echo ============================================================================',
     `set "TARGET_DIR=%LOCALAPPDATA%\\${installFolderName}"`,
@@ -54,8 +56,8 @@ function generateWindowsOneClickInstallBat({ appShortcutName = 'Qalix Agents Pla
     '  echo [ERROR] Failed to copy application files cleanly.',
     '  pause & exit /b 1',
     ')',
-    'echo [2/3] Creating Desktop and Start Menu shortcuts ...',
-    `powershell -NoProfile -ExecutionPolicy Bypass -Command "$ws = New-Object -ComObject WScript.Shell; $desk = [Environment]::GetFolderPath('Desktop'); $prog = [Environment]::GetFolderPath('Programs'); foreach($d in @($desk,$prog)){ $sc=$ws.CreateShortcut((Join-Path $d '${appShortcutName}.lnk')); $sc.TargetPath=(Join-Path $env:LOCALAPPDATA '${installFolderName}\\${launchBatName}'); $sc.WorkingDirectory=(Join-Path $env:LOCALAPPDATA '${installFolderName}'); $sc.Save() }"`,
+    'echo [2/3] Creating Desktop and Start Menu shortcuts with official Qalix icon ...',
+    `powershell -NoProfile -ExecutionPolicy Bypass -Command "$ws = New-Object -ComObject WScript.Shell; $desk = [Environment]::GetFolderPath('Desktop'); $prog = [Environment]::GetFolderPath('Programs'); $ico = Join-Path $env:LOCALAPPDATA '${installFolderName}\\${iconRelPath}'; foreach($d in @($desk,$prog)){ $sc=$ws.CreateShortcut((Join-Path $d '${appShortcutName}.lnk')); $sc.TargetPath=(Join-Path $env:LOCALAPPDATA '${installFolderName}\\${launchBatName}'); $sc.WorkingDirectory=(Join-Path $env:LOCALAPPDATA '${installFolderName}'); if(Test-Path $ico){ $sc.IconLocation=$ico }; $sc.Save() }"`,
     'echo [3/3] Installation completed cleanly!',
     'echo Launching application ...',
     `start "" "%TARGET_DIR%\\${launchBatName}"`,
@@ -138,9 +140,10 @@ function buildCleanResellerEdition(options = {}) {
   fs.writeFileSync(path.join(editionDir, 'START_AGENT_PANEL.bat'), startBat, 'utf8');
 
   const installBat = generateWindowsOneClickInstallBat({
-    appShortcutName: isQalixSuiteEdition ? 'Qalix Agents Platform 11' : 'Universal Agents Platform',
+    appShortcutName: isQalixSuiteEdition ? 'Qalix Agents & Distributors Management' : 'Universal Agents & Distributors Management',
     installFolderName: isQalixSuiteEdition ? 'QalixAgentsPlatform11' : 'UniversalAgentsPlatform',
-    launchBatName: 'START_AGENT_PANEL.bat'
+    launchBatName: 'START_AGENT_PANEL.bat',
+    iconRelPath: 'public\\img\\qalix-agents.ico'
   });
   fs.writeFileSync(path.join(editionDir, 'INSTALL_ON_WINDOWS.bat'), installBat, 'utf8');
 

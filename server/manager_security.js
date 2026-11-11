@@ -391,7 +391,7 @@ function generateManagerExecutiveReportHtml(analytics, managerProfile = {}) {
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>التقرير التنفيذي الموحد لمدير الوكلاء — منصة كالكس</title>
+  <title>التقرير التنفيذي لمدير الوكلاء — كالكس لإدارة الوكلاء والموزعين | Qalix Agents &amp; Distributors Management</title>
   <style>
     @page { size: A4; margin: 14mm; }
     body { font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif; color: #0f172a; margin: 0; background: #fff; }

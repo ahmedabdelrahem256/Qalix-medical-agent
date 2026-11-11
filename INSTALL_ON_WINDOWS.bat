@@ -1,9 +1,10 @@
 @echo off
 chcp 65001 >nul
 cd /d "%~dp0"
-title Qalix Agents Manager Platform - Windows Installer (32-bit / 64-bit)
+title كالكس لإدارة الوكلاء والموزعين - Qalix Agents ^& Distributors Management (32-bit / 64-bit)
 echo ============================================================================
-echo   Qalix Agents Manager Platform - One-Click Windows Installer
+echo   كالكس لإدارة الوكلاء والموزعين
+echo   Qalix Agents ^& Distributors Management - One-Click Windows Installer
 echo   Supports Windows 32-bit and 64-bit (100%% Offline, No Admin Required)
 echo ============================================================================
 set "TARGET_DIR=%LOCALAPPDATA%\QalixAgentsPlatform"
@@ -14,8 +15,8 @@ if errorlevel 8 (
   echo [ERROR] Failed to copy application files cleanly.
   pause & exit /b 1
 )
-echo [2/3] Creating Desktop and Start Menu shortcuts ...
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$ws = New-Object -ComObject WScript.Shell; $desk = [Environment]::GetFolderPath('Desktop'); $prog = [Environment]::GetFolderPath('Programs'); foreach($d in @($desk,$prog)){ $sc=$ws.CreateShortcut((Join-Path $d 'Qalix Agents Manager Platform.lnk')); $sc.TargetPath=(Join-Path $env:LOCALAPPDATA 'QalixAgentsPlatform\START_AGENTS_MANAGER_PLATFORM.bat'); $sc.WorkingDirectory=(Join-Path $env:LOCALAPPDATA 'QalixAgentsPlatform'); $sc.Save() }"
+echo [2/3] Creating Desktop and Start Menu shortcuts with official Qalix icon ...
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$ws = New-Object -ComObject WScript.Shell; $desk = [Environment]::GetFolderPath('Desktop'); $prog = [Environment]::GetFolderPath('Programs'); $ico = Join-Path $env:LOCALAPPDATA 'QalixAgentsPlatform\public\img\qalix-agents.ico'; foreach($d in @($desk,$prog)){ $sc=$ws.CreateShortcut((Join-Path $d 'Qalix Agents & Distributors Management.lnk')); $sc.TargetPath=(Join-Path $env:LOCALAPPDATA 'QalixAgentsPlatform\START_AGENTS_MANAGER_PLATFORM.bat'); $sc.WorkingDirectory=(Join-Path $env:LOCALAPPDATA 'QalixAgentsPlatform'); if(Test-Path $ico){ $sc.IconLocation=$ico }; $sc.Save() }"
 echo [3/3] Installation completed cleanly!
 echo Launching application ...
 start "" "%TARGET_DIR%\START_AGENTS_MANAGER_PLATFORM.bat"

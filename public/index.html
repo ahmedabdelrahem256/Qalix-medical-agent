@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Qalix Multi-System Agent | لوحة تحكم الوكيل متعددة المنظومات</title>
-  <link rel="icon" type="image/svg+xml" href="/public/img/qalix-sovereign-logo.svg" />
+  <title>كالكس لإدارة الوكلاء والموزعين | Qalix Agents & Distributors Management</title>
+  <link rel="icon" type="image/png" href="/public/img/qalix-agents-icon.png" />
+  <link rel="shortcut icon" type="image/x-icon" href="/public/img/qalix-agents.ico" />
   <style>
     :root {
       color-scheme: dark;
@@ -269,16 +270,19 @@
     <!-- Top Sovereign Glass Header -->
     <header class="glass">
       <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:16px;">
-        <div>
-          <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
-            <span class="badge b-emerald">★ QALIX · ABSOLUTE SECURITY · أمان سيادي تام ★</span>
-            <span class="badge b-sky">100% AIR-GAPPED FORTRESS · أوفلاين بالكامل</span>
-            <span id="headerProjectBadge" class="badge b-amber">مشروع: منصة كالكس متعددة المنظومات</span>
+        <div style="display:flex; align-items:center; gap:14px;">
+          <img src="/public/img/qalix-agents-icon.png" alt="كالكس لإدارة الوكلاء والموزعين — Qalix Agents & Distributors Management" width="58" height="58" style="border-radius:14px; border:1px solid rgba(56,189,248,0.45); box-shadow:0 8px 22px rgba(2,132,199,0.28); flex-shrink:0;" />
+          <div>
+            <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:6px;">
+              <span class="badge b-emerald">★ كالكس لإدارة الوكلاء والموزعين · Qalix Agents &amp; Distributors Management ★</span>
+              <span class="badge b-sky">100% OFFLINE · أوفلاين بالكامل</span>
+              <span id="headerProjectBadge" class="badge b-amber">مشروع: كالكس لإدارة الوكلاء والموزعين</span>
+            </div>
+            <h1 id="headerMainTitle" style="margin:0; font-size:23px;">كالكس لإدارة الوكلاء والموزعين — لوحة مدير الوكلاء</h1>
+            <p id="headerMainSubtitle" style="margin:4px 0 0; color:var(--muted); font-size:12.5px;">
+              Qalix Agents &amp; Distributors Management · واجهة زجاجية أوفلاين · إدارة 11 منظومة وشبكة الوكلاء والموزعين بدون إنترنت
+            </p>
           </div>
-          <h1 id="headerMainTitle" style="margin:0; font-size:24px;">لوحة تحكم: وكيل منصة كالكس وشبكة الموزعين</h1>
-          <p id="headerMainSubtitle" style="margin:4px 0 0; color:var(--muted); font-size:13px;">
-            واجهة زجاجية عصرية مريحة للعين · إدارة الموزعين المستقلين بنظام النسبة من السعر الثابت · نافذة المنظومات المنافسة · ركن الارتقاء والريادة
-          </p>
         </div>
         <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
           <!-- Comfort Theme Selector Dropdown -->
@@ -2124,7 +2128,7 @@
       const isMedical = sysId === 'qalix_medical';
       const agentPhone = (data.agent && data.agent.phone) ? data.agent.phone : '01000000000';
 
-      document.title = (sysObj.projectName || data.agent?.projectName || 'Qalix Multi-System Agent') + ' | لوحة تحكم: ' + sysName;
+      document.title = 'كالكس لإدارة الوكلاء والموزعين | Qalix Agents & Distributors Management — ' + sysName;
       document.querySelectorAll('.dyn-agent-phone').forEach(el => { el.innerText = agentPhone; });
       document.querySelectorAll('.dyn-system-name').forEach(el => { el.innerText = sysName; });
 

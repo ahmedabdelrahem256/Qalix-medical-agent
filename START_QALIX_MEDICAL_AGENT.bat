@@ -1,9 +1,9 @@
 @echo off
 chcp 65001 >nul
 cd /d "%~dp0"
-title Qalix Agents Platform v1.0 — لوحة مدير الوكلاء ومنظومة كالكس الطبية
+title كالكس لإدارة الوكلاء والموزعين — Qalix Agents ^& Distributors Management (v1.0)
 echo ============================================================================
-echo   ★ Qalix Agents Platform v1.0 — متوافقة مع جميع نسخ ويندوز 32-bit / 64-bit ★
+echo   ★ كالكس لإدارة الوكلاء والموزعين — Qalix Agents ^& Distributors Management v1.0 ★
 echo   - مجلد التشغيل الحالي: %CD%
 echo   - تعمل 100%% أوفلاين بالكامل (Air-Gapped) بدون أي تبعيات خارجية
 echo ============================================================================
