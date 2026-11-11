@@ -1788,7 +1788,7 @@ function req(method, urlPath, body) {
     const editionBlockedRes = await reqHdr('POST', '/api/systems/build-reseller-edition', { includeAllQalix11: true });
     const login83 = await req('POST', '/api/manager/auth/login', { pin: '3579' });
     const tok83 = login83.body?.session?.token;
-    const clean11Res = await reqHdr('POST', '/api/systems/build-reseller-edition', { includeAllQalix11: true }, { 'X-Qalix-Manager-Token': tok83 });
+    const clean11Res = await reqHdr('POST', '/api/systems/build-reseller-edition', { includeAllQalix11: true, includeRuntime: true }, { 'X-Qalix-Manager-Token': tok83 });
     await req('POST', '/api/manager/auth/set-pin', { currentPin: '3579', newPin: '' });
 
     const edFolder = clean11Res.body?.edition?.folderPath;
@@ -1798,9 +1798,11 @@ function req(method, urlPath, body) {
     const edHasInstallBat = edFolder && fs.existsSync(path.join(edFolder, 'INSTALL_ON_WINDOWS.bat'));
     const edHasUninstallBat = edFolder && fs.existsSync(path.join(edFolder, 'UNINSTALL_FROM_WINDOWS.bat'));
     const edHasMgrDb = edFolder && fs.existsSync(path.join(edFolder, 'data', 'manager_hub.db'));
+    const embeddedNodeExe = edFolder ? path.join(edFolder, 'runtime', 'node.exe') : '';
+    const edHasRuntime = edFolder && fs.existsSync(embeddedNodeExe);
     const edHasSystems = clean11Res.body?.edition?.systemsIncluded?.length === 11;
 
-    // Real restart persistence check on the clean offline edition folder
+    // Real restart persistence check on the clean offline edition folder using its embedded runtime/node.exe
     const reqOnPort = (portNum, method, urlPath, bodyObj) => new Promise((resolve, reject) => {
       const payload = bodyObj ? JSON.stringify(bodyObj) : null;
       const headers = { 'Content-Type': 'application/json' };
@@ -1831,7 +1833,8 @@ function req(method, urlPath, body) {
     let persistedAcrossRestart = false;
     let restartedIntegrityOk = false;
     if (edFolder) {
-      const child1 = spawn(process.execPath, [path.join(edFolder, 'server', 'agent_server.js')], {
+      const childExec = edHasRuntime ? embeddedNodeExe : process.execPath;
+      const child1 = spawn(childExec, [path.join(edFolder, 'server', 'agent_server.js')], {
         cwd: edFolder,
         env: { ...process.env, PORT: '4198', AUTO_OPEN_BROWSER: '0' },
         stdio: 'ignore'
@@ -1839,7 +1842,7 @@ function req(method, urlPath, body) {
       try {
         if (await waitPortUp(4198)) {
           const postDist = await reqOnPort(4198, 'POST', '/api/distributors', {
-            name: 'Persisted MEGA Distributor',
+            name: 'Persisted Clean Distributor',
             phone: '01099887766',
             governorate: 'Cairo',
             commissionRate: 27
@@ -1854,7 +1857,7 @@ function req(method, urlPath, body) {
         await new Promise(r => setTimeout(r, 400));
       }
 
-      const child2 = spawn(process.execPath, [path.join(edFolder, 'server', 'agent_server.js')], {
+      const child2 = spawn(childExec, [path.join(edFolder, 'server', 'agent_server.js')], {
         cwd: edFolder,
         env: { ...process.env, PORT: '4198', AUTO_OPEN_BROWSER: '0' },
         stdio: 'ignore'
@@ -1865,7 +1868,7 @@ function req(method, urlPath, body) {
           const rows = Array.isArray(bootList.body?.summary?.distributors)
             ? bootList.body.summary.distributors
             : (Array.isArray(bootList.body?.distributors) ? bootList.body.distributors : []);
-          persistedAcrossRestart = rows.some(d => d.phone === '01099887766' && d.name === 'Persisted MEGA Distributor');
+          persistedAcrossRestart = rows.some(d => d.phone === '01099887766' && d.name === 'Persisted Clean Distributor');
           const st2 = await reqOnPort(4198, 'GET', '/api/system/storage-health');
           restartedIntegrityOk = st2.body?.ok === true && st2.body?.dbIntegrityOk === true && st2.body?.managerDbIntegrityOk === true;
         }
@@ -1878,7 +1881,7 @@ function req(method, urlPath, body) {
       try { if (clean11Res.body?.edition?.zipPath) fs.rmSync(clean11Res.body.edition.zipPath, { force: true }); } catch (_) {}
     }
 
-    check('83. جاهزية برنامج ويندوز الأوفلاين + استمرارية حفظ البيانات عبر إعادة التشغيل + سياسة المفاتيح اليدوية + نسخة ميجا الـ 11 المصفّرة',
+    check('83. جاهزية برنامج ويندوز الأوفلاين + استمرارية حفظ البيانات عبر إعادة التشغيل + سياسة المفاتيح اليدوية + النسخة الـ 11 المصفّرة المكتفية ذاتياً',
       healthRes.status === 200 &&
       healthRes.body?.ok === true &&
       healthRes.body?.offlineMode === '100% Air-Gapped' &&
@@ -1902,6 +1905,8 @@ function req(method, urlPath, body) {
       edHasInstallBat &&
       edHasUninstallBat &&
       edHasMgrDb &&
+      edHasRuntime &&
+      clean11Res.body?.edition?.includesRuntimeNode === true &&
       edHasSystems &&
       persistedAcrossRestart &&
       restartedIntegrityOk,
@@ -1916,6 +1921,8 @@ function req(method, urlPath, body) {
         edHasInstallBat,
         edHasUninstallBat,
         edHasMgrDb,
+        edHasRuntime,
+        includesRuntimeNode: clean11Res.body?.edition?.includesRuntimeNode,
         persistedAcrossRestart,
         restartedIntegrityOk
       }

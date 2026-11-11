@@ -2673,6 +2673,7 @@ const server = http.createServer(async (req, res) => {
           defaultSystemId: body.defaultSystemId,
           includeAllQalix11: body.includeAllQalix11 === true,
           includeMediaAssets: body.includeMediaAssets === true,
+          includeRuntime: body.includeRuntime === true,
           extraSystemPresets: Array.isArray(body.extraSystemPresets) ? body.extraSystemPresets : []
         });
         logAudit('reseller_edition_built', `إنشاء نسخة وكلاء متعددة المنظومات مصفرة البيانات جاهزة للبيع: ${edition.editionName}`);

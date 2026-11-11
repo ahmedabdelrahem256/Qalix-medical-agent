@@ -341,6 +341,15 @@ function buildCleanResellerEdition(options = {}) {
   };
   vDb.close();
 
+  // Optional: embed local runtime/node.exe for self-contained Windows Portable ZIP (runs without pre-installed Node.js)
+  let includesRuntimeNode = false;
+  if (options.includeRuntime === true && process.platform === 'win32' && fs.existsSync(process.execPath)) {
+    const runtimeDir = path.join(editionDir, 'runtime');
+    fs.mkdirSync(runtimeDir, { recursive: true });
+    fs.copyFileSync(process.execPath, path.join(runtimeDir, 'node.exe'));
+    includesRuntimeNode = true;
+  }
+
   // 6. Create .zip archive cleanly (PowerShell Compress-Archive on Win10/11 or .NET ZipFile fallback on Win7/8 32/64-bit)
   let zipSizeBytes = 0;
   if (options.skipZip !== true) {
@@ -373,6 +382,7 @@ function buildCleanResellerEdition(options = {}) {
     zipPath: options.skipZip !== true ? zipPath : null,
     zipSizeBytes,
     zipSizeMB: (zipSizeBytes / (1024 * 1024)).toFixed(2),
+    includesRuntimeNode,
     systemsIncluded: [primaryManifest.id, ...extraPresets.filter(p => p !== primaryManifest.id && SYSTEM_PRESETS[p])],
     verification
   };
