@@ -1778,7 +1778,150 @@ function req(method, urlPath, body) {
       { status: instKitRes.status, issExists, compileBatExists, oneClickInstallExists, oneClickUninstallExists, bundledRuntimeExists, arch: instKitRes.body?.bundledNodeArch }
     );
 
-    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/82 PASSED ===`);
+    // Test 83: 100% Offline Windows Desktop App Readiness, Storage Persistence Across Restart, Manual Platform Keys & Clean 11-System MEGA Edition
+    const healthRes = await req('GET', '/api/health');
+    const storageRes = await req('GET', '/api/system/storage-health');
+    const flushRes = await req('POST', '/api/system/flush-storage', {});
+    const pinLock83 = await req('POST', '/api/manager/auth/set-pin', { newPin: '3579' });
+    const resetBlockedRes = await reqHdr('POST', '/api/dev/reset-deals', {});
+    const restoreBlockedRes = await reqHdr('POST', '/api/backup/restore', { filename: 'none.db' });
+    const editionBlockedRes = await reqHdr('POST', '/api/systems/build-reseller-edition', { includeAllQalix11: true });
+    const login83 = await req('POST', '/api/manager/auth/login', { pin: '3579' });
+    const tok83 = login83.body?.session?.token;
+    const clean11Res = await reqHdr('POST', '/api/systems/build-reseller-edition', { includeAllQalix11: true }, { 'X-Qalix-Manager-Token': tok83 });
+    await req('POST', '/api/manager/auth/set-pin', { currentPin: '3579', newPin: '' });
+
+    const edFolder = clean11Res.body?.edition?.folderPath;
+    const edHasPkg = edFolder && fs.existsSync(path.join(edFolder, 'package.json'));
+    const edHasSh = edFolder && fs.existsSync(path.join(edFolder, 'START_SERVER.sh'));
+    const edHasVbs = edFolder && fs.existsSync(path.join(edFolder, 'Qalix_Desktop_App.vbs'));
+    const edHasInstallBat = edFolder && fs.existsSync(path.join(edFolder, 'INSTALL_ON_WINDOWS.bat'));
+    const edHasUninstallBat = edFolder && fs.existsSync(path.join(edFolder, 'UNINSTALL_FROM_WINDOWS.bat'));
+    const edHasMgrDb = edFolder && fs.existsSync(path.join(edFolder, 'data', 'manager_hub.db'));
+    const edHasSystems = clean11Res.body?.edition?.systemsIncluded?.length === 11;
+
+    // Real restart persistence check on the clean offline edition folder
+    const reqOnPort = (portNum, method, urlPath, bodyObj) => new Promise((resolve, reject) => {
+      const payload = bodyObj ? JSON.stringify(bodyObj) : null;
+      const headers = { 'Content-Type': 'application/json' };
+      if (payload) headers['Content-Length'] = Buffer.byteLength(payload);
+      const r = http.request({ hostname: '127.0.0.1', port: portNum, path: urlPath, method, headers }, res => {
+        let b = '';
+        res.on('data', d => b += d);
+        res.on('end', () => {
+          try { resolve({ status: res.statusCode, body: JSON.parse(b) }); }
+          catch { resolve({ status: res.statusCode, body: b }); }
+        });
+      });
+      r.on('error', reject);
+      if (payload) r.write(payload);
+      r.end();
+    });
+    const waitPortUp = async (portNum) => {
+      for (let i = 0; i < 40; i++) {
+        try {
+          const r = await reqOnPort(portNum, 'GET', '/api/health');
+          if (r.status === 200) return true;
+        } catch (_) {}
+        await new Promise(r => setTimeout(r, 150));
+      }
+      return false;
+    };
+
+    let persistedAcrossRestart = false;
+    let restartedIntegrityOk = false;
+    if (edFolder) {
+      const child1 = spawn(process.execPath, [path.join(edFolder, 'server', 'agent_server.js')], {
+        cwd: edFolder,
+        env: { ...process.env, PORT: '4198', AUTO_OPEN_BROWSER: '0' },
+        stdio: 'ignore'
+      });
+      try {
+        if (await waitPortUp(4198)) {
+          const postDist = await reqOnPort(4198, 'POST', '/api/distributors', {
+            name: 'Persisted MEGA Distributor',
+            phone: '01099887766',
+            governorate: 'Cairo',
+            commissionRate: 27
+          });
+          if (postDist.status !== 200) {
+            throw new Error('POST /api/distributors failed on edFolder: ' + JSON.stringify(postDist));
+          }
+          await reqOnPort(4198, 'POST', '/api/system/flush-storage', {});
+        }
+      } finally {
+        try { child1.kill('SIGTERM'); } catch (_) {}
+        await new Promise(r => setTimeout(r, 400));
+      }
+
+      const child2 = spawn(process.execPath, [path.join(edFolder, 'server', 'agent_server.js')], {
+        cwd: edFolder,
+        env: { ...process.env, PORT: '4198', AUTO_OPEN_BROWSER: '0' },
+        stdio: 'ignore'
+      });
+      try {
+        if (await waitPortUp(4198)) {
+          const bootList = await reqOnPort(4198, 'GET', '/api/bootstrap');
+          const rows = Array.isArray(bootList.body?.summary?.distributors)
+            ? bootList.body.summary.distributors
+            : (Array.isArray(bootList.body?.distributors) ? bootList.body.distributors : []);
+          persistedAcrossRestart = rows.some(d => d.phone === '01099887766' && d.name === 'Persisted MEGA Distributor');
+          const st2 = await reqOnPort(4198, 'GET', '/api/system/storage-health');
+          restartedIntegrityOk = st2.body?.ok === true && st2.body?.dbIntegrityOk === true && st2.body?.managerDbIntegrityOk === true;
+        }
+      } finally {
+        try { child2.kill('SIGTERM'); } catch (_) {}
+        await new Promise(r => setTimeout(r, 300));
+      }
+      // Re-clean child write artifacts from edFolder/data so test temp export stays clean
+      try { fs.rmSync(edFolder, { recursive: true, force: true }); } catch (_) {}
+      try { if (clean11Res.body?.edition?.zipPath) fs.rmSync(clean11Res.body.edition.zipPath, { force: true }); } catch (_) {}
+    }
+
+    check('83. جاهزية برنامج ويندوز الأوفلاين + استمرارية حفظ البيانات عبر إعادة التشغيل + سياسة المفاتيح اليدوية + نسخة ميجا الـ 11 المصفّرة',
+      healthRes.status === 200 &&
+      healthRes.body?.ok === true &&
+      healthRes.body?.offlineMode === '100% Air-Gapped' &&
+      healthRes.body?.host === '127.0.0.1' &&
+      storageRes.status === 200 &&
+      storageRes.body?.ok === true &&
+      storageRes.body?.writable === true &&
+      storageRes.body?.dbIntegrityOk === true &&
+      storageRes.body?.managerDbIntegrityOk === true &&
+      storageRes.body?.manualKeysOnlyPolicy === true &&
+      flushRes.status === 200 &&
+      flushRes.body?.ok === true &&
+      pinLock83.status === 200 &&
+      resetBlockedRes.status === 401 &&
+      restoreBlockedRes.status === 401 &&
+      editionBlockedRes.status === 401 &&
+      clean11Res.status === 201 &&
+      edHasPkg &&
+      !edHasSh &&
+      edHasVbs &&
+      edHasInstallBat &&
+      edHasUninstallBat &&
+      edHasMgrDb &&
+      edHasSystems &&
+      persistedAcrossRestart &&
+      restartedIntegrityOk,
+      {
+        health: healthRes.body,
+        storageOk: storageRes.body?.ok,
+        flushOk: flushRes.body?.ok,
+        sysCount: clean11Res.body?.edition?.systemsIncluded?.length,
+        edHasPkg,
+        edHasSh,
+        edHasVbs,
+        edHasInstallBat,
+        edHasUninstallBat,
+        edHasMgrDb,
+        persistedAcrossRestart,
+        restartedIntegrityOk
+      }
+    );
+
+    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/83 PASSED ===`);
     for (const r of results) console.log(' ✅', r);
   } finally {
     srv.kill('SIGINT');

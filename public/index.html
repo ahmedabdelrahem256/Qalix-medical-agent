@@ -280,8 +280,13 @@
             </div>
             <h1 id="headerMainTitle" style="margin:0; font-size:23px;">كالكس لإدارة الوكلاء والموزعين — لوحة مدير الوكلاء</h1>
             <p id="headerMainSubtitle" style="margin:4px 0 0; color:var(--muted); font-size:12.5px;">
-              Qalix Agents &amp; Distributors Management · واجهة زجاجية أوفلاين · إدارة 11 منظومة وشبكة الوكلاء والموزعين بدون إنترنت
+              Qalix Agents &amp; Distributors Management · واجهة ويندوز عصرية أوفلاين 100% · إدارة 11 منظومة بدون إنترنت
             </p>
+            <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:7px; align-items:center;">
+              <span id="desktopStorageBadge" class="badge b-emerald" style="font-size:10.5px;">💾 الحفظ داخل ملفات data/: جاري التحقق...</span>
+              <span class="badge b-purple" style="font-size:10.5px;">🔑 المفاتيح (لهذه المنظومة والمنظومات الـ 11) تصدر داخل المنصة فقط ويجلبها مدير الوكلاء يدوياً</span>
+              <button type="button" class="btn btn-sm btn-sky" style="padding:3px 9px; font-size:11px;" onclick="checkDesktopStorageHealth(true)">🔄 فحص وتثبيت حفظ الملفات الآن</button>
+            </div>
           </div>
         </div>
         <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
@@ -4933,6 +4938,43 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
         if (btn) { btn.disabled = false; btn.innerText = prev; }
       }
     }
+
+    async function checkDesktopStorageHealth(flushFirst = false) {
+      const badge = document.getElementById('desktopStorageBadge');
+      try {
+        if (flushFirst) {
+          await fetch('/api/system/flush-storage', { method: 'POST' });
+        }
+        const res = await fetch('/api/system/storage-health');
+        const st = await res.json();
+        if (badge) {
+          if (st.ok && st.writable) {
+            badge.className = 'badge b-emerald';
+            badge.innerText = '💾 حفظ الملفات (data/): مؤكد وسليم 100%';
+            badge.title = st.activeDbPath || '';
+          } else {
+            badge.className = 'badge b-rose';
+            badge.innerText = '⚠️ تنبيه صلاحية الحفظ: ' + (st.writeError || 'يرجى النقل لمجلد قابل للكتابة');
+          }
+        }
+        if (flushFirst) {
+          if (st.ok && st.writable) {
+            alert(`✅ تم التحقق وتثبيت الحفظ الفوري داخل الملفات بنجاح!\n\n• مسار الحفظ: ${st.dataDir}\n• قاعدة البيانات النشطة: سليمة (${st.dbIntegrityOk})\n• قاعدة مدير الوكلاء: سليمة (${st.managerDbIntegrityOk})\n• الكتابة الفعلية على القرص: مفعلة (100%)`);
+          } else {
+            alert('❌ تعذر التأكد من حفظ الملفات: ' + (st.writeError || 'تحقق من صلاحيات المجلد'));
+          }
+        }
+      } catch (err) {
+        if (badge) {
+          badge.className = 'badge b-amber';
+          badge.innerText = '💾 تعذر فحص الحفظ الفوري';
+        }
+      }
+    }
+    window.addEventListener('DOMContentLoaded', () => checkDesktopStorageHealth(false));
+    window.addEventListener('beforeunload', () => {
+      try { if (navigator.sendBeacon) navigator.sendBeacon('/api/system/flush-storage', ''); } catch (_) {}
+    });
   </script>
 
   <!-- Modal for Lead Lock (Phase 9) -->

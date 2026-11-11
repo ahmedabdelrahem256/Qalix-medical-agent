@@ -20,7 +20,7 @@ if "%NODE_BIN%"=="" (
   echo [خطأ] لم يتم العثور على Node.js على هذا الجهاز.
   echo - لأجهزة ويندوز 64-بت: ثبّت Node.js 22 LTS ^(x64^) أو أحدث.
   echo - لأجهزة ويندوز 32-بت: ثبّت Node.js 22 LTS ^(win-x86 32-bit^).
-  pause
+  if not "%QALIX_SILENT%"=="1" pause
   exit /b 1
 )
 
@@ -33,7 +33,7 @@ if errorlevel 1 (
     echo [خطأ] إصدار Node.js المثبت لا يدعم node:sqlite المدمج.
     echo - لويندوز 64-بت: يرجى تثبيت Node.js 22 LTS أو 24 ^(x64^).
     echo - لويندوز 32-بت: يرجى تثبيت Node.js 22.5+ LTS ^(win-x86^).
-    pause
+    if not "%QALIX_SILENT%"=="1" pause
     exit /b 1
   )
   set "SQLITE_FLAG=--experimental-sqlite"
@@ -44,5 +44,5 @@ set AUTO_OPEN_BROWSER=1
 if errorlevel 1 (
   echo.
   echo [تنبيه] توقف الخادم برمز خطأ %errorlevel%.
-  pause
+  if not "%QALIX_SILENT%"=="1" pause
 )

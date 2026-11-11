@@ -15,7 +15,7 @@ function generateInnoSetupScript({ appNameAr, appVersion, sourceDir, outputDir, 
 AppName=${appNameAr}
 AppVersion=${appVersion}
 AppPublisher=Qalix Platform
-DefaultDirName={autopf}\\QalixAgentsPlatform
+DefaultDirName={localappdata}\\QalixAgentsPlatform
 DefaultGroupName=${appNameAr}
 DisableProgramGroupPage=yes
 OutputDir=${outputDir.replace(/\//g, '\\')}
@@ -34,11 +34,11 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Source: "${srcWin}\\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{autodesktop}\\${appNameAr}"; Filename: "{app}\\START_AGENT_PANEL.bat"; WorkingDir: "{app}"; IconFilename: "{app}\\public\\img\\qalix-agents.ico"
-Name: "{group}\\${appNameAr}"; Filename: "{app}\\START_AGENT_PANEL.bat"; WorkingDir: "{app}"; IconFilename: "{app}\\public\\img\\qalix-agents.ico"
+Name: "{autodesktop}\\${appNameAr}"; Filename: "{sys}\\wscript.exe"; Parameters: "//nologo ""{app}\\Qalix_Desktop_App.vbs"""; WorkingDir: "{app}"; IconFilename: "{app}\\public\\img\\qalix-agents.ico"
+Name: "{group}\\${appNameAr}"; Filename: "{sys}\\wscript.exe"; Parameters: "//nologo ""{app}\\Qalix_Desktop_App.vbs"""; WorkingDir: "{app}"; IconFilename: "{app}\\public\\img\\qalix-agents.ico"
 
 [Run]
-Filename: "{app}\\START_AGENT_PANEL.bat"; Description: "تشغيل المنظومة الآن"; Flags: nowait postinstall skipifsilent
+Filename: "{sys}\\wscript.exe"; Parameters: "//nologo ""{app}\\Qalix_Desktop_App.vbs"""; Description: "تشغيل المنظومة كبرنامج ويندوز الآن"; Flags: nowait postinstall skipifsilent
 `;
 }
 

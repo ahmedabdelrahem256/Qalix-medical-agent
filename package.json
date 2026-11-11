@@ -1,0 +1,15 @@
+{
+  "name": "qalix-agents-distributors-management",
+  "version": "1.0.0",
+  "private": true,
+  "description": "كالكس لإدارة الوكلاء والموزعين — Qalix Agents & Distributors Management (100% Offline Air-Gapped Windows Edition, Zero External Dependencies)",
+  "main": "server/agent_server.js",
+  "scripts": {
+    "start": "node server/agent_server.js",
+    "test": "node tests/test_agent.js"
+  },
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "dependencies": {}
+}

@@ -67,6 +67,7 @@ const {
 } = require('./manager_security');
 const { buildAgentSyncPacket, importSyncPacket } = require('./sync_engine');
 const { buildWindowsInstallerKit } = require('./installer_builder');
+const { openWindowsDesktopApp } = require('./windows_app_launcher');
 
 const PORT = Number(process.env.PORT) || 4000;
 let activePort = PORT;
@@ -931,7 +932,7 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(204, {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Headers': 'Content-Type, X-Qalix-Manager-Token',
         'Access-Control-Max-Age': '86400'
       });
       return res.end();
@@ -942,6 +943,51 @@ const server = http.createServer(async (req, res) => {
       pathname = decodeURIComponent(url.pathname);
     } catch {
       pathname = url.pathname;
+    }
+
+    if (req.method === 'GET' && pathname === '/api/health') {
+      return sendJson(res, 200, {
+        ok: true,
+        service: 'qalix-agents-distributors-management',
+        offlineMode: '100% Air-Gapped',
+        activeSystemId: ACTIVE_SYSTEM.id,
+        port: activePort,
+        host: HOST,
+        uptimeSec: Math.round(process.uptime())
+      });
+    }
+
+    if (req.method === 'GET' && pathname === '/api/system/storage-health') {
+      let writable = false;
+      let writeError = null;
+      const probePath = path.join(BASE_DATA_DIR, `.write_probe_${process.pid}.tmp`);
+      try {
+        fs.mkdirSync(BASE_DATA_DIR, { recursive: true });
+        fs.writeFileSync(probePath, 'ok', 'utf8');
+        fs.unlinkSync(probePath);
+        writable = true;
+      } catch (err) {
+        writeError = err.message;
+      }
+      const dbOk = db.prepare('PRAGMA quick_check').get().quick_check === 'ok';
+      const mgrOk = managerHubDb.prepare('PRAGMA quick_check').get().quick_check === 'ok';
+      return sendJson(res, 200, {
+        ok: writable && dbOk && mgrOk,
+        writable,
+        writeError,
+        dbIntegrityOk: dbOk,
+        managerDbIntegrityOk: mgrOk,
+        dataDir: BASE_DATA_DIR,
+        activeDbPath: dbPath,
+        managerHubDbPath: path.join(BASE_DATA_DIR, 'manager_hub.db'),
+        manualKeysOnlyPolicy: true
+      });
+    }
+
+    if (req.method === 'POST' && pathname === '/api/system/flush-storage') {
+      try { db.exec('PRAGMA wal_checkpoint(TRUNCATE);'); } catch (_) {}
+      try { managerHubDb.exec('PRAGMA wal_checkpoint(TRUNCATE);'); } catch (_) {}
+      return sendJson(res, 200, { ok: true, flushedAt: new Date().toISOString(), dataDir: BASE_DATA_DIR });
     }
 
     if (req.method === 'GET' && pathname === '/api/license') {
@@ -1386,6 +1432,9 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (req.method === 'POST' && pathname === '/api/backup/restore') {
+      if (!isManagerAuthorized(managerHubDb, req)) {
+        return sendJson(res, 401, { error: 'يرجى تسجيل دخول مدير الوكلاء لإتمام الاستعادة', managerPinRequired: true });
+      }
       const body = await readJsonBody(req);
       try {
         const restored = restoreDatabaseSnapshot(db, DATA_DIR, body.filename, dbPath, {
@@ -1823,8 +1872,7 @@ const server = http.createServer(async (req, res) => {
       const count = db.prepare('SELECT COUNT(*) AS n FROM deals').get().n + 101;
       const dealId = 'deal_' + crypto.randomBytes(6).toString('hex');
       const dealNo = `DEAL-2026-${count}`;
-      const sysPrefix = ACTIVE_SYSTEM.licensePrefix || 'QLX2';
-      const activationKey = String(body.activationKey || `${sysPrefix}-${pr.tier.toUpperCase().slice(0, 3)}-${count}`).trim();
+      const activationKey = String(body.activationKey || '').trim() || 'PENDING_MANUAL_KEY_FROM_PLATFORM';
       const now = new Date().toISOString();
 
       db.prepare(`INSERT INTO deals(
@@ -2610,6 +2658,9 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (req.method === 'POST' && pathname === '/api/systems/build-reseller-edition') {
+      if (!isManagerAuthorized(managerHubDb, req)) {
+        return sendJson(res, 401, { error: 'يرجى تسجيل دخول مدير الوكلاء لتصدير النسخ', managerPinRequired: true });
+      }
       const body = await readJsonBody(req);
       try {
         const exportsBase = path.join(BASE_DATA_DIR, 'exports');
@@ -2638,6 +2689,9 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (req.method === 'POST' && pathname === '/api/systems/build-installer-kit') {
+      if (!isManagerAuthorized(managerHubDb, req)) {
+        return sendJson(res, 401, { error: 'يرجى تسجيل دخول مدير الوكلاء لتجهيز المُثبِّت', managerPinRequired: true });
+      }
       const body = await readJsonBody(req);
       try {
         const kit = buildWindowsInstallerKit({
@@ -2674,18 +2728,27 @@ const server = http.createServer(async (req, res) => {
 
     /* ---------------- Developer & System Administration API (Dev Console) ---------------- */
     if (req.method === 'POST' && pathname === '/api/dev/reset-deals') {
+      if (!isManagerAuthorized(managerHubDb, req)) {
+        return sendJson(res, 401, { error: 'يرجى تسجيل دخول مدير الوكلاء لإجراء التصفير', managerPinRequired: true });
+      }
       const resData = resetDealsOnly(db, DATA_DIR);
       logAudit('dev_reset_deals', 'تصفير صفقات النظام من لوحة المطور مع أخذ لقطة احتياطية');
       return sendJson(res, 200, resData);
     }
 
     if (req.method === 'POST' && pathname === '/api/dev/factory-reset') {
+      if (!isManagerAuthorized(managerHubDb, req)) {
+        return sendJson(res, 401, { error: 'يرجى تسجيل دخول مدير الوكلاء لإعادة ضبط المصنع', managerPinRequired: true });
+      }
       const resData = resetAllDataFactory(db, () => seedInitialData(db), DATA_DIR);
       logAudit('dev_factory_reset', 'استعادة ضبط المصنع وتصفير قاعدة البيانات من لوحة المطور');
       return sendJson(res, 200, resData);
     }
 
     if (req.method === 'POST' && pathname === '/api/dev/clear-audits') {
+      if (!isManagerAuthorized(managerHubDb, req)) {
+        return sendJson(res, 401, { error: 'يرجى تسجيل دخول مدير الوكلاء لتصفير السجل', managerPinRequired: true });
+      }
       const resData = clearAuditLogsOnly(db, DATA_DIR);
       return sendJson(res, 200, resData);
     }
@@ -2873,18 +2936,21 @@ server.listen(activePort, HOST, () => {
   console.log(`  - Database (SQLite WAL):  ${dbPath}`);
   console.log(`=============================================================`);
   if (process.env.AUTO_OPEN_BROWSER === '1' && process.platform === 'win32') {
-    try {
-      const { spawn } = require('node:child_process');
-      spawn('cmd.exe', ['/c', 'start', '', `http://${HOST}:${activePort}`], { detached: true, stdio: 'ignore' }).unref();
-    } catch (_) {}
+    const openHost = HOST === '0.0.0.0' ? '127.0.0.1' : HOST;
+    openWindowsDesktopApp(`http://${openHost}:${activePort}`, BASE_DATA_DIR);
   }
 });
 
 function gracefulShutdown() {
   for (const conn of dbPool.values()) {
+    try { conn.exec('PRAGMA wal_checkpoint(TRUNCATE);'); } catch (_) {}
     try { conn.close(); } catch (_) {}
   }
   dbPool.clear();
+  try {
+    managerHubDb.exec('PRAGMA wal_checkpoint(TRUNCATE);');
+    managerHubDb.close();
+  } catch (_) {}
   process.exit(0);
 }
 process.on('SIGINT', gracefulShutdown);

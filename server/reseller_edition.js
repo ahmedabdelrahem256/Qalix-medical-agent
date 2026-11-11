@@ -16,10 +16,12 @@ const {
   SYSTEM_PRESETS,
   buildAgentInfoFromSystem,
   initSystemSchema,
+  openManagerHubDb,
   seedSystemGenesisAudit,
   seedGenericSystemProposals,
   createIsolatedSystem
 } = require('./systems_manager');
+const { generateSilentDesktopVbs } = require('./windows_app_launcher');
 
 function copyDirFiltered(src, dest, skipNames = new Set()) {
   if (!fs.existsSync(src)) return;
@@ -57,10 +59,14 @@ function generateWindowsOneClickInstallBat({ appShortcutName = 'Qalix Agents & D
     '  pause & exit /b 1',
     ')',
     'echo [2/3] Creating Desktop and Start Menu shortcuts with official Qalix icon ...',
-    `powershell -NoProfile -ExecutionPolicy Bypass -Command "$ws = New-Object -ComObject WScript.Shell; $desk = [Environment]::GetFolderPath('Desktop'); $prog = [Environment]::GetFolderPath('Programs'); $ico = Join-Path $env:LOCALAPPDATA '${installFolderName}\\${iconRelPath}'; foreach($d in @($desk,$prog)){ $sc=$ws.CreateShortcut((Join-Path $d '${appShortcutName}.lnk')); $sc.TargetPath=(Join-Path $env:LOCALAPPDATA '${installFolderName}\\${launchBatName}'); $sc.WorkingDirectory=(Join-Path $env:LOCALAPPDATA '${installFolderName}'); if(Test-Path $ico){ $sc.IconLocation=$ico }; $sc.Save() }"`,
+    `powershell -NoProfile -ExecutionPolicy Bypass -Command "$ws = New-Object -ComObject WScript.Shell; $desk = [Environment]::GetFolderPath('Desktop'); $prog = [Environment]::GetFolderPath('Programs'); $tDir = Join-Path $env:LOCALAPPDATA '${installFolderName}'; $vbs = Join-Path $tDir 'Qalix_Desktop_App.vbs'; $ico = Join-Path $tDir '${iconRelPath}'; foreach($d in @($desk,$prog)){ $sc=$ws.CreateShortcut((Join-Path $d '${appShortcutName}.lnk')); if(Test-Path $vbs){ $sc.TargetPath=(Join-Path $env:SystemRoot 'System32\\wscript.exe'); $sc.Arguments=('//nologo \\"' + $vbs + '\\"') } else { $sc.TargetPath=(Join-Path $tDir '${launchBatName}') }; $sc.WorkingDirectory=$tDir; if(Test-Path $ico){ $sc.IconLocation=$ico }; $sc.Save() }"`,
     'echo [3/3] Installation completed cleanly!',
-    'echo Launching application ...',
-    `start "" "%TARGET_DIR%\\${launchBatName}"`,
+    'echo Launching Qalix Windows Application ...',
+    'if exist "%TARGET_DIR%\\Qalix_Desktop_App.vbs" (',
+    '  start "" wscript.exe //nologo "%TARGET_DIR%\\Qalix_Desktop_App.vbs"',
+    ') else (',
+    `  start "" "%TARGET_DIR%\\${launchBatName}"`,
+    ')',
     'pause',
     ''
   ].join('\r\n');
@@ -120,7 +126,8 @@ function buildCleanResellerEdition(options = {}) {
   copyDirFiltered(path.join(rootDir, 'server'), path.join(editionDir, 'server'));
 
   const safeRootFiles = [
-    'CREATE_BACKUP.bat'
+    'CREATE_BACKUP.bat',
+    'package.json'
   ];
   for (const fname of safeRootFiles) {
     const srcFile = path.join(rootDir, fname);
@@ -149,7 +156,8 @@ function buildCleanResellerEdition(options = {}) {
     '  echo [خطأ] لم يتم العثور على Node.js.',
     '  echo - لويندوز 64-بت: ثبّت Node.js 22 LTS ^(x64^) أو أحدث.',
     '  echo - لويندوز 32-بت: ثبّت Node.js 22 LTS ^(win-x86 32-bit^).',
-    '  pause & exit /b 1',
+    '  if not "%QALIX_SILENT%"=="1" pause',
+    '  exit /b 1',
     ')',
     'set "SQLITE_FLAG="',
     '"%NODE_BIN%" -e "require(\'node:sqlite\')" >nul 2>&1',
@@ -157,16 +165,18 @@ function buildCleanResellerEdition(options = {}) {
     '  "%NODE_BIN%" --experimental-sqlite -e "require(\'node:sqlite\')" >nul 2>&1',
     '  if errorlevel 1 (',
     '    echo [خطأ] إصدار Node.js الحالي لا يدعم SQLite المدمج. ثبّت Node.js 22.5+ LTS ^(32-bit أو 64-bit^).',
-    '    pause & exit /b 1',
+    '    if not "%QALIX_SILENT%"=="1" pause',
+    '    exit /b 1',
     '  )',
     '  set "SQLITE_FLAG=--experimental-sqlite"',
     ')',
     'set AUTO_OPEN_BROWSER=1',
     '"%NODE_BIN%" %SQLITE_FLAG% "server\\agent_server.js"',
-    'pause',
+    'if not "%QALIX_SILENT%"=="1" pause',
     ''
   ].join('\r\n');
   fs.writeFileSync(path.join(editionDir, 'START_AGENT_PANEL.bat'), startBat, 'utf8');
+  fs.writeFileSync(path.join(editionDir, 'Qalix_Desktop_App.vbs'), generateSilentDesktopVbs('START_AGENT_PANEL.bat'), 'utf8');
 
   const installBat = generateWindowsOneClickInstallBat({
     appShortcutName: isQalixSuiteEdition ? 'Qalix Agents & Distributors Management' : 'Universal Agents & Distributors Management',
@@ -251,14 +261,20 @@ function buildCleanResellerEdition(options = {}) {
   try {
     initSystemSchema(cleanDb);
     cleanDb.prepare("INSERT INTO agent_private_settings(key, value) VALUES('clean_production_mode', '1') ON CONFLICT(key) DO UPDATE SET value='1'").run();
-    cleanDb.prepare("INSERT INTO agent_private_settings(key, value) VALUES('platform_owner_name', ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").run(buyerOwnerName);
-    cleanDb.prepare("INSERT INTO agent_private_settings(key, value) VALUES('platform_owner_phone', '') ON CONFLICT(key) DO UPDATE SET value=''").run();
     seedGenericSystemProposals(cleanDb, primaryManifest);
     seedSystemGenesisAudit(cleanDb, 'reseller_clean_release', 'نسخة وكيل متعددة المنظومات مصفرة البيانات وجاهزة للتشغيل التجاري المباشر');
     cleanDb.exec('PRAGMA wal_checkpoint(TRUNCATE);');
     cleanDb.exec('PRAGMA journal_mode = DELETE;');
   } finally {
     try { cleanDb.close(); } catch (_) {}
+  }
+
+  // Initialize clean zeroed manager_hub.db (zero key requests, zero sessions, zero synced snapshots)
+  const cleanMgrDb = openManagerHubDb(dataDest);
+  try {
+    cleanMgrDb.exec('PRAGMA wal_checkpoint(TRUNCATE); PRAGMA journal_mode = DELETE;');
+  } finally {
+    try { cleanMgrDb.close(); } catch (_) {}
   }
 
   // 4. Optional additional clean system presets (zero data, separate DB folders)
@@ -275,29 +291,38 @@ function buildCleanResellerEdition(options = {}) {
         agentTitleAr: `وكيل ${SYSTEM_PRESETS[presetId].nameAr}`,
         activateNow: false
       }, { cleanOwnerPhone: true });
+      const extraDbPath = path.join(dataDest, 'systems', presetId, 'agent.db');
+      if (fs.existsSync(extraDbPath)) {
+        const edb = new DatabaseSync(extraDbPath);
+        try { edb.exec('PRAGMA wal_checkpoint(TRUNCATE); PRAGMA journal_mode = DELETE;'); } finally { try { edb.close(); } catch (_) {} }
+      }
     }
   }
 
-  // Write buyer quick-start guide
+  // Write buyer / Agents Manager quick-start guide (100% Offline Windows v1.0)
   const readmeText = [
     '====================================================================',
-    '  منظومة إدارة الوكيل والموزعين الشاملة — النسخة التجارية المصفّرة',
+    '  كالكس لإدارة الوكلاء والموزعين — Qalix Agents & Distributors',
+    '  النسخة التجريبية الأولى (v1.0) — تعمل أوفلاين بالكامل على ويندوز',
     '====================================================================',
     '',
-    '1. للتشغيل المباشر على ويندوز:',
-    '   شغّل ملف START_AGENT_PANEL.bat أو نفّذ: node server/agent_server.js',
+    '1. التثبيت والتشغيل كبرنامج ويندوز حديث بدون نافذة أوامر أو متصفح تقليدي:',
+    '   - للتثبيت وإنشاء اختصارات سطح المكتب وقائمة ابدأ بأيقونة كالكس الرسمية:',
+    '     شغّل ملف INSTALL_ON_WINDOWS.bat (يثبت البرنامج في مجلد المستخدم القابل للكتابة).',
+    '   - أو للتشغيل الفوري المباشر كبرنامج ويندوز مستقل:',
+    '     اضغط مرتين على Qalix_Desktop_App.vbs',
     '',
-    '2. طبيعة هذه النسخة:',
-    '   - نظام عام لإدارة الموزعين لبيع أي منتج أو خدمة أو منظومة برمجية.',
-    '   - مصفّرة بالكامل وجاهزة للبيع والتسليم (0 موزعين، 0 صفقات، 0 طلبات دفع).',
-    '   - يمكنك من داخل اللوحة إضافة منظومات متخصصة معزولة (مثل منظومات كالكس أو غيرها).',
+    '2. دستور كالكس — 100% أوفلاين (Air-Gapped):',
+    '   - هذه المنظومة والـ 11 منظومة بداخلها تعمل محلياً بالكامل بدون أي اتصال سحابي.',
+    '   - جميع البيانات والصفقات والموزعين تُحفظ فوراً وبأمان داخل مجلد data\\ المحلي.',
     '',
-    '3. تعدد المنظومات والعزل الكامل:',
-    '   - كل منظومة تضيفها من شريط «إدارة المنظومات المعزولة» تحصل على قاعدة بيانات مستقلة',
-    '     (data/systems/<systemId>/agent.db) ومجلد بوابات ومستندات منفصل تماماً.',
+    '3. سياسة مفاتيح التراخيص (إصدار يدوي من المنصة فقط):',
+    '   - لا تصدر هذه المنظومة ولا أي منظومة من الـ 11 منظومة بداخلها مفاتيح تراخيص.',
+    '   - مفاتيح التراخيص تُصدر حصراً داخل المنصة الأم بواسطة المطور، ويجلبها مدير',
+    '     الوكلاء ويسلّمها يدوياً للموزع عند الطلب.',
     '',
-    '4. ضبط القناة السرية للوكيل مع صاحب المنصة:',
-    '   - من داخل لوحة الوكيل -> قسم القناة السرية مع صاحب المنصة، أدخل رقم صاحب المنصة.',
+    '4. الإزالة النظيفة من ويندوز:',
+    '   - لإزالة الاختصارات والنسخة المثبتة دون المساس بالنسخة المضغوطة: UNINSTALL_FROM_WINDOWS.bat',
     '====================================================================',
     ''
   ].join('\r\n');
