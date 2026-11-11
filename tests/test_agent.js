@@ -1352,7 +1352,108 @@ function req(method, urlPath, body) {
       }
     );
 
-    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/73 PASSED ===`);
+    // 74. Unified Rep -> Tech -> Distributor -> Agent -> Agents Manager (مدير الوكلاء) Full Traceability & Oversight
+    const repSaveRes = await req('POST', '/api/field-team', {
+      id: 'tm_rep_u1',
+      distributorId: sampleDistId,
+      name: 'أ. محمود سلامة',
+      role: 'rep',
+      phone: '01011223344',
+      zone: 'وسط البلد'
+    });
+    const techSaveRes = await req('POST', '/api/field-team', {
+      id: 'tm_tech_u1',
+      distributorId: sampleDistId,
+      name: 'م. طارق حسين',
+      role: 'tech',
+      phone: '01022334455',
+      zone: 'وسط البلد'
+    });
+
+    const unifiedRepStep = await req('POST', '/api/unified-pipeline', {
+      caseCode: 'CASE-UNIFIED-01',
+      distributorId: sampleDistId,
+      customerName: 'مركز النيل التخصصي الموحد',
+      contactInfo: '01033445566 - وسط البلد',
+      repName: 'أ. محمود سلامة',
+      repAction: 'زار العميل ميدانياً وسلم النسخة التجريبية وعرض السعر',
+      techName: 'م. طارق حسين',
+      stage: 'rep_visited',
+      actorRole: 'rep',
+      actorName: 'أ. محمود سلامة',
+      actionText: 'إتمام الزيارة الأولى والتجريب'
+    });
+
+    const unifiedPayReq = await req('POST', '/api/payment-requests', {
+      distributorId: sampleDistId,
+      customerName: 'مركز النيل التخصصي الموحد',
+      contactName: '01033445566',
+      tier: 'professional',
+      paymentChannel: 'إنستاباي (InstaPay)',
+      paymentRef: 'IPN-UNIF-01',
+      repName: 'أ. محمود سلامة',
+      techName: 'م. طارق حسين'
+    });
+    const unifiedApprove = await req('POST', `/api/payment-requests/${unifiedPayReq.body?.request?.id}/approve`, {
+      activationKey: 'QLX2-UNI-777'
+    });
+
+    const unifiedTechStep = await req('POST', '/api/unified-pipeline', {
+      caseCode: 'CASE-UNIFIED-01',
+      distributorId: sampleDistId,
+      customerName: 'مركز النيل التخصصي الموحد',
+      techName: 'م. طارق حسين',
+      techAction: 'ثبت المنظومة وفعّل المفتاح QLX2-UNI-777 ودرب الفريق',
+      stage: 'completed',
+      outcome: 'تم التركيب والتدريب والتسليم النهائي بنجاح 100%',
+      actorRole: 'tech',
+      actorName: 'م. طارق حسين',
+      actionText: 'اكتمال التركيب والتفعيل'
+    });
+
+    const unifiedListRes = await req('GET', '/api/unified-pipeline');
+    const uCase = (unifiedListRes.body?.cases || []).find(c => c.case_code === 'CASE-UNIFIED-01');
+
+    const ownerActivityRes = await req('GET', '/api/owner/agents-activity');
+    const gt = ownerActivityRes.body?.grandTotals || {};
+
+    check('74. الترابط الموحد الكامل (ماذا فعل المندوب ← الفني ← الموزع ← الوكيل ← النتيجة) + متابعة مدير الوكلاء المتقدمة',
+      repSaveRes.status === 200 &&
+      techSaveRes.status === 200 &&
+      unifiedRepStep.status === 200 &&
+      unifiedApprove.status === 200 &&
+      unifiedTechStep.status === 200 &&
+      unifiedListRes.status === 200 &&
+      uCase &&
+      uCase.rep_action.includes('زار العميل') &&
+      uCase.tech_action.includes('ثبت المنظومة') &&
+      uCase.activation_key === 'QLX2-UNI-777' &&
+      uCase.stage === 'completed' &&
+      Array.isArray(uCase.timeline) && uCase.timeline.length >= 4 &&
+      ownerActivityRes.status === 200 &&
+      gt.repsCount >= 1 &&
+      gt.techsCount >= 1 &&
+      gt.repActionsCount >= 1 &&
+      gt.techActionsCount >= 1 &&
+      gt.unifiedCasesCount >= 1 &&
+      Boolean(ownerActivityRes.body.reportSha256) &&
+      typeof ownerActivityRes.body.waBrief === 'string' &&
+      portalAfterPay.body.includes('logUnifiedActionPrompt'),
+      {
+        statuses: [repSaveRes.status, techSaveRes.status, unifiedRepStep.status, unifiedApprove.status, unifiedTechStep.status, unifiedListRes.status, ownerActivityRes.status],
+        caseCode: uCase?.case_code,
+        repAction: uCase?.rep_action,
+        techAction: uCase?.tech_action,
+        stage: uCase?.stage,
+        key: uCase?.activation_key,
+        timelineCount: uCase?.timeline?.length,
+        hasLogBtn: portalAfterPay.body.includes('logUnifiedActionPrompt'),
+        hasSha: Boolean(ownerActivityRes.body?.reportSha256),
+        ownerGrandTotals: gt
+      }
+    );
+
+    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/74 PASSED ===`);
     for (const r of results) console.log(' ✅', r);
   } finally {
     srv.kill('SIGINT');

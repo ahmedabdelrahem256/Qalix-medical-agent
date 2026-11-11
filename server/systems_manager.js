@@ -428,6 +428,50 @@ function initSystemSchema(targetDb) {
       updated_at TEXT NOT NULL,
       FOREIGN KEY (distributor_id) REFERENCES distributors(id)
     );
+
+    CREATE TABLE IF NOT EXISTS distributor_field_team (
+      id TEXT PRIMARY KEY,
+      distributor_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      role TEXT NOT NULL,
+      phone TEXT DEFAULT '',
+      zone TEXT DEFAULT '',
+      fee REAL NOT NULL DEFAULT 0,
+      status TEXT NOT NULL DEFAULT 'available',
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (distributor_id) REFERENCES distributors(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS unified_workflow_cases (
+      id TEXT PRIMARY KEY,
+      case_code TEXT UNIQUE NOT NULL,
+      distributor_id TEXT NOT NULL,
+      customer_name TEXT NOT NULL,
+      contact_info TEXT DEFAULT '',
+      governorate TEXT DEFAULT '',
+      system_name TEXT DEFAULT '',
+      rep_name TEXT DEFAULT '',
+      rep_action TEXT DEFAULT '',
+      rep_at TEXT DEFAULT '',
+      tech_name TEXT DEFAULT '',
+      tech_action TEXT DEFAULT '',
+      tech_at TEXT DEFAULT '',
+      trial_code TEXT DEFAULT '',
+      trial_device TEXT DEFAULT '',
+      trial_start_date TEXT DEFAULT '',
+      trial_end_date TEXT DEFAULT '',
+      payment_req_code TEXT DEFAULT '',
+      payment_status TEXT DEFAULT '',
+      activation_key TEXT DEFAULT '',
+      deal_no TEXT DEFAULT '',
+      stage TEXT NOT NULL DEFAULT 'rep_pending',
+      outcome TEXT DEFAULT '',
+      timeline_json TEXT DEFAULT '[]',
+      notified_agent INTEGER NOT NULL DEFAULT 1,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (distributor_id) REFERENCES distributors(id)
+    );
   `);
 
   initializeTerritoryTables(targetDb);

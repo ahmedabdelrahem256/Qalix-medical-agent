@@ -733,12 +733,136 @@ function getSummaryResponse() {
   };
 }
 
+function upsertUnifiedCase(targetDb, patch = {}) {
+  try {
+    const distId = String(patch.distributorId || '').trim();
+    const customerName = String(patch.customerName || '').trim().slice(0, 140);
+    if (!distId || !customerName) return null;
+
+    const now = new Date().toISOString();
+    const caseCodeIn = String(patch.caseCode || patch.trialCode || '').trim().toUpperCase().slice(0, 32);
+    const payCodeIn = String(patch.paymentReqCode || '').trim().toUpperCase().slice(0, 32);
+
+    let row = null;
+    if (caseCodeIn) {
+      row = targetDb.prepare('SELECT * FROM unified_workflow_cases WHERE UPPER(case_code) = ? OR UPPER(trial_code) = ?').get(caseCodeIn, caseCodeIn);
+    }
+    if (!row && payCodeIn) {
+      row = targetDb.prepare('SELECT * FROM unified_workflow_cases WHERE UPPER(payment_req_code) = ?').get(payCodeIn);
+    }
+    if (!row) {
+      row = targetDb.prepare('SELECT * FROM unified_workflow_cases WHERE distributor_id = ? AND customer_name = ? ORDER BY updated_at DESC LIMIT 1').get(distId, customerName);
+    }
+
+    let timeline = [];
+    if (row && row.timeline_json) {
+      try { timeline = JSON.parse(row.timeline_json); } catch (_) { timeline = []; }
+    }
+    if (patch.timelineEvent) {
+      timeline.push({
+        at: now,
+        actorRole: String(patch.timelineEvent.actorRole || 'distributor'),
+        actorName: String(patch.timelineEvent.actorName || ''),
+        stage: String(patch.timelineEvent.stage || patch.stage || (row ? row.stage : 'rep_pending')),
+        actionText: String(patch.timelineEvent.actionText || '').slice(0, 300)
+      });
+      if (timeline.length > 40) timeline = timeline.slice(-40);
+    }
+
+    const distRow = targetDb.prepare('SELECT governorate FROM distributors WHERE id = ?').get(distId);
+    const gov = String(patch.governorate || (row && row.governorate) || (distRow && distRow.governorate) || '').slice(0, 80);
+    const effRepAction = String(patch.repAction || ((row && row.rep_action) ? '' : (patch.repActionFallback || '')) || '').trim().slice(0, 260);
+    const effTechAction = String(patch.techAction || ((row && row.tech_action) ? '' : (patch.techActionFallback || '')) || '').trim().slice(0, 260);
+
+    if (row) {
+      const nextRepAt = effRepAction ? (patch.repAt || now) : (row.rep_at || '');
+      const nextTechAt = effTechAction ? (patch.techAt || now) : (row.tech_at || '');
+      targetDb.prepare(`
+        UPDATE unified_workflow_cases SET
+          contact_info = CASE WHEN ? <> '' THEN ? ELSE contact_info END,
+          governorate = ?,
+          system_name = CASE WHEN ? <> '' THEN ? ELSE system_name END,
+          rep_name = CASE WHEN ? <> '' THEN ? ELSE rep_name END,
+          rep_action = CASE WHEN ? <> '' THEN ? ELSE rep_action END,
+          rep_at = ?,
+          tech_name = CASE WHEN ? <> '' THEN ? ELSE tech_name END,
+          tech_action = CASE WHEN ? <> '' THEN ? ELSE tech_action END,
+          tech_at = ?,
+          trial_code = CASE WHEN ? <> '' THEN ? ELSE trial_code END,
+          trial_device = CASE WHEN ? <> '' THEN ? ELSE trial_device END,
+          trial_start_date = CASE WHEN ? <> '' THEN ? ELSE trial_start_date END,
+          trial_end_date = CASE WHEN ? <> '' THEN ? ELSE trial_end_date END,
+          payment_req_code = CASE WHEN ? <> '' THEN ? ELSE payment_req_code END,
+          payment_status = CASE WHEN ? <> '' THEN ? ELSE payment_status END,
+          activation_key = CASE WHEN ? <> '' THEN ? ELSE activation_key END,
+          deal_no = CASE WHEN ? <> '' THEN ? ELSE deal_no END,
+          stage = CASE WHEN ? <> '' THEN ? ELSE stage END,
+          outcome = CASE WHEN ? <> '' THEN ? ELSE outcome END,
+          timeline_json = ?,
+          notified_agent = 1,
+          updated_at = ?
+        WHERE id = ?
+      `).run(
+        String(patch.contactInfo || ''), String(patch.contactInfo || ''),
+        gov,
+        String(patch.systemName || ''), String(patch.systemName || ''),
+        String(patch.repName || ''), String(patch.repName || ''),
+        effRepAction, effRepAction,
+        nextRepAt,
+        String(patch.techName || ''), String(patch.techName || ''),
+        effTechAction, effTechAction,
+        nextTechAt,
+        String(patch.trialCode || ''), String(patch.trialCode || ''),
+        String(patch.trialDevice || ''), String(patch.trialDevice || ''),
+        String(patch.trialStartDate || ''), String(patch.trialStartDate || ''),
+        String(patch.trialEndDate || ''), String(patch.trialEndDate || ''),
+        payCodeIn, payCodeIn,
+        String(patch.paymentStatus || ''), String(patch.paymentStatus || ''),
+        String(patch.activationKey || ''), String(patch.activationKey || ''),
+        String(patch.dealNo || ''), String(patch.dealNo || ''),
+        String(patch.stage || ''), String(patch.stage || ''),
+        String(patch.outcome || ''), String(patch.outcome || ''),
+        JSON.stringify(timeline),
+        now,
+        row.id
+      );
+      return targetDb.prepare('SELECT * FROM unified_workflow_cases WHERE id = ?').get(row.id);
+    }
+
+    const id = 'case_' + crypto.randomBytes(6).toString('hex');
+    const finalCaseCode = caseCodeIn || ('CASE-' + crypto.randomBytes(3).toString('hex').toUpperCase());
+    targetDb.prepare(`
+      INSERT INTO unified_workflow_cases(
+        id, case_code, distributor_id, customer_name, contact_info, governorate, system_name,
+        rep_name, rep_action, rep_at, tech_name, tech_action, tech_at,
+        trial_code, trial_device, trial_start_date, trial_end_date,
+        payment_req_code, payment_status, activation_key, deal_no,
+        stage, outcome, timeline_json, notified_agent, created_at, updated_at
+      ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
+    `).run(
+      id, finalCaseCode, distId, customerName,
+      String(patch.contactInfo || '').slice(0, 160), gov, String(patch.systemName || ACTIVE_SYSTEM.nameAr || '').slice(0, 140),
+      String(patch.repName || '').slice(0, 100), effRepAction, effRepAction ? now : '',
+      String(patch.techName || '').slice(0, 100), effTechAction, effTechAction ? now : '',
+      String(patch.trialCode || '').slice(0, 32), String(patch.trialDevice || '').slice(0, 100),
+      String(patch.trialStartDate || '').slice(0, 20), String(patch.trialEndDate || '').slice(0, 20),
+      payCodeIn, String(patch.paymentStatus || '').slice(0, 30),
+      String(patch.activationKey || '').slice(0, 80), String(patch.dealNo || '').slice(0, 40),
+      String(patch.stage || 'rep_pending').slice(0, 40), String(patch.outcome || '').slice(0, 260),
+      JSON.stringify(timeline), now, now
+    );
+    return targetDb.prepare('SELECT * FROM unified_workflow_cases WHERE id = ?').get(id);
+  } catch (_) {
+    return null;
+  }
+}
+
 const server = http.createServer(async (req, res) => {
   try {
     if (req.method === 'OPTIONS') {
       res.writeHead(204, {
         'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type',
         'Access-Control-Max-Age': '86400'
       });
@@ -851,6 +975,23 @@ const server = http.createServer(async (req, res) => {
       );
 
       logAudit('create_deal', `تسجيل صفقة ${dealNo} عبر الموزع ${dist.code} للعيادة "${clinicName}" بالسعر الثابت ${calc.fixedPrice} ج.م (عمولة الموزع: ${calc.distributorCommission} ج.م، صافي الوكيل: ${calc.agentNetAmount} ج.م)`);
+      upsertUnifiedCase(db, {
+        distributorId: dist.id,
+        customerName: clinicName,
+        contactInfo: `${doctorName}${clinicPhone ? ' - ' + clinicPhone : ''}`,
+        governorate: city || dist.governorate,
+        dealNo,
+        activationKey: licenseRef,
+        paymentStatus: status === 'completed' ? 'approved' : 'pending',
+        stage: status === 'completed' ? 'completed' : 'payment_pending',
+        outcome: status === 'completed' ? `تم إغلاق وتفعيل الصفقة (${dealNo})` : `صفقة معلقة قيد التحصيل (${dealNo})`,
+        timelineEvent: {
+          actorRole: 'agent',
+          actorName: AGENT_INFO.titleAr || 'الوكيل',
+          stage: status === 'completed' ? 'completed' : 'payment_pending',
+          actionText: `تسجيل الصفقة ${dealNo} بقيمة ${calc.fixedPrice} ج.م (${status === 'completed' ? 'مكتملة بمفتاح ' + licenseRef : 'معلقة'})`
+        }
+      });
       return sendJson(res, 200, { ok: true, summary: getSummaryResponse() });
     }
 
@@ -1493,6 +1634,25 @@ const server = http.createServer(async (req, res) => {
       );
 
       logAudit('payment_request_submitted', `استلام طلب تأكيد دفع بالريسيت (${reqCode}) من الموزع ${dist.code} لصالح "${customerName}" بمبلغ صافي ${calc.agentNetAmount} ج.م عبر ${paymentChannel}`);
+      upsertUnifiedCase(db, {
+        distributorId: dist.id,
+        customerName,
+        contactInfo: `${contactName}${customerPhone ? ' - ' + customerPhone : ''}`,
+        governorate: city || dist.governorate,
+        repName: String(body.repName || ''),
+        repActionFallback: String(body.repName || '') ? `أتم العرض والتعاقد مع العميل عبر الموزع ${dist.code}` : '',
+        techName: String(body.techName || ''),
+        paymentReqCode: reqCode,
+        paymentStatus: 'pending',
+        stage: 'payment_pending',
+        outcome: `بانتظار مراجعة الوكيل لريسيت الدفع (${reqCode})`,
+        timelineEvent: {
+          actorRole: 'distributor',
+          actorName: dist.name,
+          stage: 'payment_pending',
+          actionText: `أرسل الموزع طلب تأكيد دفع بالريسيت (${reqCode}) بمبلغ صافي ${calc.agentNetAmount} ج.م عبر ${paymentChannel}`
+        }
+      });
       const createdRow = db.prepare(`
         SELECT pr.*, d.name AS distributor_name, d.code AS distributor_code, d.phone AS distributor_phone
         FROM payment_requests pr JOIN distributors d ON d.id = pr.distributor_id WHERE pr.id = ?
@@ -1535,6 +1695,22 @@ const server = http.createServer(async (req, res) => {
         .run(activationKey, dealId, now, body.notes ? String(body.notes).slice(0, 500) : null, id);
 
       logAudit('payment_request_approved', `تأكيد استلام الدفع لطلب ${pr.req_code} (${dealNo}) وتفعيل المفتاح ${activationKey} للموزع ${pr.distributor_code}`);
+      upsertUnifiedCase(db, {
+        distributorId: pr.distributor_id,
+        customerName: pr.customer_name,
+        paymentReqCode: pr.req_code,
+        paymentStatus: 'approved',
+        activationKey,
+        dealNo,
+        stage: 'tech_deploying',
+        outcome: `تم تأكيد الدفع وإصدار المفتاح ${activationKey} — جاهز لتشغيل الفني`,
+        timelineEvent: {
+          actorRole: 'agent',
+          actorName: AGENT_INFO.titleAr || 'الوكيل',
+          stage: 'tech_deploying',
+          actionText: `اعتمد الوكيل الدفع (${pr.agent_net_amount} ج.م) وأصدر المفتاح ${activationKey} للصفقة ${dealNo}`
+        }
+      });
 
       const waText = [
         `✅ *تم تأكيد استلام الدفع وإصدار مفتاح التفعيل — ${ACTIVE_SYSTEM.nameAr}*`,
@@ -1654,6 +1830,30 @@ const server = http.createServer(async (req, res) => {
 
       const stText = STAGE_LABELS[stage] || stage;
       logAudit('trial_stage_notified', `إخطار الوكيل ببطاقة الموزع (${dist.code}) للعميل "${customerName}" [${reportCode}] — المرحلة: ${stText}`);
+      upsertUnifiedCase(db, {
+        caseCode: reportCode,
+        distributorId: dist.id,
+        customerName,
+        contactInfo,
+        governorate,
+        systemName: sysName,
+        repName,
+        repActionFallback: repName ? (notes || `متابعة المندوب (${stText})`) : '',
+        techName,
+        techActionFallback: (techName && (stage === 'tech_assigned' || stage === 'tech_deploying' || stage === 'completed')) ? (notes || stText) : '',
+        trialCode: reportCode,
+        trialDevice: trialDeviceOrId,
+        trialStartDate: startDate,
+        trialEndDate: endDate,
+        stage,
+        outcome: notes || stText,
+        timelineEvent: {
+          actorRole: repName && stage.startsWith('rep') ? 'rep' : (techName && (stage.startsWith('tech') || stage === 'completed') ? 'tech' : 'distributor'),
+          actorName: (stage.startsWith('rep') && repName) ? repName : ((stage.startsWith('tech') || stage === 'completed') && techName ? techName : dist.name),
+          stage,
+          actionText: `${stText}${notes ? ' — ' + notes : ''}`
+        }
+      });
 
       const waText = [
         `📡 *إخطار وتحديث بطاقة العميل للوكيل — ${sysName}*`,
@@ -1673,6 +1873,240 @@ const server = http.createServer(async (req, res) => {
         FROM trial_stage_reports tr JOIN distributors d ON d.id = tr.distributor_id WHERE tr.id = ?
       `).get(rowId);
       return sendJson(res, existing ? 200 : 201, { ok: true, report: savedRow, waText });
+    }
+
+    /* ---------------- Unified Field Team & Full Rep -> Tech -> Distributor -> Agent -> Owner Pipeline ---------------- */
+    if (req.method === 'GET' && pathname === '/api/field-team') {
+      const distIdFilter = String(url.searchParams.get('distributorId') || '').trim();
+      const rows = distIdFilter
+        ? db.prepare(`
+            SELECT ft.*, d.name AS distributor_name, d.code AS distributor_code
+            FROM distributor_field_team ft JOIN distributors d ON d.id = ft.distributor_id
+            WHERE ft.distributor_id = ? ORDER BY ft.created_at DESC
+          `).all(distIdFilter)
+        : db.prepare(`
+            SELECT ft.*, d.name AS distributor_name, d.code AS distributor_code
+            FROM distributor_field_team ft JOIN distributors d ON d.id = ft.distributor_id
+            ORDER BY ft.created_at DESC
+          `).all();
+      return sendJson(res, 200, { ok: true, members: rows });
+    }
+
+    if (req.method === 'POST' && pathname === '/api/field-team') {
+      const body = await readJsonBody(req);
+      const rawDistId = String(body.distributorId || '').trim();
+      const rawDistCode = String(body.distributorCode || '').trim().toUpperCase();
+      const dist = rawDistId
+        ? db.prepare('SELECT * FROM distributors WHERE id = ?').get(rawDistId)
+        : db.prepare('SELECT * FROM distributors WHERE UPPER(code) = ?').get(rawDistCode);
+      if (!dist) return sendJson(res, 404, { error: 'الموزع غير مسجل في هذه المنظومة' });
+
+      const name = String(body.name || '').trim().slice(0, 100);
+      if (!name) return sendJson(res, 400, { error: 'اسم المندوب أو الفني مطلوب' });
+      const role = body.role === 'tech' ? 'tech' : 'rep';
+      const phone = String(body.phone || '').trim().slice(0, 30);
+      const zone = String(body.zone || dist.governorate || '').trim().slice(0, 80);
+      const fee = Number(body.fee || 0) || 0;
+      const status = ['available', 'busy', 'off'].includes(body.status) ? body.status : 'available';
+      const id = String(body.id || '').trim().slice(0, 40) || ('tm_' + crypto.randomBytes(5).toString('hex'));
+      const now = new Date().toISOString();
+
+      db.prepare(`
+        INSERT INTO distributor_field_team(id, distributor_id, name, role, phone, zone, fee, status, created_at)
+        VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(id) DO UPDATE SET
+          name = excluded.name, role = excluded.role, phone = excluded.phone,
+          zone = excluded.zone, fee = excluded.fee, status = excluded.status
+      `).run(id, dist.id, name, role, phone, zone, fee, status, now);
+      logAudit('field_team_sync', `تحديث فريق الموزع ${dist.code}: ${role === 'rep' ? 'مندوب' : 'فني'} "${name}" (${zone}) - ${status}`);
+      const member = db.prepare('SELECT * FROM distributor_field_team WHERE id = ?').get(id);
+      return sendJson(res, 200, { ok: true, member });
+    }
+
+    if (req.method === 'DELETE' && pathname.startsWith('/api/field-team/')) {
+      const id = pathname.split('/')[3];
+      db.prepare('DELETE FROM distributor_field_team WHERE id = ?').run(id);
+      return sendJson(res, 200, { ok: true });
+    }
+
+    if (req.method === 'GET' && pathname === '/api/unified-pipeline') {
+      const distFilter = String(url.searchParams.get('distributorId') || '').trim();
+      const rawRows = distFilter
+        ? db.prepare(`
+            SELECT uc.*, d.name AS distributor_name, d.code AS distributor_code, d.phone AS distributor_phone
+            FROM unified_workflow_cases uc JOIN distributors d ON d.id = uc.distributor_id
+            WHERE uc.distributor_id = ? ORDER BY uc.updated_at DESC
+          `).all(distFilter)
+        : db.prepare(`
+            SELECT uc.*, d.name AS distributor_name, d.code AS distributor_code, d.phone AS distributor_phone
+            FROM unified_workflow_cases uc JOIN distributors d ON d.id = uc.distributor_id
+            ORDER BY uc.updated_at DESC
+          `).all();
+
+      const cases = rawRows.map(r => {
+        let timeline = [];
+        try { timeline = JSON.parse(r.timeline_json || '[]'); } catch (_) {}
+        return { ...r, timeline };
+      });
+      const stats = {
+        totalCases: cases.length,
+        repActionsLogged: cases.filter(c => c.rep_action).length,
+        techActionsLogged: cases.filter(c => c.tech_action).length,
+        trialsActive: cases.filter(c => c.stage === 'trial_installed' || c.trial_code).length,
+        paymentsPending: cases.filter(c => c.payment_status === 'pending' || c.stage === 'payment_pending').length,
+        completedCases: cases.filter(c => c.stage === 'completed').length
+      };
+      return sendJson(res, 200, { ok: true, stats, cases });
+    }
+
+    if (req.method === 'POST' && pathname === '/api/unified-pipeline') {
+      const body = await readJsonBody(req);
+      const rawDistId = String(body.distributorId || '').trim();
+      const rawDistCode = String(body.distributorCode || '').trim().toUpperCase();
+      const dist = rawDistId
+        ? db.prepare('SELECT * FROM distributors WHERE id = ?').get(rawDistId)
+        : db.prepare('SELECT * FROM distributors WHERE UPPER(code) = ?').get(rawDistCode);
+      if (!dist) return sendJson(res, 404, { error: 'الموزع غير مسجل في هذه المنظومة' });
+
+      const customerName = String(body.customerName || '').trim().slice(0, 140);
+      if (!customerName) return sendJson(res, 400, { error: 'اسم العميل مطلوب في سلسلة الترابط الموحد' });
+
+      const actorRole = String(body.actorRole || 'distributor').trim();
+      const actorName = String(body.actorName || dist.name).trim();
+      const actionText = String(body.actionText || body.outcome || '').trim();
+      const stage = String(body.stage || 'rep_pending').trim();
+
+      const savedCase = upsertUnifiedCase(db, {
+        caseCode: body.caseCode,
+        distributorId: dist.id,
+        customerName,
+        contactInfo: body.contactInfo,
+        governorate: body.governorate || dist.governorate,
+        systemName: body.systemName || ACTIVE_SYSTEM.nameAr,
+        repName: body.repName,
+        repAction: body.repAction || (actorRole === 'rep' ? actionText : ''),
+        techName: body.techName,
+        techAction: body.techAction || (actorRole === 'tech' ? actionText : ''),
+        trialCode: body.trialCode,
+        trialDevice: body.trialDevice,
+        trialStartDate: body.trialStartDate,
+        trialEndDate: body.trialEndDate,
+        paymentReqCode: body.paymentReqCode,
+        paymentStatus: body.paymentStatus,
+        activationKey: body.activationKey,
+        dealNo: body.dealNo,
+        stage,
+        outcome: body.outcome || actionText,
+        timelineEvent: actionText ? { actorRole, actorName, stage, actionText } : null
+      });
+      logAudit('unified_case_sync', `تحديث سلسلة العمل الموحدة [${savedCase?.case_code || ''}] للعميل "${customerName}" — المرحلة: ${stage}${actionText ? ' | ' + actionText : ''}`);
+      return sendJson(res, 200, { ok: true, caseItem: savedCase });
+    }
+
+    /* ---------------- Agents Manager (مدير الوكلاء) Consolidated Cross-System Oversight ---------------- */
+    if (req.method === 'GET' && pathname === '/api/owner/agents-activity') {
+      systemsRegistry = loadSystemsRegistry(BASE_DATA_DIR, BASE_KITS_DIR);
+      const agentsActivity = [];
+      const grandTotals = {
+        systemsCount: systemsRegistry.systems.length,
+        distributorsCount: 0,
+        repsCount: 0,
+        techsCount: 0,
+        unifiedCasesCount: 0,
+        repActionsCount: 0,
+        techActionsCount: 0,
+        trialsCount: 0,
+        pendingPaymentsCount: 0,
+        completedDealsCount: 0,
+        grossSales: 0,
+        agentNetRevenue: 0
+      };
+
+      for (const sysMeta of systemsRegistry.systems) {
+        const useActiveDb = sysMeta.id === ACTIVE_SYSTEM.id;
+        const paths = getSystemPaths(BASE_DATA_DIR, BASE_KITS_DIR, sysMeta.id);
+        let row = {
+          systemId: sysMeta.id,
+          systemNameAr: sysMeta.nameAr,
+          licensePrefix: sysMeta.licensePrefix,
+          agentTitleAr: sysMeta.agentInfo?.titleAr || '',
+          agentPhone: sysMeta.agentInfo?.phone || '',
+          isActive: useActiveDb,
+          distributorsCount: 0,
+          repsCount: 0,
+          techsCount: 0,
+          unifiedCasesCount: 0,
+          repActionsCount: 0,
+          techActionsCount: 0,
+          trialsCount: 0,
+          pendingPaymentsCount: 0,
+          completedDealsCount: 0,
+          grossSales: 0,
+          agentNetRevenue: 0,
+          activityScore: 0,
+          recentCases: []
+        };
+        if (useActiveDb || fs.existsSync(paths.dbPath)) {
+          const sdb = useActiveDb ? db : new DatabaseSync(paths.dbPath);
+          try {
+            if (!useActiveDb) initSystemSchema(sdb);
+            row.distributorsCount = sdb.prepare('SELECT COUNT(*) AS c FROM distributors').get().c;
+            row.repsCount = sdb.prepare("SELECT COUNT(*) AS c FROM distributor_field_team WHERE role = 'rep'").get().c;
+            row.techsCount = sdb.prepare("SELECT COUNT(*) AS c FROM distributor_field_team WHERE role = 'tech'").get().c;
+            row.unifiedCasesCount = sdb.prepare('SELECT COUNT(*) AS c FROM unified_workflow_cases').get().c;
+            row.repActionsCount = sdb.prepare("SELECT COUNT(*) AS c FROM unified_workflow_cases WHERE rep_action <> ''").get().c;
+            row.techActionsCount = sdb.prepare("SELECT COUNT(*) AS c FROM unified_workflow_cases WHERE tech_action <> ''").get().c;
+            row.trialsCount = sdb.prepare('SELECT COUNT(*) AS c FROM trial_stage_reports').get().c;
+            row.pendingPaymentsCount = sdb.prepare("SELECT COUNT(*) AS c FROM payment_requests WHERE status = 'pending'").get().c;
+            const dStats = sdb.prepare("SELECT COUNT(*) AS c, COALESCE(SUM(fixed_price), 0) AS g, COALESCE(SUM(agent_net_amount), 0) AS n FROM deals WHERE status = 'completed'").get();
+            row.completedDealsCount = dStats.c;
+            row.grossSales = Number(dStats.g || 0);
+            row.agentNetRevenue = Number(dStats.n || 0);
+            row.activityScore = (row.distributorsCount * 10) + (row.repActionsCount * 5) + (row.techActionsCount * 5) + (row.completedDealsCount * 20);
+            row.recentCases = sdb.prepare(`
+              SELECT uc.case_code, uc.customer_name, uc.rep_name, uc.rep_action, uc.tech_name, uc.tech_action,
+                     uc.stage, uc.outcome, uc.updated_at, d.name AS distributor_name, d.code AS distributor_code
+              FROM unified_workflow_cases uc JOIN distributors d ON d.id = uc.distributor_id
+              ORDER BY uc.updated_at DESC LIMIT 6
+            `).all();
+          } finally {
+            if (!useActiveDb) {
+              try { sdb.close(); } catch (_) {}
+            }
+          }
+        }
+        grandTotals.distributorsCount += row.distributorsCount;
+        grandTotals.repsCount += row.repsCount;
+        grandTotals.techsCount += row.techsCount;
+        grandTotals.unifiedCasesCount += row.unifiedCasesCount;
+        grandTotals.repActionsCount += row.repActionsCount;
+        grandTotals.techActionsCount += row.techActionsCount;
+        grandTotals.trialsCount += row.trialsCount;
+        grandTotals.pendingPaymentsCount += row.pendingPaymentsCount;
+        grandTotals.completedDealsCount += row.completedDealsCount;
+        grandTotals.grossSales += row.grossSales;
+        grandTotals.agentNetRevenue += row.agentNetRevenue;
+        agentsActivity.push(row);
+      }
+
+      const ownerNameRow = db.prepare("SELECT value FROM agent_private_settings WHERE key = 'platform_owner_name'").get();
+      const ownerName = ownerNameRow ? ownerNameRow.value : 'مدير الوكلاء / صاحب المنصة';
+      const generatedAt = new Date().toISOString();
+      const reportPayload = { ownerName, generatedAt, grandTotals, agentsActivity };
+      const reportSha256 = crypto.createHash('sha256').update(JSON.stringify(reportPayload)).digest('hex');
+
+      const waBrief = [
+        `🏛️ *تقرير نشاط عمل الوكلاء والفرق الميدانية لـ (${ownerName})*`,
+        `• تاريخ التقرير: ${new Date().toLocaleString('ar-EG')}`,
+        `• عدد المنظومات / الوكلاء النشطة: ${grandTotals.systemsCount}`,
+        `• إجمالي الموزعين: ${grandTotals.distributorsCount} | المناديب: ${grandTotals.repsCount} | الفنيون: ${grandTotals.techsCount}`,
+        `• الحالات الميدانية الموحدة: ${grandTotals.unifiedCasesCount} (مناديب: ${grandTotals.repActionsCount} · فنيون: ${grandTotals.techActionsCount})`,
+        `• النسخ التجريبية المسجلة: ${grandTotals.trialsCount} | طلبات دفع بالانتظار: ${grandTotals.pendingPaymentsCount}`,
+        `• الصفقات المكتملة: ${grandTotals.completedDealsCount} | المبيعات: ${grandTotals.grossSales} ج.م | صافي الوكلاء: ${grandTotals.agentNetRevenue} ج.م`,
+        `• بصمة التوثيق SHA-256: ${reportSha256.slice(0, 16)}...`
+      ].join('\n');
+
+      return sendJson(res, 200, { ok: true, ...reportPayload, reportSha256, waBrief });
     }
 
     /* ---------------- Multi-System Isolation & Clean Reseller Edition API ---------------- */

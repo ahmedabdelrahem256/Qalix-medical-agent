@@ -388,7 +388,11 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo, systemCtx = {}
             </div>
           </div>
 
-          <div id="distWorkflowTasksList" style="max-height:310px; overflow-y:auto; display:grid; gap:8px;"></div>
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px; margin-bottom:6px;">
+            <span style="font-size:11.5px; color:var(--accent);">🔗 كل حركة للمندوب أو الفني تُربط آلياً في السجل الموحد بالوكيل:</span>
+            <button type="button" onclick="syncUnifiedPortalFromAgent(true)" style="padding:4px 10px; font-size:11px; background:#0369a1; color:#fff; width:auto;">🔄 مزامنة السجل الموحد مع الوكيل</button>
+          </div>
+          <div id="distWorkflowTasksList" style="max-height:360px; overflow-y:auto; display:grid; gap:8px;"></div>
         </div>
       </div>
     </div>
@@ -1185,6 +1189,8 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo, systemCtx = {}
           tier: tierKey,
           paymentChannel: ch,
           paymentRef: pref,
+          repName,
+          techName,
           notes: notesStr,
           receiptFilename: currentReceiptFilename,
           receiptDataUrl: currentReceiptDataUrl
@@ -1407,6 +1413,24 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo, systemCtx = {}
       renderDistTeamUi();
     }
 
+    async function syncTeamMemberToAgent(member) {
+      await tryFetchAgentApi('/api/field-team', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: member.id,
+          distributorId: PORTAL_DIST.id,
+          distributorCode: PORTAL_DIST.code,
+          name: member.name,
+          role: member.role,
+          phone: member.phone,
+          zone: member.zone,
+          fee: member.fee,
+          status: member.status
+        })
+      });
+    }
+
     function addDistTeamMember() {
       const name = (document.getElementById('tmName')?.value || '').trim();
       const role = document.getElementById('tmRole')?.value || 'rep';
@@ -1415,7 +1439,7 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo, systemCtx = {}
       const fee = Number(document.getElementById('tmFee')?.value || 0);
       if (!name) return alert('يرجى إدخال اسم المندوب أو الفني.');
       const list = loadDistTeamMembers();
-      list.unshift({
+      const member = {
         id: 'tm_' + Math.random().toString(16).slice(2, 8),
         name,
         role,
@@ -1424,10 +1448,12 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo, systemCtx = {}
         fee,
         status: 'available',
         createdAt: new Date().toISOString()
-      });
+      };
+      list.unshift(member);
       document.getElementById('tmName').value = '';
       document.getElementById('tmPhone').value = '';
       saveDistTeamMembers(list);
+      syncTeamMemberToAgent(member);
     }
 
     function toggleTeamMemberStatus(id) {
@@ -1438,11 +1464,13 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo, systemCtx = {}
       const next = order[(order.indexOf(item.status) + 1) % order.length];
       item.status = next;
       saveDistTeamMembers(list);
+      syncTeamMemberToAgent(item);
     }
 
     function removeTeamMember(id) {
       if (!confirm('حذف هذا العضو من قائمة الفريق؟')) return;
       saveDistTeamMembers(loadDistTeamMembers().filter(x => x.id !== id));
+      tryFetchAgentApi('/api/field-team/' + encodeURIComponent(id), { method: 'DELETE' });
     }
 
     function messageTeamMemberWa(phone, text) {
@@ -1454,7 +1482,7 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo, systemCtx = {}
       window.open(url, '_blank');
     }
 
-    function addFieldWorkflowTask() {
+    async function addFieldWorkflowTask() {
       const customerName = (document.getElementById('wfCustomerName')?.value || '').trim();
       const customerInfo = (document.getElementById('wfCustomerPhone')?.value || '').trim();
       const repName = document.getElementById('wfRepSelect')?.value || '';
@@ -1462,23 +1490,121 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo, systemCtx = {}
       const notes = (document.getElementById('wfNotes')?.value || '').trim();
       if (!customerName) return alert('يرجى إدخال اسم العميل أو المنشأة.');
       const list = loadDistFieldTasks();
-      list.unshift({
+      const taskObj = {
         id: 'wf_' + Math.random().toString(16).slice(2, 8),
+        reportCode: 'CASE-' + Math.random().toString(16).slice(2, 8).toUpperCase(),
         customerName,
         customerInfo,
         repName,
+        repAction: repName ? ('تم تكليف المندوب ' + repName + ' بالزيارة الأولى') : '',
         techName,
+        techAction: '',
         stage: 'rep_pending',
         reqCode: '',
         activationKey: '',
         notes,
         createdAt: new Date().toISOString()
-      });
+      };
+      list.unshift(taskObj);
       document.getElementById('wfCustomerName').value = '';
       document.getElementById('wfCustomerPhone').value = '';
       document.getElementById('wfNotes').value = '';
       saveDistFieldTasks(list);
+      await syncUnifiedCasePayload(taskObj, 'distributor', PORTAL_DIST.name, 'إدراج عميل جديد وتكليف المندوب للزيارة الأولى');
     }
+
+    async function syncUnifiedCasePayload(t, actorRole, actorName, actionText) {
+      const res = await tryFetchAgentApi('/api/unified-pipeline', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          caseCode: t.reportCode || t.id,
+          distributorId: PORTAL_DIST.id,
+          distributorCode: PORTAL_DIST.code,
+          customerName: t.customerName,
+          contactInfo: t.customerInfo || '',
+          governorate: PORTAL_DIST.governorate,
+          systemName: PORTAL_DIST.systemName,
+          repName: t.repName || '',
+          repAction: t.repAction || '',
+          techName: t.techName || '',
+          techAction: t.techAction || '',
+          trialCode: t.reportCode || '',
+          trialDevice: t.trialDevice || '',
+          trialStartDate: t.trialStartDate || '',
+          trialEndDate: t.trialEndDate || '',
+          paymentReqCode: t.reqCode || '',
+          activationKey: t.activationKey || '',
+          stage: t.stage || 'rep_pending',
+          outcome: t.notes || actionText || '',
+          actorRole: actorRole || 'distributor',
+          actorName: actorName || PORTAL_DIST.name,
+          actionText: actionText || ''
+        })
+      });
+      return Boolean(res && res.data && res.data.ok);
+    }
+
+    async function logUnifiedActionPrompt(taskId, role) {
+      const list = loadDistFieldTasks();
+      const t = list.find(x => x.id === taskId);
+      if (!t) return;
+      const defaultTxt = role === 'rep'
+        ? 'تمت زيارة العميل ميدانياً وشرح المزايا وتسليمه النسخة التجريبية / عرض السعر'
+        : 'تم تركيب المنظومة للعميل وربط الشبكة وإتمام التدريب بنجاح 100%';
+      const lbl = role === 'rep' ? ('ماذا فعل المندوب (' + (t.repName || 'المندوب') + ') مع "' + t.customerName + '"؟') : ('ماذا فعل الفني (' + (t.techName || 'الفني') + ') لدى "' + t.customerName + '"؟');
+      const act = prompt(lbl, role === 'rep' ? (t.repAction || defaultTxt) : (t.techAction || defaultTxt));
+      if (!act || !act.trim()) return;
+      if (role === 'rep') {
+        t.repAction = act.trim();
+        if (t.stage === 'rep_pending' || t.stage === 'trial_installed') t.stage = 'rep_visited';
+      } else {
+        t.techAction = act.trim();
+        if (t.stage === 'tech_assigned') t.stage = 'completed';
+      }
+      t.agentNotifiedAt = new Date().toLocaleString('ar-EG');
+      saveDistFieldTasks(list);
+      const ok = await syncUnifiedCasePayload(t, role, role === 'rep' ? (t.repName || 'المندوب') : (t.techName || 'الفني'), act.trim());
+      if (ok) alert('✅ تم توثيق ما أنجزه ' + (role === 'rep' ? 'المندوب' : 'الفني') + ' وربطه مباشرة في لوحة الوكيل ومدير الوكلاء!');
+    }
+
+    async function syncUnifiedPortalFromAgent(showAlert) {
+      for (const m of loadDistTeamMembers()) await syncTeamMemberToAgent(m);
+      for (const t of loadDistFieldTasks()) await syncUnifiedCasePayload(t, 'distributor', PORTAL_DIST.name, '');
+      const [ftRes, upRes] = await Promise.all([
+        tryFetchAgentApi('/api/field-team?distributorId=' + encodeURIComponent(PORTAL_DIST.id), { method: 'GET' }),
+        tryFetchAgentApi('/api/unified-pipeline?distributorId=' + encodeURIComponent(PORTAL_DIST.id), { method: 'GET' })
+      ]);
+      if (ftRes && ftRes.data && ftRes.data.ok && Array.isArray(ftRes.data.members) && ftRes.data.members.length) {
+        saveDistTeamMembers(ftRes.data.members);
+      }
+      if (upRes && upRes.data && upRes.data.ok && Array.isArray(upRes.data.cases) && upRes.data.cases.length) {
+        const localTasks = loadDistFieldTasks();
+        for (const sc of upRes.data.cases) {
+          let match = localTasks.find(x => (x.reportCode && x.reportCode === sc.case_code) || x.customerName === sc.customer_name);
+          if (!match) {
+            match = { id: sc.id, createdAt: sc.created_at };
+            localTasks.push(match);
+          }
+          match.reportCode = sc.case_code;
+          match.customerName = sc.customer_name;
+          match.customerInfo = sc.contact_info || match.customerInfo;
+          match.repName = sc.rep_name || match.repName;
+          match.repAction = sc.rep_action || match.repAction;
+          match.techName = sc.tech_name || match.techName;
+          match.techAction = sc.tech_action || match.techAction;
+          match.activationKey = sc.activation_key || match.activationKey;
+          match.reqCode = sc.payment_req_code || match.reqCode;
+          match.dealNo = sc.deal_no || match.dealNo;
+          match.stage = sc.stage || match.stage;
+          match.notes = sc.outcome || match.notes;
+          match.agentNotifiedAt = sc.updated_at;
+        }
+        saveDistFieldTasks(localTasks);
+      }
+      if (showAlert) alert('✅ تمت مزامنة السجل الموحد والفريق الميداني مع لوحة الوكيل بنجاح.');
+    }
+    setTimeout(() => syncUnifiedPortalFromAgent(false), 400);
 
     function upsertWorkflowTaskFromDeal(info) {
       const list = loadDistFieldTasks();
@@ -1776,15 +1902,17 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo, systemCtx = {}
               '<div style="font-size:11.5px; color:var(--muted); line-height:1.55;">' +
               (t.customerInfo ? '📞 ' + escHtml(t.customerInfo) + '<br>' : '') +
               (t.trialDevice ? '🧪 مرجع التجريبية: <code dir="ltr">' + escHtml(t.trialDevice) + '</code>' + (t.trialEndDate ? ' (تنتهي: ' + escHtml(t.trialEndDate) + ')' : '') + '<br>' : '') +
-              '1️⃣ المندوب: <strong style="color:var(--sky);">' + escHtml(t.repName || 'غير محدد') + '</strong> · ' +
-              '2️⃣ الفني: <strong style="color:var(--accent);">' + escHtml(t.techName || 'غير محدد') + '</strong>' +
+              '1️⃣ المندوب: <strong style="color:var(--sky);">' + escHtml(t.repName || 'غير محدد') + '</strong>' + (t.repAction ? ' — <span style="color:#7dd3fc;">«' + escHtml(t.repAction) + '»</span>' : '') + '<br>' +
+              '2️⃣ الفني: <strong style="color:var(--accent);">' + escHtml(t.techName || 'غير محدد') + '</strong>' + (t.techAction ? ' — <span style="color:#6ee7b7;">«' + escHtml(t.techAction) + '»</span>' : '') +
               (t.agentNotifiedAt ? '<br>📡 آخر إخطار للوكيل: <strong style="color:#34d399;">' + escHtml(t.agentNotifiedAt) + '</strong>' : '<br>⚠️ <span style="color:#fbbf24;">لم يُرسل تحديث هذه البطاقة للوكيل بعد</span>') +
               (resolvedKey ? '<br>🔑 مفتاح التفعيل الجاهز للفني: <strong style="font-family:monospace; color:#34d399;" dir="ltr">' + escHtml(resolvedKey) + '</strong>' : '') +
-              (t.notes ? '<br>📝 ' + escHtml(t.notes) : '') +
+              (t.notes ? '<br>📝 النتيجة / الملاحظات: ' + escHtml(t.notes) : '') +
               '</div>' +
               '<div style="display:flex; gap:5px; flex-wrap:wrap; margin-top:8px;">' +
               '<button type="button" onclick="dispatchStageMemberWa(&apos;' + t.id + '&apos;, &apos;rep&apos;)" style="padding:4px 8px; font-size:11px; background:#0369a1; color:#fff; width:auto;">📲 تكليف المندوب</button>' +
+              '<button type="button" onclick="logUnifiedActionPrompt(&apos;' + t.id + '&apos;, &apos;rep&apos;)" style="padding:4px 8px; font-size:11px; background:#0284c7; color:#fff; width:auto;">✍️ ماذا فعل المندوب؟</button>' +
               '<button type="button" onclick="dispatchStageMemberWa(&apos;' + t.id + '&apos;, &apos;tech&apos;)" style="padding:4px 8px; font-size:11px; background:#059669; color:#fff; width:auto;">📲 أمر شغل الفني</button>' +
+              '<button type="button" onclick="logUnifiedActionPrompt(&apos;' + t.id + '&apos;, &apos;tech&apos;)" style="padding:4px 8px; font-size:11px; background:#047857; color:#fff; width:auto;">✍️ ماذا فعل الفني؟</button>' +
               '<button type="button" onclick="notifyAgentWithUpdatedCard(&apos;' + t.id + '&apos;, true)" style="padding:4px 8px; font-size:11px; background:#7c3aed; color:#fff; width:auto;">📡 إخطار الوكيل بالبطاقة</button>' +
               (stageMeta.nextTxt ? '<button type="button" onclick="advanceWorkflowStage(&apos;' + t.id + '&apos;)" style="padding:4px 8px; font-size:11px; background:#d97706; color:#fff; width:auto;">' + stageMeta.nextTxt + '</button>' : '') +
               '<button type="button" onclick="removeWorkflowTask(&apos;' + t.id + '&apos;)" style="padding:4px 8px; font-size:11px; background:#7f1d1d; color:#fecaca; width:auto;">✕</button>' +

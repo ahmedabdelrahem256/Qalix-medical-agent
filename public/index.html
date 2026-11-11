@@ -569,6 +569,25 @@
         <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;">
           <button type="button" class="btn btn-sm btn-emerald" onclick="sendToPlatformOwnerWa()">📲 إرسال مباشرة لواتساب صاحب المنصة (للوكيل فقط)</button>
           <button type="button" class="btn btn-sm btn-amber" onclick="copyPlatformOwnerMsg()">📋 نسخ نص الرسالة</button>
+          <button type="button" class="btn btn-sm btn-sky" onclick="loadAgentsManagerOversight()">🏛️ تحديث نشاط عمل الوكلاء (لمدير الوكلاء)</button>
+        </div>
+
+        <!-- Agents Manager Advanced Cross-System Activity Oversight -->
+        <div id="agentsManagerOversightSection" class="sub-card" style="margin-top:14px; padding:12px; border:1px solid rgba(251,191,36,0.4); background:rgba(15,23,42,0.7);">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
+            <div>
+              <h4 style="margin:0; color:var(--amber); font-size:15px;">🏛️ لوحة مدير الوكلاء المتقدمة: متابعة نشاط عمل جميع الوكلاء والفرق الميدانية</h4>
+              <p style="margin:2px 0 0; font-size:11.5px; color:var(--muted);">يرى مدير الوكلاء هنا أداء كل وكيل ومنظومة، نشاط المناديب والفنيين والموزعين، المبيعات الصافية، وبصمة التوثيق عبر كافة المنظومات المعزولة.</p>
+            </div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+              <button type="button" class="btn btn-sm btn-emerald" onclick="downloadAgentsManagerReportJson()">📥 تصدير تقرير نشاط الوكلاء (SHA-256)</button>
+              <button type="button" class="btn btn-sm btn-amber" onclick="sendAgentsActivityBriefToOwnerWa()">📲 إرسال الملخص التنفيذي لمدير الوكلاء</button>
+            </div>
+          </div>
+          <div id="ownerGrandKpis" class="grid" style="grid-template-columns:repeat(auto-fit, minmax(125px, 1fr)); gap:8px; margin-bottom:10px;"></div>
+          <div id="ownerAgentsActivityList" style="max-height:260px; overflow-y:auto; display:grid; gap:8px;">
+            <div style="font-size:12px; color:var(--muted);">⏳ جاري تحميل نشاط عمل الوكلاء...</div>
+          </div>
         </div>
       </div>
 
@@ -695,6 +714,42 @@
           <div id="trialReportsRadarContainer" style="max-height:240px; overflow-y:auto; display:grid; gap:8px;">
             <div style="font-size:12px; color:var(--muted);">لم ترد بطاقات نسخ تجريبية أو إخطارات مراحل بعد.</div>
           </div>
+        </div>
+      </div>
+
+      <!-- Unified End-to-End Pipeline Chain: Rep Action -> Tech Action -> Distributor -> Agent -> Outcome -->
+      <div id="unifiedPipelineSection" class="glass" style="border:1px solid rgba(16,185,129,0.45); margin-bottom:18px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
+          <div>
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:4px;">
+              <span class="badge b-emerald">ترابط وتوحيد كامل للبيانات</span>
+              <span class="badge b-sky">المندوب ← الفني ← الموزع ← الوكيل ← النتيجة</span>
+            </div>
+            <h3 style="margin:0; font-size:17px; color:var(--emerald);">🔗 لوحة متابعة السلسلة الميدانية الموحدة: ماذا فعل المندوب والفني والموزع والنتيجة النهائية</h3>
+            <p style="margin:4px 0 0; font-size:12.5px; color:var(--muted);">
+              تتجمع هنا كافة تحركات المندوب، إنجاز الفني، بطاقة التجربة، إيصال الدفع، مفتاح التفعيل والنتيجة الحالية لكل عميل مع الجدول الزمني الموثّق.
+            </p>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+            <select id="upFilterDist" onchange="renderUnifiedPipelineList()" style="padding:6px 10px; font-size:12px;">
+              <option value="">كل الموزعين</option>
+            </select>
+            <select id="upFilterStage" onchange="renderUnifiedPipelineList()" style="padding:6px 10px; font-size:12px;">
+              <option value="">كل المراحل</option>
+              <option value="trial_installed">🧪 مرحلة التجريب</option>
+              <option value="rep_pending">1️⃣ بانتظار المندوب</option>
+              <option value="rep_visited">🤝 تمت زيارة المندوب</option>
+              <option value="payment_pending">💳 بانتظار الدفع/المفتاح</option>
+              <option value="tech_assigned">🛠️ لدى الفني</option>
+              <option value="tech_deploying">🚀 قيد التشغيل النهائي</option>
+              <option value="completed">✅ مكتمل 100%</option>
+            </select>
+            <button type="button" class="btn btn-sm btn-emerald" onclick="loadUnifiedPipelineSection()">🔄 تحديث السجل الموحد</button>
+          </div>
+        </div>
+        <div id="unifiedPipelineKpis" class="grid" style="grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:8px; margin-bottom:12px;"></div>
+        <div id="unifiedPipelineContainer" style="max-height:380px; overflow-y:auto; display:grid; gap:10px;">
+          <div style="font-size:12px; color:var(--muted); padding:10px;">⏳ جاري تحميل سلسلة الترابط الموحد...</div>
         </div>
       </div>
 
@@ -3691,9 +3746,167 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
         populateManualPaymentDistSelect();
         renderPaymentRequestsList();
         renderTrialReportsRadar((trlJson && trlJson.ok && Array.isArray(trlJson.reports)) ? trlJson.reports : []);
+        await Promise.allSettled([loadUnifiedPipelineSection(), loadAgentsManagerOversight()]);
       } catch (e) {
         console.error('Error loading payment panel:', e);
       }
+    }
+
+    let unifiedPipelineCache = [];
+    let unifiedStatsCache = {};
+    let ownerActivityReportCache = null;
+
+    const UNIFIED_STAGE_META = {
+      trial_installed: { label: '🧪 مرحلة التجريب', cls: 'b-amber' },
+      rep_pending:     { label: '1️⃣ بانتظار المندوب', cls: 'b-amber' },
+      rep_visited:     { label: '🤝 تمت زيارة المندوب', cls: 'b-sky' },
+      rep_followup:    { label: '🧑‍💼 متابعة التجريب', cls: 'b-sky' },
+      payment_pending: { label: '💳 بانتظار الدفع/المفتاح', cls: 'b-amber' },
+      tech_assigned:   { label: '🛠️ لدى الفني للتنفيذ', cls: 'b-purple' },
+      tech_deploying:  { label: '🚀 قيد التشغيل النهائي', cls: 'b-purple' },
+      completed:       { label: '✅ مكتمل ومنجز 100%', cls: 'b-emerald' }
+    };
+
+    async function loadUnifiedPipelineSection() {
+      try {
+        const r = await fetch('/api/unified-pipeline');
+        const j = await r.json();
+        if (!j || !j.ok) return;
+        unifiedPipelineCache = Array.isArray(j.cases) ? j.cases : [];
+        unifiedStatsCache = j.stats || {};
+        const dSel = document.getElementById('upFilterDist');
+        if (dSel) {
+          const cur = dSel.value;
+          const dists = Array.isArray(window.lastSummaryDistributors) ? window.lastSummaryDistributors : [];
+          dSel.innerHTML = '<option value="">كل الموزعين</option>' +
+            dists.map(d => `<option value="${escPayHtml(d.id)}">${escPayHtml(d.name)} (${escPayHtml(d.code)})</option>`).join('');
+          if (cur) dSel.value = cur;
+        }
+        renderUnifiedPipelineList();
+      } catch (e) {
+        console.error('Error loading unified pipeline:', e);
+      }
+    }
+
+    function renderUnifiedPipelineList() {
+      const kpiBox = document.getElementById('unifiedPipelineKpis');
+      const cont = document.getElementById('unifiedPipelineContainer');
+      const distF = document.getElementById('upFilterDist')?.value || '';
+      const stgF = document.getElementById('upFilterStage')?.value || '';
+
+      if (kpiBox) {
+        const s = unifiedStatsCache;
+        kpiBox.innerHTML = `
+          <div class="sub-card" style="text-align:center; padding:8px;"><div style="font-size:11px; color:var(--muted);">إجمالي الحالات الموحدة</div><div style="font-size:18px; font-weight:800; color:var(--text);">${s.totalCases || 0}</div></div>
+          <div class="sub-card" style="text-align:center; padding:8px;"><div style="font-size:11px; color:var(--muted);">🧑‍💼 أنشطة المناديب الموثقة</div><div style="font-size:18px; font-weight:800; color:var(--sky);">${s.repActionsLogged || 0}</div></div>
+          <div class="sub-card" style="text-align:center; padding:8px;"><div style="font-size:11px; color:var(--muted);">🛠️ إنجازات الفنيين</div><div style="font-size:18px; font-weight:800; color:var(--purple);">${s.techActionsLogged || 0}</div></div>
+          <div class="sub-card" style="text-align:center; padding:8px;"><div style="font-size:11px; color:var(--muted);">🧪 التجريب / 💳 الدفع</div><div style="font-size:18px; font-weight:800; color:var(--amber);">${s.trialsActive || 0} / ${s.paymentsPending || 0}</div></div>
+          <div class="sub-card" style="text-align:center; padding:8px;"><div style="font-size:11px; color:var(--muted);">✅ النتائج المكتملة</div><div style="font-size:18px; font-weight:800; color:var(--emerald);">${s.completedCases || 0}</div></div>
+        `;
+      }
+      if (!cont) return;
+      const filtered = unifiedPipelineCache.filter(c => (!distF || c.distributor_id === distF) && (!stgF || c.stage === stgF));
+      if (!filtered.length) {
+        cont.innerHTML = '<div style="font-size:12px; color:var(--muted); padding:10px;">لا توجد حالات مسجلة مطابقة للفلترة في السجل الموحد بعد.</div>';
+        return;
+      }
+      cont.innerHTML = filtered.map(c => {
+        const sm = UNIFIED_STAGE_META[c.stage] || { label: c.stage, cls: 'b-sky' };
+        const tlHtml = (Array.isArray(c.timeline) && c.timeline.length)
+          ? `<details style="margin-top:6px;"><summary style="cursor:pointer; font-size:11px; color:var(--sky);">📜 السجل الزمني المتسلسل (${c.timeline.length} حركات موثقة)</summary><div style="margin-top:4px; padding-right:8px; border-right:2px solid var(--sky); font-size:11px; color:var(--muted); line-height:1.5;">${c.timeline.map(ev => `<div>• <strong>${escPayHtml(ev.actorName || ev.actorRole)}:</strong> ${escPayHtml(ev.actionText)} <span style="opacity:0.7;" dir="ltr">(${escPayHtml((ev.at || '').slice(0, 16).replace('T', ' '))})</span></div>`).join('')}</div></details>`
+          : '';
+        return `<div class="sub-card" style="padding:12px; border:1px solid rgba(16,185,129,0.28); margin:0;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px;">
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+              <strong style="color:var(--sky); font-family:monospace;" dir="ltr">${escPayHtml(c.case_code)}</strong>
+              <span class="badge ${sm.cls}">${sm.label}</span>
+              <strong style="font-size:13.5px;">${escPayHtml(c.customer_name)}</strong>
+              <span style="font-size:11.5px; color:var(--muted);">الموزع: ${escPayHtml(c.distributor_name)} (${escPayHtml(c.distributor_code)})</span>
+            </div>
+            ${c.activation_key ? `<span class="badge b-emerald" dir="ltr" style="font-family:monospace;">🔑 ${escPayHtml(c.activation_key)}</span>` : ''}
+          </div>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:8px; font-size:12px;">
+            <div style="background:rgba(56,189,248,0.08); border-radius:8px; padding:7px 9px;">
+              <div style="color:var(--sky); font-weight:700;">1️⃣ المندوب وماذا فعل:</div>
+              <div>${escPayHtml(c.rep_name || 'لم يُحدد مندوب')}</div>
+              <div style="color:var(--muted); font-size:11.5px;">${escPayHtml(c.rep_action || 'بانتظار تسجيل حركة المندوب')}</div>
+            </div>
+            <div style="background:rgba(167,139,250,0.08); border-radius:8px; padding:7px 9px;">
+              <div style="color:var(--purple); font-weight:700;">2️⃣ الفني وماذا فعل:</div>
+              <div>${escPayHtml(c.tech_name || 'لم يُحدد فني')}</div>
+              <div style="color:var(--muted); font-size:11.5px;">${escPayHtml(c.tech_action || 'بانتظار إسناد/تنفيذ الفني')}</div>
+            </div>
+            <div style="background:rgba(16,185,129,0.08); border-radius:8px; padding:7px 9px;">
+              <div style="color:var(--emerald); font-weight:700;">3️⃣ الموزع والنتيجة النهائية:</div>
+              <div>${c.payment_req_code ? ('طلب دفع: <code dir="ltr">' + escPayHtml(c.payment_req_code) + '</code>') : (c.deal_no ? ('صفقة: <code dir="ltr">' + escPayHtml(c.deal_no) + '</code>') : 'قيد المتابعة الميدانية')}</div>
+              <div style="color:var(--text); font-size:11.5px; font-weight:600;">${escPayHtml(c.outcome || sm.label)}</div>
+            </div>
+          </div>
+          ${tlHtml}
+        </div>`;
+      }).join('');
+    }
+
+    async function loadAgentsManagerOversight() {
+      try {
+        const r = await fetch('/api/owner/agents-activity');
+        const j = await r.json();
+        if (!j || !j.ok) return;
+        ownerActivityReportCache = j;
+        const kpiEl = document.getElementById('ownerGrandKpis');
+        const listEl = document.getElementById('ownerAgentsActivityList');
+        const g = j.grandTotals || {};
+        if (kpiEl) {
+          kpiEl.innerHTML = `
+            <div class="sub-card" style="padding:7px; text-align:center;"><div style="font-size:10.5px; color:var(--muted);">المنظومات/الوكلاء</div><div style="font-size:16px; font-weight:800; color:var(--amber);">${g.systemsCount || 0}</div></div>
+            <div class="sub-card" style="padding:7px; text-align:center;"><div style="font-size:10.5px; color:var(--muted);">الموزعون | المناديب | الفنيون</div><div style="font-size:14px; font-weight:800; color:var(--sky);">${g.distributorsCount || 0} · ${g.repsCount || 0} · ${g.techsCount || 0}</div></div>
+            <div class="sub-card" style="padding:7px; text-align:center;"><div style="font-size:10.5px; color:var(--muted);">الحالات الموحدة / التجريبية</div><div style="font-size:15px; font-weight:800; color:var(--purple);">${g.unifiedCasesCount || 0} / ${g.trialsCount || 0}</div></div>
+            <div class="sub-card" style="padding:7px; text-align:center;"><div style="font-size:10.5px; color:var(--muted);">إجمالي المبيعات (ج.م)</div><div style="font-size:15px; font-weight:800; color:var(--text);">${fmt(g.grossSales || 0)}</div></div>
+            <div class="sub-card" style="padding:7px; text-align:center;"><div style="font-size:10.5px; color:var(--muted);">صافي إيراد الوكلاء</div><div style="font-size:15px; font-weight:800; color:var(--emerald);">${fmt(g.agentNetRevenue || 0)}</div></div>
+          `;
+        }
+        if (listEl) {
+          const arr = Array.isArray(j.agentsActivity) ? j.agentsActivity : [];
+          listEl.innerHTML = arr.map(a => `
+            <div class="sub-card" style="padding:9px 12px; border:1px solid ${a.isActive ? 'var(--emerald)' : 'var(--border)'}; margin:0;">
+              <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+                <div>
+                  <strong style="color:var(--sky);">${escPayHtml(a.systemNameAr)}</strong>
+                  <span class="badge ${a.isActive ? 'b-emerald' : 'b-sky'}" style="font-size:10px;">${escPayHtml(a.licensePrefix)}</span>
+                  <span style="font-size:11px; color:var(--muted);">الوكيل: ${escPayHtml(a.agentTitleAr)} (<span dir="ltr">${escPayHtml(a.agentPhone)}</span>)</span>
+                </div>
+                <span class="badge b-amber" style="font-size:10.5px;">نقاط النشاط: ${a.activityScore || 0}</span>
+              </div>
+              <div style="font-size:11.5px; color:var(--muted); margin-top:4px;">
+                الموزعون: <strong>${a.distributorsCount}</strong> · المناديب: <strong>${a.repsCount}</strong> (أنشطة: ${a.repActionsCount}) · الفنيون: <strong>${a.techsCount}</strong> (إنجازات: ${a.techActionsCount}) · الصفقات المكتملة: <strong>${a.completedDealsCount}</strong> · الصافي: <strong style="color:var(--emerald);">${fmt(a.agentNetRevenue)}</strong>
+              </div>
+            </div>
+          `).join('');
+        }
+      } catch (e) {
+        console.error('Error loading owner oversight:', e);
+      }
+    }
+
+    function downloadAgentsManagerReportJson() {
+      if (!ownerActivityReportCache) return alert('جاري تحميل التقرير، أعد المحاولة خلال لحظات.');
+      const blob = new Blob([JSON.stringify(ownerActivityReportCache, null, 2)], { type: 'application/json;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'Agents-Manager-Activity-Report-' + new Date().toISOString().slice(0, 10) + '.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function sendAgentsActivityBriefToOwnerWa() {
+      if (!ownerActivityReportCache || !ownerActivityReportCache.waBrief) return alert('لا يوجد ملخص نشاط متاح بعد.');
+      const rawPhone = (document.getElementById('ownerPrivatePhone')?.value || '').replace(/[^0-9]/g, '');
+      const waDigits = rawPhone.startsWith('0') ? ('2' + rawPhone) : rawPhone;
+      const url = waDigits
+        ? ('https://wa.me/' + waDigits + '?text=' + encodeURIComponent(ownerActivityReportCache.waBrief))
+        : ('https://api.whatsapp.com/send?text=' + encodeURIComponent(ownerActivityReportCache.waBrief));
+      window.open(url, '_blank');
     }
 
     function renderTrialReportsRadar(reports) {

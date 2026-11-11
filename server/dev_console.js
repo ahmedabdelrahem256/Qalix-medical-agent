@@ -90,8 +90,10 @@ function resetDealsOnly(db, dataDir) {
   const backup = createDatabaseSnapshot(db, targetDir);
 
   db.prepare('DELETE FROM deals').run();
-  try { db.prepare("DELETE FROM audit_log WHERE action IN ('create_deal', 'settle_deal')").run(); } catch (_) {}
-  try { db.prepare("DELETE FROM audit_logs WHERE action IN ('create_deal', 'settle_deal')").run(); } catch (_) {}
+  try { db.prepare('DELETE FROM payment_requests').run(); } catch (_) {}
+  try { db.prepare('DELETE FROM unified_workflow_cases').run(); } catch (_) {}
+  try { db.prepare("DELETE FROM audit_log WHERE action IN ('create_deal', 'settle_deal', 'payment_request_approved')").run(); } catch (_) {}
+  try { db.prepare("DELETE FROM audit_logs WHERE action IN ('create_deal', 'settle_deal', 'payment_request_approved')").run(); } catch (_) {}
 
   return {
     ok: true,
@@ -107,14 +109,14 @@ function resetAllDataFactory(db, seedDistributorsFn, dataDir) {
   const backup = createDatabaseSnapshot(db, targetDir);
 
   db.prepare('DELETE FROM deals').run();
+  try { db.prepare('DELETE FROM payment_requests').run(); } catch (_) {}
+  try { db.prepare('DELETE FROM trial_stage_reports').run(); } catch (_) {}
+  try { db.prepare('DELETE FROM unified_workflow_cases').run(); } catch (_) {}
+  try { db.prepare('DELETE FROM distributor_field_team').run(); } catch (_) {}
+  try { db.prepare('DELETE FROM lead_locks').run(); } catch (_) {}
   db.prepare('DELETE FROM distributors').run();
   try { db.prepare('DELETE FROM audit_log').run(); } catch (_) {}
   try { db.prepare('DELETE FROM audit_logs').run(); } catch (_) {}
-
-  // Clear territory lead locks if table exists
-  try {
-    db.prepare('DELETE FROM lead_locks').run();
-  } catch (_) {}
 
   // Re-seed distributors if function provided
   if (typeof seedDistributorsFn === 'function') {
