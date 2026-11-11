@@ -1766,14 +1766,16 @@ function req(method, urlPath, body) {
     const issExists = instKitRes.body?.issPath && fs.existsSync(instKitRes.body.issPath);
     const compileBatExists = instKitRes.body?.compileBatPath && fs.existsSync(instKitRes.body.compileBatPath);
     const oneClickInstallExists = instKitRes.body?.oneClickInstallBatPath && fs.existsSync(instKitRes.body.oneClickInstallBatPath);
+    const oneClickUninstallExists = instKitRes.body?.oneClickUninstallBatPath && fs.existsSync(instKitRes.body.oneClickUninstallBatPath);
     const bundledRuntimeExists = instKitRes.body?.stageDir && fs.existsSync(path.join(instKitRes.body.stageDir, 'runtime', 'node.exe'));
-    check('82. المرحلة 6: تجهيز حزمة ومخطط مُثبِّت ويندوز المستقل (Inno Setup .iss + INSTALL_ON_WINDOWS + runtime/node.exe)',
+    check('82. المرحلة 6: تجهيز حزمة ومخطط مُثبِّت ويندوز المستقل (Inno Setup .iss + INSTALL/UNINSTALL + runtime/node.exe)',
       instKitRes.status === 201 &&
       issExists &&
       compileBatExists &&
       oneClickInstallExists &&
+      oneClickUninstallExists &&
       bundledRuntimeExists,
-      { status: instKitRes.status, issExists, compileBatExists, oneClickInstallExists, bundledRuntimeExists, arch: instKitRes.body?.bundledNodeArch }
+      { status: instKitRes.status, issExists, compileBatExists, oneClickInstallExists, oneClickUninstallExists, bundledRuntimeExists, arch: instKitRes.body?.bundledNodeArch }
     );
 
     console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/82 PASSED ===`);

@@ -66,6 +66,35 @@ function generateWindowsOneClickInstallBat({ appShortcutName = 'Qalix Agents & D
   ].join('\r\n');
 }
 
+function generateWindowsUninstallBat({ appShortcutName = 'Qalix Agents & Distributors Management', installFolderName = 'QalixAgentsPlatform' } = {}) {
+  const safeBannerName = String(appShortcutName).replace(/&/g, '^&');
+  return [
+    '@echo off',
+    'chcp 65001 >nul',
+    'cd /d "%~dp0"',
+    `title كالكس لإدارة الوكلاء والموزعين - إزالة التثبيت (${safeBannerName})`,
+    'echo ============================================================================',
+    'echo   كالكس لإدارة الوكلاء والموزعين',
+    `echo   Uninstall ${safeBannerName} (Desktop / Start Menu / LocalAppData)`,
+    'echo ============================================================================',
+    `set "TARGET_DIR=%LOCALAPPDATA%\\${installFolderName}"`,
+    'echo [1/2] Removing Desktop and Start Menu shortcuts ...',
+    `powershell -NoProfile -ExecutionPolicy Bypass -Command "$desk = [Environment]::GetFolderPath('Desktop'); $prog = [Environment]::GetFolderPath('Programs'); foreach($d in @($desk,$prog)){ $lnk = Join-Path $d '${appShortcutName}.lnk'; if(Test-Path $lnk){ Remove-Item -LiteralPath $lnk -Force } }"`,
+    'echo [2/2] Removing installed application folder "%TARGET_DIR%" ...',
+    'if exist "%TARGET_DIR%" (',
+    '  if /i "%~dp0"=="%TARGET_DIR%\\" (',
+    '    cd /d "%TEMP%"',
+    '    start "" /b cmd /c "timeout /t 2 /nobreak >nul & rmdir /s /q ""%TARGET_DIR%"""',
+    '  ) else (',
+    '    rmdir /s /q "%TARGET_DIR%"',
+    '  )',
+    ')',
+    'echo Uninstall completed cleanly.',
+    'pause',
+    ''
+  ].join('\r\n');
+}
+
 function buildCleanResellerEdition(options = {}) {
   const rootDir = options.rootDir || path.resolve(__dirname, '..');
   const outputBaseDir = options.outputBaseDir || path.join(rootDir, 'data', 'exports');
@@ -146,6 +175,12 @@ function buildCleanResellerEdition(options = {}) {
     iconRelPath: 'public\\img\\qalix-agents.ico'
   });
   fs.writeFileSync(path.join(editionDir, 'INSTALL_ON_WINDOWS.bat'), installBat, 'utf8');
+
+  const uninstallBat = generateWindowsUninstallBat({
+    appShortcutName: isQalixSuiteEdition ? 'Qalix Agents & Distributors Management' : 'Universal Agents & Distributors Management',
+    installFolderName: isQalixSuiteEdition ? 'QalixAgentsPlatform11' : 'UniversalAgentsPlatform'
+  });
+  fs.writeFileSync(path.join(editionDir, 'UNINSTALL_FROM_WINDOWS.bat'), uninstallBat, 'utf8');
 
   // Legal docs (~3MB, helpful for new buyers)
   const legalSrc = path.join(rootDir, 'الوثائق_القانونية_والتسليم');
@@ -320,5 +355,6 @@ function buildCleanResellerEdition(options = {}) {
 
 module.exports = {
   buildCleanResellerEdition,
-  generateWindowsOneClickInstallBat
+  generateWindowsOneClickInstallBat,
+  generateWindowsUninstallBat
 };
