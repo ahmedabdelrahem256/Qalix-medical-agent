@@ -3,16 +3,25 @@
  */
 'use strict';
 
+const { escapeHtml } = require('./html_escape');
+
 function generateDistributorContractHtml(dist, agentInfo) {
   const contractDate = new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
-  const contractNo = `CTR-${dist.code}-${new Date().getFullYear()}`;
+  const safeDist = {
+    name: escapeHtml(dist.name),
+    code: escapeHtml(dist.code),
+    phone: escapeHtml(dist.phone),
+    governorate: escapeHtml(dist.governorate),
+    commission_rate: Number(dist.commission_rate) || 27
+  };
+  const contractNo = `CTR-${safeDist.code}-${new Date().getFullYear()}`;
 
   return `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>عقد توزيع مستقل معتمد: ${dist.name} (${contractNo})</title>
+  <title>عقد توزيع مستقل معتمد: ${safeDist.name} (${contractNo})</title>
   <style>
     body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; margin: 0; padding: 30px; color: #0f172a; line-height: 1.7; background: #fff; }
     .page { max-width: 820px; margin: 0 auto; border: 2px solid #0f172a; padding: 35px; border-radius: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); }
@@ -46,32 +55,32 @@ function generateDistributorContractHtml(dist, agentInfo) {
       <div class="meta">
         <span>رقم العقد المرجعي: <strong>${contractNo}</strong></span>
         <span>تاريخ التحرير: <strong>${contractDate}</strong></span>
-        <span>نطاق التوزيع: <strong>محافظة ${dist.governorate}</strong></span>
+        <span>نطاق التوزيع: <strong>محافظة ${safeDist.governorate}</strong></span>
       </div>
     </div>
 
     <div class="clause">
       <strong>تم الاتفاق والتراضي في هذا اليوم بين كلٍ من:</strong><br>
       <strong>الطرف الأول (الوكيل الحصري):</strong> وكيل منظومة كالكس ميديكال الطبية، هاتف وواتساب الدعم المعتمد: <code>01122166076</code>.<br>
-      <strong>الطرف الثاني (الموزع المستقل):</strong> السيد/المكتب: <strong>${dist.name}</strong>، كود الموزع: <strong>${dist.code}</strong>، هاتف: <strong>${dist.phone}</strong>، المقيم بنطاق: <strong>${dist.governorate}</strong>.
+      <strong>الطرف الثاني (الموزع المستقل):</strong> السيد/المكتب: <strong>${safeDist.name}</strong>، كود الموزع: <strong>${safeDist.code}</strong>، هاتف: <strong>${safeDist.phone}</strong>، المقيم بنطاق: <strong>${safeDist.governorate}</strong>.
     </div>
 
     <div class="clause">
       <div class="clause-title">البند الأول: موضوع التعاقد والصفة القانونية</div>
-      يمنح الطرف الأول بموجب هذا العقد الطرف الثاني صفة «موزع مستقل معتمد» لتسويق وتثبيت النسخ التجريبية وبيع تراخيص منظومة "كالكس ميديكال" الطبية داخل النطاق الجغرافي المحدد (${dist.governorate})، دون أن يترتب على ذلك أي علاقة عمل تابع أو التزام وظيفي.
+      يمنح الطرف الأول بموجب هذا العقد الطرف الثاني صفة «موزع مستقل معتمد» لتسويق وتثبيت النسخ التجريبية وبيع تراخيص منظومة "كالكس ميديكال" الطبية داخل النطاق الجغرافي المحدد (${safeDist.governorate})، دون أن يترتب على ذلك أي علاقة عمل تابع أو التزام وظيفي.
     </div>
 
     <div class="clause">
       <div class="clause-title">البند الثاني: السياسة السعرية الثابتة والعمولة</div>
-      يلتزم الطرف الثاني التزاماً صارماً وغير قابل للتفاوض بالأسعار الرسمية الثابتة، ويحصل على عمولة فورية بنسبة <strong>${dist.commission_rate}%</strong> من إجمالي سعر البيع الثابت، ويورد صافي المبلغ كاملاً للوكيل، وفق الجدول التالي:
+      يلتزم الطرف الثاني التزاماً صارماً وغير قابل للتفاوض بالأسعار الرسمية الثابتة، ويحصل على عمولة فورية بنسبة <strong>${safeDist.commission_rate}%</strong> من إجمالي سعر البيع الثابت، ويورد صافي المبلغ كاملاً للوكيل، وفق الجدول التالي:
       <table>
         <thead>
-          <tr><th>الباقة المعتمدة</th><th>السعر الرسمي الثابت</th><th>عمولة الموزع (${dist.commission_rate}%)</th><th>صافي توريد الوكيل (01122166076)</th></tr>
+          <tr><th>الباقة المعتمدة</th><th>السعر الرسمي الثابت</th><th>عمولة الموزع (${safeDist.commission_rate}%)</th><th>صافي توريد الوكيل (01122166076)</th></tr>
         </thead>
         <tbody>
-          <tr><td>الباقة الأساسية (عيادة فردية)</td><td>4,500 ج.م</td><td>${Math.round(4500 * dist.commission_rate / 100)} ج.م</td><td>${4500 - Math.round(4500 * dist.commission_rate / 100)} ج.م</td></tr>
-          <tr><td>الباقة التخصصية (عيادة نشطة)</td><td>8,500 ج.م</td><td>${Math.round(8500 * dist.commission_rate / 100)} ج.م</td><td>${8500 - Math.round(8500 * dist.commission_rate / 100)} ج.م</td></tr>
-          <tr><td>باقة المراكز الكبرى والفروع (Enterprise)</td><td>18,500 ج.م</td><td>${Math.round(18500 * dist.commission_rate / 100)} ج.م</td><td>${18500 - Math.round(18500 * dist.commission_rate / 100)} ج.م</td></tr>
+          <tr><td>الباقة الأساسية (عيادة فردية)</td><td>4,500 ج.م</td><td>${Math.round(4500 * safeDist.commission_rate / 100)} ج.م</td><td>${4500 - Math.round(4500 * safeDist.commission_rate / 100)} ج.م</td></tr>
+          <tr><td>الباقة التخصصية (عيادة نشطة)</td><td>8,500 ج.م</td><td>${Math.round(8500 * safeDist.commission_rate / 100)} ج.م</td><td>${8500 - Math.round(8500 * safeDist.commission_rate / 100)} ج.م</td></tr>
+          <tr><td>باقة المراكز الكبرى والفروع (Enterprise)</td><td>18,500 ج.م</td><td>${Math.round(18500 * safeDist.commission_rate / 100)} ج.م</td><td>${18500 - Math.round(18500 * safeDist.commission_rate / 100)} ج.م</td></tr>
         </tbody>
       </table>
     </div>
@@ -95,8 +104,8 @@ function generateDistributorContractHtml(dist, agentInfo) {
       </div>
       <div class="sig-box">
         <strong>الطرف الثاني (الموزع المستقل):</strong><br>
-        الاسم: ${dist.name}<br>
-        الكود: ${dist.code} — هاتف: ${dist.phone}<br>
+        الاسم: ${safeDist.name}<br>
+        الكود: ${safeDist.code} — هاتف: ${safeDist.phone}<br>
         التوقيع: .......................................
       </div>
     </div>
@@ -107,14 +116,30 @@ function generateDistributorContractHtml(dist, agentInfo) {
 
 function generateClinicHandoverHtml(deal, dist, agentInfo) {
   const handoverDate = deal.settled_at ? new Date(deal.settled_at).toLocaleDateString('ar-EG') : new Date().toLocaleDateString('ar-EG');
-  const handoverNo = `HO-${deal.deal_no}`;
+  const safeDeal = {
+    deal_no: escapeHtml(deal.deal_no),
+    clinic_name: escapeHtml(deal.clinic_name),
+    city: escapeHtml(deal.city),
+    doctor_name: escapeHtml(deal.doctor_name),
+    clinic_phone: escapeHtml(deal.clinic_phone || '—'),
+    tier: escapeHtml(deal.tier),
+    fixed_price: Number(deal.fixed_price) || 0,
+    license_key_ref: escapeHtml(deal.license_key_ref || 'QLX2-ISSUED'),
+    hardware_id: escapeHtml(deal.hardware_id || 'REGISTERED_IN_SECURE_VAULT')
+  };
+  const safeDist = {
+    name: escapeHtml(dist.name),
+    code: escapeHtml(dist.code),
+    phone: escapeHtml(dist.phone || '')
+  };
+  const handoverNo = `HO-${safeDeal.deal_no}`;
 
   return `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>محضر تسليم وتشغيل منظومة طبية: ${deal.clinic_name} (${handoverNo})</title>
+  <title>محضر تسليم وتشغيل منظومة طبية: ${safeDeal.clinic_name} (${handoverNo})</title>
   <style>
     body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; margin: 0; padding: 30px; color: #0f172a; line-height: 1.7; background: #fff; }
     .page { max-width: 820px; margin: 0 auto; border: 2px solid #059669; padding: 35px; border-radius: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); }
@@ -149,16 +174,16 @@ function generateClinicHandoverHtml(deal, dist, agentInfo) {
       <div class="meta">
         <span>رقم المحضر: <strong>${handoverNo}</strong></span>
         <span>تاريخ التشغيل: <strong>${handoverDate}</strong></span>
-        <span>رقم الصفقة: <strong>${deal.deal_no}</strong></span>
+        <span>رقم الصفقة: <strong>${safeDeal.deal_no}</strong></span>
       </div>
     </div>
 
     <div class="section-title">1. بيانات المنشأة الطبية والمتعاقد</div>
     <table>
-      <tr><th style="width:25%;">اسم العيادة / المركز:</th><td><strong>${deal.clinic_name}</strong></td><th style="width:25%;">المدينة / النطاق:</th><td>${deal.city}</td></tr>
-      <tr><th>اسم الطبيب المسؤول:</th><td><strong>${deal.doctor_name}</strong></td><th>هاتف التواصل:</th><td dir="ltr">${deal.clinic_phone || '—'}</td></tr>
-      <tr><th>الباقة المتعاقد عليها:</th><td>${deal.tier} (${deal.fixed_price} ج.م)</td><th>مرجع الترخيص الصادر:</th><td><code>${deal.license_key_ref || 'QLX2-ISSUED'}</code></td></tr>
-      <tr><th>بصمة العتاد (Hardware ID):</th><td colspan="3"><code dir="ltr">${deal.hardware_id || 'REGISTERED_IN_SECURE_VAULT'}</code></td></tr>
+      <tr><th style="width:25%;">اسم العيادة / المركز:</th><td><strong>${safeDeal.clinic_name}</strong></td><th style="width:25%;">المدينة / النطاق:</th><td>${safeDeal.city}</td></tr>
+      <tr><th>اسم الطبيب المسؤول:</th><td><strong>${safeDeal.doctor_name}</strong></td><th>هاتف التواصل:</th><td dir="ltr">${safeDeal.clinic_phone}</td></tr>
+      <tr><th>الباقة المتعاقد عليها:</th><td>${safeDeal.tier} (${safeDeal.fixed_price} ج.م)</td><th>مرجع الترخيص الصادر:</th><td><code>${safeDeal.license_key_ref}</code></td></tr>
+      <tr><th>بصمة العتاد (Hardware ID):</th><td colspan="3"><code dir="ltr">${safeDeal.hardware_id}</code></td></tr>
     </table>
 
     <div class="section-title">2. بنود الفحص والتشغيل الميداني التي تم التحقق منها بحضور العميل</div>
@@ -178,14 +203,14 @@ function generateClinicHandoverHtml(deal, dist, agentInfo) {
     <div class="signatures">
       <div class="sig-box">
         <strong>المسلِّم (الموزع المعتمد):</strong><br>
-        الموزع: ${dist.name} (${dist.code})<br>
-        ${dist.phone ? 'الهاتف: ' + dist.phone + '<br>' : ''}
+        الموزع: ${safeDist.name} (${safeDist.code})<br>
+        ${safeDist.phone ? 'الهاتف: ' + safeDist.phone + '<br>' : ''}
         التوقيع: .......................................
       </div>
       <div class="sig-box">
         <strong>المستلم (الطبيب / المدير المالي للمركز):</strong><br>
-        الاسم: د. ${deal.doctor_name}<br>
-        المنشأة: ${deal.clinic_name}<br>
+        الاسم: د. ${safeDeal.doctor_name}<br>
+        المنشأة: ${safeDeal.clinic_name}<br>
         التوقيع والختم: .......................................
       </div>
     </div>

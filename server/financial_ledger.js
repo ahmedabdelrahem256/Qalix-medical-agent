@@ -3,8 +3,14 @@
  */
 'use strict';
 
+const { escapeHtml } = require('./html_escape');
+
 function generateDistributorStatementHtml(dist, deals, agentInfo) {
   const generatedAt = new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
+  const distName = escapeHtml(dist.name);
+  const distCode = escapeHtml(dist.code);
+  const distGov = escapeHtml(dist.governorate);
+  const distPhone = escapeHtml(dist.phone);
   const completedDeals = deals.filter(d => d.distributor_id === dist.id && d.status === 'completed');
   const pendingDeals = deals.filter(d => d.distributor_id === dist.id && d.status === 'pending');
 
@@ -20,7 +26,7 @@ function generateDistributorStatementHtml(dist, deals, agentInfo) {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>كشف حساب مالي رسمي: ${dist.name} (${dist.code})</title>
+  <title>كشف حساب مالي رسمي: ${distName} (${distCode})</title>
   <style>
     body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; margin: 0; padding: 25px; color: #0f172a; line-height: 1.6; background: #fff; }
     .page { max-width: 900px; margin: 0 auto; border: 1px solid #cbd5e1; padding: 30px; border-radius: 6px; }
@@ -54,12 +60,12 @@ function generateDistributorStatementHtml(dist, deals, agentInfo) {
       </div>
       <div style="text-align:left; font-size:12px; color:#475569;">
         <div>تاريخ الكشف: <strong>${generatedAt}</strong></div>
-        <div>كود الموزع: <strong>${dist.code}</strong></div>
+        <div>كود الموزع: <strong>${distCode}</strong></div>
       </div>
     </div>
 
     <div style="margin-bottom:20px; font-size:13px; background:#f8fafc; border:1px solid #e2e8f0; padding:12px 16px; border-radius:8px;">
-      <strong>الموزع المستقل:</strong> ${dist.name} · <strong>النطاق الجغرافي:</strong> ${dist.governorate} · <strong>الهاتف:</strong> ${dist.phone} · <strong>نسبة العمولة الرسمية:</strong> ${dist.commission_rate}%
+      <strong>الموزع المستقل:</strong> ${distName} · <strong>النطاق الجغرافي:</strong> ${distGov} · <strong>الهاتف:</strong> ${distPhone} · <strong>نسبة العمولة الرسمية:</strong> ${Number(dist.commission_rate) || 0}%
     </div>
 
     <div class="kpi-cards">
@@ -99,14 +105,14 @@ function generateDistributorStatementHtml(dist, deals, agentInfo) {
       <tbody>
         ${deals.filter(d => d.distributor_id === dist.id).map(d => `
           <tr>
-            <td><code>${d.deal_no}</code></td>
-            <td><strong>${d.clinic_name}</strong><br><span style="color:#64748b; font-size:11px;">${d.city}</span></td>
-            <td>د. ${d.doctor_name}</td>
-            <td>${d.tier}</td>
+            <td><code>${escapeHtml(d.deal_no)}</code></td>
+            <td><strong>${escapeHtml(d.clinic_name)}</strong><br><span style="color:#64748b; font-size:11px;">${escapeHtml(d.city)}</span></td>
+            <td>د. ${escapeHtml(d.doctor_name)}</td>
+            <td>${escapeHtml(d.tier)}</td>
             <td><strong>${fmt(d.fixed_price)}</strong></td>
             <td style="color:#d97706; font-weight:bold;">${fmt(d.distributor_commission)}</td>
             <td style="color:#16a34a; font-weight:bold;">${fmt(d.agent_net_amount)}</td>
-            <td><code>${d.license_key_ref || '—'}</code></td>
+            <td><code>${escapeHtml(d.license_key_ref || '—')}</code></td>
             <td><span class="${d.status === 'completed' ? 'badge-comp' : 'badge-pend'}">${d.status === 'completed' ? 'مكتملة وموردة' : 'قيد التحصيل'}</span></td>
           </tr>
         `).join('')}

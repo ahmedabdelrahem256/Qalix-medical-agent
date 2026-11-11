@@ -7,10 +7,7 @@
 const crypto = require('node:crypto');
 const { SPECIALTY_PACKS } = require('./specialty_packs');
 const { generateSimpleSvgQr } = require('./network_diagnostics');
-
-function escapeHtml(s) {
-  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-}
+const { escapeHtml } = require('./html_escape');
 
 function generateQuotationData(params, pricingCatalog) {
   const doctorName = escapeHtml((params.doctor_name || 'السيد الدكتور المحترم').trim());

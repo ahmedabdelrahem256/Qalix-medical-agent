@@ -6,6 +6,7 @@
 
 const crypto = require('node:crypto');
 const { generateSimpleSvgQr } = require('./network_diagnostics');
+const { escapeHtml } = require('./html_escape');
 
 const TRAINING_MODULES = [
   {
@@ -143,12 +144,16 @@ function generateAccreditationCertificateHtml(dist, certDate = new Date()) {
   const certHash = crypto.createHash('sha256').update(`${dist.id}|${dist.code}|${dist.name}|${dateStr}`).digest('hex').substring(0, 10).toUpperCase();
   const certSerial = `QMA-CERT-${dateStr.replace(/-/g, '').substring(2, 6)}-${certHash}`;
   const qrSvg = generateSimpleSvgQr(`CERT:${certSerial}|DIST:${dist.code}|NAME:${dist.name}|AGENT:01122166076`);
+  const safeName = escapeHtml(dist.name);
+  const safeCode = escapeHtml(dist.code);
+  const safeGov = escapeHtml(dist.governorate);
+  const safeRate = Number(dist.commission_rate) || 0;
 
   return `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>شهادة اعتماد موزع طبي مستقل — ${dist.name} (${dist.code})</title>
+  <title>شهادة اعتماد موزع طبي مستقل — ${safeName} (${safeCode})</title>
   <style>
     @page { size: A4 landscape; margin: 10mm; }
     * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Cairo", Tahoma, sans-serif; }
@@ -183,14 +188,14 @@ function generateAccreditationCertificateHtml(dist, certDate = new Date()) {
 
       <div class="cert-body">
         يشهد وكيل منظومة كالكس ميديكال الطبية بأن السيد / المكتب الموقر:
-        <span class="dist-name">${dist.name}</span>
+        <span class="dist-name">${safeName}</span>
         قد أتم بنجاح البرنامج التدريبي المتخصص واجتاز محاكاة المبيعات الميدانية وقواعد حماية الأسعار الثابتة وأوفى بكافة المعايير المهنية، وبناءً عليه تم اعتماده رسمياً كموزع معتمد لترويج وتوريد منظومة كالكس ميديكال في النطاق الجغرافي المحدد له.
       </div>
 
       <div class="meta-grid">
-        <div><strong>كود الموزع المعتمد:</strong> <span style="font-family:monospace; color:#0f766e;">${dist.code}</span></div>
-        <div><strong>النطاق الجغرافي:</strong> ${dist.governorate}</div>
-        <div><strong>نسبة العمولة الرسمية:</strong> ${dist.commission_rate}%</div>
+        <div><strong>كود الموزع المعتمد:</strong> <span style="font-family:monospace; color:#0f766e;">${safeCode}</span></div>
+        <div><strong>النطاق الجغرافي:</strong> ${safeGov}</div>
+        <div><strong>نسبة العمولة الرسمية:</strong> ${safeRate}%</div>
         <div><strong>الرقم المرجعي للشهادة:</strong> <span style="font-family:monospace;">${certSerial}</span></div>
         <div><strong>تاريخ الاعتماد:</strong> ${dateStr}</div>
         <div><strong>صلاحية الاعتماد:</strong> سارية لمدة 12 شهراً</div>

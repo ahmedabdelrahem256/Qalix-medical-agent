@@ -56,9 +56,7 @@ function evaluateClinicChecklist(checkedIds = []) {
   };
 }
 
-function escapeHtml(s) {
-  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-}
+const { escapeHtml } = require('./html_escape');
 
 function generateClinicAuditReportHtml(params, evalResult) {
   const doctorName = escapeHtml((params.doctorName || 'السيد الدكتور المحترم').trim());

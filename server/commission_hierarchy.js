@@ -6,6 +6,7 @@
 
 const crypto = require('node:crypto');
 const { generateSimpleSvgQr } = require('./network_diagnostics');
+const { escapeHtml } = require('./html_escape');
 
 const COMMISSION_TIERS = {
   bronze: {
@@ -81,12 +82,15 @@ function generateTierPromotionLetterHtml(profile, agentInfo) {
   const dateStr = new Date().toISOString().split('T')[0];
   const refNo = `QMA-TIER-${dateStr.replace(/-/g, '')}-${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
   const qrSvg = generateSimpleSvgQr(`TIER:${profile.currentTier.id}|DIST:${profile.code}|NAME:${profile.name}|AGENT:01122166076`);
+  const safeName = escapeHtml(profile.name);
+  const safeCode = escapeHtml(profile.code);
+  const safeGov = escapeHtml(profile.governorate);
 
   return `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>خطاب ترقية واعتماد شريحة التميز — ${profile.name} (${profile.code})</title>
+  <title>خطاب ترقية واعتماد شريحة التميز — ${safeName} (${safeCode})</title>
   <style>
     @page { size: A4 portrait; margin: 15mm; }
     * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Cairo", Tahoma, sans-serif; }
@@ -138,12 +142,12 @@ function generateTierPromotionLetterHtml(profile, agentInfo) {
     </p>
 
     <div class="tier-badge-box">
-      <div style="font-size:18px; font-weight:bold; margin-bottom:8px; color:#0f766e;">${profile.name} (${profile.code})</div>
+      <div style="font-size:18px; font-weight:bold; margin-bottom:8px; color:#0f766e;">${safeName} (${safeCode})</div>
       <span class="tier-pill">${profile.currentTier.nameAr}</span>
     </div>
 
     <table class="meta-table">
-      <tr><td><strong>النطاق الجغرافي المعتمد:</strong></td><td>${profile.governorate}</td></tr>
+      <tr><td><strong>النطاق الجغرافي المعتمد:</strong></td><td>${safeGov}</td></tr>
       <tr><td><strong>نسبة العمولة المعتمدة الجديدة:</strong></td><td style="color:#0f766e; font-weight:bold; font-size:15px;">${profile.currentTier.commissionRate}% من سعر البيع الثابت</td></tr>
       <tr><td><strong>عدد الصفقات المكتملة المسجلة:</strong></td><td>${profile.completedDealsCount} عيادة ومركز طبي</td></tr>
       <tr><td><strong>إجمالي المبيعات المحققة بالسعر الثابت:</strong></td><td style="font-weight:bold;">${profile.grossSales.toLocaleString('en-US')} ج.م</td></tr>
@@ -161,7 +165,7 @@ function generateTierPromotionLetterHtml(profile, agentInfo) {
     <div class="sig-grid">
       <div class="sig-col">
         <strong>الموزع المعتمد / الشريك الإقليمي</strong>
-        <p style="margin:2px 0; font-size:11px;">${profile.name}</p>
+        <p style="margin:2px 0; font-size:11px;">${safeName}</p>
         <div class="line"></div>
       </div>
       <div style="text-align:center;">

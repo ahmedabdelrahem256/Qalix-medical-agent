@@ -5,6 +5,7 @@
 'use strict';
 
 const crypto = require('crypto');
+const { escapeHtml } = require('./html_escape');
 
 const PAYMENT_CHANNELS = {
   instapay: { id: 'instapay', nameAr: 'إنستاباي (InstaPay IPN)', icon: '⚡', reqRef: true, desc: 'تحويل فوري لحظي عبر إنستاباي للموزع المعتمد' },
@@ -14,7 +15,25 @@ const PAYMENT_CHANNELS = {
 };
 
 function generateReceiptHtml(receiptData, agentInfo) {
-  const d = receiptData;
+  const raw = receiptData;
+  const d = {
+    ...raw,
+    receiptNo: escapeHtml(raw.receiptNo),
+    receiptDate: escapeHtml(raw.receiptDate),
+    distributorName: escapeHtml(raw.distributorName),
+    distributorCode: escapeHtml(raw.distributorCode),
+    distributorPhone: escapeHtml(raw.distributorPhone),
+    clinicName: escapeHtml(raw.clinicName),
+    doctorName: escapeHtml(raw.doctorName),
+    city: escapeHtml(raw.city),
+    governorate: escapeHtml(raw.governorate),
+    clinicPhone: escapeHtml(raw.clinicPhone),
+    tierNameAr: escapeHtml(raw.tierNameAr),
+    channelNameAr: escapeHtml(raw.channelNameAr),
+    referenceId: escapeHtml(raw.referenceId),
+    amountPaidInWords: escapeHtml(raw.amountPaidInWords),
+    sha256: escapeHtml(raw.sha256)
+  };
   const qrSvg = `<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
     <rect width="100" height="100" fill="#ffffff" rx="6"/>
     <path d="M10 10 h25 v25 h-25 z M15 15 h15 v15 h-15 z M65 10 h25 v25 h-25 z M70 15 h15 v15 h-15 z M10 65 h25 v25 h-25 z M15 70 h15 v15 h-15 z M45 20 h10 v10 h-10 z M45 45 h10 v10 h-10 z M20 45 h10 v10 h-10 z M65 65 h10 v10 h-10 z M80 45 h10 v20 h-10 z M45 70 h20 v10 h-20 z M70 80 h20 v10 h-20 z" fill="#0f172a"/>

@@ -27,27 +27,41 @@ for (const d of dirs) {
 console.log('[2/4] أخذ لقطة آمنة لقاعدة البيانات (SQLite Snapshot)...');
 fs.mkdirSync(path.join(staging, 'data'), { recursive: true });
 let snapshotTaken = false;
+const sourceDbPath = path.join(root, 'data', 'agent.db');
+const destDbPath = path.join(staging, 'data', 'agent.db');
 try {
-  const Database = require('better-sqlite3');
-  const db = new Database(path.join(root, 'data', 'agent.db'), { readonly: true });
-  db.backup(path.join(staging, 'data', 'agent.db'));
-  db.close();
-  snapshotTaken = true;
-  console.log('      تم أخذ لقطة قاعدة البيانات بنجاح عبر SQLite Backup API.');
+  if (fs.existsSync(sourceDbPath)) {
+    const { DatabaseSync } = require('node:sqlite');
+    const db = new DatabaseSync(sourceDbPath, { readOnly: true });
+    try {
+      const normalizedDest = destDbPath.replace(/\\/g, '/').replace(/'/g, "''");
+      db.exec(`VACUUM INTO '${normalizedDest}';`);
+      snapshotTaken = true;
+      console.log('      تم أخذ لقطة قاعدة البيانات بنجاح عبر node:sqlite VACUUM INTO.');
+    } finally {
+      db.close();
+    }
+  }
 } catch (e) {
+  console.warn('      تعذر أخذ لقطة VACUUM INTO مباشرة، جاري محاولة النسخ البديل:', e.message);
   const backupsDir = path.join(root, 'data', 'backups');
   if (fs.existsSync(backupsDir)) {
     const snaps = fs.readdirSync(backupsDir).filter(f => f.endsWith('.db')).sort().reverse();
     if (snaps.length > 0) {
-      fs.copyFileSync(path.join(backupsDir, snaps[0]), path.join(staging, 'data', 'agent.db'));
+      fs.copyFileSync(path.join(backupsDir, snaps[0]), destDbPath);
       snapshotTaken = true;
       console.log('      تم استخدام آخر نقطة استعادة:', snaps[0]);
     }
   }
 }
 
-if (!snapshotTaken && fs.existsSync(path.join(root, 'data', 'agent.db'))) {
-  fs.copyFileSync(path.join(root, 'data', 'agent.db'), path.join(staging, 'data', 'agent.db'));
+if (!snapshotTaken && fs.existsSync(sourceDbPath)) {
+  fs.copyFileSync(sourceDbPath, destDbPath);
+}
+
+const customDevPath = path.join(root, 'data', 'custom_dev_data.json');
+if (fs.existsSync(customDevPath)) {
+  fs.copyFileSync(customDevPath, path.join(staging, 'data', 'custom_dev_data.json'));
 }
 
 console.log('[3/4] نسخ ملفات الوثائق والتشغيل...');

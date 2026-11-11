@@ -31,8 +31,8 @@ function createDatabaseSnapshot(db, dataDir) {
   // Attempt VACUUM INTO for consistent online snapshot
   let method = 'vacuum_into';
   try {
-    // SQLite expects forward slashes or escaped backslashes in paths
-    const normalizedPath = backupPath.replace(/\\/g, '/');
+    // SQLite expects forward slashes and doubled single quotes in paths
+    const normalizedPath = backupPath.replace(/\\/g, '/').replace(/'/g, "''");
     db.exec(`VACUUM INTO '${normalizedPath}';`);
   } catch (err) {
     // Fallback: Copy raw agent.db if VACUUM INTO is not supported
@@ -99,6 +99,12 @@ function exportFullSystemJson(db) {
   const deals = db.prepare('SELECT * FROM deals ORDER BY created_at DESC').all();
   const auditLogs = db.prepare('SELECT * FROM audit_log ORDER BY id ASC').all();
   const proposals = db.prepare('SELECT * FROM excellence_proposals ORDER BY created_at DESC').all();
+  let leadLocks = [];
+  try {
+    leadLocks = db.prepare('SELECT * FROM lead_locks ORDER BY created_at DESC').all();
+  } catch (e) {
+    leadLocks = [];
+  }
 
   const exportObj = {
     exportedAt: new Date().toISOString(),
@@ -108,13 +114,15 @@ function exportFullSystemJson(db) {
       distributorsCount: distributors.length,
       dealsCount: deals.length,
       auditRecordsCount: auditLogs.length,
-      proposalsCount: proposals.length
+      proposalsCount: proposals.length,
+      leadLocksCount: leadLocks.length
     },
     data: {
       distributors,
       deals,
       auditLogs,
-      proposals
+      proposals,
+      leadLocks
     }
   };
 

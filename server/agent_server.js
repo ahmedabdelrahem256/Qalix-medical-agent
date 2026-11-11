@@ -611,13 +611,22 @@ function readJsonBody(req) {
     let size = 0;
     req.on('data', c => {
       size += c.length;
-      if (size > 1e6) { req.destroy(); reject(new Error('Payload too large')); }
+      if (size > 1e6) {
+        const err = new Error('Payload too large');
+        err.statusCode = 413;
+        req.destroy();
+        reject(err);
+      }
       else chunks.push(c);
     });
     req.on('end', () => {
       if (!size) return resolve({});
       try { resolve(JSON.parse(Buffer.concat(chunks).toString('utf8'))); }
-      catch { reject(new Error('Invalid JSON')); }
+      catch {
+        const err = new Error('Invalid JSON');
+        err.statusCode = 400;
+        reject(err);
+      }
     });
     req.on('error', reject);
   });
@@ -1479,8 +1488,9 @@ const server = http.createServer(async (req, res) => {
 
     return sendJson(res, 404, { error: 'Not found' });
   } catch (e) {
-    console.error(e);
-    return sendJson(res, 500, { error: e.message || 'Server error' });
+    if (!e?.statusCode || e.statusCode >= 500) console.error(e);
+    const status = Number(e?.statusCode) || 500;
+    return sendJson(res, status, { error: e.message || 'Server error' });
   }
 });
 

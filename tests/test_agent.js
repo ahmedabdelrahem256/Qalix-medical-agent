@@ -915,7 +915,57 @@ function req(method, urlPath, body) {
       }
     );
 
-    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/63 PASSED ===`);
+    // 64. API Malformed JSON Returns 400 + Shared HTML Escaping Across Document Generators
+    const badJsonRes = await new Promise((resolve, reject) => {
+      const r = http.request({
+        hostname: '127.0.0.1',
+        port: TEST_PORT,
+        path: '/api/distributors',
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Content-Length': 11 }
+      }, res => {
+        let b = '';
+        res.on('data', d => b += d);
+        res.on('end', () => resolve({ status: res.statusCode, body: b }));
+      });
+      r.on('error', reject);
+      r.write('{bad_json!!');
+      r.end();
+    });
+    const { generateDistributorContractHtml } = require('../server/contract_generator');
+    const { generateDistributorStatementHtml } = require('../server/financial_ledger');
+    const xssDist = { id: 99, name: '<script>xss</script>', code: 'QMA-XSS', phone: '01000000000', governorate: '<img src=x>', commission_rate: 27 };
+    const escapedContract = generateDistributorContractHtml(xssDist);
+    const escapedStatement = generateDistributorStatementHtml(xssDist, []);
+    check('64. رفض JSON المعطوب بحالة 400 وتنقية مخرجات العقود وكشوف الحسابات من حقن HTML',
+      badJsonRes.status === 400 &&
+      !escapedContract.includes('<script>xss</script>') &&
+      escapedContract.includes('&lt;script&gt;xss&lt;/script&gt;') &&
+      !escapedStatement.includes('<script>xss</script>') &&
+      escapedStatement.includes('&lt;script&gt;xss&lt;/script&gt;'),
+      { badJsonStatus: badJsonRes.status }
+    );
+
+    // 65. Air-Gapped Backup Integrity: create_backup.js Uses node:sqlite & backup_manager Exports leadLocks
+    const createBackupSrc = fs.readFileSync(path.join(__dirname, '..', 'server', 'create_backup.js'), 'utf8');
+    const fullExportRes = await req('GET', '/api/backup/export-data');
+    check('65. سلامة محرك النسخ الاحتياطي (اعتماد node:sqlite بدون حزم خارجية وشمول leadLocks بالتصدير)',
+      !createBackupSrc.includes('better-sqlite3') &&
+      createBackupSrc.includes("require('node:sqlite')") &&
+      createBackupSrc.includes('VACUUM INTO') &&
+      fullExportRes.status === 200 &&
+      fullExportRes.body &&
+      fullExportRes.body.data &&
+      Array.isArray(fullExportRes.body.data.leadLocks) &&
+      typeof fullExportRes.body.summary.leadLocksCount === 'number',
+      {
+        usesNodeSqlite: createBackupSrc.includes("require('node:sqlite')"),
+        hasBetterSqlite: createBackupSrc.includes('better-sqlite3'),
+        exportStatus: fullExportRes.status
+      }
+    );
+
+    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/65 PASSED ===`);
     for (const r of results) console.log(' ✅', r);
   } finally {
     srv.kill('SIGINT');
