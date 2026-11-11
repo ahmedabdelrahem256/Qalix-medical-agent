@@ -35,7 +35,7 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
     .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 20px; }
     .sub-card { background: var(--card2); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 12px; }
     .badge { display: inline-block; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; background: rgba(16,185,129,0.15); color: var(--accent); border: 1px solid rgba(16,185,129,0.3); }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 16px; }
     input, select, textarea { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border); background: #0f172a; color: var(--text); font-size: 13px; margin-top: 4px; }
     button { cursor: pointer; padding: 10px 16px; border-radius: 10px; border: none; font-weight: 700; font-size: 13px; background: var(--accent); color: #052e16; transition: 0.2s; }
     button:hover { opacity: 0.9; }
@@ -44,6 +44,11 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
     th, td { padding: 10px; border-bottom: 1px solid var(--border); text-align: right; }
     th { color: var(--muted); background: #0f172a; }
+    @media (max-width: 768px) {
+      body { padding: 12px; }
+      .card { padding: 14px; }
+      table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    }
     @media print {
       body { background: white; color: black; padding: 0; }
       .no-print { display: none !important; }

@@ -351,10 +351,16 @@ function req(method, urlPath, body) {
       chartsRes.body.ok === true &&
       typeof chartsRes.body.charts.barChartSvg === 'string' &&
       chartsRes.body.charts.barChartSvg.includes('<svg') &&
+      chartsRes.body.charts.barChartSvg.includes('direction="ltr"') &&
+      chartsRes.body.charts.barChartSvg.includes('height:auto') &&
       typeof chartsRes.body.charts.donutChartSvg === 'string' &&
       chartsRes.body.charts.donutChartSvg.includes('<svg') &&
+      chartsRes.body.charts.donutChartSvg.includes('direction="ltr"') &&
+      chartsRes.body.charts.donutChartSvg.includes('height:auto') &&
       typeof chartsRes.body.charts.waterfallChartSvg === 'string' &&
-      chartsRes.body.charts.waterfallChartSvg.includes('<svg')
+      chartsRes.body.charts.waterfallChartSvg.includes('<svg') &&
+      chartsRes.body.charts.waterfallChartSvg.includes('direction="ltr"') &&
+      chartsRes.body.charts.waterfallChartSvg.includes('height:auto')
     );
 
     // 27. Distributor Training Modules & Exam Curriculum (Phase 6)
@@ -449,7 +455,9 @@ function req(method, urlPath, body) {
       fcRes.body.forecast.annualGrossSales > 0 &&
       fcRes.body.forecast.annualAgentNetRevenue > 0 &&
       typeof fcRes.body.forecast.forecastSvgChart === 'string' &&
-      fcRes.body.forecast.forecastSvgChart.includes('<svg')
+      fcRes.body.forecast.forecastSvgChart.includes('<svg') &&
+      fcRes.body.forecast.forecastSvgChart.includes('direction="ltr"') &&
+      fcRes.body.forecast.forecastSvgChart.includes('height:auto')
     );
 
     // 36. Marketing & Presentation Catalog API (Phase 8)

@@ -83,59 +83,74 @@ function calculate12MonthForecast(scenarioKey = 'balanced') {
 }
 
 function generateForecastSvgChart(months) {
-  const width = 580;
-  const height = 200;
-  const padLeft = 50;
-  const padBottom = 30;
-  const chartW = width - padLeft - 20;
-  const chartH = height - padBottom - 30;
+  const width = 600;
+  const height = 230;
+  const padLeft = 66;
+  const padTop = 58;
+  const padRight = 24;
+  const padBottom = 34;
+  const chartW = width - padLeft - padRight;
+  const chartH = height - padTop - padBottom;
 
   const maxVal = Math.max(...months.map(m => m.grossSales), 1);
+  const midVal = Math.round(maxVal / 2);
   const stepX = chartW / (months.length - 1);
 
-  const pointsGross = months.map((m, i) => {
-    const x = padLeft + i * stepX;
-    const y = 30 + chartH - (m.grossSales / maxVal) * chartH;
-    return `${x},${y}`;
-  }).join(' ');
+  const grossCoords = months.map((m, i) => ({
+    x: +(padLeft + i * stepX).toFixed(1),
+    y: +(padTop + chartH - (m.grossSales / maxVal) * chartH).toFixed(1)
+  }));
+  const netCoords = months.map((m, i) => ({
+    x: +(padLeft + i * stepX).toFixed(1),
+    y: +(padTop + chartH - (m.agentNetRevenue / maxVal) * chartH).toFixed(1)
+  }));
 
-  const pointsNet = months.map((m, i) => {
-    const x = padLeft + i * stepX;
-    const y = 30 + chartH - (m.agentNetRevenue / maxVal) * chartH;
-    return `${x},${y}`;
-  }).join(' ');
+  const pointsGross = grossCoords.map(p => `${p.x},${p.y}`).join(' ');
+  const pointsNet = netCoords.map(p => `${p.x},${p.y}`).join(' ');
+  const areaNet = `${padLeft},${padTop + chartH} ${pointsNet} ${padLeft + chartW},${padTop + chartH}`;
 
-  const labels = months.filter((_, i) => i % 2 === 0).map((m, i) => {
-    const x = padLeft + (i * 2) * stepX;
-    return `<text x="${x}" y="${height - 10}" fill="#94a3b8" font-size="10" text-anchor="middle">ش ${m.monthNumber}</text>`;
+  const dotsGross = grossCoords.map((p, i) => `<circle cx="${p.x}" cy="${p.y}" r="3" fill="#38bdf8"><title>شهر ${months[i].monthNumber}: ${months[i].grossSales.toLocaleString('en-US')} ج.م</title></circle>`).join('');
+  const dotsNet = netCoords.map((p, i) => `<circle cx="${p.x}" cy="${p.y}" r="3" fill="#10b981"><title>شهر ${months[i].monthNumber}: ${months[i].agentNetRevenue.toLocaleString('en-US')} ج.م</title></circle>`).join('');
+
+  const labels = months.map((m, i) => {
+    const x = +(padLeft + i * stepX).toFixed(1);
+    return `<text x="${x}" y="${height - 12}" fill="#94a3b8" font-size="9.5" text-anchor="middle">ش ${m.monthNumber}</text>`;
   }).join('');
 
   return `
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="100%" height="${height}" style="background:rgba(15,23,42,0.6); border-radius:12px; font-family:-apple-system, Cairo, sans-serif;">
-      <text x="${width / 2}" y="20" fill="#38bdf8" font-size="12.5" font-weight="bold" text-anchor="middle">المسار التنبؤي لإيرادات الوكيل وصافي التدفق السنوي (12 شهراً)</text>
-      
-      <!-- Grid lines -->
-      <line x1="${padLeft}" y1="30" x2="${width - 20}" y2="30" stroke="#1e293b" stroke-dasharray="3" />
-      <line x1="${padLeft}" y1="${30 + chartH / 2}" x2="${width - 20}" y2="${30 + chartH / 2}" stroke="#1e293b" stroke-dasharray="3" />
-      <line x1="${padLeft}" y1="${30 + chartH}" x2="${width - 20}" y2="${30 + chartH}" stroke="#334155" />
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="100%" direction="ltr" style="width:100%; height:auto; display:block; direction:ltr; background:#0b1324; border:1px solid rgba(148,163,184,0.14); border-radius:12px; font-family:'Cairo','Segoe UI',Tahoma,sans-serif;">
+      <text x="${width / 2}" y="22" fill="#38bdf8" font-size="13" font-weight="800" text-anchor="middle">المسار التنبؤي لإيرادات الوكيل وصافي التدفق السنوي (12 شهراً)</text>
 
-      <!-- Polyline Gross Sales -->
+      <!-- Legend (right-aligned, zero text overlap) -->
+      <g>
+        <rect x="556" y="34" width="16" height="4" rx="2" fill="#38bdf8" />
+        <text x="548" y="39" fill="#38bdf8" font-size="10.5" font-weight="700" text-anchor="end">إجمالي المبيعات</text>
+
+        <rect x="418" y="34" width="16" height="4" rx="2" fill="#10b981" />
+        <text x="410" y="39" fill="#10b981" font-size="10.5" font-weight="700" text-anchor="end">صافي إيراد الوكيل</text>
+      </g>
+
+      <!-- Y-axis scale ticks & Grid lines -->
+      <text x="${padLeft - 8}" y="${padTop + 4}" fill="#64748b" font-size="9.5" text-anchor="end">${maxVal.toLocaleString('en-US')}</text>
+      <line x1="${padLeft}" y1="${padTop}" x2="${width - padRight}" y2="${padTop}" stroke="#1e293b" stroke-dasharray="3" />
+
+      <text x="${padLeft - 8}" y="${padTop + chartH / 2 + 4}" fill="#64748b" font-size="9.5" text-anchor="end">${midVal.toLocaleString('en-US')}</text>
+      <line x1="${padLeft}" y1="${padTop + chartH / 2}" x2="${width - padRight}" y2="${padTop + chartH / 2}" stroke="#1e293b" stroke-dasharray="3" />
+
+      <text x="${padLeft - 8}" y="${padTop + chartH + 4}" fill="#64748b" font-size="9.5" text-anchor="end">0</text>
+      <line x1="${padLeft}" y1="${padTop + chartH}" x2="${width - padRight}" y2="${padTop + chartH}" stroke="#334155" />
+
+      <!-- Net Agent Subtle Area -->
+      <polygon fill="#10b981" opacity="0.1" points="${areaNet}" />
+
+      <!-- Polylines & Data Points -->
       <polyline fill="none" stroke="#38bdf8" stroke-width="2.5" points="${pointsGross}" />
-      
-      <!-- Polyline Net Agent -->
       <polyline fill="none" stroke="#10b981" stroke-width="2.5" points="${pointsNet}" />
+      ${dotsGross}
+      ${dotsNet}
 
       <!-- Month Labels -->
       ${labels}
-
-      <!-- Legend -->
-      <g transform="translate(60, 40)">
-        <line x1="0" y1="0" x2="16" y2="0" stroke="#38bdf8" stroke-width="2.5" />
-        <text x="22" y="4" fill="#38bdf8" font-size="10" font-weight="bold">إجمالي المبيعات</text>
-
-        <line x1="120" y1="0" x2="136" y2="0" stroke="#10b981" stroke-width="2.5" />
-        <text x="142" y="4" fill="#10b981" font-size="10" font-weight="bold">صافي إيراد الوكيل</text>
-      </g>
     </svg>
   `;
 }

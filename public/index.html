@@ -144,8 +144,8 @@
     .pane { display: none; animation: fadeIn 0.25s ease; }
     .pane.active { display: block; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
-    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 18px; }
-    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 18px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 16px; }
     table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
     th, td { padding: 11px 12px; border-bottom: 1px solid var(--border); text-align: right; }
     th { background: rgba(15, 23, 42, 0.35); color: var(--muted); font-weight: 700; }
@@ -179,8 +179,11 @@
       transition: 0.2s ease;
     }
     .btn:hover { opacity: 0.94; transform: translateY(-1px); }
+    .btn-emerald { background: linear-gradient(135deg, #10b981, #059669); color: #ffffff; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.28); }
     .btn-sky { background: linear-gradient(135deg, #0ea5e9, #0284c7); color: #ffffff; box-shadow: 0 4px 14px rgba(14, 165, 233, 0.28); }
-    .btn-sm { padding: 5px 11px; font-size: 12px; border-radius: 8px; }
+    .btn-amber { background: linear-gradient(135deg, #f59e0b, #d97706); color: #0f172a; font-weight: 800; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.28); }
+    .btn-purple { background: linear-gradient(135deg, #a855f7, #7e22ce); color: #ffffff; box-shadow: 0 4px 14px rgba(168, 85, 247, 0.28); }
+    .btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 8px; }
     .filter-chip {
       padding: 6px 14px;
       border-radius: 999px;
@@ -196,6 +199,15 @@
       color: #ffffff;
       font-weight: 700;
       border-color: transparent;
+    }
+    #svgChartsRow svg, #forecastSvgContainer svg { max-width: 100%; height: auto; display: block; direction: ltr; }
+    @media (max-width: 960px) {
+      .glass table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    }
+    @media (max-width: 768px) {
+      body { padding: 12px; }
+      .glass { padding: 14px; border-radius: 16px; }
+      .tab-btn { padding: 8px 12px; font-size: 12px; }
     }
   </style>
 </head>
@@ -434,14 +446,14 @@
 
             <!-- Visual Analytics & SVG Charts (Phase 6) -->
       <div class="glass" style="margin-bottom:18px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:14px;">
           <h3 style="margin:0; font-size:17px; color:var(--sky);">📊 لوحة التحليلات والمؤشرات البصرية المباشرة (Pure SVG Zero-Dependency)</h3>
           <span class="badge b-emerald">مخططات بيانية تفاعلية أوفلاين 100%</span>
         </div>
-        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:14px;" id="svgChartsRow">
-          <div id="chartTierContainer" class="sub-card" style="padding:10px;"></div>
-          <div id="chartGeoContainer" class="sub-card" style="padding:10px;"></div>
-          <div id="chartWaterfallContainer" class="sub-card" style="padding:10px;"></div>
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap:14px;" id="svgChartsRow">
+          <div id="chartTierContainer" class="sub-card" style="padding:10px; overflow:hidden; min-width:0;"></div>
+          <div id="chartGeoContainer" class="sub-card" style="padding:10px; overflow:hidden; min-width:0;"></div>
+          <div id="chartWaterfallContainer" class="sub-card" style="padding:10px; overflow:hidden; min-width:0;"></div>
         </div>
       </div>
 
