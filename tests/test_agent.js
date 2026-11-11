@@ -672,7 +672,24 @@ function req(method, urlPath, body) {
       mList.body.media.images.length >= 1
     );
 
-    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/55 PASSED ===`);
+    // 56. Card & Portal Live Preview Before Download (Modal + Preview/Download headers)
+    const kitPreviewRes = await req('GET', `/api/distributors/${sampleDistId}/kit?preview=1`);
+    const battleDlRes = await req('GET', '/api/marketing/battle-card?download=1');
+    const dashHtmlRes = await req('GET', '/');
+    check('56. دعم معاينة البطاقات وبوابات الموزعين مباشرة داخل نافذة تفاعلية قبل التحميل',
+      kitPreviewRes.status === 200 &&
+      !kitPreviewRes.headers['content-disposition'] &&
+      battleDlRes.status === 200 &&
+      String(battleDlRes.headers['content-disposition'] || '').includes('Qalix-Competitive-Battle-Card.html') &&
+      dashHtmlRes.status === 200 &&
+      typeof dashHtmlRes.body === 'string' &&
+      dashHtmlRes.body.includes('cardPreviewModal') &&
+      dashHtmlRes.body.includes('openCardPreviewModal') &&
+      dashHtmlRes.body.includes('previewDistributorKit') &&
+      dashHtmlRes.body.includes('cardPreviewDownloadBtn')
+    );
+
+    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/56 PASSED ===`);
     for (const r of results) console.log(' ✅', r);
   } finally {
     srv.kill('SIGINT');

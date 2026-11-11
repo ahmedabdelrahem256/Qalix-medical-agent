@@ -52,6 +52,15 @@ const KITS_DIR = process.env.DATA_DIR ? path.join(DATA_DIR, 'kits') : path.join(
 fs.mkdirSync(DATA_DIR, { recursive: true });
 fs.mkdirSync(KITS_DIR, { recursive: true });
 
+function sendHtmlWithOptionalDownload(res, html, downloadFilename, forceDownload) {
+  const headers = { 'Content-Type': 'text/html; charset=utf-8' };
+  if (forceDownload && downloadFilename) {
+    headers['Content-Disposition'] = `attachment; filename="${downloadFilename}"`;
+  }
+  res.writeHead(200, headers);
+  return res.end(html);
+}
+
 /* ---------------- Fixed Official Pricing (EGP) ---------------- */
 const OFFICIAL_PRICING = {
   basic:        { id: 'basic',        nameAr: 'الباقة الأساسية (عيادة طبيب فردي)',         price: 4500,  assiutPrice: 2700, maxDoctors: 2,  maxUsers: 4 },
@@ -546,11 +555,8 @@ const server = http.createServer(async (req, res) => {
       const dist = db.prepare('SELECT * FROM distributors WHERE id = ?').get(id);
       if (!dist) return sendJson(res, 404, { error: 'الموزع غير موجود' });
       const html = generateStandaloneDistributorPortalHtml(dist);
-      res.writeHead(200, {
-        'Content-Type': 'text/html; charset=utf-8',
-        'Content-Disposition': `attachment; filename="${dist.code}-Standalone-Kit.html"`
-      });
-      return res.end(html);
+      const isPreview = url.searchParams.get('preview') === '1';
+      return sendHtmlWithOptionalDownload(res, html, `${dist.code}-Standalone-Kit.html`, !isPreview);
     }
 
     if (req.method === 'POST' && pathname === '/api/deals') {
@@ -696,44 +702,51 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (req.method === 'GET' && pathname === '/api/marketing/whatsapp-catalog') {
-      const html = renderWhatsAppCatalogA4();
-      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-      return res.end(html);
+      return sendHtmlWithOptionalDownload(
+        res,
+        renderWhatsAppCatalogA4(),
+        'Qalix-WhatsApp-Sales-Catalog.html',
+        url.searchParams.get('download') === '1'
+      );
     }
 
     if (req.method === 'GET' && pathname === '/api/marketing/wow-demo') {
-      const html = renderWowDemoA4();
-      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-      return res.end(html);
+      return sendHtmlWithOptionalDownload(
+        res,
+        renderWowDemoA4(),
+        'Qalix-WOW-5Min-Demo-Guide.html',
+        url.searchParams.get('download') === '1'
+      );
     }
 
     if (req.method === 'GET' && pathname === '/api/marketing/battle-card') {
       const distId = url.searchParams.get('distId');
       const dist = distId ? db.prepare('SELECT * FROM distributors WHERE id = ?').get(distId) : null;
-      const html = renderBattleCardA4(dist);
-      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-      return res.end(html);
+      return sendHtmlWithOptionalDownload(
+        res,
+        renderBattleCardA4(dist),
+        'Qalix-Competitive-Battle-Card.html',
+        url.searchParams.get('download') === '1'
+      );
     }
 
     /* ---------------- Distributor Recruitment & Onboarding Cards API ---------------- */
     if (req.method === 'GET' && pathname === '/api/recruitment/flyer') {
-      const html = renderDistributorRecruitmentCardHtml(AGENT_INFO);
-      const headers = { 'Content-Type': 'text/html; charset=utf-8' };
-      if (url.searchParams.get('download') === '1') {
-        headers['Content-Disposition'] = 'attachment; filename="Qalix-Distributor-Recruitment-Card.html"';
-      }
-      res.writeHead(200, headers);
-      return res.end(html);
+      return sendHtmlWithOptionalDownload(
+        res,
+        renderDistributorRecruitmentCardHtml(AGENT_INFO),
+        'Qalix-Distributor-Recruitment-Card.html',
+        url.searchParams.get('download') === '1'
+      );
     }
 
     if (req.method === 'GET' && pathname === '/api/recruitment/onboarding-card') {
-      const html = renderDistributorOnboardingCardHtml(AGENT_INFO);
-      const headers = { 'Content-Type': 'text/html; charset=utf-8' };
-      if (url.searchParams.get('download') === '1') {
-        headers['Content-Disposition'] = 'attachment; filename="Qalix-New-Distributor-Onboarding-Card.html"';
-      }
-      res.writeHead(200, headers);
-      return res.end(html);
+      return sendHtmlWithOptionalDownload(
+        res,
+        renderDistributorOnboardingCardHtml(AGENT_INFO),
+        'Qalix-New-Distributor-Onboarding-Card.html',
+        url.searchParams.get('download') === '1'
+      );
     }
 
     /* ---------------- Network Diagnostics & Mobile QR Access (Phase 4) ---------------- */

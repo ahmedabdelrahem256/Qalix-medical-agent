@@ -460,9 +460,9 @@
             </p>
           </div>
           <div style="display:flex; gap:8px; flex-wrap:wrap;">
-            <a href="/api/recruitment/flyer" target="_blank" class="btn btn-sm btn-amber" style="text-decoration:none;">📣 بطاقة تسويق طلب موزعين (A4)</a>
-            <a href="/api/recruitment/onboarding-card" target="_blank" class="btn btn-sm btn-sky" style="text-decoration:none;">📝 بطاقة بيانات الموزع الجديد (معاينة/إرسال)</a>
-            <a href="/api/recruitment/onboarding-card?download=1" class="btn btn-sm btn-emerald" style="text-decoration:none;">⬇️ تحميل البطاقة التفاعلية (.html لإرسالها واتساب)</a>
+            <a href="/api/recruitment/flyer" onclick="event.preventDefault(); openCardPreviewModal({ title: '📣 بطاقة تسويق طلب موزعين معتمدين (A4)', subtitle: 'معاينة البطاقة التسويقية قبل التحميل أو الطباعة والنشر', previewUrl: '/api/recruitment/flyer', downloadUrl: '/api/recruitment/flyer?download=1', downloadFilename: 'Qalix-Distributor-Recruitment-Card.html' })" class="btn btn-sm btn-amber" style="text-decoration:none;">📣 بطاقة تسويق طلب موزعين (A4)</a>
+            <a href="/api/recruitment/onboarding-card" onclick="event.preventDefault(); openCardPreviewModal({ title: '📝 بطاقة بيانات الموزع الجديد التفاعلية', subtitle: 'معاينة بطاقة الشراكة والعمولات قبل الإرسال أو التحميل', previewUrl: '/api/recruitment/onboarding-card', downloadUrl: '/api/recruitment/onboarding-card?download=1', downloadFilename: 'Qalix-New-Distributor-Onboarding-Card.html' })" class="btn btn-sm btn-sky" style="text-decoration:none;">📝 بطاقة بيانات الموزع الجديد (معاينة)</a>
+            <a href="/api/recruitment/onboarding-card?download=1" onclick="event.preventDefault(); openCardPreviewModal({ title: '📝 معاينة البطاقة التفاعلية قبل التحميل (.html)', subtitle: 'استعرض محتوى البطاقة وتأكد منه أولاً ثم اضغط زر تأكيد التحميل بالأسفل لإرسالها واتساب', previewUrl: '/api/recruitment/onboarding-card', downloadUrl: '/api/recruitment/onboarding-card?download=1', downloadFilename: 'Qalix-New-Distributor-Onboarding-Card.html' })" class="btn btn-sm btn-emerald" style="text-decoration:none;">⬇️ معاينة وتحميل البطاقة (.html)</a>
           </div>
         </div>
       </div>
@@ -849,8 +849,8 @@
             </p>
           </div>
           <div style="display:flex; gap:8px; align-items:center;">
-            <a href="/api/marketing/wow-demo" target="_blank" class="btn btn-sm" style="text-decoration:none; background:linear-gradient(135deg, #8b5cf6, #7c3aed); color:#fff; display:inline-flex; align-items:center; gap:6px;">
-              📄 استعراض وطباعة سيناريو الـ 5 دقائق (A4)
+            <a href="/api/marketing/wow-demo" onclick="event.preventDefault(); openCardPreviewModal({ title: '📄 سيناريو العرض الميداني الحاسم في 5 دقائق (A4)', subtitle: 'معاينة بطاقة سيناريو العرض قبل التحميل أو الطباعة', previewUrl: '/api/marketing/wow-demo', downloadUrl: '/api/marketing/wow-demo?download=1', downloadFilename: 'Qalix-WOW-5Min-Demo-Guide.html' })" class="btn btn-sm" style="text-decoration:none; background:linear-gradient(135deg, #8b5cf6, #7c3aed); color:#fff; display:inline-flex; align-items:center; gap:6px;">
+              📄 معاينة وتحميل سيناريو الـ 5 دقائق (A4)
             </a>
             <span class="badge b-purple">نسبة اقتناع الأطباء +80%</span>
           </div>
@@ -868,8 +868,8 @@
             </p>
           </div>
           <div style="display:flex; gap:8px; align-items:center;">
-            <a href="/api/marketing/whatsapp-catalog" target="_blank" class="btn btn-sm btn-sky" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
-              📄 فتح واستعراض الكتالوج كاملاً (A4)
+            <a href="/api/marketing/whatsapp-catalog" onclick="event.preventDefault(); openCardPreviewModal({ title: '💬 كتالوج رسائل واتساب البيعية السريعة (A4)', subtitle: 'معاينة الكتالوج كاملاً قبل التحميل أو الطباعة', previewUrl: '/api/marketing/whatsapp-catalog', downloadUrl: '/api/marketing/whatsapp-catalog?download=1', downloadFilename: 'Qalix-WhatsApp-Sales-Catalog.html' })" class="btn btn-sm btn-sky" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
+              📄 معاينة وتحميل الكتالوج كاملاً (A4)
             </a>
             <span class="badge b-emerald">إرسال مباشر بنقرة زر</span>
           </div>
@@ -888,9 +888,9 @@
             </p>
           </div>
           <div style="display:flex; gap:8px; flex-wrap:wrap;">
-            <a href="/api/recruitment/flyer" target="_blank" class="btn btn-sm btn-amber" style="text-decoration:none;">📣 بطاقة طلب موزعين (A4 / PDF)</a>
-            <a href="/api/recruitment/onboarding-card" target="_blank" class="btn btn-sm btn-sky" style="text-decoration:none;">📝 فتح بطاقة بيانات الموزع الجديد</a>
-            <a href="/api/recruitment/onboarding-card?download=1" class="btn btn-sm btn-emerald" style="text-decoration:none;">⬇️ تحميل ملف الاستمارة (.html)</a>
+            <a href="/api/recruitment/flyer" onclick="event.preventDefault(); openCardPreviewModal({ title: '📣 بطاقة طلب موزعين (A4 / PDF)', subtitle: 'معاينة البطاقة الترويجية قبل التحميل أو الطباعة', previewUrl: '/api/recruitment/flyer', downloadUrl: '/api/recruitment/flyer?download=1', downloadFilename: 'Qalix-Distributor-Recruitment-Card.html' })" class="btn btn-sm btn-amber" style="text-decoration:none;">📣 بطاقة طلب موزعين (A4 / PDF)</a>
+            <a href="/api/recruitment/onboarding-card" onclick="event.preventDefault(); openCardPreviewModal({ title: '📝 بطاقة بيانات الموزع الجديد التفاعلية', subtitle: 'معاينة الاستمارة قبل الإرسال أو التحميل', previewUrl: '/api/recruitment/onboarding-card', downloadUrl: '/api/recruitment/onboarding-card?download=1', downloadFilename: 'Qalix-New-Distributor-Onboarding-Card.html' })" class="btn btn-sm btn-sky" style="text-decoration:none;">📝 معاينة بطاقة بيانات الموزع الجديد</a>
+            <a href="/api/recruitment/onboarding-card?download=1" onclick="event.preventDefault(); openCardPreviewModal({ title: '📝 معاينة استمارة الموزع الجديد قبل التحميل (.html)', subtitle: 'استعرض الاستمارة وتأكد منها أولاً ثم اضغط تأكيد التحميل بالأسفل', previewUrl: '/api/recruitment/onboarding-card', downloadUrl: '/api/recruitment/onboarding-card?download=1', downloadFilename: 'Qalix-New-Distributor-Onboarding-Card.html' })" class="btn btn-sm btn-emerald" style="text-decoration:none;">⬇️ معاينة وتحميل الاستمارة (.html)</a>
           </div>
         </div>
       </div>
@@ -902,11 +902,11 @@
           <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
             <h3 style="margin:0; font-size:16px; color:var(--sky);">🖨️ بطاقة المقارنة التنافسية A4 الجاهزة للطباعة</h3>
             <div style="display:flex; gap:6px; flex-wrap:wrap;">
-              <a href="/api/marketing/battle-card" target="_blank" class="btn btn-sm btn-sky" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
-                🖨️ فتح وطباعة بطاقة المقارنة (A4)
+              <a href="/api/marketing/battle-card" onclick="event.preventDefault(); openCardPreviewModal({ title: '🖨️ بطاقة المقارنة التنافسية A4', subtitle: 'معاينة بطاقة المقارنة قبل التحميل أو الطباعة', previewUrl: '/api/marketing/battle-card', downloadUrl: '/api/marketing/battle-card?download=1', downloadFilename: 'Qalix-Competitive-Battle-Card.html' })" class="btn btn-sm btn-sky" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
+                🖨️ معاينة وتحميل بطاقة المقارنة (A4)
               </a>
-              <a href="/presentations/بطاقة_عرض_منظومة_كالكس_الطبية_الموحدة.html" target="_blank" class="btn btn-sm btn-amber" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
-                💎 بطاقة الباقات والأسعار
+              <a href="/presentations/بطاقة_عرض_منظومة_كالكس_الطبية_الموحدة.html" onclick="event.preventDefault(); openCardPreviewModal({ title: '💎 بطاقة الباقات والأسعار الرسمية', subtitle: 'معاينة بطاقة العرض الموحدة قبل التحميل أو الطباعة', previewUrl: '/presentations/بطاقة_عرض_منظومة_كالكس_الطبية_الموحدة.html', downloadUrl: '/presentations/بطاقة_عرض_منظومة_كالكس_الطبية_الموحدة.html', downloadFilename: 'بطاقة_عرض_منظومة_كالكس_الطبية_الموحدة.html' })" class="btn btn-sm btn-amber" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
+                💎 معاينة وتحميل بطاقة الباقات
               </a>
             </div>
           </div>
@@ -1723,7 +1723,7 @@
           <td style="color:var(--emerald); font-weight:bold;">${fmt(d.metrics.totalAgentNet)}</td>
           <td>
             <div style="display:flex; gap:4px; flex-wrap:wrap;">
-              <a href="/api/distributors/${d.id}/kit" class="btn btn-sm" style="text-decoration:none;" title="تنزيل بوابة الموزع المستقلة">⬇ البوابة</a>
+              <a href="/api/distributors/${d.id}/kit" onclick="event.preventDefault(); previewDistributorKit('${d.id}', '${d.code}')" class="btn btn-sm" style="text-decoration:none;" title="معاينة ثم تنزيل بوابة الموزع المستقلة">⬇ البوابة</a>
               <a href="/api/contracts/distributor/${d.id}" target="_blank" class="btn btn-sm btn-sky" style="text-decoration:none;" title="طباعة عقد التوزيع الرسمي">📄 العقد</a>
               <a href="/api/distributors/${d.id}/statement" target="_blank" class="btn btn-sm btn-amber" style="text-decoration:none;" title="عرض وطباعة كشف الحساب المالي">📊 كشف حساب</a>
             </div>
@@ -2482,8 +2482,8 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
                 <p style="margin:2px 0 0; font-size:11.5px; color:var(--muted); line-height:1.4;">${p.description}</p>
               </div>
               <div style="display:flex; gap:6px;">
-                ${p.htmlUrl ? `<a href="${p.htmlUrl}" target="_blank" class="btn btn-sm btn-sky" style="text-decoration:none;">🌐 فتح HTML</a>` : ''}
-                ${p.pdfUrl ? `<a href="${p.pdfUrl}" target="_blank" class="btn btn-sm btn-amber" style="text-decoration:none;">📄 ملف PDF</a>` : ''}
+                ${p.htmlUrl ? `<a href="${p.htmlUrl}" onclick="event.preventDefault(); openCardPreviewModal({ title: this.dataset.title, subtitle: 'معاينة العرض التقديمي قبل التحميل أو الطباعة', previewUrl: this.dataset.url, downloadUrl: this.dataset.url, downloadFilename: this.dataset.fname })" data-title="${p.title.replace(/"/g, '&quot;')}" data-url="${p.htmlUrl}" data-fname="${p.id || 'presentation'}.html" class="btn btn-sm btn-sky" style="text-decoration:none;">👁️ معاينة وتحميل HTML</a>` : ''}
+                ${p.pdfUrl ? `<a href="${p.pdfUrl}" onclick="event.preventDefault(); openCardPreviewModal({ title: this.dataset.title + ' (PDF)', subtitle: 'معاينة ملف PDF قبل التحميل', previewUrl: this.dataset.url, downloadUrl: this.dataset.url, downloadFilename: this.dataset.fname })" data-title="${p.title.replace(/"/g, '&quot;')}" data-url="${p.pdfUrl}" data-fname="${p.id || 'presentation'}.pdf" class="btn btn-sm btn-amber" style="text-decoration:none;">📄 معاينة وتحميل PDF</a>` : ''}
               </div>
             </div>
           `).join('');
@@ -2545,6 +2545,8 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
       document.getElementById('lightboxTitle').innerText = title || 'معاينة الشاشة';
       document.getElementById('lightboxSubtitle').innerText = subtitle || '';
       document.getElementById('lightboxOpenNew').href = src;
+      const dlBtn = document.getElementById('lightboxDownloadBtn');
+      if (dlBtn) dlBtn.href = src;
       const tCont = document.getElementById('lightboxTags');
       if (tCont) {
         tCont.innerHTML = (tags || '').split('·').filter(Boolean).map(t =>
@@ -2563,6 +2565,78 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
     function closeLightboxDirect() {
       document.getElementById('imageLightboxModal').style.display = 'none';
     }
+
+    function previewDistributorKit(distId, distCode) {
+      openCardPreviewModal({
+        title: `🗂️ بوابة الموزع المستقلة (${distCode})`,
+        subtitle: `معاينة كاملة للبوابة وتأكد من كافة الأدوات والعمولات قبل تنزيل الملف (${distCode}-Standalone-Kit.html)`,
+        previewUrl: `/api/distributors/${encodeURIComponent(distId)}/kit?preview=1`,
+        downloadUrl: `/api/distributors/${encodeURIComponent(distId)}/kit`,
+        downloadFilename: `${distCode}-Standalone-Kit.html`
+      });
+    }
+
+    function openCardPreviewModal(opts) {
+      const m = document.getElementById('cardPreviewModal');
+      const frame = document.getElementById('cardPreviewFrame');
+      const loader = document.getElementById('cardPreviewLoading');
+      const dlBtn = document.getElementById('cardPreviewDownloadBtn');
+      const openBtn = document.getElementById('cardPreviewOpenNewBtn');
+      if (!m || !frame) return;
+
+      document.getElementById('cardPreviewTitle').innerText = opts.title || 'معاينة البطاقة قبل التحميل';
+      document.getElementById('cardPreviewSubtitle').innerText = opts.subtitle || 'عاين المحتوى وتأكد من التفاصيل قبل حفظ الملف أو طباعته';
+
+      if (loader) loader.style.display = 'flex';
+      frame.onload = () => {
+        if (loader) loader.style.display = 'none';
+      };
+      frame.src = opts.previewUrl || opts.downloadUrl || 'about:blank';
+
+      if (dlBtn) {
+        const dlUrl = opts.downloadUrl || opts.previewUrl || '#';
+        dlBtn.href = dlUrl;
+        if (opts.downloadFilename) {
+          dlBtn.setAttribute('download', opts.downloadFilename);
+        } else {
+          dlBtn.removeAttribute('download');
+        }
+      }
+      if (openBtn) {
+        openBtn.href = opts.previewUrl || opts.downloadUrl || '#';
+      }
+      m.style.display = 'flex';
+    }
+
+    function printCardPreview() {
+      const frame = document.getElementById('cardPreviewFrame');
+      if (!frame || !frame.contentWindow) return;
+      try {
+        frame.contentWindow.focus();
+        frame.contentWindow.print();
+      } catch (e) {
+        const openBtn = document.getElementById('cardPreviewOpenNewBtn');
+        if (openBtn && openBtn.href) window.open(openBtn.href, '_blank');
+      }
+    }
+
+    function closeCardPreviewModal(e) {
+      if (e.target.id === 'cardPreviewModal') closeCardPreviewDirect();
+    }
+
+    function closeCardPreviewDirect() {
+      const m = document.getElementById('cardPreviewModal');
+      const frame = document.getElementById('cardPreviewFrame');
+      if (m) m.style.display = 'none';
+      if (frame) frame.src = 'about:blank';
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeCardPreviewDirect();
+        closeLightboxDirect();
+      }
+    });
 
     async function loadCommercialAlerts() {
       try {
@@ -2917,9 +2991,40 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
       <div style="padding:16px; text-align:center; max-height:80vh; overflow-y:auto;">
         <img id="lightboxImg" src="" style="max-width:100%; max-height:72vh; border-radius:8px; border:1px solid var(--border); box-shadow:0 10px 30px rgba(0,0,0,0.5);" alt="" />
       </div>
-      <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 18px; border-top:1px solid var(--border); background:rgba(15,23,42,0.9); font-size:12px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 18px; border-top:1px solid var(--border); background:rgba(15,23,42,0.9); font-size:12px; gap:8px; flex-wrap:wrap;">
         <span id="lightboxTags" style="display:flex; gap:6px;"></span>
-        <a id="lightboxOpenNew" href="" target="_blank" class="btn btn-sm btn-sky" style="text-decoration:none;">🔍 فتح الصورة بالحجم الكامل الأصلي</a>
+        <div style="display:flex; gap:8px;">
+          <a id="lightboxDownloadBtn" href="" download class="btn btn-sm btn-emerald" style="text-decoration:none;">⬇️ تحميل الصورة</a>
+          <a id="lightboxOpenNew" href="" target="_blank" class="btn btn-sm btn-sky" style="text-decoration:none;">🔍 فتح الصورة بالحجم الكامل الأصلي</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for Live Card & Document Preview Before Download -->
+  <div id="cardPreviewModal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(2,6,23,0.88); backdrop-filter:blur(8px); align-items:center; justify-content:center; padding:16px;" onclick="closeCardPreviewModal(event)">
+    <div style="position:relative; max-width:1120px; width:100%; height:90vh; display:flex; flex-direction:column; background:#0f172a; border:1px solid var(--emerald); border-radius:14px; overflow:hidden; box-shadow:0 25px 60px rgba(0,0,0,0.85);" onclick="event.stopPropagation()">
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 18px; border-bottom:1px solid var(--border); background:rgba(15,23,42,0.95); gap:10px; flex-wrap:wrap;">
+        <div>
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:2px;">
+            <span class="badge b-emerald">👁️ معاينة قبل التحميل</span>
+            <h3 id="cardPreviewTitle" style="margin:0; font-size:16px; color:var(--text);">معاينة البطاقة</h3>
+          </div>
+          <p id="cardPreviewSubtitle" style="margin:0; font-size:12px; color:var(--muted);"></p>
+        </div>
+        <button class="btn btn-sm btn-rose" onclick="closeCardPreviewDirect()">✕ إغلاق</button>
+      </div>
+      <div style="position:relative; flex:1; background:#e2e8f0; overflow:hidden;">
+        <div id="cardPreviewLoading" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(15,23,42,0.85); color:var(--sky); font-size:14px; font-weight:700;">⏳ جاري تحميل المعاينة المباشرة...</div>
+        <iframe id="cardPreviewFrame" src="about:blank" style="width:100%; height:100%; border:none; background:#fff;" title="معاينة البطاقة"></iframe>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 18px; border-top:1px solid var(--border); background:rgba(15,23,42,0.96); gap:10px; flex-wrap:wrap;">
+        <span style="font-size:12px; color:var(--muted);">تأكد من شكل البطاقة ومحتواها أعلاه قبل التحميل أو الطباعة</span>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <a id="cardPreviewDownloadBtn" href="#" class="btn btn-sm btn-emerald" style="text-decoration:none; font-weight:800;">⬇️ تأكيد وتحميل الملف الآن</a>
+          <button id="cardPreviewPrintBtn" type="button" class="btn btn-sm btn-sky" onclick="printCardPreview()">🖨️ طباعة / حفظ PDF</button>
+          <a id="cardPreviewOpenNewBtn" href="#" target="_blank" class="btn btn-sm btn-amber" style="text-decoration:none;">↗️ فتح في تبويب مستقل</a>
+        </div>
       </div>
     </div>
   </div>
