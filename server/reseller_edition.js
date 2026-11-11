@@ -77,12 +77,33 @@ function buildCleanResellerEdition(options = {}) {
     'cd /d "%~dp0"',
     'title Universal Agent & Distributors Platform — لوحة إدارة الوكيل والموزعين',
     'echo ============================================================================',
-    'echo   Universal Multi-System Agent Platform — v1.0',
+    'echo   Universal Multi-System Agent Platform — v1.0 (Win 32-bit / 64-bit)',
     'echo   لإدارة الموزعين والمبيعات والعمولات وتأكيد الدفع (أوفلاين 100%%)',
     'echo ============================================================================',
-    'where node >nul 2>&1 || (echo [خطأ] يلزم تثبيت Node.js 22 LTS أو أحدث. & pause & exit /b 1)',
+    'set "NODE_BIN="',
+    'if exist "%~dp0runtime\\node.exe" set "NODE_BIN=%~dp0runtime\\node.exe"',
+    'if "%NODE_BIN%"=="" if exist "%~dp0node.exe" set "NODE_BIN=%~dp0node.exe"',
+    'if "%NODE_BIN%"=="" where node >nul 2>&1 && set "NODE_BIN=node"',
+    'if "%NODE_BIN%"=="" if exist "%ProgramFiles%\\nodejs\\node.exe" set "NODE_BIN=%ProgramFiles%\\nodejs\\node.exe"',
+    'if "%NODE_BIN%"=="" if exist "%ProgramFiles(x86)%\\nodejs\\node.exe" set "NODE_BIN=%ProgramFiles(x86)%\\nodejs\\node.exe"',
+    'if "%NODE_BIN%"=="" (',
+    '  echo [خطأ] لم يتم العثور على Node.js.',
+    '  echo - لويندوز 64-بت: ثبّت Node.js 22 LTS ^(x64^) أو أحدث.',
+    '  echo - لويندوز 32-بت: ثبّت Node.js 22 LTS ^(win-x86 32-bit^).',
+    '  pause & exit /b 1',
+    ')',
+    'set "SQLITE_FLAG="',
+    '"%NODE_BIN%" -e "require(\'node:sqlite\')" >nul 2>&1',
+    'if errorlevel 1 (',
+    '  "%NODE_BIN%" --experimental-sqlite -e "require(\'node:sqlite\')" >nul 2>&1',
+    '  if errorlevel 1 (',
+    '    echo [خطأ] إصدار Node.js الحالي لا يدعم SQLite المدمج. ثبّت Node.js 22.5+ LTS ^(32-bit أو 64-bit^).',
+    '    pause & exit /b 1',
+    '  )',
+    '  set "SQLITE_FLAG=--experimental-sqlite"',
+    ')',
     'set AUTO_OPEN_BROWSER=1',
-    'node "server\\agent_server.js"',
+    '"%NODE_BIN%" %SQLITE_FLAG% "server\\agent_server.js"',
     'pause',
     ''
   ].join('\r\n');
@@ -222,15 +243,24 @@ function buildCleanResellerEdition(options = {}) {
   };
   vDb.close();
 
-  // 6. Create .zip archive cleanly via PowerShell Compress-Archive (unless skipZip=true)
+  // 6. Create .zip archive cleanly (PowerShell Compress-Archive on Win10/11 or .NET ZipFile fallback on Win7/8 32/64-bit)
   let zipSizeBytes = 0;
   if (options.skipZip !== true) {
     const psSrc = editionDir.replace(/'/g, "''");
     const psDest = zipPath.replace(/'/g, "''");
+    const psScript = [
+      `if (Get-Command Compress-Archive -ErrorAction SilentlyContinue) {`,
+      `  Compress-Archive -Path '${psSrc}\\*' -DestinationPath '${psDest}' -Force`,
+      `} else {`,
+      `  Add-Type -AssemblyName System.IO.Compression.FileSystem;`,
+      `  if (Test-Path '${psDest}') { Remove-Item '${psDest}' -Force };`,
+      `  [System.IO.Compression.ZipFile]::CreateFromDirectory('${psSrc}', '${psDest}')`,
+      `}`
+    ].join(' ');
     execFileSync('powershell.exe', [
       '-NoProfile',
       '-ExecutionPolicy', 'Bypass',
-      '-Command', `Compress-Archive -Path '${psSrc}\\*' -DestinationPath '${psDest}' -Force`
+      '-Command', psScript
     ], { stdio: 'pipe' });
     if (fs.existsSync(zipPath)) {
       zipSizeBytes = fs.statSync(zipPath).size;

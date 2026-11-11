@@ -82,8 +82,10 @@ for (const rf of rootFiles) {
 console.log('[4/4] ضغط النسخة الاحتياطية إلى ملف ZIP...');
 if (fs.existsSync(zipOut)) fs.unlinkSync(zipOut);
 
-// Use PowerShell Compress-Archive
-const psCmd = `powershell -NoProfile -Command "Compress-Archive -Path '${staging}\\*' -DestinationPath '${zipOut}' -CompressionLevel Optimal"`;
+// Use PowerShell Compress-Archive or .NET ZipFile fallback (Win 7/8/10/11 32-bit & 64-bit)
+const psSrc = staging.replace(/'/g, "''");
+const psDest = zipOut.replace(/'/g, "''");
+const psCmd = `powershell -NoProfile -ExecutionPolicy Bypass -Command "if (Get-Command Compress-Archive -ErrorAction SilentlyContinue) { Compress-Archive -Path '${psSrc}\\*' -DestinationPath '${psDest}' -CompressionLevel Optimal } else { Add-Type -AssemblyName System.IO.Compression.FileSystem; [System.IO.Compression.ZipFile]::CreateFromDirectory('${psSrc}', '${psDest}') }"`;
 execSync(psCmd, { stdio: 'inherit' });
 
 if (fs.existsSync(staging)) fs.rmSync(staging, { recursive: true, force: true });

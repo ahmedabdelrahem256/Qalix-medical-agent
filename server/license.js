@@ -11,6 +11,7 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
+const os = require('node:os');
 const crypto = require('node:crypto');
 const { execSync } = require('node:child_process');
 
@@ -125,20 +126,28 @@ function getHardwareId() {
   if (cachedHwid) return cachedHwid;
   const parts = [];
   if (process.platform === 'win32') {
-    try {
-      const out = execSync('reg query "HKLM\\SOFTWARE\\Microsoft\\Cryptography" /v MachineGuid', {
-        encoding: 'utf8',
-        windowsHide: true,
-        stdio: ['ignore', 'pipe', 'ignore']
-      });
-      const m = out.match(/MachineGuid\s+REG_SZ\s+(\S+)/i);
-      if (m) parts.push(m[1].trim());
-    } catch {
-      /* تجاهل عند عدم توفر صلاحية استعلام السجل */
+    const queries = process.env.PROCESSOR_ARCHITEW6432
+      ? ['reg query "HKLM\\SOFTWARE\\Microsoft\\Cryptography" /v MachineGuid /reg:64', 'reg query "HKLM\\SOFTWARE\\Microsoft\\Cryptography" /v MachineGuid']
+      : ['reg query "HKLM\\SOFTWARE\\Microsoft\\Cryptography" /v MachineGuid'];
+    for (const qCmd of queries) {
+      try {
+        const out = execSync(qCmd, {
+          encoding: 'utf8',
+          windowsHide: true,
+          stdio: ['ignore', 'pipe', 'ignore']
+        });
+        const m = out.match(/MachineGuid\s+REG_SZ\s+(\S+)/i);
+        if (m) {
+          parts.push(m[1].trim());
+          break;
+        }
+      } catch {
+        /* تجاهل والمحاولة بالمسار القياسي المتوافق مع ويندوز 32/64 بت */
+      }
     }
   }
-  parts.push(process.env.COMPUTERNAME || 'QALIX-DEFAULT-NODE');
-  parts.push(process.env.PROCESSOR_IDENTIFIER || 'CPU-GENERIC');
+  parts.push(process.env.COMPUTERNAME || os.hostname() || 'QALIX-DEFAULT-NODE');
+  parts.push(process.env.PROCESSOR_IDENTIFIER || os.arch() || 'CPU-GENERIC');
   cachedHwid = crypto.createHash('sha256').update(parts.join('::'), 'utf8').digest('hex').slice(0, 24).toUpperCase();
   return cachedHwid;
 }
