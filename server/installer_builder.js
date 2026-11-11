@@ -5,7 +5,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { execFileSync } = require('node:child_process');
-const { buildCleanResellerEdition } = require('./reseller_edition');
+const { buildCleanResellerEdition, generateWindowsOneClickInstallBat } = require('./reseller_edition');
 
 function generateInnoSetupScript({ appNameAr, appVersion, sourceDir, outputDir, setupFilename }) {
   return `; Inno Setup Script — Qalix Agents & Distributors Platform ${appVersion}
@@ -104,6 +104,14 @@ function buildWindowsInstallerKit({ rootDir, baseDataDir, edition = 'qalix11', i
   ].join('\r\n');
   fs.writeFileSync(path.join(stageDir, 'BUILD_INSTALLER.bat'), compileBat, 'utf8');
 
+  const oneClickInstallBat = generateWindowsOneClickInstallBat({
+    appShortcutName: isQalix11 ? 'Qalix Agents Platform 11' : 'Universal Agents Platform',
+    installFolderName: isQalix11 ? 'QalixAgentsPlatform11' : 'UniversalAgentsPlatform',
+    launchBatName: 'START_AGENT_PANEL.bat'
+  });
+  const oneClickInstallBatPath = path.join(stageDir, 'INSTALL_ON_WINDOWS.bat');
+  fs.writeFileSync(oneClickInstallBatPath, oneClickInstallBat, 'utf8');
+
   let compiledExePath = null;
   try {
     const candidates = [
@@ -123,12 +131,14 @@ function buildWindowsInstallerKit({ rootDir, baseDataDir, edition = 'qalix11', i
     stageDir,
     issPath,
     compileBatPath: path.join(stageDir, 'BUILD_INSTALLER.bat'),
+    oneClickInstallBatPath,
     bundledNodeArch,
     compiledExePath
   };
 }
 
 module.exports = {
+  generateWindowsOneClickInstallBat,
   generateInnoSetupScript,
   buildWindowsInstallerKit
 };

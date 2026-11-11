@@ -1761,17 +1761,19 @@ function req(method, urlPath, body) {
       { conversionPct: funnelRes.body?.funnel?.overallConversionPct, reportLen: String(execReportRes.body || '').length }
     );
 
-    // Test 82: Phase 6 - Windows Setup.exe Installer Kit Stage Builder (Inno Setup .iss + Portable Node Runtime)
+    // Test 82: Phase 6 - Windows Setup.exe Installer Kit Stage Builder (Inno Setup .iss + One-Click Installer + Portable Node Runtime)
     const instKitRes = await req('POST', '/api/systems/build-installer-kit', { edition: 'qalix11' });
     const issExists = instKitRes.body?.issPath && fs.existsSync(instKitRes.body.issPath);
     const compileBatExists = instKitRes.body?.compileBatPath && fs.existsSync(instKitRes.body.compileBatPath);
+    const oneClickInstallExists = instKitRes.body?.oneClickInstallBatPath && fs.existsSync(instKitRes.body.oneClickInstallBatPath);
     const bundledRuntimeExists = instKitRes.body?.stageDir && fs.existsSync(path.join(instKitRes.body.stageDir, 'runtime', 'node.exe'));
-    check('82. المرحلة 6: تجهيز حزمة ومخطط مُثبِّت ويندوز المستقل (Inno Setup .iss + runtime/node.exe)',
+    check('82. المرحلة 6: تجهيز حزمة ومخطط مُثبِّت ويندوز المستقل (Inno Setup .iss + INSTALL_ON_WINDOWS + runtime/node.exe)',
       instKitRes.status === 201 &&
       issExists &&
       compileBatExists &&
+      oneClickInstallExists &&
       bundledRuntimeExists,
-      { status: instKitRes.status, issExists, compileBatExists, bundledRuntimeExists, arch: instKitRes.body?.bundledNodeArch }
+      { status: instKitRes.status, issExists, compileBatExists, oneClickInstallExists, bundledRuntimeExists, arch: instKitRes.body?.bundledNodeArch }
     );
 
     console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/82 PASSED ===`);
