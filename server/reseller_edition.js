@@ -12,6 +12,7 @@ const { DatabaseSync } = require('node:sqlite');
 const {
   DEFAULT_MEDICAL_PRICING,
   DEFAULT_AGENT_INFO,
+  QALIX_11_SUITE_IDS,
   SYSTEM_PRESETS,
   buildAgentInfoFromSystem,
   initSystemSchema,
@@ -41,7 +42,11 @@ function buildCleanResellerEdition(options = {}) {
   fs.mkdirSync(outputBaseDir, { recursive: true });
 
   const stamp = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 14);
-  const editionName = String(options.editionName || `Universal_MultiSystem_Clean_Edition_${stamp}`).replace(/[^a-zA-Z0-9_-]/g, '_');
+  const isQalixSuiteEdition = options.includeAllQalix11 === true;
+  const fallbackBaseName = isQalixSuiteEdition
+    ? `Qalix_11Systems_Agents_Edition_${stamp}`
+    : `Universal_MultiSystem_Clean_Edition_${stamp}`;
+  const editionName = String(options.editionName || fallbackBaseName).replace(/[^a-zA-Z0-9_-]/g, '_');
   const editionDir = path.join(outputBaseDir, editionName);
   const zipFilename = `${editionName}.zip`;
   const zipPath = path.join(outputBaseDir, zipFilename);
@@ -113,7 +118,7 @@ function buildCleanResellerEdition(options = {}) {
 
   const defaultPresetId = (options.defaultSystemId && SYSTEM_PRESETS[options.defaultSystemId])
     ? options.defaultSystemId
-    : 'universal_agent';
+    : (isQalixSuiteEdition ? 'qalix_platform' : 'universal_agent');
   const defaultPreset = SYSTEM_PRESETS[defaultPresetId];
 
   const buyerAgentInfo = buildAgentInfoFromSystem({
@@ -162,7 +167,11 @@ function buildCleanResellerEdition(options = {}) {
   }
 
   // 4. Optional additional clean system presets (zero data, separate DB folders)
-  const extraPresets = Array.isArray(options.extraSystemPresets) ? options.extraSystemPresets : [];
+  const requestedExtras = Array.isArray(options.extraSystemPresets) ? options.extraSystemPresets : [];
+  const extraPresets = [...new Set([
+    ...(isQalixSuiteEdition ? QALIX_11_SUITE_IDS : []),
+    ...requestedExtras
+  ])];
   for (const presetId of extraPresets) {
     if (presetId && presetId !== primaryManifest.id && SYSTEM_PRESETS[presetId]) {
       createIsolatedSystem(dataDest, kitsDest, {

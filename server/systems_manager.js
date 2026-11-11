@@ -30,11 +30,26 @@ const DEFAULT_AGENT_INFO = {
   packageSha256: '0f7ff4448eb11ee1385332edf4233f0b6cc9964f490782800de78efc2b8499f7'
 };
 
+const QALIX_11_SUITE_IDS = [
+  'qalix_medical',
+  'qalix_finance',
+  'qalix_assets',
+  'qalix_stores',
+  'qalix_enterprise',
+  'qalix_security',
+  'qalix_ai',
+  'qalix_inspection',
+  'qalix_education',
+  'qalix_hr',
+  'qalix_platform'
+];
+
 const SYSTEM_PRESETS = {
   universal_agent: {
     id: 'universal_agent',
-    nameAr: 'منظومة إدارة الوكيل والموزعين الشاملة (عامة لأي نشاط)',
-    subtitleAr: 'منصة مستقلة لإدارة الموزعين والمبيعات والعمولات والإيصالات — لبيع أي منتج أو برنامج أو خدمة',
+    category: 'universal_product',
+    nameAr: 'منظومة إدارة الوكيل والموزعين العامة (المعروضة للبيع لأي نشاط)',
+    subtitleAr: 'النسخة العامة المصفّرة — لإدارة الموزعين والمناديب والفنيين والمبيعات وتأكيد الدفع لأي مجال',
     projectName: 'Universal Agent & Distributors Platform',
     licensePrefix: 'AGT2',
     pricing: {
@@ -43,28 +58,161 @@ const SYSTEM_PRESETS = {
       enterprise:   { id: 'enterprise',   nameAr: 'الباقة الاحترافية / المؤسسات',        price: 12000, maxDoctors: 99, maxUsers: 99 }
     }
   },
-  qalix_platform: {
-    id: 'qalix_platform',
-    nameAr: 'منصة كالكس الشاملة (متعددة المنظومات)',
-    subtitleAr: 'إدارة الموزعين المستقلين والمبيعات بنظام السعر الموحد والعمل 100% أوفلاين',
-    projectName: 'Qalix Multi-System Platform',
-    licensePrefix: 'QLX2',
-    pricing: {
-      basic:        { id: 'basic',        nameAr: 'الباقة الأساسية (نشاط / فرع فردي)',            price: 4500,  maxDoctors: 2,  maxUsers: 4 },
-      professional: { id: 'professional', nameAr: 'الباقة المتقدمة (الأنشطة والأفرع النشطة)',     price: 8500,  maxDoctors: 5,  maxUsers: 12 },
-      enterprise:   { id: 'enterprise',   nameAr: 'باقة المؤسسات والفروع الكبرى (Enterprise)',     price: 18500, maxDoctors: 99, maxUsers: 99 }
-    }
-  },
+  // --- منظومات منصة كالكس الـ 11 المخصصة لوكلاء كالكس (بدون منظومة الأرشفة والخزنة الرقمية) ---
   qalix_medical: {
     id: 'qalix_medical',
-    nameAr: 'منظومة كالكس ميديكال الطبية',
-    subtitleAr: 'العيادات والمراكز الطبية المتخصصة',
+    category: 'qalix_suite',
+    suiteOrder: 1,
+    nameAr: 'منظومة كالكس الطبية الشاملة',
+    subtitleAr: 'العيادات والمراكز الطبية المتخصصة — بيانات معزولة 100%',
     projectName: 'Qalix Medical Agent',
     licensePrefix: 'QLX2',
     pricing: DEFAULT_MEDICAL_PRICING
   },
+  qalix_finance: {
+    id: 'qalix_finance',
+    category: 'qalix_suite',
+    suiteOrder: 2,
+    nameAr: 'منظومة كالكس المالية والخزينة العامة',
+    subtitleAr: 'إدارة الخزائن العامة، القيود المحاسبية، الاعتمادات والتقارير المالية',
+    projectName: 'Qalix Finance & Treasury',
+    licensePrefix: 'QFN2',
+    pricing: {
+      basic:        { id: 'basic',        nameAr: 'الباقة الأساسية (خزينة وحسابات فرع)',         price: 5000,  maxDoctors: 2,  maxUsers: 5 },
+      professional: { id: 'professional', nameAr: 'الباقة التخصصية (مراكز تكلفة + موازنات)',     price: 9500,  maxDoctors: 8,  maxUsers: 15 },
+      enterprise:   { id: 'enterprise',   nameAr: 'باقة المؤسسات المالية والمجموعات الكبرى',     price: 21000, maxDoctors: 99, maxUsers: 99 }
+    }
+  },
+  qalix_assets: {
+    id: 'qalix_assets',
+    category: 'qalix_suite',
+    suiteOrder: 3,
+    nameAr: 'منظومة كالكس لإدارة الأصول والمعدات والصيانة الوقائية',
+    subtitleAr: 'جرد الأصول، تتبع المعدات والأعطال، وجداول الصيانة الوقائية الدورية',
+    projectName: 'Qalix Assets & Maintenance',
+    licensePrefix: 'QAS2',
+    pricing: {
+      basic:        { id: 'basic',        nameAr: 'الباقة الأساسية (منشأة / مصنع صغير)',        price: 4500,  maxDoctors: 2,  maxUsers: 5 },
+      professional: { id: 'professional', nameAr: 'الباقة التخصصية (أصول + أوامر شغل وصيانة)',   price: 9000,  maxDoctors: 6,  maxUsers: 15 },
+      enterprise:   { id: 'enterprise',   nameAr: 'باقة المؤسسات والمصانع الكبرى',             price: 19500, maxDoctors: 99, maxUsers: 99 }
+    }
+  },
+  qalix_stores: {
+    id: 'qalix_stores',
+    category: 'qalix_suite',
+    suiteOrder: 4,
+    nameAr: 'منظومة كالكس لإدارة المتاجر والمستودعات',
+    subtitleAr: 'إدارة المخازن، حركة الأصناف بالباركود، الجرد ونقاط التوزيع',
+    projectName: 'Qalix Stores & Warehouses',
+    licensePrefix: 'QST2',
+    pricing: {
+      basic:        { id: 'basic',        nameAr: 'الباقة الأساسية (متجر ومستودع فردي)',         price: 3500,  maxDoctors: 1,  maxUsers: 4 },
+      professional: { id: 'professional', nameAr: 'الباقة التخصصية (متاجر + مخازن متعددة)',     price: 7500,  maxDoctors: 4,  maxUsers: 12 },
+      enterprise:   { id: 'enterprise',   nameAr: 'باقة السلاسل التجارية والمستودعات الكبرى',   price: 16500, maxDoctors: 99, maxUsers: 99 }
+    }
+  },
+  qalix_enterprise: {
+    id: 'qalix_enterprise',
+    category: 'qalix_suite',
+    suiteOrder: 5,
+    nameAr: 'منظومة كالكس لإدارة المؤسسات والشركات',
+    subtitleAr: 'الحوكمة المؤسسية، الإدارات، العقود والتقارير التنفيذية الشاملة',
+    projectName: 'Qalix Enterprise Management',
+    licensePrefix: 'QER2',
+    pricing: {
+      basic:        { id: 'basic',        nameAr: 'الباقة الأساسية (شركة متوسطة)',              price: 6500,  maxDoctors: 5,  maxUsers: 8 },
+      professional: { id: 'professional', nameAr: 'الباقة الاحترافية (إدارات متكاملة)',          price: 14000, maxDoctors: 15, maxUsers: 25 },
+      enterprise:   { id: 'enterprise',   nameAr: 'باقة الشركات والمجموعات القابضة',           price: 28000, maxDoctors: 99, maxUsers: 99 }
+    }
+  },
+  qalix_security: {
+    id: 'qalix_security',
+    category: 'qalix_suite',
+    suiteOrder: 6,
+    nameAr: 'منظومة كالكس للأمن السيادي والرقابة والتحكم في الدخول',
+    subtitleAr: 'التحكم الصارم في الصلاحيات، بوابات الدخول، وسجلات المراقبة السيادية',
+    projectName: 'Qalix Sovereign Security & Access',
+    licensePrefix: 'QSC2',
+    pricing: {
+      basic:        { id: 'basic',        nameAr: 'الباقة الأساسية (بوابة ومنشأة مؤمّنة)',       price: 6000,  maxDoctors: 2,  maxUsers: 6 },
+      professional: { id: 'professional', nameAr: 'الباقة المتقدمة (بصمة + تحكم دخول متعدد)',   price: 12500, maxDoctors: 8,  maxUsers: 20 },
+      enterprise:   { id: 'enterprise',   nameAr: 'باقة المنشآت الحساسة والأمن السيادي',       price: 25000, maxDoctors: 99, maxUsers: 99 }
+    }
+  },
+  qalix_ai: {
+    id: 'qalix_ai',
+    category: 'qalix_suite',
+    suiteOrder: 7,
+    nameAr: 'منظومة كالكس للتحليلات التنبؤية والذكاء الاصطناعي',
+    subtitleAr: 'تحليل البيانات الضخمة، مؤشرات التنبؤ واتخاذ القرار أوفلاين',
+    projectName: 'Qalix Predictive Analytics & AI',
+    licensePrefix: 'QAI2',
+    pricing: {
+      basic:        { id: 'basic',        nameAr: 'الباقة الأساسية (محرك مؤشرات وتقارير)',       price: 5500,  maxDoctors: 2,  maxUsers: 5 },
+      professional: { id: 'professional', nameAr: 'الباقة التخصصية (تنبؤ مالي وتشغيلي ذكي)',    price: 11500, maxDoctors: 6,  maxUsers: 15 },
+      enterprise:   { id: 'enterprise',   nameAr: 'باقة المؤسسات ومراكز اتخاذ القرار',         price: 24000, maxDoctors: 99, maxUsers: 99 }
+    }
+  },
+  qalix_inspection: {
+    id: 'qalix_inspection',
+    category: 'qalix_suite',
+    suiteOrder: 8,
+    nameAr: 'منظومة كالكس للتفتيش والرقابة الميدانية',
+    subtitleAr: 'حوكمة حملات التفتيش الميداني، المخالفات، ومحاضر الضبط والجودة',
+    projectName: 'Qalix Field Inspection & Control',
+    licensePrefix: 'QIN2',
+    pricing: {
+      basic:        { id: 'basic',        nameAr: 'الباقة الأساسية (وحدة تفتيش محلية)',         price: 4500,  maxDoctors: 2,  maxUsers: 6 },
+      professional: { id: 'professional', nameAr: 'الباقة التخصصية (فرق تفتيش ميدانية)',        price: 9000,  maxDoctors: 8,  maxUsers: 20 },
+      enterprise:   { id: 'enterprise',   nameAr: 'باقة الجهات الرقابية وهيئات التفتيش',        price: 19000, maxDoctors: 99, maxUsers: 99 }
+    }
+  },
+  qalix_education: {
+    id: 'qalix_education',
+    category: 'qalix_suite',
+    suiteOrder: 9,
+    nameAr: 'منظومة كالكس للمنشآت التعليمية والتدريبية',
+    subtitleAr: 'إدارة المدارس، الأكاديميات، مراكز التدريب، الشهادات والمصروفات',
+    projectName: 'Qalix Education & Training',
+    licensePrefix: 'QED2',
+    pricing: {
+      basic:        { id: 'basic',        nameAr: 'الباقة الأساسية (مركز تدريبي / حضانة)',      price: 4000,  maxDoctors: 2,  maxUsers: 5 },
+      professional: { id: 'professional', nameAr: 'الباقة التخصصية (أكاديمية / مدرسة متكاملة)', price: 8500,  maxDoctors: 6,  maxUsers: 18 },
+      enterprise:   { id: 'enterprise',   nameAr: 'باقة المجمعات التعليمية والجامعات الخاصة',   price: 18500, maxDoctors: 99, maxUsers: 99 }
+    }
+  },
+  qalix_hr: {
+    id: 'qalix_hr',
+    category: 'qalix_suite',
+    suiteOrder: 10,
+    nameAr: 'منظومة كالكس للموارد البشرية والدوام البيومتري',
+    subtitleAr: 'شؤون العاملين، أجهزة البصمة، الورديات، الإجازات ومسير الرواتب',
+    projectName: 'Qalix HR & Biometric Attendance',
+    licensePrefix: 'QHR2',
+    pricing: {
+      basic:        { id: 'basic',        nameAr: 'الباقة الأساسية (حتى 50 موظفاً)',            price: 3800,  maxDoctors: 1,  maxUsers: 4 },
+      professional: { id: 'professional', nameAr: 'الباقة التخصصية (رواتب + ربط أجهزة البصمة)', price: 7800,  maxDoctors: 4,  maxUsers: 12 },
+      enterprise:   { id: 'enterprise',   nameAr: 'باقة الشركات متعددة الفروع (بصمة غير محدودة)', price: 16500, maxDoctors: 99, maxUsers: 99 }
+    }
+  },
+  qalix_platform: {
+    id: 'qalix_platform',
+    category: 'qalix_suite',
+    suiteOrder: 11,
+    nameAr: 'منظومة كالكس لإدارة الوكلاء والموزعين (هذا المشروع)',
+    subtitleAr: 'منظومة الوكلاء المركزية لإدارة الموزعين والمناديب والفنيين لبيع منظومات كالكس',
+    projectName: 'Qalix Agents & Distributors Platform',
+    licensePrefix: 'QLXP',
+    pricing: {
+      basic:        { id: 'basic',        nameAr: 'الباقة الأساسية (وكيل محلي مستقل)',          price: 4500,  maxDoctors: 2,  maxUsers: 4 },
+      professional: { id: 'professional', nameAr: 'الباقة المتقدمة (شبكة موزعين ومناديب وفنيين)', price: 8500,  maxDoctors: 5,  maxUsers: 12 },
+      enterprise:   { id: 'enterprise',   nameAr: 'باقة الوكالة الإقليمية المتكاملة',          price: 18500, maxDoctors: 99, maxUsers: 99 }
+    }
+  },
+  // Legacy aliases kept for backwards compatibility with existing isolated presets/tests
   qalix_pharmacy: {
     id: 'qalix_pharmacy',
+    category: 'legacy_addon',
     nameAr: 'منظومة كالكس فارما للصيدليات',
     subtitleAr: 'إدارة الصيدليات، المخزون، النواقص، ونقاط البيع بالباركود',
     projectName: 'Qalix Pharma Agent',
@@ -77,6 +225,7 @@ const SYSTEM_PRESETS = {
   },
   qalix_pos: {
     id: 'qalix_pos',
+    category: 'legacy_addon',
     nameAr: 'منظومة كالكس كاشير ونقاط البيع (POS)',
     subtitleAr: 'المحلات التجارية، السوبر ماركت، المطاعم والمخازن أوفلاين',
     projectName: 'Qalix POS Agent',
@@ -89,6 +238,7 @@ const SYSTEM_PRESETS = {
   },
   qalix_erp: {
     id: 'qalix_erp',
+    category: 'legacy_addon',
     nameAr: 'منظومة كالكس ERP للمؤسسات',
     subtitleAr: 'المحاسبة المتكاملة، شؤون العاملين، المستودعات وخطوط الإنتاج',
     projectName: 'Qalix ERP Agent',
@@ -101,6 +251,7 @@ const SYSTEM_PRESETS = {
   },
   qalix_realestate: {
     id: 'qalix_realestate',
+    category: 'legacy_addon',
     nameAr: 'منظومة كالكس برو العقارية',
     subtitleAr: 'شركات التطوير والتسويق العقاري وإدارة الأقساط والوحدات',
     projectName: 'Qalix RealEstate Agent',
@@ -253,6 +404,28 @@ function initSystemSchema(targetDb) {
       notes TEXT DEFAULT '',
       created_at TEXT NOT NULL,
       reviewed_at TEXT DEFAULT '',
+      FOREIGN KEY (distributor_id) REFERENCES distributors(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS trial_stage_reports (
+      id TEXT PRIMARY KEY,
+      report_code TEXT UNIQUE NOT NULL,
+      distributor_id TEXT NOT NULL,
+      customer_name TEXT NOT NULL,
+      contact_info TEXT DEFAULT '',
+      governorate TEXT DEFAULT '',
+      system_name TEXT DEFAULT '',
+      trial_device_or_id TEXT DEFAULT '',
+      trial_start_date TEXT NOT NULL,
+      trial_end_date TEXT NOT NULL,
+      stage TEXT NOT NULL DEFAULT 'trial_installed',
+      rep_name TEXT DEFAULT '',
+      tech_name TEXT DEFAULT '',
+      card_summary TEXT DEFAULT '',
+      notes TEXT DEFAULT '',
+      notified_agent INTEGER NOT NULL DEFAULT 1,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
       FOREIGN KEY (distributor_id) REFERENCES distributors(id)
     );
   `);
@@ -494,6 +667,7 @@ function summarizeSystemStats(baseDataDir, baseKitsDir, sys) {
 module.exports = {
   DEFAULT_MEDICAL_PRICING,
   DEFAULT_AGENT_INFO,
+  QALIX_11_SUITE_IDS,
   SYSTEM_PRESETS,
   sanitizeSystemId,
   buildAgentInfoFromSystem,

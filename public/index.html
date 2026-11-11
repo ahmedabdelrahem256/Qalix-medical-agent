@@ -685,6 +685,17 @@
             </div>
           </div>
         </div>
+
+        <!-- Distributor Trial Editions & Stage Transition Notification Radar -->
+        <div id="trialReportsRadarBox" class="sub-card" style="margin-top:14px; padding:12px; border:1px solid rgba(167,139,250,0.4);">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
+            <h4 style="margin:0; color:var(--purple); font-size:14.5px;">📡 متابعة النسخ التجريبية وإخطارات انتقال المراحل الواردة من الموزعين</h4>
+            <span id="trialReportsBadge" class="badge b-purple">0 بطاقات متابعة</span>
+          </div>
+          <div id="trialReportsRadarContainer" style="max-height:240px; overflow-y:auto; display:grid; gap:8px;">
+            <div style="font-size:12px; color:var(--muted);">لم ترد بطاقات نسخ تجريبية أو إخطارات مراحل بعد.</div>
+          </div>
+        </div>
       </div>
 
       <!-- Distributor Recruitment & Onboarding Cards (New) -->
@@ -3659,12 +3670,14 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
 
     async function loadPaymentRequestsPanel() {
       try {
-        const [accRes, reqRes] = await Promise.all([
+        const [accRes, reqRes, trlRes] = await Promise.all([
           fetch('/api/agent/payment-accounts'),
-          fetch('/api/payment-requests')
+          fetch('/api/payment-requests'),
+          fetch('/api/trial-reports')
         ]);
         const accJson = await accRes.json();
         const reqJson = await reqRes.json();
+        const trlJson = await trlRes.json();
         if (accJson && accJson.ok && accJson.accounts) {
           const a = accJson.accounts;
           if (document.getElementById('paInstapay')) document.getElementById('paInstapay').value = a.instapay || '';
@@ -3677,9 +3690,42 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
         paymentRequestsCache = (reqJson && reqJson.ok && Array.isArray(reqJson.requests)) ? reqJson.requests : [];
         populateManualPaymentDistSelect();
         renderPaymentRequestsList();
+        renderTrialReportsRadar((trlJson && trlJson.ok && Array.isArray(trlJson.reports)) ? trlJson.reports : []);
       } catch (e) {
         console.error('Error loading payment panel:', e);
       }
+    }
+
+    function renderTrialReportsRadar(reports) {
+      const box = document.getElementById('trialReportsRadarContainer');
+      const badge = document.getElementById('trialReportsBadge');
+      if (badge) badge.innerText = reports.length + ' بطاقات متابعة';
+      if (!box) return;
+      if (!reports.length) {
+        box.innerHTML = '<div style="font-size:12px; color:var(--muted);">لم ترد بطاقات نسخ تجريبية أو إخطارات مراحل من الموزعين في هذه المنظومة بعد.</div>';
+        return;
+      }
+      box.innerHTML = reports.map(tr => `
+        <div class="sub-card" style="padding:8px 12px; border:1px solid rgba(167,139,250,0.3); margin:0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+          <div>
+            <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+              <strong style="color:var(--sky); font-family:monospace;" dir="ltr">${escPayHtml(tr.report_code)}</strong>
+              <span class="badge b-purple">${escPayHtml(tr.card_summary || tr.stage)}</span>
+              <span style="font-size:11px; color:var(--muted);">${escPayHtml(tr.distributor_name)} (${escPayHtml(tr.distributor_code)})</span>
+            </div>
+            <div style="font-size:12px; margin-top:2px;">
+              العميل: <strong>${escPayHtml(tr.customer_name)}</strong>${tr.contact_info ? ' · ' + escPayHtml(tr.contact_info) : ''}
+              ${tr.trial_device_or_id ? ' · مرجع التجريبية: <code dir="ltr">' + escPayHtml(tr.trial_device_or_id) + '</code>' : ''}
+            </div>
+            <div style="font-size:11px; color:var(--muted);">
+              التجريب (14 يوماً): ${escPayHtml(tr.trial_start_date)} ← ${escPayHtml(tr.trial_end_date)}
+              ${tr.rep_name ? ' · المندوب: <strong style="color:var(--sky);">' + escPayHtml(tr.rep_name) + '</strong>' : ''}
+              ${tr.tech_name ? ' · الفني: <strong style="color:var(--emerald);">' + escPayHtml(tr.tech_name) + '</strong>' : ''}
+            </div>
+          </div>
+          <span class="badge b-emerald" style="font-size:10.5px;">📡 تم إخطار الوكيل</span>
+        </div>
+      `).join('');
     }
 
     function populateManualPaymentDistSelect() {
@@ -3874,9 +3920,33 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
         systemsPresetsCache = j.presets || [];
         const sel = document.getElementById('systemSwitchSelect');
         if (sel && Array.isArray(j.systems)) {
-          sel.innerHTML = j.systems.map(s =>
-            `<option value="${s.id}" ${s.id === j.activeSystemId ? 'selected' : ''}>${s.nameAr} (${s.licensePrefix}) — ${s.distributorsCount} موزع · ${s.dealsCount} صفقة</option>`
-          ).join('');
+          const activeIds = new Set(j.systems.map(s => s.id));
+          const isUniversalOnly = j.systems.length === 1 && j.systems[0].id === 'universal_agent';
+          let htmlOpts = `<optgroup label="✅ المنظومات المفعلة حالياً (معزولة بقاعدة بيانات مستقلة)">` +
+            j.systems.map(s =>
+              `<option value="${s.id}" ${s.id === j.activeSystemId ? 'selected' : ''}>${s.nameAr} (${s.licensePrefix}) — ${s.distributorsCount} موزع · ${s.dealsCount} صفقة</option>`
+            ).join('') + `</optgroup>`;
+
+          if (!isUniversalOnly && Array.isArray(j.qalixSuiteIds)) {
+            const uninstantiatedQalix = j.qalixSuiteIds
+              .filter(id => !activeIds.has(id))
+              .map(id => systemsPresetsCache.find(p => p.id === id))
+              .filter(Boolean);
+            if (uninstantiatedQalix.length) {
+              htmlOpts += `<optgroup label="🏢 قائمة منظومات منصة كالكس الـ 11 (تُنشأ معزولة عند الاختيار)">` +
+                uninstantiatedQalix.map(p =>
+                  `<option value="__preset__:${p.id}">[${p.suiteOrder || '★'}] ${p.nameAr} (${p.licensePrefix})</option>`
+                ).join('') + `</optgroup>`;
+            }
+            if (!activeIds.has('universal_agent')) {
+              const uni = systemsPresetsCache.find(p => p.id === 'universal_agent');
+              if (uni) {
+                htmlOpts += `<optgroup label="🌐 النسخة العامة المصفرة (المعروضة للبيع لأي نشاط)">` +
+                  `<option value="__preset__:universal_agent">🌐 ${uni.nameAr} (${uni.licensePrefix})</option></optgroup>`;
+              }
+            }
+          }
+          sel.innerHTML = htmlOpts;
         }
       } catch (_) {}
     }
@@ -3884,6 +3954,29 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
     async function switchActiveSystem(systemId) {
       if (!systemId) return;
       try {
+        if (systemId.startsWith('__preset__:')) {
+          const presetId = systemId.slice('__preset__:'.length);
+          const preset = systemsPresetsCache.find(p => p.id === presetId);
+          const r = await fetch('/api/systems', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              presetId,
+              agentPhone: window.ACTIVE_AGENT_INFO?.phone || '01000000000',
+              agentTitleAr: preset ? ('وكيل ' + preset.nameAr) : 'وكيل المنظومة المعتمد',
+              activateNow: true
+            })
+          });
+          const j = await r.json();
+          if (j.ok) {
+            await load();
+            await loadOwnerChannelConfig();
+          } else {
+            alert('❌ تعذر تفعيل المنظومة: ' + (j.error || 'خطأ'));
+          }
+          return;
+        }
+
         const r = await fetch('/api/systems/select', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -3988,13 +4081,17 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
     async function buildAndExportResellerEdition() {
       const buyerAgentPhone = (document.getElementById('rsAgentPhone')?.value || '01000000000').trim();
       const buyerAgentTitleAr = (document.getElementById('rsAgentTitle')?.value || 'وكيل المنظومة المعتمد').trim();
-      const defaultSystemId = (document.getElementById('rsDefaultSystem')?.value || 'universal_agent').trim();
+      const editionType = (document.getElementById('rsDefaultSystem')?.value || 'universal_agent').trim();
+      const includeAllQalix11 = editionType === 'qalix_suite_11';
+      const defaultSystemId = includeAllQalix11 ? 'qalix_platform' : editionType;
       const includeMediaAssets = Boolean(document.getElementById('rsIncludeMedia')?.checked);
       const presets = [];
-      if (document.getElementById('rsAddMedical')?.checked) presets.push('qalix_medical');
-      if (document.getElementById('rsAddPharma')?.checked) presets.push('qalix_pharmacy');
-      if (document.getElementById('rsAddPos')?.checked) presets.push('qalix_pos');
-      if (document.getElementById('rsAddErp')?.checked) presets.push('qalix_erp');
+      if (!includeAllQalix11) {
+        if (document.getElementById('rsAddMedical')?.checked) presets.push('qalix_medical');
+        if (document.getElementById('rsAddPharma')?.checked) presets.push('qalix_pharmacy');
+        if (document.getElementById('rsAddPos')?.checked) presets.push('qalix_pos');
+        if (document.getElementById('rsAddErp')?.checked) presets.push('qalix_erp');
+      }
 
       const btn = document.getElementById('rsBuildBtn');
       const prevTxt = btn.innerText;
@@ -4008,6 +4105,7 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
             buyerAgentPhone,
             buyerAgentTitleAr,
             defaultSystemId,
+            includeAllQalix11,
             includeMediaAssets,
             extraSystemPresets: presets
           })
@@ -4146,15 +4244,28 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
       </div>
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
         <div style="grid-column:1 / -1;">
-          <label style="font-size:12px; color:var(--muted);">اختر قالب منظومة جاهز (عام أو من منظومات كالكس، أو خصص من الصفر):</label>
+          <label style="font-size:12px; color:var(--muted);">اختر قالب منظومة جاهز (منظومات كالكس الـ 11 أو النسخة العامة المعروضة للبيع):</label>
           <select id="msPreset" onchange="applySystemPresetForm(this.value)" style="padding:7px; font-size:12.5px;">
             <option value="">— منظومة مخصصة بالكامل —</option>
-            <option value="universal_agent">🌐 منظومة إدارة الوكلاء والموزعين العامة لبيع أي منتج/خدمة (AGT2)</option>
-            <option value="qalix_medical">🏥 منظومة كالكس ميديكال الطبية (QLX2)</option>
-            <option value="qalix_pharmacy">💊 منظومة كالكس فارما للصيدليات (QPH2)</option>
-            <option value="qalix_pos">🛒 منظومة كالكس كاشير ونقاط البيع (QPS2)</option>
-            <option value="qalix_erp">🏭 منظومة كالكس ERP للشركات (QER2)</option>
-            <option value="qalix_realestate">🏢 منظومة كالكس برو العقارية (QRE2)</option>
+            <option value="universal_agent">🌐 منظومة إدارة الوكلاء والموزعين العامة المعروضة للبيع لأي نشاط (AGT2)</option>
+            <optgroup label="🏢 منظومات منصة كالكس الـ 11 (بدون منظومة الأرشفة والخزنة الرقمية)">
+              <option value="qalix_medical">1. 🏥 منظومة كالكس الطبية الشاملة (QLX2)</option>
+              <option value="qalix_finance">2. 🏛️ منظومة كالكس المالية والخزينة العامة (QFN2)</option>
+              <option value="qalix_assets">3. ⚙️ منظومة كالكس لإدارة الأصول والمعدات والصيانة الوقائية (QAS2)</option>
+              <option value="qalix_stores">4. 📦 منظومة كالكس لإدارة المتاجر والمستودعات (QST2)</option>
+              <option value="qalix_enterprise">5. 🏢 منظومة كالكس لإدارة المؤسسات والشركات (QER2)</option>
+              <option value="qalix_security">6. 🔒 منظومة كالكس للأمن السيادي والرقابة والتحكم في الدخول (QSC2)</option>
+              <option value="qalix_ai">7. 🧠 منظومة كالكس للتحليلات التنبؤية والذكاء الاصطناعي (QAI2)</option>
+              <option value="qalix_inspection">8. 📍 منظومة كالكس للتفتيش والرقابة الميدانية (QIN2)</option>
+              <option value="qalix_education">9. 🎓 منظومة كالكس للمنشآت التعليمية والتدريبية (QED2)</option>
+              <option value="qalix_hr">10. 👥 منظومة كالكس للموارد البشرية والدوام البيومتري (QHR2)</option>
+              <option value="qalix_platform">11. 🎯 منظومة كالكس لإدارة الوكلاء والموزعين — هذا المشروع (QLXP)</option>
+            </optgroup>
+            <optgroup label="قوالب إضافية متنوعة">
+              <option value="qalix_pharmacy">💊 منظومة كالكس فارما للصيدليات (QPH2)</option>
+              <option value="qalix_pos">🛒 منظومة كالكس كاشير ونقاط البيع (QPS2)</option>
+              <option value="qalix_realestate">🏗️ منظومة كالكس برو العقارية (QRE2)</option>
+            </optgroup>
           </select>
         </div>
         <div>
@@ -4220,10 +4331,11 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
           <input id="rsAgentTitle" value="وكيل المنظومة المعتمد" style="padding:6px; font-size:12px;" />
         </div>
         <div style="grid-column:1 / -1;">
-          <label style="font-size:12px; color:var(--muted);">القالب الافتراضي الرئيسي للنسخة المصدّرة:</label>
+          <label style="font-size:12px; color:var(--muted);">نوع النسخة المصدّرة:</label>
           <select id="rsDefaultSystem" style="padding:6px; font-size:12px;">
-            <option value="universal_agent" selected>🌐 اللوحة العامة لإدارة الوكلاء والموزعين (لبيع أي منتج أو خدمة — AGT2)</option>
-            <option value="qalix_platform">🏢 نسخة مخصصة لوكلاء منظومة كالكس (QLXP)</option>
+            <option value="universal_agent" selected>🌐 النسخة العامة المصفرة (المعروضة للبيع لأي نشاط — بدون منظومات كالكس)</option>
+            <option value="qalix_suite_11">🏢 نسخة وكلاء منصة كالكس المخصصة (تضم المنظومات الـ 11 معزولة — بدون الأرشفة)</option>
+            <option value="qalix_platform">🎯 نسخة كالكس لإدارة الوكلاء منفردة (QLXP)</option>
           </select>
         </div>
       </div>

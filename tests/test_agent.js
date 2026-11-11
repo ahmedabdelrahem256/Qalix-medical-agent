@@ -1286,7 +1286,73 @@ function req(method, urlPath, body) {
       }
     );
 
-    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/72 PASSED ===`);
+    // 73. Qalix 11-System Suite (Excluding Archive/Vault) + Distributor Trial Stage Reports & Agent Notification
+    const sysSuiteInfo = await req('GET', '/api/systems');
+    const q11Ids = sysSuiteInfo.body?.qalixSuiteIds || [];
+    const q11Presets = (sysSuiteInfo.body?.presets || []).filter(p => q11Ids.includes(p.id));
+    const noArchiveOrVault = q11Presets.every(p => !p.nameAr.includes('الأرشفة') && !p.nameAr.includes('الخزنة الرقمية'));
+
+    const trialCreateRes = await req('POST', '/api/trial-reports', {
+      reportCode: 'TRL-TEST01',
+      distributorId: sampleDistId,
+      customerName: 'عيادة المستقبل التجريبية',
+      contactInfo: '01099001122 - أسيوط',
+      trialDeviceOrId: 'HW-TRIAL-88',
+      stage: 'trial_installed',
+      repName: 'كريم عادل',
+      techName: 'م. سامح',
+      notes: 'تثبيت نسخة تجربة 14 يوماً'
+    });
+    const trialUpdateRes = await req('POST', '/api/trial-reports', {
+      reportCode: 'TRL-TEST01',
+      distributorId: sampleDistId,
+      customerName: 'عيادة المستقبل التجريبية',
+      contactInfo: '01099001122 - أسيوط',
+      trialDeviceOrId: 'HW-TRIAL-88',
+      stage: 'tech_assigned',
+      repName: 'كريم عادل',
+      techName: 'م. سامح',
+      notes: 'تم انتقال العميل لمرحلة الفني بعد التعاقد'
+    });
+    const trialListRes = await req('GET', '/api/trial-reports');
+
+    const q11EditionRes = await req('POST', '/api/systems/build-reseller-edition', {
+      buyerAgentPhone: '01088776655',
+      buyerAgentTitleAr: 'وكيل منصة كالكس المعتمد',
+      includeAllQalix11: true,
+      includeMediaAssets: false
+    });
+    const q11Ed = q11EditionRes.body?.edition;
+
+    check('73. قائمة منظومات منصة كالكس الـ 11 (بدون الأرشفة والخزنة الرقمية) + إلزام إرسال بيانات التجربة وإخطار الوكيل بكل مرحلة',
+      q11Ids.length === 11 &&
+      noArchiveOrVault &&
+      q11Ids.includes('qalix_medical') &&
+      q11Ids.includes('qalix_platform') &&
+      q11Ids.includes('qalix_hr') &&
+      trialCreateRes.status === 201 &&
+      trialUpdateRes.status === 200 &&
+      trialUpdateRes.body.report.stage === 'tech_assigned' &&
+      trialUpdateRes.body.report.notified_agent === 1 &&
+      trialListRes.status === 200 &&
+      trialListRes.body.reports.some(r => r.report_code === 'TRL-TEST01' && r.stage === 'tech_assigned') &&
+      typeof portalAfterPay.body === 'string' &&
+      portalAfterPay.body.includes('submitTrialCardAndNotifyAgent') &&
+      portalAfterPay.body.includes('notifyAgentWithUpdatedCard') &&
+      q11EditionRes.status === 201 &&
+      q11Ed && q11Ed.systemsIncluded.length === 11 &&
+      q11Ed.verification.distributors === 0 &&
+      q11Ed.verification.deals === 0,
+      {
+        q11Count: q11Ids.length,
+        noArchiveOrVault,
+        trialStageAfterUpdate: trialUpdateRes.body?.report?.stage,
+        q11EditionSystems: q11Ed?.systemsIncluded?.length,
+        q11EditionClean: q11Ed?.verification
+      }
+    );
+
+    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/73 PASSED ===`);
     for (const r of results) console.log(' ✅', r);
   } finally {
     srv.kill('SIGINT');

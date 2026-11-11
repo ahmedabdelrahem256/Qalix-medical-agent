@@ -264,6 +264,60 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo, systemCtx = {}
         </div>
       </div>
 
+      <!-- Mandatory Trial Edition Registration & Stage Transition Agent Notification -->
+      <div id="trialRegistrationCard" class="sub-card" style="padding:12px; border:1px solid rgba(245,158,11,0.5); background:rgba(245,158,11,0.06); margin-bottom:14px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
+          <div>
+            <h4 style="margin:0; color:var(--amber); font-size:14.5px;">🧪 تسجيل نسخة المرحلة التجريبية (إلزامي إرسال البيانات للوكيل + تحديث البطاقة عند كل انتقال مرحلة)</h4>
+            <p style="margin:2px 0 0; font-size:12px; color:var(--muted);">أي عميل يتسلم نسخة تجريبية (14 يوماً) يجب تسجيل بياناته وإرسال بطاقته للوكيل فوراً؛ وعند انتقال العميل لأي مرحلة تالية تتحدث بطاقته تلقائياً وتُرسل للوكيل.</p>
+          </div>
+          <span style="background:rgba(245,158,11,0.2); color:#fbbf24; padding:3px 10px; border-radius:999px; font-size:11px; font-weight:bold;">إخطار إلزامي للوكيل</span>
+        </div>
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(175px, 1fr)); gap:8px; margin-bottom:10px;">
+          <div>
+            <label style="font-size:11px; color:var(--muted);">اسم العميل / المنشأة (مرحلة التجريب):</label>
+            <input id="trlCustomerName" placeholder="مثال: مركز السلام التخصصي" style="padding:6px; font-size:12px;" />
+          </div>
+          <div>
+            <label style="font-size:11px; color:var(--muted);">بيانات التواصل والمنطقة:</label>
+            <input id="trlContactInfo" placeholder="هاتف العميل + المنطقة..." style="padding:6px; font-size:12px;" />
+          </div>
+          <div>
+            <label style="font-size:11px; color:var(--muted);">مرجع النسخة التجريبية / بصمة الجهاز:</label>
+            <input id="trlDevice" dir="ltr" placeholder="TRIAL-HW / Device ID" style="padding:6px; font-size:12px;" />
+          </div>
+          <div>
+            <label style="font-size:11px; color:var(--muted);">تاريخ بدء التجربة (14 يوماً):</label>
+            <input id="trlStartDate" type="date" dir="ltr" style="padding:6px; font-size:12px;" />
+          </div>
+          <div>
+            <label style="font-size:11px; color:var(--muted);">المندوب المشرف على التجربة:</label>
+            <select id="trlRepSelect" style="padding:6px; font-size:12px;"></select>
+          </div>
+          <div>
+            <label style="font-size:11px; color:var(--muted);">الفني المرشح عند التفعيل:</label>
+            <select id="trlTechSelect" style="padding:6px; font-size:12px;"></select>
+          </div>
+          <div>
+            <label style="font-size:11px; color:var(--muted);">المرحلة الحالية:</label>
+            <select id="trlStageSelect" style="padding:6px; font-size:12px;">
+              <option value="trial_installed" selected>🧪 في مرحلة التجريب (تم التثبيت للعميل)</option>
+              <option value="rep_pending">1️⃣ مجدول لزيارة المندوب</option>
+              <option value="rep_visited">🤝 تمت زيارة المندوب والعرض</option>
+              <option value="tech_assigned">🛠️ جاري الإعداد للتنفيذ مع الفني</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:11px; color:var(--muted);">ملاحظات البطاقة / التحديث:</label>
+            <input id="trlNotes" placeholder="تم تثبيت التجريبية وطلب العميل متابعة..." style="padding:6px; font-size:12px;" />
+          </div>
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button type="button" onclick="submitTrialCardAndNotifyAgent(false)" style="background:linear-gradient(135deg,#d97706,#b45309); color:#fff; padding:8px 14px; font-size:12px; width:auto;">📡 حفظ بيانات النسخة التجريبية وإخطار الوكيل مباشرة</button>
+          <button type="button" onclick="submitTrialCardAndNotifyAgent(true)" style="background:linear-gradient(135deg,#10b981,#059669); color:#fff; padding:8px 14px; font-size:12px; width:auto;">📲 حفظ + إرسال بطاقة التجربة لواتساب الوكيل</button>
+        </div>
+      </div>
+
       <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap:14px;">
         <!-- Column 1: Team Roster (Reps & Technicians in Geographic Zone) -->
         <div class="sub-card" style="padding:12px; border:1px solid rgba(56,189,248,0.3); margin:0;">
@@ -1451,18 +1505,156 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo, systemCtx = {}
       saveDistFieldTasks(list);
     }
 
-    function advanceWorkflowStage(id, targetStage) {
+    const STAGE_LABELS_PORTAL = {
+      trial_installed: '🧪 مرحلة التجريب (تم تثبيت النسخة التجريبية)',
+      rep_pending: '1️⃣ بانتظار زيارة المندوب الأولى',
+      rep_visited: '🤝 زاره المندوب (متابعة / بانتظار الدفع)',
+      tech_assigned: '2️⃣ لدى الفني للتنفيذ والتشغيل',
+      completed: '✅ منجز ومفعّل بالكامل 100%'
+    };
+
+    function composeTaskAgentCardMessage(t) {
+      const stageTxt = STAGE_LABELS_PORTAL[t.stage] || t.stage;
+      return [
+        '📡 *بطاقة متابعة وتحديث مرحلة للوكيل — ' + PORTAL_DIST.systemName + '*',
+        '• كود المتابعة: ' + (t.reportCode || t.id),
+        '• الموزع: ' + PORTAL_DIST.name + ' (' + PORTAL_DIST.code + ') · ' + PORTAL_DIST.governorate,
+        '• العميل / الجهة: ' + t.customerName + (t.customerInfo ? ' (' + t.customerInfo + ')' : ''),
+        t.trialDevice ? ('• مرجع النسخة التجريبية: ' + t.trialDevice) : '',
+        t.trialStartDate ? ('• فترة التجريب (14 يوماً): من ' + t.trialStartDate + ' إلى ' + (t.trialEndDate || '')) : '',
+        '• المرحلة الحالية المحدّثة: ' + stageTxt,
+        t.repName ? ('• 1️⃣ المندوب: ' + t.repName) : '',
+        t.techName ? ('• 2️⃣ الفني: ' + t.techName) : '',
+        t.notes ? ('• ملاحظات: ' + t.notes) : '',
+        '• وقت تحديث البطاقة: ' + new Date().toLocaleString('ar-EG')
+      ].filter(Boolean).join('\\n');
+    }
+
+    async function sendTaskUpdateToAgentApi(t, forceOpenWa) {
+      const cardMsg = composeTaskAgentCardMessage(t);
+      const apiRes = await tryFetchAgentApi('/api/trial-reports', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reportCode: t.reportCode || t.id.toUpperCase(),
+          distributorId: PORTAL_DIST.id,
+          distributorCode: PORTAL_DIST.code,
+          customerName: t.customerName,
+          contactInfo: t.customerInfo || '',
+          governorate: PORTAL_DIST.governorate,
+          systemName: PORTAL_DIST.systemName,
+          trialDeviceOrId: t.trialDevice || '',
+          trialStartDate: t.trialStartDate || new Date().toISOString().slice(0, 10),
+          trialEndDate: t.trialEndDate || new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10),
+          stage: t.stage,
+          repName: t.repName || '',
+          techName: t.techName || '',
+          cardSummary: STAGE_LABELS_PORTAL[t.stage] || t.stage,
+          notes: t.notes || ''
+        })
+      });
+      const list = loadDistFieldTasks();
+      const target = list.find(x => x.id === t.id);
+      if (target) {
+        target.agentNotifiedAt = new Date().toLocaleString('ar-EG');
+        target.deliveredLive = Boolean(apiRes && apiRes.data && apiRes.data.ok);
+        saveDistFieldTasks(list);
+      }
+      if (forceOpenWa || !(apiRes && apiRes.data && apiRes.data.ok)) {
+        window.open('https://wa.me/' + PORTAL_DIST.waAgentDigits + '?text=' + encodeURIComponent(cardMsg), '_blank');
+      }
+      return Boolean(apiRes && apiRes.data && apiRes.data.ok);
+    }
+
+    async function submitTrialCardAndNotifyAgent(openWaAlso) {
+      const customerName = (document.getElementById('trlCustomerName')?.value || '').trim();
+      const customerInfo = (document.getElementById('trlContactInfo')?.value || '').trim();
+      const trialDevice = (document.getElementById('trlDevice')?.value || '').trim();
+      const trialStartDate = document.getElementById('trlStartDate')?.value || new Date().toISOString().slice(0, 10);
+      const repName = document.getElementById('trlRepSelect')?.value || '';
+      const techName = document.getElementById('trlTechSelect')?.value || '';
+      const stage = document.getElementById('trlStageSelect')?.value || 'trial_installed';
+      const notes = (document.getElementById('trlNotes')?.value || '').trim();
+      if (!customerName) return alert('يرجى إدخال اسم العميل أو المنشأة المسلمة لها النسخة التجريبية.');
+      if (!trialDevice && !customerInfo) return alert('يرجى إدخال مرجع النسخة التجريبية/بصمة الجهاز أو بيانات التواصل مع العميل لإثبات التجريب للوكيل.');
+
+      const startMs = Date.parse(trialStartDate) || Date.now();
+      const trialEndDate = new Date(startMs + 14 * 86400000).toISOString().slice(0, 10);
+      const reportCode = 'TRL-' + Math.random().toString(16).slice(2, 8).toUpperCase();
+
+      const list = loadDistFieldTasks();
+      const existing = list.find(x => x.customerName === customerName && x.stage !== 'completed');
+      let taskObj;
+      if (existing) {
+        existing.customerInfo = customerInfo || existing.customerInfo;
+        existing.trialDevice = trialDevice || existing.trialDevice;
+        existing.trialStartDate = trialStartDate;
+        existing.trialEndDate = trialEndDate;
+        existing.repName = repName || existing.repName;
+        existing.techName = techName || existing.techName;
+        existing.stage = stage;
+        existing.notes = notes || existing.notes;
+        existing.reportCode = existing.reportCode || reportCode;
+        taskObj = existing;
+      } else {
+        taskObj = {
+          id: 'wf_' + Math.random().toString(16).slice(2, 8),
+          reportCode,
+          customerName,
+          customerInfo,
+          trialDevice,
+          trialStartDate,
+          trialEndDate,
+          repName,
+          techName,
+          stage,
+          reqCode: '',
+          activationKey: '',
+          notes,
+          createdAt: new Date().toISOString()
+        };
+        list.unshift(taskObj);
+      }
+      saveDistFieldTasks(list);
+      document.getElementById('trlCustomerName').value = '';
+      document.getElementById('trlContactInfo').value = '';
+      document.getElementById('trlDevice').value = '';
+      document.getElementById('trlNotes').value = '';
+
+      const sentLive = await sendTaskUpdateToAgentApi(taskObj, openWaAlso);
+      if (sentLive && !openWaAlso) {
+        alert('✅ تم تسجيل بيانات النسخة التجريبية وإخطار الوكيل بالبطاقة فوراً بكود (' + (taskObj.reportCode || taskObj.id) + ').');
+      }
+    }
+
+    async function notifyAgentWithUpdatedCard(taskId, openWa) {
+      const t = loadDistFieldTasks().find(x => x.id === taskId);
+      if (!t) return;
+      const sentLive = await sendTaskUpdateToAgentApi(t, Boolean(openWa));
+      if (sentLive && !openWa) {
+        alert('✅ تم إخطار الوكيل بتحديث بطاقة (' + t.customerName + ') للمرحلة الحالية.');
+      }
+    }
+
+    async function advanceWorkflowStage(id, targetStage) {
       const list = loadDistFieldTasks();
       const item = list.find(x => x.id === id);
       if (!item) return;
-      const stages = ['rep_pending', 'rep_visited', 'tech_assigned', 'completed'];
+      const stages = ['trial_installed', 'rep_pending', 'rep_visited', 'tech_assigned', 'completed'];
       if (targetStage) {
         item.stage = targetStage;
       } else {
         const idx = stages.indexOf(item.stage);
         item.stage = stages[Math.min(stages.length - 1, idx + 1)];
       }
+      item.stageUpdatedAt = new Date().toLocaleString('ar-EG');
+      if (!item.reportCode) item.reportCode = 'TRL-' + Math.random().toString(16).slice(2, 8).toUpperCase();
       saveDistFieldTasks(list);
+
+      const sentLive = await sendTaskUpdateToAgentApi(item, false);
+      if (sentLive) {
+        alert('📡 تم تحديث بطاقة العميل «' + item.customerName + '» وإخطار الوكيل آلياً بالانتقال إلى مرحلة: ' + (STAGE_LABELS_PORTAL[item.stage] || item.stage));
+      }
     }
 
     function removeWorkflowTask(id) {
@@ -1519,7 +1711,7 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo, systemCtx = {}
 
       const repOptions = '<option value="">— اختر مندوباً —</option>' + reps.map(r => '<option value="' + escHtml(r.name) + '">🧑‍💼 ' + escHtml(r.name) + ' (' + escHtml(r.zone) + ')</option>').join('');
       const techOptions = '<option value="">— اختر فنياً —</option>' + techs.map(tc => '<option value="' + escHtml(tc.name) + '">🛠️ ' + escHtml(tc.name) + ' (' + escHtml(tc.zone) + ')</option>').join('');
-      ['wfRepSelect', 'dealRepSelect'].forEach(id => {
+      ['wfRepSelect', 'dealRepSelect', 'trlRepSelect'].forEach(id => {
         const sel = document.getElementById(id);
         if (sel) {
           const cur = sel.value;
@@ -1527,7 +1719,7 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo, systemCtx = {}
           if (cur) sel.value = cur;
         }
       });
-      ['wfTechSelect', 'dealTechSelect'].forEach(id => {
+      ['wfTechSelect', 'dealTechSelect', 'trlTechSelect'].forEach(id => {
         const sel = document.getElementById(id);
         if (sel) {
           const cur = sel.value;
@@ -1535,6 +1727,8 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo, systemCtx = {}
           if (cur) sel.value = cur;
         }
       });
+      const trlDateEl = document.getElementById('trlStartDate');
+      if (trlDateEl && !trlDateEl.value) trlDateEl.value = new Date().toISOString().slice(0, 10);
 
       const memBox = document.getElementById('distTeamMembersList');
       if (memBox) {
@@ -1568,6 +1762,7 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo, systemCtx = {}
             const linkedReq = t.reqCode ? waitingList.find(r => r.reqCode === t.reqCode) : waitingList.find(r => r.customerName === t.customerName);
             const resolvedKey = t.activationKey || (linkedReq && linkedReq.activationKey) || '';
             const stageMeta = {
+              trial_installed: { txt: '🧪 مرحلة التجريب (تم التثبيت للعميل)', bg: 'rgba(245,158,11,0.2)', clr: '#fbbf24', nextTxt: '1️⃣ تعيين زيارة المندوب' },
               rep_pending: { txt: '1️⃣ بانتظار زيارة المندوب الأولى', bg: 'rgba(245,158,11,0.18)', clr: '#fbbf24', nextTxt: '✔ تمت زيارة المندوب' },
               rep_visited: { txt: '🤝 زاره المندوب (بانتظار الدفع/الفني)', bg: 'rgba(56,189,248,0.18)', clr: '#38bdf8', nextTxt: '🛠️ إرسال الفني الآن' },
               tech_assigned: { txt: '2️⃣ لدى الفني للتنفيذ والتشغيل', bg: 'rgba(167,139,250,0.18)', clr: '#a78bfa', nextTxt: '✅ تم إنجاز العمل 100%' },
@@ -1576,18 +1771,21 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo, systemCtx = {}
 
             return '<div style="background:rgba(2,6,23,0.45); border:1px solid var(--border); border-radius:10px; padding:10px;">' +
               '<div style="display:flex; justify-content:space-between; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:4px;">' +
-              '<strong>' + escHtml(t.customerName) + '</strong>' +
+              '<strong>' + escHtml(t.customerName) + (t.reportCode ? ' <span style="font-size:11px; color:var(--sky); font-family:monospace;" dir="ltr">(' + escHtml(t.reportCode) + ')</span>' : '') + '</strong>' +
               '<span style="background:' + stageMeta.bg + '; color:' + stageMeta.clr + '; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:bold;">' + stageMeta.txt + '</span></div>' +
               '<div style="font-size:11.5px; color:var(--muted); line-height:1.55;">' +
               (t.customerInfo ? '📞 ' + escHtml(t.customerInfo) + '<br>' : '') +
+              (t.trialDevice ? '🧪 مرجع التجريبية: <code dir="ltr">' + escHtml(t.trialDevice) + '</code>' + (t.trialEndDate ? ' (تنتهي: ' + escHtml(t.trialEndDate) + ')' : '') + '<br>' : '') +
               '1️⃣ المندوب: <strong style="color:var(--sky);">' + escHtml(t.repName || 'غير محدد') + '</strong> · ' +
               '2️⃣ الفني: <strong style="color:var(--accent);">' + escHtml(t.techName || 'غير محدد') + '</strong>' +
+              (t.agentNotifiedAt ? '<br>📡 آخر إخطار للوكيل: <strong style="color:#34d399;">' + escHtml(t.agentNotifiedAt) + '</strong>' : '<br>⚠️ <span style="color:#fbbf24;">لم يُرسل تحديث هذه البطاقة للوكيل بعد</span>') +
               (resolvedKey ? '<br>🔑 مفتاح التفعيل الجاهز للفني: <strong style="font-family:monospace; color:#34d399;" dir="ltr">' + escHtml(resolvedKey) + '</strong>' : '') +
               (t.notes ? '<br>📝 ' + escHtml(t.notes) : '') +
               '</div>' +
               '<div style="display:flex; gap:5px; flex-wrap:wrap; margin-top:8px;">' +
               '<button type="button" onclick="dispatchStageMemberWa(&apos;' + t.id + '&apos;, &apos;rep&apos;)" style="padding:4px 8px; font-size:11px; background:#0369a1; color:#fff; width:auto;">📲 تكليف المندوب</button>' +
               '<button type="button" onclick="dispatchStageMemberWa(&apos;' + t.id + '&apos;, &apos;tech&apos;)" style="padding:4px 8px; font-size:11px; background:#059669; color:#fff; width:auto;">📲 أمر شغل الفني</button>' +
+              '<button type="button" onclick="notifyAgentWithUpdatedCard(&apos;' + t.id + '&apos;, true)" style="padding:4px 8px; font-size:11px; background:#7c3aed; color:#fff; width:auto;">📡 إخطار الوكيل بالبطاقة</button>' +
               (stageMeta.nextTxt ? '<button type="button" onclick="advanceWorkflowStage(&apos;' + t.id + '&apos;)" style="padding:4px 8px; font-size:11px; background:#d97706; color:#fff; width:auto;">' + stageMeta.nextTxt + '</button>' : '') +
               '<button type="button" onclick="removeWorkflowTask(&apos;' + t.id + '&apos;)" style="padding:4px 8px; font-size:11px; background:#7f1d1d; color:#fecaca; width:auto;">✕</button>' +
               '</div></div>';

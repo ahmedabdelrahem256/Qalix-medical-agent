@@ -40,6 +40,7 @@ const {
   loadCustomData
 } = require('./dev_console');
 const {
+  QALIX_11_SUITE_IDS,
   SYSTEM_PRESETS,
   initSystemSchema,
   seedGenericSystemProposals,
@@ -1565,12 +1566,122 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, 200, { ok: true, reqCode: pr.req_code, reason, summary: getSummaryResponse() });
     }
 
+    /* ---------------- Trial Registration & Mandatory Stage Transition Notification API ---------------- */
+    if (req.method === 'GET' && pathname === '/api/trial-reports') {
+      const rows = db.prepare(`
+        SELECT tr.*, d.name AS distributor_name, d.code AS distributor_code, d.phone AS distributor_phone
+        FROM trial_stage_reports tr
+        JOIN distributors d ON d.id = tr.distributor_id
+        ORDER BY tr.updated_at DESC
+      `).all();
+      return sendJson(res, 200, { ok: true, reports: rows });
+    }
+
+    if (req.method === 'POST' && pathname === '/api/trial-reports') {
+      const body = await readJsonBody(req);
+      const rawDistId = String(body.distributorId || '').trim();
+      const rawDistCode = String(body.distributorCode || '').trim().toUpperCase();
+      const dist = rawDistId
+        ? db.prepare('SELECT * FROM distributors WHERE id = ?').get(rawDistId)
+        : db.prepare('SELECT * FROM distributors WHERE UPPER(code) = ?').get(rawDistCode);
+      if (!dist) return sendJson(res, 404, { error: 'الموزع غير مسجل في هذه المنظومة' });
+
+      const customerName = String(body.customerName || '').trim().slice(0, 140);
+      if (!customerName) return sendJson(res, 400, { error: 'اسم العميل أو المنشأة مطلوب لتسجيل النسخة التجريبية' });
+
+      const STAGE_LABELS = {
+        trial_installed: '1️⃣ مرحلة التجريب (تم تثبيت النسخة التجريبية للعميل)',
+        rep_pending:     '1️⃣ بانتظار زيارة المندوب الأولى',
+        rep_visited:     '🤝 تمت زيارة المندوب والعرض',
+        rep_followup:    '🧑‍💼 متابعة المندوب خلال فترة التجريب',
+        payment_pending: '💳 جاهز للشراء وتأكيد الدفع',
+        tech_assigned:   '🛠️ لدى الفني للتركيب والتفعيل',
+        tech_deploying:  '🛠️ لدى الفني للتنفيذ والتدريب',
+        completed:       '✅ منجز ومفعّل بالكامل 100%'
+      };
+
+      const stage = String(body.stage || 'trial_installed').trim().slice(0, 40);
+      const contactInfo = String(body.contactInfo || '').trim().slice(0, 160);
+      const governorate = String(body.governorate || dist.governorate || '').trim().slice(0, 80);
+      const sysName = String(body.systemName || ACTIVE_SYSTEM.nameAr || 'المنظومة').trim().slice(0, 140);
+      const trialDeviceOrId = String(body.trialDeviceOrId || '').trim().slice(0, 100);
+      const startDate = String(body.trialStartDate || new Date().toISOString().slice(0, 10)).slice(0, 20);
+      const endDate = String(body.trialEndDate || new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10)).slice(0, 20);
+      const repName = String(body.repName || '').trim().slice(0, 100);
+      const techName = String(body.techName || '').trim().slice(0, 100);
+      const cardSummary = String(body.cardSummary || STAGE_LABELS[stage] || stage).trim().slice(0, 600);
+      const notes = String(body.notes || '').trim().slice(0, 600);
+      const now = new Date().toISOString();
+
+      const providedCode = String(body.reportCode || '').trim().toUpperCase().replace(/[^A-Z0-9\-]/g, '').slice(0, 28);
+      const existing = providedCode
+        ? db.prepare('SELECT * FROM trial_stage_reports WHERE UPPER(report_code) = ?').get(providedCode)
+        : null;
+
+      let reportCode = providedCode || ('TRL-' + crypto.randomBytes(3).toString('hex').toUpperCase());
+      let rowId;
+
+      if (existing) {
+        rowId = existing.id;
+        reportCode = existing.report_code;
+        db.prepare(`
+          UPDATE trial_stage_reports
+          SET customer_name = ?, contact_info = ?, governorate = ?, system_name = ?,
+              trial_device_or_id = ?, trial_start_date = ?, trial_end_date = ?,
+              stage = ?, rep_name = ?, tech_name = ?, card_summary = ?, notes = ?,
+              notified_agent = 1, updated_at = ?
+          WHERE id = ?
+        `).run(
+          customerName, contactInfo, governorate, sysName,
+          trialDeviceOrId, startDate, endDate,
+          stage, repName, techName, cardSummary, notes,
+          now, rowId
+        );
+      } else {
+        rowId = 'trl_' + crypto.randomBytes(6).toString('hex');
+        db.prepare(`
+          INSERT INTO trial_stage_reports(
+            id, report_code, distributor_id, customer_name, contact_info, governorate, system_name,
+            trial_device_or_id, trial_start_date, trial_end_date, stage, rep_name, tech_name,
+            card_summary, notes, notified_agent, created_at, updated_at
+          ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
+        `).run(
+          rowId, reportCode, dist.id, customerName, contactInfo, governorate, sysName,
+          trialDeviceOrId, startDate, endDate, stage, repName, techName,
+          cardSummary, notes, now, now
+        );
+      }
+
+      const stText = STAGE_LABELS[stage] || stage;
+      logAudit('trial_stage_notified', `إخطار الوكيل ببطاقة الموزع (${dist.code}) للعميل "${customerName}" [${reportCode}] — المرحلة: ${stText}`);
+
+      const waText = [
+        `📡 *إخطار وتحديث بطاقة العميل للوكيل — ${sysName}*`,
+        `• كود المتابعة: ${reportCode}`,
+        `• الموزع: ${dist.name} (${dist.code}) · ${governorate}`,
+        `• العميل: ${customerName}${contactInfo ? ' (' + contactInfo + ')' : ''}`,
+        trialDeviceOrId ? `• مرجع النسخة التجريبية / الجهاز: ${trialDeviceOrId}` : '',
+        `• فترة التجريب (14 يوماً): من ${startDate} إلى ${endDate}`,
+        `• المرحلة الحالية: *${stText}*`,
+        repName ? `• 1️⃣ المندوب المسؤول: ${repName}` : '',
+        techName ? `• 2️⃣ الفني المكلّف: ${techName}` : '',
+        notes ? `• ملاحظات وتحديث البطاقة: ${notes}` : ''
+      ].filter(Boolean).join('\n');
+
+      const savedRow = db.prepare(`
+        SELECT tr.*, d.name AS distributor_name, d.code AS distributor_code, d.phone AS distributor_phone
+        FROM trial_stage_reports tr JOIN distributors d ON d.id = tr.distributor_id WHERE tr.id = ?
+      `).get(rowId);
+      return sendJson(res, existing ? 200 : 201, { ok: true, report: savedRow, waText });
+    }
+
     /* ---------------- Multi-System Isolation & Clean Reseller Edition API ---------------- */
     if (req.method === 'GET' && pathname === '/api/systems') {
       systemsRegistry = loadSystemsRegistry(BASE_DATA_DIR, BASE_KITS_DIR);
       return sendJson(res, 200, {
         ok: true,
         activeSystemId: ACTIVE_SYSTEM.id,
+        qalixSuiteIds: QALIX_11_SUITE_IDS,
         presets: Object.values(SYSTEM_PRESETS),
         systems: systemsRegistry.systems.map(s => summarizeSystemStats(BASE_DATA_DIR, BASE_KITS_DIR, s))
       });
@@ -1627,6 +1738,7 @@ const server = http.createServer(async (req, res) => {
           buyerAgentTitleAr: body.buyerAgentTitleAr,
           buyerOwnerName: body.buyerOwnerName,
           defaultSystemId: body.defaultSystemId,
+          includeAllQalix11: body.includeAllQalix11 === true,
           includeMediaAssets: body.includeMediaAssets === true,
           extraSystemPresets: Array.isArray(body.extraSystemPresets) ? body.extraSystemPresets : []
         });
