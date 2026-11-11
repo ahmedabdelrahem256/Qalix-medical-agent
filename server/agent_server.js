@@ -148,6 +148,11 @@ db.exec(`
     prev_hash TEXT NOT NULL,
     curr_hash TEXT NOT NULL
   );
+
+  CREATE TABLE IF NOT EXISTS agent_private_settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+  );
 `);
 
 initializeTerritoryTables(db);
@@ -1340,6 +1345,28 @@ const server = http.createServer(async (req, res) => {
         'Qalix-RD-Proposals-v2.0.html',
         url.searchParams.get('download') === '1'
       );
+    }
+
+    /* ---------------- Agent-Only Confidential Platform Owner Channel ---------------- */
+    if (req.method === 'GET' && pathname === '/api/agent/owner-channel') {
+      const nameRow = db.prepare("SELECT value FROM agent_private_settings WHERE key = 'platform_owner_name'").get();
+      const phoneRow = db.prepare("SELECT value FROM agent_private_settings WHERE key = 'platform_owner_phone'").get();
+      return sendJson(res, 200, {
+        ok: true,
+        ownerName: nameRow ? nameRow.value : 'صاحب منصة كالكس الطبية',
+        ownerPhone: phoneRow ? phoneRow.value : ''
+      });
+    }
+
+    if (req.method === 'POST' && pathname === '/api/agent/owner-channel') {
+      const body = await readJsonBody(req);
+      const ownerName = String(body.ownerName || 'صاحب منصة كالكس الطبية').trim().slice(0, 120);
+      const ownerPhone = String(body.ownerPhone || '').replace(/[^0-9+]/g, '').slice(0, 20);
+      const upsert = db.prepare('INSERT INTO agent_private_settings(key, value) VALUES(?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value');
+      upsert.run('platform_owner_name', ownerName);
+      upsert.run('platform_owner_phone', ownerPhone);
+      logAudit('owner_channel_update', 'تحديث إعدادات القناة السرية المباشرة للوكيل مع صاحب منصة كالكس');
+      return sendJson(res, 200, { ok: true, ownerName, ownerPhone });
     }
 
     /* ---------------- Developer & System Administration API (Dev Console) ---------------- */

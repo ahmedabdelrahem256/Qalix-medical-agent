@@ -501,6 +501,61 @@
         </div>
       </div>
 
+      <!-- Agent-Only Confidential Platform Owner Direct Channel -->
+      <div id="ownerChannelCard" class="glass" style="border:1px solid rgba(244,63,94,0.38); background:rgba(244,63,94,0.04); margin-bottom:18px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
+          <div>
+            <div style="display:flex; gap:8px; align-items:center; margin-bottom:4px; flex-wrap:wrap;">
+              <span class="badge b-rose">🔐 قناة سرية للوكيل فقط (صفر وصول للموزعين أو الأطباء)</span>
+              <span class="badge b-emerald">تواصل مباشر مع صاحب منصة كالكس</span>
+            </div>
+            <h3 style="margin:0; font-size:17px; color:var(--text);">👑 التواصل المباشر بين الوكيل (<span dir="ltr">01122166076</span>) وصاحب منصة كالكس</h3>
+            <p style="margin:4px 0 0; font-size:12px; color:var(--muted);">
+              هذه القناة محصورة تماماً داخل جهاز الوكيل فقط؛ لا يظهر رقم صاحب المنصة أو بياناته لأي موزع أو طبيب أو في أي عقد أو بوابة.
+            </p>
+          </div>
+          <button type="button" class="btn btn-sm btn-sky" onclick="toggleOwnerPhoneVisibility()">👁️ إظهار / إخفاء الرقم المحفوظ</button>
+        </div>
+        <div class="grid-3" style="margin-bottom:10px;">
+          <div>
+            <label style="font-size:11.5px; color:var(--muted);">اسم / صفة صاحب المنصة:</label>
+            <input id="ownerPrivateName" type="text" value="صاحب منصة كالكس الطبية" placeholder="صاحب منصة كالكس" />
+          </div>
+          <div>
+            <label style="font-size:11.5px; color:var(--muted);">رقم واتساب صاحب المنصة (محفوظ محلياً فقط):</label>
+            <input id="ownerPrivatePhone" type="password" placeholder="أدخل رقم واتساب صاحب المنصة..." dir="ltr" />
+          </div>
+          <div style="display:flex; align-items:flex-end;">
+            <button type="button" class="btn btn-sm btn-emerald" style="width:100%;" onclick="saveOwnerChannelConfig()">💾 حفظ الرقم في قاعدة الوكيل المحلية</button>
+          </div>
+        </div>
+        <div class="grid-3" style="margin-bottom:10px;">
+          <div>
+            <label style="font-size:11.5px; color:var(--muted);">نوع المراسلة المباشرة لصاحب المنصة:</label>
+            <select id="ownerMsgCategory">
+              <option value="key">🔑 طلب إصدار مفتاح تفعيل دائم (QLX2) بالبصمة</option>
+              <option value="settlement">💰 إشعار توريد مالي / تسوية حسابات الوكيل</option>
+              <option value="dev">🚀 رفع مقترحات تطوير المنظومة (v2.0)</option>
+              <option value="support">🛠️ طلب دعم فني أو تحديث برمجي</option>
+              <option value="direct">💬 رسالة مباشرة لصاحب المنصة</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:11.5px; color:var(--muted);">مرجع العيادة / الصفقة (اختياري):</label>
+            <input id="ownerClinicRef" placeholder="مثال: عيادة النور — التخصصية (8,500 ج.م)" />
+          </div>
+          <div>
+            <label style="font-size:11.5px; color:var(--muted);">بصمة الجهاز (HWID) أو المبلغ:</label>
+            <input id="ownerHwidRef" placeholder="HWID أو المبلغ المحوّل" dir="ltr" />
+          </div>
+        </div>
+        <textarea id="ownerMsgBody" rows="2" placeholder="اكتب رسالتك أو تفاصيل الطلب الموجه حصرياً من الوكيل إلى صاحب منصة كالكس..."></textarea>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;">
+          <button type="button" class="btn btn-sm btn-emerald" onclick="sendToPlatformOwnerWa()">📲 إرسال مباشرة لواتساب صاحب المنصة (للوكيل فقط)</button>
+          <button type="button" class="btn btn-sm btn-amber" onclick="copyPlatformOwnerMsg()">📋 نسخ نص الرسالة</button>
+        </div>
+      </div>
+
             <!-- Visual Analytics & SVG Charts (Phase 6) -->
       <div class="glass" style="margin-bottom:18px;">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:14px;">
@@ -3243,7 +3298,84 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
       }
     }
 
+    async function loadOwnerChannelConfig() {
+      try {
+        const r = await fetch('/api/agent/owner-channel');
+        const j = await r.json();
+        if (j && j.ok) {
+          const n = document.getElementById('ownerPrivateName');
+          const p = document.getElementById('ownerPrivatePhone');
+          if (n && j.ownerName) n.value = j.ownerName;
+          if (p && j.ownerPhone) p.value = j.ownerPhone;
+        }
+      } catch (_) {}
+    }
+
+    function toggleOwnerPhoneVisibility() {
+      const p = document.getElementById('ownerPrivatePhone');
+      if (!p) return;
+      p.type = p.type === 'password' ? 'text' : 'password';
+    }
+
+    async function saveOwnerChannelConfig() {
+      const ownerName = (document.getElementById('ownerPrivateName')?.value || 'صاحب منصة كالكس الطبية').trim();
+      const ownerPhone = (document.getElementById('ownerPrivatePhone')?.value || '').trim();
+      if (!ownerPhone) return alert('يرجى إدخال رقم واتساب صاحب منصة كالكس لحفظه محلياً');
+      try {
+        const r = await fetch('/api/agent/owner-channel', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ownerName, ownerPhone })
+        });
+        const j = await r.json();
+        if (j.ok) alert('🔐 تم حفظ بيانات القناة المباشرة لصاحب منصة كالكس داخل قاعدة الوكيل المحلية بنجاح (لا يراها أي موزع أو طبيب).');
+        else alert('❌ تعذر الحفظ: ' + (j.error || 'خطأ'));
+      } catch (e) {
+        alert('❌ خطأ في الاتصال: ' + e.message);
+      }
+    }
+
+    function buildPlatformOwnerMsg() {
+      const ownerName = (document.getElementById('ownerPrivateName')?.value || 'صاحب منصة كالكس').trim();
+      const catEl = document.getElementById('ownerMsgCategory');
+      const catText = catEl?.options[catEl.selectedIndex]?.text || 'تواصل سيادي مباشر';
+      const clinicRef = (document.getElementById('ownerClinicRef')?.value || '').trim();
+      const hwidRef = (document.getElementById('ownerHwidRef')?.value || '').trim();
+      const body = (document.getElementById('ownerMsgBody')?.value || '').trim();
+      const lines = [
+        `👑 *رسالة مباشرة من الوكيل (01122166076) إلى ${ownerName}*`,
+        `━━━━━━━━━━━━━━━━━━━━`,
+        `📌 *الموضوع:* ${catText}`
+      ];
+      if (clinicRef) lines.push(`🏥 *مرجع العيادة/الصفقة:* ${clinicRef}`);
+      if (hwidRef) lines.push(`🔐 *البصمة (HWID) / المبلغ:* ${hwidRef}`);
+      if (body) lines.push(`📝 *التفاصيل:*\n${body}`);
+      lines.push(`━━━━━━━━━━━━━━━━━━━━\n📅 ${new Date().toLocaleString('ar-EG')}`);
+      return lines.join('\n');
+    }
+
+    function sendToPlatformOwnerWa() {
+      const rawPhone = (document.getElementById('ownerPrivatePhone')?.value || '').trim();
+      const waPhone = normalizeEgWaPhone(rawPhone);
+      if (!waPhone) {
+        alert('أدخل رقم واتساب صاحب منصة كالكس واضغط (حفظ الرقم في قاعدة الوكيل المحلية) أولاً.');
+        document.getElementById('ownerPrivatePhone')?.focus();
+        return;
+      }
+      const msg = buildPlatformOwnerMsg();
+      if (navigator.clipboard) navigator.clipboard.writeText(msg).catch(() => {});
+      openWaChat(waPhone, msg);
+    }
+
+    function copyPlatformOwnerMsg() {
+      const msg = buildPlatformOwnerMsg();
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(msg).then(() => alert('تم نسخ الرسالة الموجهة لصاحب المنصة بنجاح!'));
+      }
+    }
+
     load();
+    loadOwnerChannelConfig();
   </script>
 
   <!-- Modal for Lead Lock (Phase 9) -->

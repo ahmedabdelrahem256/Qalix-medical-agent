@@ -1019,7 +1019,31 @@ function req(method, urlPath, body) {
       }
     );
 
-    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/68 PASSED ===`);
+    // 69. Strict Platform Owner Isolation (Agent-Only Channel; Zero Owner Exposure in EULA, Docs, or Portals)
+    const eulaCleanRes = await req('GET', '/legal-docs/' + encodeURIComponent('عقد_ترخيص_الاستخدام_EULA.html'));
+    const saveOwnerRes = await req('POST', '/api/agent/owner-channel', { ownerName: 'صاحب منصة كالكس', ownerPhone: '01150000000' });
+    const getOwnerRes = await req('GET', '/api/agent/owner-channel');
+    check('69. حصر التواصل مع صاحب منصة كالكس على الوكيل فقط ومنع ظهوره في العقود وبوابات الموزعين',
+      eulaCleanRes.status === 200 &&
+      !eulaCleanRes.body.includes('01156150650') &&
+      !eulaCleanRes.body.includes('عبد الرحيم') &&
+      saveOwnerRes.status === 200 &&
+      saveOwnerRes.body.ok === true &&
+      getOwnerRes.status === 200 &&
+      getOwnerRes.body.ownerPhone === '01150000000' &&
+      !kitRefreshed.body.includes('owner-channel') &&
+      !kitRefreshed.body.includes('01156150650') &&
+      dashHtmlRes.body.includes('id="ownerChannelCard"') &&
+      dashHtmlRes.body.includes('sendToPlatformOwnerWa()'),
+      {
+        eulaClean: !eulaCleanRes.body.includes('01156150650') && !eulaCleanRes.body.includes('عبد الرحيم'),
+        ownerRouteOk: saveOwnerRes.status === 200 && getOwnerRes.status === 200,
+        portalIsolated: !kitRefreshed.body.includes('owner-channel') && !kitRefreshed.body.includes('01156150650'),
+        hasDashOwnerCard: dashHtmlRes.body.includes('id="ownerChannelCard"')
+      }
+    );
+
+    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/69 PASSED ===`);
     for (const r of results) console.log(' ✅', r);
   } finally {
     srv.kill('SIGINT');
