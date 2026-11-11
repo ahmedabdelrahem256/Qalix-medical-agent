@@ -59,12 +59,14 @@ function req(method, urlPath, body) {
     const b1 = await req('GET', '/api/bootstrap');
     check('1. تشغيل خادم الوكيل والتحقق من الرقم الموحد 01122166076', b1.status === 200 && b1.body.agent.phone === '01122166076');
 
-    // 2. Verify Fixed Pricing Table
-    check('2. التحقق من جدول الأسعار الرسمية الثابتة (4500 / 8500 / 18500) وعرض أسيوط (2700 / 5100 / 11100)',
+    // 2. Verify Fixed Pricing Table (Unified Nationwide Pricing)
+    check('2. التحقق من جدول الأسعار الرسمية الثابتة الموحدة (4500 / 8500 / 18500) وإلغاء خصم أسيوط',
       b1.body.pricing.basic.price === 4500 &&
       b1.body.pricing.professional.price === 8500 &&
       b1.body.pricing.enterprise.price === 18500 &&
-      b1.body.pricing.professional.assiutPrice === 5100
+      b1.body.pricing.basic.assiutPrice === undefined &&
+      b1.body.pricing.professional.assiutPrice === undefined &&
+      b1.body.pricing.enterprise.assiutPrice === undefined
     );
 
     // 3. Create Independent Distributor with 20% commission
@@ -105,7 +107,7 @@ function req(method, urlPath, body) {
       createdDeal.status === 'pending'
     );
 
-    // 6. Register Deal with Assiut 40% Discount (Basic = 2700 EGP, 20% = 540 EGP, Agent Net = 2160 EGP)
+    // 6. Verify Passing isAssiut: true Still Enforces Unified Basic Price (4500 EGP, 20% = 900 EGP, Agent Net = 3600 EGP)
     const dl2 = await req('POST', '/api/deals', {
       distributorId: distId,
       clinicName: 'عيادة الرحمة التخصصية بأسيوط',
@@ -117,11 +119,12 @@ function req(method, urlPath, body) {
       hardwareId: 'F1E2D3C4B5A69788695A4B3C'
     });
     const assiutDeal = dl2.body.summary.deals[0];
-    check('6. تسجيل صفقة بعرض أسيوط الثابت (2,700 ج.م) وحساب عمولة الموزع (540 ج.م) وصافي الوكيل (2,160 ج.م)',
+    check('6. فرض السعر الرسمي الموحد للباقة الأساسية (4,500 ج.م) وحساب العمولة (900 ج.م) وصافي الوكيل (3,600 ج.م) حتى مع إرسال isAssiut=true',
       dl2.status === 200 &&
-      assiutDeal.fixed_price === 2700 &&
-      assiutDeal.distributor_commission === 540 &&
-      assiutDeal.agent_net_amount === 2160
+      assiutDeal.fixed_price === 4500 &&
+      assiutDeal.distributor_commission === 900 &&
+      assiutDeal.agent_net_amount === 3600 &&
+      assiutDeal.is_assiut === 0
     );
 
     // 7. Settle Pending Deal & Issue License Reference
@@ -269,9 +272,9 @@ function req(method, urlPath, body) {
       stmtRes.body.includes('01122166076')
     );
 
-    // 21. Generate Printable Official Quotation HTML & Data (Phase 5)
+    // 21. Generate Printable Official Quotation HTML & Data (Unified Pricing Enforced)
     const quoRes = await req('GET', `/api/quotations/generate?doctor_name=${encodeURIComponent('د. أحمد صلاح')}&clinic_name=${encodeURIComponent('مركز الشفاء التخصصي')}&specialty=dental&tier=professional&governorate=${encodeURIComponent('أسيوط')}&assiut=true`);
-    check('21. توليد عرض السعر الرسمي المعتمد A4 بخصم أسيوط 40% والرمز الرقمي (Phase 5)',
+    check('21. توليد عرض السعر الرسمي المعتمد A4 بالسعر الرسمي الموحد (8,500 ج.م) حتى لمحافظة أسيوط (Phase 5)',
       quoRes.status === 200 &&
       typeof quoRes.body === 'string' &&
       quoRes.body.includes('عــرض ســعـر وتـوريــد رســمـي مـعـتـمـد') &&
@@ -279,7 +282,9 @@ function req(method, urlPath, body) {
       quoRes.body.includes('مركز الشفاء التخصصي') &&
       quoRes.body.includes('الموزع المعتمد') &&
       !quoRes.body.includes('01122166076') &&
-      quoRes.body.includes('5,100'),
+      quoRes.body.includes('8,500') &&
+      !quoRes.body.includes('5,100') &&
+      !quoRes.body.includes('40%'),
       { status: quoRes.status, bodyLen: typeof quoRes.body === 'string' ? quoRes.body.length : null, bodySub: typeof quoRes.body === 'string' ? quoRes.body.substring(0, 300) : quoRes.body }
     );
 
@@ -783,7 +788,44 @@ function req(method, urlPath, body) {
       }
     );
 
-    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/59 PASSED ===`);
+    // 60. Enforce Cancellation of Assiut 40% Discount Across Portal, Flyer, Receipts, Marketing & Static Ads
+    const battleUnifiedRes = await req('GET', '/api/marketing/battle-card');
+    const flyerAssiutRes = await req('GET', '/api/recruitment/flyer');
+    const objUnifiedRes = await req('GET', '/api/playbook/objections');
+    const staticDeckRes = await req('GET', '/presentations/' + encodeURIComponent('العرض_التقديمي_الشامل_المجمع.html'));
+    check('60. التحقق الشامل من إلغاء عرض أسيوط (40%) واعتماد الأسعار الموحدة (4500/8500/18500) عبر جميع الواجهات والملفات',
+      battleUnifiedRes.status === 200 &&
+      !battleUnifiedRes.body.includes('5,100') &&
+      !battleUnifiedRes.body.includes('2,700') &&
+      flyerAssiutRes.status === 200 &&
+      !flyerAssiutRes.body.includes('5,100') &&
+      !flyerAssiutRes.body.includes('2,700') &&
+      objUnifiedRes.status === 200 &&
+      !JSON.stringify(objUnifiedRes.body).includes('5,100') &&
+      !JSON.stringify(objUnifiedRes.body).includes('2,700') &&
+      !dashHtmlRes.body.includes('5,100') &&
+      !dashHtmlRes.body.includes('2,700') &&
+      !kitPreviewRes.body.includes('5,100') &&
+      !kitPreviewRes.body.includes('2,700') &&
+      !kitPreviewRes.body.includes('11,100') &&
+      fbHtmlRes.status === 200 &&
+      !fbHtmlRes.body.includes('5,100') &&
+      !fbHtmlRes.body.includes('2,700') &&
+      staticDeckRes.status === 200 &&
+      !staticDeckRes.body.includes('5,100') &&
+      !staticDeckRes.body.includes('2,700') &&
+      !staticDeckRes.body.includes('11,100'),
+      {
+        battleHas5100: battleUnifiedRes.body.includes('5,100'),
+        flyerHas5100: flyerAssiutRes.body.includes('5,100'),
+        dashHas5100: dashHtmlRes.body.includes('5,100'),
+        kitHas5100: kitPreviewRes.body.includes('5,100'),
+        adHas5100: fbHtmlRes.body.includes('5,100'),
+        deckHas5100: staticDeckRes.body.includes('5,100')
+      }
+    );
+
+    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/60 PASSED ===`);
     for (const r of results) console.log(' ✅', r);
   } finally {
     srv.kill('SIGINT');

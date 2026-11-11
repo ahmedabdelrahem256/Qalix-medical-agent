@@ -96,8 +96,8 @@ function generateReceiptHtml(receiptData, agentInfo) {
           <div style="font-size:11px; color:#64748b;">شامل التثبيت والتدريب وضمان الاستقرار الفني لمدة 12 شهراً مجاناً</div>
         </td>
         <td>${d.standardPrice.toLocaleString('en-US')} ج.م</td>
-        <td style="color:${d.isAssiut ? '#dc2626' : '#64748b'}; font-weight:bold;">
-          ${d.isAssiut ? 'خصم 40% (دعم أسيوط)' : 'سعر رسمي'}
+        <td style="color:#64748b; font-weight:bold;">
+          سعر رسمي موحد
         </td>
         <td style="font-size:15px; font-weight:bold; color:#15803d;">
           ${d.amountPaid.toLocaleString('en-US')} ج.م

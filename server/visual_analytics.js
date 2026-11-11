@@ -80,7 +80,7 @@ function generateGeographicDonutChart(deals) {
 
   return `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 180" width="100%" height="180" style="background:rgba(15,23,42,0.6); border-radius:12px; font-family:-apple-system, Cairo, sans-serif;">
-      <text x="190" y="22" fill="#10b981" font-size="13.5" font-weight="bold" text-anchor="middle">التوزيع الجغرافي (أسيوط والصعيد 40% مقابل باقي المحافظات)</text>
+      <text x="190" y="22" fill="#10b981" font-size="13.5" font-weight="bold" text-anchor="middle">التوزيع الجغرافي للمبيعات (أسيوط والصعيد مقابل المحافظات)</text>
       
       <!-- Donut Circle -->
       <g transform="translate(90, 100)">

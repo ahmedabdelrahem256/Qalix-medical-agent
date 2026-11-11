@@ -17,10 +17,10 @@ function generateQuotationData(params, pricingCatalog) {
   const distributorName = (params.distributor_name || '').trim();
   const distributorCode = (params.distributor_code || '').trim();
   const distributorPhone = (params.distributor_phone || '').trim();
-  const isAssiut = governorate.includes('أسيوط') || governorate.includes('اسيوط') || params.assiut === 'true' || params.assiut === true;
+  const isAssiut = false;
   
   const tier = pricingCatalog[tierKey] || pricingCatalog.professional;
-  const unitPrice = isAssiut ? tier.assiutPrice : tier.price;
+  const unitPrice = tier.price;
   const spec = SPECIALTY_PACKS[specialtyId] || SPECIALTY_PACKS.dental;
   
   const now = new Date();
@@ -43,9 +43,10 @@ function generateQuotationData(params, pricingCatalog) {
     maxDoctors: tier.maxDoctors,
     maxUsers: tier.maxUsers,
     unitPrice,
-    isAssiut,
+    isAssiut: false,
+    governorate,
     originalPrice: tier.price,
-    discountAmount: isAssiut ? (tier.price - tier.assiutPrice) : 0,
+    discountAmount: 0,
     distributorName,
     distributorCode,
     distributorPhone,
@@ -145,7 +146,7 @@ function generateQuotationHtml(quo) {
       <div><strong>الموجه إلى:</strong> د. ${quo.doctorName}</div>
       <div><strong>اسم المركز / العيادة:</strong> ${quo.clinicName}</div>
       <div><strong>التخصص الطبي:</strong> ${quo.specialtyIcon} ${quo.specialty}</div>
-      <div><strong>النطاق الجغرافي:</strong> ${quo.isAssiut ? 'محافظة أسيوط (خاضع لدعم الصعيد 40%)' : 'جمهورية مصر العربية'}</div>
+      <div><strong>النطاق الجغرافي:</strong> ${quo.governorate || 'جمهورية مصر العربية'}</div>
     </div>
 
     <table class="table-box">
@@ -169,7 +170,6 @@ function generateQuotationHtml(quo) {
             <span style="font-size: 11px; color: #64748b;">${quo.maxUsers === 99 ? 'غير محدود' : quo.maxUsers + ' مستخدمين'}</span>
           </td>
           <td class="price-cell">
-            ${quo.isAssiut ? `<span class="strike-price">${quo.originalPrice.toLocaleString('en-US')} ج.م</span>` : ''}
             <span>${quo.unitPrice.toLocaleString('en-US')} ج.م</span>
           </td>
         </tr>

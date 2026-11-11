@@ -8,24 +8,21 @@ const SCENARIOS = {
   conservative: {
     id: 'conservative',
     nameAr: 'السيناريو المتحفظ (الحد الأدنى)',
-    monthlyAssiutDeals: 3,
-    monthlyStandardDeals: 2,
+    monthlyStandardDeals: 5,
     avgDistCommissionRate: 20,
     desc: 'معدل بيع 5 عيادات شهرياً عبر 2 موزعين نشطين فقط.'
   },
   balanced: {
     id: 'balanced',
     nameAr: 'السيناريو المتوازن (المستهدف التشغيلي الرسمي)',
-    monthlyAssiutDeals: 7,
-    monthlyStandardDeals: 5,
+    monthlyStandardDeals: 12,
     avgDistCommissionRate: 22,
     desc: 'معدل بيع 12 عيادة شهرياً بتغطية أسيوط، القاهرة، والجيزة، والدلتا.'
   },
   aggressive: {
     id: 'aggressive',
     nameAr: 'السيناريو التوسعي (الريادة والانتشار الشامل)',
-    monthlyAssiutDeals: 15,
-    monthlyStandardDeals: 10,
+    monthlyStandardDeals: 25,
     avgDistCommissionRate: 25,
     desc: 'معدل بيع 25 عيادة شهرياً بتغطية محافظات الصعيد والدلتا والقناة.'
   }
@@ -34,11 +31,10 @@ const SCENARIOS = {
 function calculate12MonthForecast(scenarioKey = 'balanced') {
   const scen = SCENARIOS[scenarioKey] || SCENARIOS.balanced;
   
-  // Standard fixed prices: Professional 8,500, Assiut 5,100
-  const assiutPrice = 5100;
+  // Unified standard official price: Professional 8,500 EGP
   const standardPrice = 8500;
 
-  const monthlyGross = (scen.monthlyAssiutDeals * assiutPrice) + (scen.monthlyStandardDeals * standardPrice);
+  const monthlyGross = scen.monthlyStandardDeals * standardPrice;
   const monthlyDistComm = Math.round(monthlyGross * (scen.avgDistCommissionRate / 100));
   const monthlyAgentNet = monthlyGross - monthlyDistComm;
 
@@ -69,7 +65,7 @@ function calculate12MonthForecast(scenarioKey = 'balanced') {
   }
 
   // Potential Year 2 optional maintenance support contract (10% of license value)
-  const totalClinicsYear1 = Math.round((scen.monthlyAssiutDeals + scen.monthlyStandardDeals) * 12 * 1.08);
+  const totalClinicsYear1 = Math.round(scen.monthlyStandardDeals * 12 * 1.08);
   const optionalAnnualMaintenancePool = Math.round(cumGross * 0.12);
 
   const forecastSvgChart = generateForecastSvgChart(months);

@@ -73,9 +73,6 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
             <tr><td>الباقة الأساسية</td><td>4,500 ج.م</td><td style="color:var(--accent);font-weight:bold;">${Math.round(4500 * dist.commission_rate / 100)} ج.م</td><td>${4500 - Math.round(4500 * dist.commission_rate / 100)} ج.م</td></tr>
             <tr><td>الباقة التخصصية</td><td>8,500 ج.م</td><td style="color:var(--accent);font-weight:bold;">${Math.round(8500 * dist.commission_rate / 100)} ج.م</td><td>${8500 - Math.round(8500 * dist.commission_rate / 100)} ج.م</td></tr>
             <tr><td>باقة المراكز الكبرى</td><td>18,500 ج.م</td><td style="color:var(--accent);font-weight:bold;">${Math.round(18500 * dist.commission_rate / 100)} ج.م</td><td>${18500 - Math.round(18500 * dist.commission_rate / 100)} ج.م</td></tr>
-            <tr><td>الأساسية (خصم أسيوط 40%)</td><td>2,700 ج.م</td><td style="color:var(--amber);font-weight:bold;">${Math.round(2700 * dist.commission_rate / 100)} ج.م</td><td>${2700 - Math.round(2700 * dist.commission_rate / 100)} ج.م</td></tr>
-            <tr><td>التخصصية (خصم أسيوط 40%)</td><td>5,100 ج.م</td><td style="color:var(--amber);font-weight:bold;">${Math.round(5100 * dist.commission_rate / 100)} ج.م</td><td>${5100 - Math.round(5100 * dist.commission_rate / 100)} ج.م</td></tr>
-            <tr><td>المراكز (خصم أسيوط 40%)</td><td>11,100 ج.م</td><td style="color:var(--amber);font-weight:bold;">${Math.round(11100 * dist.commission_rate / 100)} ج.م</td><td>${11100 - Math.round(11100 * dist.commission_rate / 100)} ج.م</td></tr>
           </tbody>
         </table>
       </div>
@@ -92,9 +89,6 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
               <option value="basic|4500">الباقة الأساسية (4,500 ج.م)</option>
               <option value="pro|8500" selected>الباقة التخصصية (8,500 ج.م)</option>
               <option value="ent|18500">باقة المراكز الكبرى (18,500 ج.م)</option>
-              <option value="basic_as|2700">الأساسية - عرض أسيوط (2,700 ج.م)</option>
-              <option value="pro_as|5100">التخصصية - عرض أسيوط (5,100 ج.م)</option>
-              <option value="ent_as|11100">المراكز - عرض أسيوط (11,100 ج.م)</option>
             </select>
           </div>
           <button onclick="genRequest()">توليد رسالة طلب التفعيل للوكيل (نسخ واتساب)</button>
@@ -200,15 +194,14 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
         <div>
           <label style="font-size:12px; color:var(--muted);">الباقة المطلوبة:</label>
           <select id="quoTier">
-            <option value="basic">الباقة الأساسية (4,500 ج.م / أسيوط 2,700 ج.م)</option>
-            <option value="professional" selected>الباقة التخصصية (8,500 ج.م / أسيوط 5,100 ج.م)</option>
-            <option value="enterprise">باقة المراكز الكبرى (18,500 ج.م / أسيوط 11,100 ج.م)</option>
+            <option value="basic">الباقة الأساسية (4,500 ج.م)</option>
+            <option value="professional" selected>الباقة التخصصية (8,500 ج.م)</option>
+            <option value="enterprise">باقة المراكز الكبرى (18,500 ج.م)</option>
           </select>
         </div>
       </div>
       <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
-        <button onclick="openQuotation(false)" style="background:var(--accent); color:#052e16;">📄 توليد وعرض سعر رسمي (عام)</button>
-        <button onclick="openQuotation(true)" class="btn-amber">🌟 توليد عرض سعر أسيوط والصعيد (خصم 40%)</button>
+        <button onclick="openQuotation()" style="background:var(--accent); color:#052e16;">📄 توليد عرض السعر الرسمي المعتمد (A4)</button>
       </div>
     </div>
 
@@ -366,13 +359,13 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
       });
     }
 
-    function openQuotation(isAssiut) {
+    function openQuotation() {
       const doc = encodeURIComponent(document.getElementById('quoDoctor').value.trim() || 'السيد الدكتور المحترم');
       const cln = encodeURIComponent(document.getElementById('quoClinic').value.trim() || 'العيادة التخصصية');
       const spec = document.getElementById('quoSpecialty').value;
       const tier = document.getElementById('quoTier').value;
-      const gov = isAssiut ? 'أسيوط' : encodeURIComponent('${dist.governorate}');
-      const url = API_BASE + \`/api/quotations/generate?doctor_name=\${doc}&clinic_name=\${cln}&specialty=\${spec}&tier=\${tier}&governorate=\${gov}&assiut=\${isAssiut}&distributor_name=\${encodeURIComponent('${dist.name}')}&distributor_code=\${encodeURIComponent('${dist.code}')}&distributor_phone=\${encodeURIComponent('${dist.phone || ''}')}\`;
+      const gov = encodeURIComponent('${dist.governorate}');
+      const url = API_BASE + \`/api/quotations/generate?doctor_name=\${doc}&clinic_name=\${cln}&specialty=\${spec}&tier=\${tier}&governorate=\${gov}&distributor_name=\${encodeURIComponent('${dist.name}')}&distributor_code=\${encodeURIComponent('${dist.code}')}&distributor_phone=\${encodeURIComponent('${dist.phone || ''}')}\`;
       window.open(url, '_blank');
     }
 

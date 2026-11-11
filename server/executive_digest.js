@@ -193,7 +193,7 @@ function generateExecutiveWeeklyDigestHtml(summaryData, agentInfo) {
       ${deals.slice(0, 8).map(dl => `
         <tr>
           <td><strong>${dl.clinic_name}</strong> (${dl.doctor_name})</td>
-          <td>${dl.city} ${dl.is_assiut ? '★ دعم أسيوط' : ''}</td>
+          <td>${dl.city}</td>
           <td>${dl.tier}</td>
           <td>${dl.fixed_price.toLocaleString('en-US')} ج.م</td>
           <td style="color:#15803d; font-weight:bold;">${dl.agent_net_amount.toLocaleString('en-US')} ج.م</td>

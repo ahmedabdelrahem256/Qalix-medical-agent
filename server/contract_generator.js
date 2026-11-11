@@ -72,7 +72,6 @@ function generateDistributorContractHtml(dist, agentInfo) {
           <tr><td>الباقة الأساسية (عيادة فردية)</td><td>4,500 ج.م</td><td>${Math.round(4500 * dist.commission_rate / 100)} ج.م</td><td>${4500 - Math.round(4500 * dist.commission_rate / 100)} ج.م</td></tr>
           <tr><td>الباقة التخصصية (عيادة نشطة)</td><td>8,500 ج.م</td><td>${Math.round(8500 * dist.commission_rate / 100)} ج.م</td><td>${8500 - Math.round(8500 * dist.commission_rate / 100)} ج.م</td></tr>
           <tr><td>باقة المراكز الكبرى والفروع (Enterprise)</td><td>18,500 ج.م</td><td>${Math.round(18500 * dist.commission_rate / 100)} ج.م</td><td>${18500 - Math.round(18500 * dist.commission_rate / 100)} ج.م</td></tr>
-          <tr><td>عرض محافظة أسيوط (خصم خاص 40%)</td><td>2,700 إلى 11,100 ج.م</td><td>حسب نسبة الموزع</td><td>المبلغ بعد استقطاع العمولة</td></tr>
         </tbody>
       </table>
     </div>

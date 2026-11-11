@@ -63,9 +63,9 @@ function sendHtmlWithOptionalDownload(res, html, downloadFilename, forceDownload
 
 /* ---------------- Fixed Official Pricing (EGP) ---------------- */
 const OFFICIAL_PRICING = {
-  basic:        { id: 'basic',        nameAr: 'الباقة الأساسية (عيادة طبيب فردي)',         price: 4500,  assiutPrice: 2700, maxDoctors: 2,  maxUsers: 4 },
-  professional: { id: 'professional', nameAr: 'الباقة التخصصية (العيادات النشطة)',         price: 8500,  assiutPrice: 5100, maxDoctors: 5,  maxUsers: 12 },
-  enterprise:   { id: 'enterprise',   nameAr: 'باقة المراكز الكبرى والفروع (Enterprise)', price: 18500, assiutPrice: 11100, maxDoctors: 99, maxUsers: 99 }
+  basic:        { id: 'basic',        nameAr: 'الباقة الأساسية (عيادة طبيب فردي)',         price: 4500,  maxDoctors: 2,  maxUsers: 4 },
+  professional: { id: 'professional', nameAr: 'الباقة التخصصية (العيادات النشطة)',         price: 8500,  maxDoctors: 5,  maxUsers: 12 },
+  enterprise:   { id: 'enterprise',   nameAr: 'باقة المراكز الكبرى والفروع (Enterprise)', price: 18500, maxDoctors: 99, maxUsers: 99 }
 };
 
 const AGENT_INFO = {
@@ -178,8 +178,8 @@ function seedInitialData(targetDb) {
   ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
 
   insDeal.run(
-    'deal_01', 'DEAL-2026-101', 'dist_assiut_01', 'عيادة النور التخصصية للباطنة والقلب', 'د. عمرو عبد العليم', '01011223344', 'أسيوط', 1,
-    'professional', 5100, 20, 1020, 4080, '7F8A9C12B4E09911A2B3C4D5', 'completed', 'QLX2-ISSUED-ASSIUT-101', 'تم التفعيل وتوريد صافي الوكيل', now, now
+    'deal_01', 'DEAL-2026-101', 'dist_assiut_01', 'عيادة النور التخصصية للباطنة والقلب', 'د. عمرو عبد العليم', '01011223344', 'أسيوط', 0,
+    'professional', 8500, 20, 1700, 6800, '7F8A9C12B4E09911A2B3C4D5', 'completed', 'QLX2-ISSUED-ASSIUT-101', 'تم التفعيل وتوريد صافي الوكيل', now, now
   );
   insDeal.run(
     'deal_02', 'DEAL-2026-102', 'dist_cairo_02', 'مركز الصفوة لطب وجراحة الأسنان', 'د. كريم المنشاوي', '01022334455', 'القاهرة', 0,
@@ -240,7 +240,6 @@ const COMPETITORS_CATALOG = [
     pricingModel: '2,500 ج.م تأسيس + اشتراك شهري (799 ج.م أساسي / 1,599 ج.م عيادة / 3,299 ج.م برو)',
     cost3YearsEgp: 50470,
     qalixCost3YearsEgp: 8500,
-    qalixAssiutCost3YearsEgp: 5100,
     savings3YearsEgp: 41970,
     pros: [
       'واجهة ويب سحابية حديثة يمكن فتحها من المتصفح في حال توفر إنترنت مستقر',
@@ -255,7 +254,7 @@ const COMPETITORS_CATALOG = [
       'لا يوجد شات داخلي صوتي/نصي أوفلاين ولا إدارة أسرة وغرف متكاملة'
     ],
     qalixWinEdge: 'كالكس ميديكال يوفر على الطبيب أكثر من 41,970 ج.م في 3 سنوات، ويعمل 100% أوفلاين بلا إنترنت وبعدد غير محدود من المرضى، مع تشفير كامل للبيانات على جهاز العيادة حصراً.',
-    salesPitchAr: 'يا دكتور، ليه تدفع 2,500 جنيه تأسيس وبعدها 1,600 جنيه كل شهر مدى الحياة (يعني أكثر من 50 ألف جنيه في 3 سنين) في نظام لو النت قطع العيادة تقف؟ كالكس ميديكال دفعة واحدة بس مدى الحياة (8,500 ج.م أو 5,100 ج.م في أسيوط) وبياناتك مشفرة على جهازك ومش مربوط بعدد مرضى شهري!'
+    salesPitchAr: 'يا دكتور، ليه تدفع 2,500 جنيه تأسيس وبعدها 1,600 جنيه كل شهر مدى الحياة (يعني أكثر من 50 ألف جنيه في 3 سنين) في نظام لو النت قطع العيادة تقف؟ كالكس ميديكال دفعة واحدة بس مدى الحياة (8,500 ج.م) وبياناتك مشفرة على جهازك ومش مربوط بعدد مرضى شهري!'
   },
   {
     id: 'tabeeb_plus',
@@ -264,7 +263,6 @@ const COMPETITORS_CATALOG = [
     pricingModel: 'اشتراك شهري متكرر: 500 ج.م (فردي) / 1,000 ج.م (عيادة) / 1,500 ج.م (مراكز)',
     cost3YearsEgp: 36000,
     qalixCost3YearsEgp: 8500,
-    qalixAssiutCost3YearsEgp: 5100,
     savings3YearsEgp: 27500,
     pros: [
       'بداية اشتراك شهري تبدو منخفضة ظاهرياً (500 - 1,000 ج.م شهرياً)',
@@ -288,7 +286,6 @@ const COMPETITORS_CATALOG = [
     pricingModel: 'اشتراك شهري ~1,500 ج.م شهرياً (أو باقات سنوية متجددة بالدولار/الجنيه)',
     cost3YearsEgp: 54000,
     qalixCost3YearsEgp: 8500,
-    qalixAssiutCost3YearsEgp: 5100,
     savings3YearsEgp: 45500,
     pros: [
       'تنظيم جيد للمواعيد ولوحات التقارير السحابية',
@@ -310,7 +307,6 @@ const COMPETITORS_CATALOG = [
     pricingModel: 'اشتراك شهري/سنوي متغير + عمولات أو رسوم تسويق إضافية',
     cost3YearsEgp: 32000,
     qalixCost3YearsEgp: 8500,
-    qalixAssiutCost3YearsEgp: 5100,
     savings3YearsEgp: 23500,
     pros: [
       'ربط مع تطبيقات الحجز أونلاين للمرضى',
@@ -331,7 +327,6 @@ const COMPETITORS_CATALOG = [
     pricingModel: '3,000 إلى 7,000 ج.م للجهاز الواحد + رسوم سنوية للصيانة أو إعادة التثبيت بعد الفورمات',
     cost3YearsEgp: 12000,
     qalixCost3YearsEgp: 8500,
-    qalixAssiutCost3YearsEgp: 5100,
     savings3YearsEgp: 3500,
     pros: [
       'تعمل بدون إنترنت على جهاز الكمبيوتر'
@@ -352,7 +347,6 @@ const COMPETITORS_CATALOG = [
     pricingModel: 'اشتراك سنوي متكرر (~2,400 إلى 6,000+ ج.م/سنة حسب الفروع)',
     cost3YearsEgp: 18000,
     qalixCost3YearsEgp: 8500,
-    qalixAssiutCost3YearsEgp: 5100,
     savings3YearsEgp: 9500,
     pros: [
       'حساب الاستشارات المجانية ونسب الأطباء سحابياً',
@@ -372,7 +366,6 @@ const COMPETITORS_CATALOG = [
     pricingModel: 'اشتراك شهري/سنوي مخصص (~900–1,200 ج.م شهرياً للباقات المتكاملة)',
     cost3YearsEgp: 36000,
     qalixCost3YearsEgp: 8500,
-    qalixAssiutCost3YearsEgp: 5100,
     savings3YearsEgp: 27500,
     pros: [
       'إدارة الجلسات والباقات لعيادات الجلدية والتجميل',
@@ -392,7 +385,6 @@ const COMPETITORS_CATALOG = [
     pricingModel: 'اشتراك شهري/سنوي متجدد (~450–700 ج.م/شهر)',
     cost3YearsEgp: 21600,
     qalixCost3YearsEgp: 8500,
-    qalixAssiutCost3YearsEgp: 5100,
     savings3YearsEgp: 13100,
     pros: [
       'واجهة خفيفة وسريعة للاستقبال والحجوزات',
@@ -412,7 +404,6 @@ const COMPETITORS_CATALOG = [
     pricingModel: 'تراخيص موديولات منفصلة + دعم وتأسيس (~8,000 إلى 24,000+ ج.م / 3 سنوات)',
     cost3YearsEgp: 18000,
     qalixCost3YearsEgp: 8500,
-    qalixAssiutCost3YearsEgp: 5100,
     savings3YearsEgp: 9500,
     pros: [
       'متوفر بباقات متعددة (STD / Pro) للمراكز المتوسطة',
@@ -432,7 +423,6 @@ const COMPETITORS_CATALOG = [
     pricingModel: 'باقات اشتراك شهرية/سنوية ورسوم تسويق (~500–900 ج.م/شهر)',
     cost3YearsEgp: 24000,
     qalixCost3YearsEgp: 8500,
-    qalixAssiutCost3YearsEgp: 5100,
     savings3YearsEgp: 15500,
     pros: [
       'منصة تسويق معروفة لجلب مرضى وحجوزات أونلاين',
@@ -452,7 +442,6 @@ const COMPETITORS_CATALOG = [
     pricingModel: 'باقة مجانية محدودة الزيارات + باقات مدفوعة شهرية/سنوية (~700–1,200 ج.م/شهر)',
     cost3YearsEgp: 25200,
     qalixCost3YearsEgp: 8500,
-    qalixAssiutCost3YearsEgp: 5100,
     savings3YearsEgp: 16700,
     pros: [
       'يعمل عبر الويب وتطبيقات الهاتف مع واجهة عربية/إنجليزية',
@@ -472,7 +461,6 @@ const COMPETITORS_CATALOG = [
     pricingModel: 'اشتراك شهري/سنوي متكرر (~500–1,000 ج.م/شهر حسب التخصص والمستخدمين)',
     cost3YearsEgp: 28800,
     qalixCost3YearsEgp: 8500,
-    qalixAssiutCost3YearsEgp: 5100,
     savings3YearsEgp: 20300,
     pros: [
       'تطبيق موبايل للحجز ومتابعة قائمة الانتظار والربط السحابي',
@@ -492,7 +480,6 @@ const COMPETITORS_CATALOG = [
     pricingModel: 'رسوم تأسيس وتراخيص موديولات + صيانة ودعم سنوي (~12,000–25,000 ج.م / 3 سنوات)',
     cost3YearsEgp: 21000,
     qalixCost3YearsEgp: 8500,
-    qalixAssiutCost3YearsEgp: 5100,
     savings3YearsEgp: 12500,
     pros: [
       'نظام مؤسسي لحسابات العيادة والتعاقدات وتنظيم الاستقبال',
@@ -512,7 +499,6 @@ const COMPETITORS_CATALOG = [
     pricingModel: 'باقات SaaS شهرية/سنوية (~700–1,400 ج.م/شهر حسب المستخدمين والرسائل)',
     cost3YearsEgp: 32400,
     qalixCost3YearsEgp: 8500,
-    qalixAssiutCost3YearsEgp: 5100,
     savings3YearsEgp: 23900,
     pros: [
       'تصميم عصري حديث يجذب أطباء الشباب عبر فيديوهات تيك توك وإنستجرام',
@@ -532,7 +518,6 @@ const COMPETITORS_CATALOG = [
     pricingModel: 'اشتراك شهري/سنوي متغير حسب الباقة والتخصص (~600–1,100 ج.م/شهر)',
     cost3YearsEgp: 25200,
     qalixCost3YearsEgp: 8500,
-    qalixAssiutCost3YearsEgp: 5100,
     savings3YearsEgp: 16700,
     pros: [
       'دعم قوالب متعددة التخصصات (أسنان، جلدية، أطفال)',
@@ -548,11 +533,11 @@ const COMPETITORS_CATALOG = [
 ];
 
 /* ---------------- Helper Functions ---------------- */
-function calculateDealFinancials(tierId, isAssiut, commissionRate) {
+function calculateDealFinancials(tierId, _isAssiut, commissionRate) {
   const tier = OFFICIAL_PRICING[tierId];
   if (!tier) throw new Error('باقة غير صالحة');
   const rate = Math.max(0, Math.min(50, Number(commissionRate) || 0));
-  const fixedPrice = isAssiut ? tier.assiutPrice : tier.price;
+  const fixedPrice = tier.price;
   const distributorCommission = Math.round(fixedPrice * (rate / 100));
   const agentNetAmount = fixedPrice - distributorCommission;
   return {
@@ -769,7 +754,7 @@ const server = http.createServer(async (req, res) => {
       const doctorName = String(body.doctorName || '').trim();
       const clinicPhone = String(body.clinicPhone || '').trim();
       const city = String(body.city || dist.governorate).trim();
-      const isAssiut = body.isAssiut ? 1 : 0;
+      const isAssiut = 0;
       const tier = String(body.tier || 'professional');
       const hardwareId = String(body.hardwareId || '').trim().toUpperCase();
       const status = body.status === 'completed' ? 'completed' : 'pending';
@@ -1232,8 +1217,8 @@ const server = http.createServer(async (req, res) => {
       const dist = deal ? db.prepare('SELECT * FROM distributors WHERE id = ?').get(deal.distributor_id) : null;
       const tier = deal ? OFFICIAL_PRICING[deal.tier] : (OFFICIAL_PRICING[qParams.tier] || OFFICIAL_PRICING.professional);
       const stdPrice = tier.price;
-      const isAssiut = deal ? Boolean(deal.is_assiut) : (qParams.isAssiut === '1' || qParams.isAssiut === 'true');
-      const paid = deal ? deal.fixed_price : (isAssiut ? tier.assiutPrice : tier.price);
+      const isAssiut = false;
+      const paid = deal ? deal.fixed_price : tier.price;
       const recNo = 'REC-2026-' + (deal ? deal.deal_no.replace(/[^0-9]/g, '') : Math.floor(100 + Math.random() * 900));
       const channelKey = qParams.channel || 'instapay';
       const channel = PAYMENT_CHANNELS[channelKey] || PAYMENT_CHANNELS.instapay;
@@ -1245,8 +1230,8 @@ const server = http.createServer(async (req, res) => {
         receiptDate: new Date().toLocaleDateString('ar-EG'),
         clinicName: deal ? deal.clinic_name : (qParams.clinicName || 'عيادة النخبة التخصصية'),
         doctorName: deal ? deal.doctor_name : (qParams.doctorName || 'السيد الدكتور المحترم'),
-        city: deal ? deal.city : (qParams.city || 'أسيوط'),
-        governorate: dist ? dist.governorate : (isAssiut ? 'أسيوط' : 'القاهرة'),
+        city: deal ? deal.city : (qParams.city || 'القاهرة'),
+        governorate: dist ? dist.governorate : 'القاهرة',
         clinicPhone: deal ? deal.clinic_phone : (qParams.phone || '01011223344'),
         tierNameAr: tier.nameAr,
         distributorName: dist ? dist.name : (qParams.distributorName || 'الموزع المعتمد'),

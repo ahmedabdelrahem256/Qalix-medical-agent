@@ -123,10 +123,10 @@ https://wa.me/${intlClean}`;
       <thead>
         <tr>
           <th>الباقة الرسمية</th>
-          <th>السعر الرسمي الثابت</th>
+          <th>السعر الرسمي الموحد</th>
           <th>عمولتك (شريحة 20%)</th>
+          <th>عمولتك (شريحة 22%)</th>
           <th>عمولتك (شريحة 25%)</th>
-          <th>عرض أسيوط (40% خصم)</th>
         </tr>
       </thead>
       <tbody>
@@ -134,22 +134,22 @@ https://wa.me/${intlClean}`;
           <td>الباقة الأساسية (عيادة طبيب فردي)</td>
           <td>4,500 ج.م</td>
           <td style="color:#059669; font-weight:bold;">900 ج.م</td>
+          <td style="color:#0d9488; font-weight:bold;">990 ج.م</td>
           <td style="color:#0284c7; font-weight:bold;">1,125 ج.م</td>
-          <td>2,700 ج.م (عمولة 540 ج.م)</td>
         </tr>
         <tr style="background:#f0fdf4;">
           <td>الباقة التخصصية ⭐ الأكثر طلباً</td>
           <td><strong>8,500 ج.م</strong></td>
           <td style="color:#059669; font-weight:bold;">1,700 ج.م</td>
+          <td style="color:#0d9488; font-weight:bold;">1,870 ج.م</td>
           <td style="color:#0284c7; font-weight:bold;">2,125 ج.م</td>
-          <td>5,100 ج.م (عمولة 1,020 ج.م)</td>
         </tr>
         <tr>
           <td>باقة المراكز الكبرى والفروع (Enterprise)</td>
           <td>18,500 ج.م</td>
           <td style="color:#059669; font-weight:bold;">3,700 ج.م</td>
+          <td style="color:#0d9488; font-weight:bold;">4,070 ج.م</td>
           <td style="color:#0284c7; font-weight:bold;">4,625 ج.م</td>
-          <td>11,100 ج.م (عمولة 2,220 ج.م)</td>
         </tr>
       </tbody>
     </table>
@@ -270,12 +270,12 @@ function renderDistributorOnboardingCardHtml(agentInfo) {
 
       <table>
         <thead>
-          <tr><th>الباقة الرسمية</th><th>السعر الرسمي الثابت</th><th>سعر مبادرة أسيوط (40%)</th><th>عمولتك الافتتاحية (20%)</th><th>عمولة الذهبية (25%)</th></tr>
+          <tr><th>الباقة الرسمية</th><th>السعر الرسمي الموحد</th><th>عمولتك الافتتاحية (20%)</th><th>عمولة الفضية (22%)</th><th>عمولة الذهبية (25%)</th></tr>
         </thead>
         <tbody>
-          <tr><td>الباقة الأساسية (طبيب فردي)</td><td>4,500 ج.م</td><td>2,700 ج.م</td><td style="color:#34d399; font-weight:bold;">900 ج.م</td><td>1,125 ج.م</td></tr>
-          <tr><td>الباقة التخصصية (الأكثر مبيعاً)</td><td>8,500 ج.م</td><td>5,100 ج.م</td><td style="color:#34d399; font-weight:bold;">1,700 ج.م</td><td>2,125 ج.م</td></tr>
-          <tr><td>باقة المراكز الكبرى والفروع</td><td>18,500 ج.م</td><td>11,100 ج.م</td><td style="color:#34d399; font-weight:bold;">3,700 ج.م</td><td>4,625 ج.م</td></tr>
+          <tr><td>الباقة الأساسية (طبيب فردي)</td><td>4,500 ج.م</td><td style="color:#34d399; font-weight:bold;">900 ج.م</td><td>990 ج.م</td><td>1,125 ج.م</td></tr>
+          <tr><td>الباقة التخصصية (الأكثر مبيعاً)</td><td>8,500 ج.م</td><td style="color:#34d399; font-weight:bold;">1,700 ج.م</td><td>1,870 ج.م</td><td>2,125 ج.م</td></tr>
+          <tr><td>باقة المراكز الكبرى والفروع</td><td>18,500 ج.م</td><td style="color:#34d399; font-weight:bold;">3,700 ج.م</td><td>4,070 ج.م</td><td>4,625 ج.م</td></tr>
         </tbody>
       </table>
     </div>

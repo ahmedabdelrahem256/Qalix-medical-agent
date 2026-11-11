@@ -379,9 +379,9 @@
               <div>
                 <label style="font-size:12px; color:var(--muted);">الباقة (سعر رسمي ثابت):</label>
                 <select id="dlTier">
-                  <option value="basic">الأساسية (4,500 ج.م / أسيوط 2,700)</option>
-                  <option value="professional" selected>التخصصية (8,500 ج.م / أسيوط 5,100)</option>
-                  <option value="enterprise">المراكز الكبرى (18,500 ج.م / أسيوط 11,100)</option>
+                  <option value="basic">الأساسية (4,500 ج.م — سعر موحد)</option>
+                  <option value="professional" selected>التخصصية (8,500 ج.م — سعر موحد)</option>
+                  <option value="enterprise">المراكز الكبرى (18,500 ج.م — سعر موحد)</option>
                 </select>
               </div>
               <div>
@@ -397,11 +397,10 @@
                 <input id="dlHwid" placeholder="تُنسخ من نافذة التفعيل بالعيادة" dir="ltr" />
               </div>
               <div>
-                <label style="font-size:12px; color:var(--muted);">المبادرة والتخفيض الإقليمي:</label>
-                <label for="dlAssiut" style="display:flex; align-items:center; gap:10px; height:38px; padding:0 12px; background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:10px; cursor:pointer; font-size:12.5px; user-select:none; box-sizing:border-box;">
-                  <input type="checkbox" id="dlAssiut" style="width:18px; height:18px; accent-color:var(--sky); cursor:pointer;" />
-                  <span style="font-weight:600; color:var(--text);">تطبيق خصم محافظة أسيوط (40%)</span>
-                </label>
+                <label style="font-size:12px; color:var(--muted);">السياسة السعرية المعتمدة:</label>
+                <div style="display:flex; align-items:center; gap:8px; height:38px; padding:0 12px; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.28); border-radius:10px; font-size:12.5px; color:var(--emerald); font-weight:600; box-sizing:border-box;">
+                  <span>✓ سعر رسمي موحد في جميع محافظات الجمهورية</span>
+                </div>
               </div>
             </div>
           </div>
@@ -634,9 +633,6 @@
                 <option value="4500">الباقة الأساسية — 4,500 ج.م (دفعة واحدة مدى الحياة)</option>
                 <option value="8500" selected>الباقة التخصصية — 8,500 ج.م (دفعة واحدة مدى الحياة)</option>
                 <option value="18500">باقة المراكز الكبرى — 18,500 ج.م (دفعة واحدة مدى الحياة)</option>
-                <option value="2700">الأساسية (خصم أسيوط 40%) — 2,700 ج.م</option>
-                <option value="5100">التخصصية (خصم أسيوط 40%) — 5,100 ج.م</option>
-                <option value="11100">المراكز الكبرى (خصم أسيوط 40%) — 11,100 ج.م</option>
               </select>
             </div>
             <div class="sub-card" style="background:rgba(244,63,94,0.1); border-color:rgba(244,63,94,0.3);">
@@ -680,7 +676,7 @@
               </tr>
               <tr>
                 <td><strong>نظام الدفع والترخيص</strong></td>
-                <td style="color:var(--emerald); font-weight:bold;">دفعة واحدة مدى الحياة: 4,500 / 8,500 / 18,500 ج.م (أسيوط: 2,700 / 5,100 / 11,100)</td>
+                <td style="color:var(--emerald); font-weight:bold;">دفعة واحدة مدى الحياة: 4,500 / 8,500 / 18,500 ج.م (سعر رسمي موحد)</td>
                 <td>2,500 تأسيس + 799 إلى 3,299 ج.م شهرياً</td>
                 <td>500 إلى 1,500 ج.م شهرياً</td>
                 <td>~1,500 ج.م شهرياً</td>
@@ -688,7 +684,7 @@
               </tr>
               <tr>
                 <td><strong>التكلفة خلال 3 سنوات (عيادة نشطة)</strong></td>
-                <td style="color:var(--emerald); font-weight:bold;">8,500 ج.م فقط (أو 5,100 ج.م في أسيوط)</td>
+                <td style="color:var(--emerald); font-weight:bold;">8,500 ج.م فقط (سعر رسمي موحد)</td>
                 <td style="color:var(--rose); font-weight:bold;">50,470 ج.م</td>
                 <td style="color:var(--amber); font-weight:bold;">36,000 ج.م</td>
                 <td style="color:var(--rose); font-weight:bold;">54,000 ج.م</td>
@@ -1113,18 +1109,17 @@
             <div>
               <label style="font-size:12px; color:var(--muted);">الباقة المطلوبة:</label>
               <select id="qTier">
-                <option value="basic">الباقة الأساسية (4,500 ج.م / أسيوط 2,700 ج.م)</option>
-                <option value="professional" selected>الباقة التخصصية (8,500 ج.م / أسيوط 5,100 ج.م)</option>
-                <option value="enterprise">باقة المراكز الكبرى (18,500 ج.م / أسيوط 11,100 ج.م)</option>
+                <option value="basic">الباقة الأساسية (4,500 ج.م — سعر موحد)</option>
+                <option value="professional" selected>الباقة التخصصية (8,500 ج.م — سعر موحد)</option>
+                <option value="enterprise">باقة المراكز الكبرى (18,500 ج.م — سعر موحد)</option>
               </select>
             </div>
             <div>
               <label style="font-size:12px; color:var(--muted);">المحافظة / النطاق الجغرافي:</label>
-              <input id="qGovernorate" placeholder="أسيوط / القاهرة / الإسكندرية..." value="أسيوط" />
+              <input id="qGovernorate" placeholder="أسيوط / القاهرة / الإسكندرية..." value="جمهورية مصر العربية" />
             </div>
             <div style="display:flex; align-items:center; gap:8px; padding-top:16px;">
-              <input type="checkbox" id="qAssiutCheck" checked style="width:18px; height:18px; cursor:pointer;" />
-              <label for="qAssiutCheck" style="font-size:12.5px; font-weight:bold; color:var(--amber); cursor:pointer;">تطبيق عرض أسيوط والصعيد (خصم 40%)</label>
+              <span style="font-size:12.5px; font-weight:bold; color:var(--emerald);">✓ تسعير رسمي موحد لجميع المحافظات</span>
             </div>
           </div>
           <div style="display:flex; gap:10px; flex-wrap:wrap;">
@@ -1792,7 +1787,7 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
         <tr>
           <td style="font-family:monospace; font-weight:bold;">${dl.deal_no}</td>
           <td>${dl.distributor_name} <span style="color:var(--muted);">(${dl.distributor_code})</span></td>
-          <td><strong>${dl.clinic_name}</strong><br><span style="color:var(--muted);">${dl.doctor_name} — ${dl.city}${dl.is_assiut ? ' (خصم أسيوط 40%)' : ''}</span></td>
+          <td><strong>${dl.clinic_name}</strong><br><span style="color:var(--muted);">${dl.doctor_name} — ${dl.city}</span></td>
           <td>${tierNames[dl.tier] || dl.tier}</td>
           <td><strong>${fmt(dl.fixed_price)}</strong></td>
           <td style="color:var(--amber); font-weight:bold;">${fmt(dl.distributor_commission)} (${dl.commission_rate}%)</td>
@@ -2068,7 +2063,7 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
       const clinicName = document.getElementById('dlClinic').value.trim();
       const doctorName = document.getElementById('dlDoctor').value.trim();
       const hardwareId = document.getElementById('dlHwid').value.trim();
-      const isAssiut = document.getElementById('dlAssiut').checked;
+      const isAssiut = false;
       if (!clinicName || !doctorName) return alert('أدخل اسم العيادة واسم الطبيب');
       const r = await fetch('/api/deals', {
         method: 'POST',
@@ -2096,9 +2091,8 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
       const cln = encodeURIComponent(document.getElementById('qClinicName').value.trim() || 'العيادة التخصصية');
       const spec = document.getElementById('qSpecialty').value;
       const tier = document.getElementById('qTier').value;
-      const gov = encodeURIComponent(document.getElementById('qGovernorate').value.trim() || 'أسيوط');
-      const isAssiut = document.getElementById('qAssiutCheck').checked;
-      const url = `/api/quotations/generate?doctor_name=${doc}&clinic_name=${cln}&specialty=${spec}&tier=${tier}&governorate=${gov}&assiut=${isAssiut}`;
+      const gov = encodeURIComponent(document.getElementById('qGovernorate').value.trim() || 'جمهورية مصر العربية');
+      const url = `/api/quotations/generate?doctor_name=${doc}&clinic_name=${cln}&specialty=${spec}&tier=${tier}&governorate=${gov}`;
       openCardPreviewModal({
         title: '📋 عرض السعر الرسمي المعتمد (A4)',
         subtitle: 'معاينة عرض السعر قبل التحميل أو الطباعة',
