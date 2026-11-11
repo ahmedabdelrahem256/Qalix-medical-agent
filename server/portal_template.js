@@ -16,12 +16,44 @@ function safeInlineJson(obj) {
     .replace(/\u2029/g, '\\u2029');
 }
 
-function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
+function generateStandaloneDistributorPortalHtml(dist, agentInfo, systemCtx = {}) {
   const safeName = escapeHtml(dist.name);
   const safeCode = escapeHtml(dist.code);
   const safeGov = escapeHtml(dist.governorate);
   const safeRate = Number(dist.commission_rate) || 27;
-  const safeMegaUrl = escapeHtml(agentInfo.megaTrialUrl);
+  const safeMegaUrl = escapeHtml(agentInfo.megaTrialUrl || '');
+
+  const activeSys = systemCtx.activeSystem || {
+    id: 'qalix_medical',
+    nameAr: agentInfo.titleAr ? agentInfo.titleAr.replace(/^وكيل\s*/, '') : 'منظومة كالكس ميديكال الطبية',
+    projectName: agentInfo.projectName || 'Qalix Medical Agent',
+    licensePrefix: 'QLX2'
+  };
+  const isMedical = activeSys.id === 'qalix_medical';
+  const pricing = systemCtx.pricing || {
+    basic:        { id: 'basic',        nameAr: 'الباقة الأساسية',     price: 4500 },
+    professional: { id: 'professional', nameAr: 'الباقة التخصصية',     price: 8500 },
+    enterprise:   { id: 'enterprise',   nameAr: 'باقة المراكز الكبرى', price: 18500 }
+  };
+  const agentPhone = String(agentInfo.phone || '01000000000').trim();
+  const waAgentDigits = String(agentInfo.intlPhone || ('+2' + agentPhone)).replace(/[^0-9]/g, '');
+  const payAccounts = systemCtx.paymentAccounts || {
+    instapay: agentPhone,
+    instapayName: agentInfo.titleAr || 'الوكيل المعتمد',
+    vodafoneCash: agentPhone,
+    bankName: '',
+    bankAccount: '',
+    cashNote: 'توريد نقدي مباشر أو عبر المندوب المعتمد'
+  };
+
+  const pBasic = Number(pricing.basic?.price || 4500);
+  const pPro = Number(pricing.professional?.price || 8500);
+  const pEnt = Number(pricing.enterprise?.price || 18500);
+
+  const safeSysName = escapeHtml(activeSys.nameAr || 'المنظومة التجارية');
+  const safeProjectName = escapeHtml(activeSys.projectName || 'Agent Platform');
+  const safeAgentPhone = escapeHtml(agentPhone);
+
   const portalDistJson = safeInlineJson({
     id: String(dist.id || ''),
     name: String(dist.name || ''),
@@ -29,16 +61,24 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
     governorate: String(dist.governorate || ''),
     phone: String(dist.phone || ''),
     rate: safeRate,
-    megaTrialUrl: String(agentInfo.megaTrialUrl || '')
+    megaTrialUrl: String(agentInfo.megaTrialUrl || ''),
+    agentPhone,
+    waAgentDigits,
+    waDirectUrl: 'https://wa.me/' + waAgentDigits,
+    systemId: activeSys.id,
+    systemName: activeSys.nameAr || 'المنظومة',
+    licensePrefix: activeSys.licensePrefix || 'QLX2',
+    serverUrl: String(systemCtx.serverUrl || ''),
+    lanUrl: String(systemCtx.lanUrl || '')
   });
   const battleCardB64 = Buffer.from(renderBattleCardA4(dist), 'utf8').toString('base64');
-  const techSec = renderTechnicalFieldSectionHtml(dist, agentInfo);
+  const techSec = isMedical ? renderTechnicalFieldSectionHtml(dist, agentInfo) : '';
   return `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>حقيبة الموزع المستقل: ${safeName} | Qalix Medical Agent</title>
+  <title>حقيبة الموزع المستقل: ${safeName} | ${safeProjectName}</title>
   <style>
     :root {
       color-scheme: dark;
@@ -87,10 +127,10 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
 <body>
   <div class="container">
     <div class="card">
-      <span class="badge">بوابة الموزع المستقل المعتمد · Qalix Medical Agent</span>
+      <span class="badge">بوابة الموزع المستقل المعتمد · ${safeProjectName}</span>
       <h1 style="margin: 10px 0 4px; font-size: 22px;">${safeName} (${safeCode})</h1>
       <p style="margin: 0; color: var(--muted); font-size: 13px;">
-        النطاق الجغرافي: <strong>${safeGov}</strong> · نسبة العمولة الثابتة من كل عملية بيع: <strong style="color:var(--accent)">${safeRate}%</strong> · بإشراف وكيل منظومة كالكس ميديكال الطبية: <strong dir="ltr">01122166076</strong>
+        المنظومة: <strong>${safeSysName}</strong> · النطاق الجغرافي: <strong>${safeGov}</strong> · نسبة العمولة: <strong style="color:var(--accent)">${safeRate}%</strong> · هاتف الوكيل: <strong dir="ltr">${safeAgentPhone}</strong>
       </p>
     </div>
 
@@ -99,36 +139,57 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
         <h3 style="margin-top:0; color:var(--accent);">1. جدول الأسعار الرسمية الثابتة وعمولتك الفورية (${safeRate}%)</h3>
         <table>
           <thead>
-            <tr><th>الباقة</th><th>السعر الرسمي</th><th>عمولتك (${safeRate}%)</th><th>صافي التوريد للوكيل</th></tr>
+            <tr><th>الباقة / الفئة</th><th>السعر الرسمي</th><th>عمولتك (${safeRate}%)</th><th>صافي التوريد للوكيل</th></tr>
           </thead>
           <tbody>
-            <tr><td>الباقة الأساسية</td><td>4,500 ج.م</td><td style="color:var(--accent);font-weight:bold;">${Math.round(4500 * dist.commission_rate / 100)} ج.م</td><td>${4500 - Math.round(4500 * dist.commission_rate / 100)} ج.م</td></tr>
-            <tr><td>الباقة التخصصية</td><td>8,500 ج.م</td><td style="color:var(--accent);font-weight:bold;">${Math.round(8500 * dist.commission_rate / 100)} ج.م</td><td>${8500 - Math.round(8500 * dist.commission_rate / 100)} ج.م</td></tr>
-            <tr><td>باقة المراكز الكبرى</td><td>18,500 ج.م</td><td style="color:var(--accent);font-weight:bold;">${Math.round(18500 * dist.commission_rate / 100)} ج.م</td><td>${18500 - Math.round(18500 * dist.commission_rate / 100)} ج.م</td></tr>
+            <tr><td>${escapeHtml(pricing.basic?.nameAr || 'الباقة الأساسية')}</td><td>${pBasic.toLocaleString('ar-EG')} ج.م</td><td style="color:var(--accent);font-weight:bold;">${Math.round(pBasic * dist.commission_rate / 100)} ج.م</td><td>${pBasic - Math.round(pBasic * dist.commission_rate / 100)} ج.م</td></tr>
+            <tr><td>${escapeHtml(pricing.professional?.nameAr || 'الباقة المتقدمة')}</td><td>${pPro.toLocaleString('ar-EG')} ج.م</td><td style="color:var(--accent);font-weight:bold;">${Math.round(pPro * dist.commission_rate / 100)} ج.م</td><td>${pPro - Math.round(pPro * dist.commission_rate / 100)} ج.م</td></tr>
+            <tr><td>${escapeHtml(pricing.enterprise?.nameAr || 'باقة المؤسسات')}</td><td>${pEnt.toLocaleString('ar-EG')} ج.م</td><td style="color:var(--accent);font-weight:bold;">${Math.round(pEnt * dist.commission_rate / 100)} ج.م</td><td>${pEnt - Math.round(pEnt * dist.commission_rate / 100)} ج.م</td></tr>
           </tbody>
         </table>
+
+        <!-- Agent Official Receiving Accounts -->
+        <div class="sub-card" style="margin-top:14px; border-color:rgba(14,165,233,0.4);">
+          <h4 style="margin:0 0 8px; font-size:13.5px; color:var(--sky);">💳 حسابات وقنوات دفع صافي التوريد إلى الوكيل:</h4>
+          <div style="font-size:12.5px; line-height:1.75; color:var(--text);">
+            ${payAccounts.instapay ? `<div>⚡ <strong>إنستاباي (InstaPay):</strong> <code dir="ltr">${escapeHtml(payAccounts.instapay)}</code> ${payAccounts.instapayName ? `(${escapeHtml(payAccounts.instapayName)})` : ''}</div>` : ''}
+            ${payAccounts.vodafoneCash ? `<div>📱 <strong>فودافون كاش / محفظة:</strong> <code dir="ltr">${escapeHtml(payAccounts.vodafoneCash)}</code></div>` : ''}
+            ${payAccounts.bankAccount ? `<div>🏛️ <strong>تحويل بنكي (${escapeHtml(payAccounts.bankName || 'البنك')}):</strong> <code dir="ltr">${escapeHtml(payAccounts.bankAccount)}</code></div>` : ''}
+            <div>💵 <strong>الدفع النقدي:</strong> ${escapeHtml(payAccounts.cashNote || 'توريد مباشر مع إيصال استلام')}</div>
+          </div>
+        </div>
       </div>
 
       <div class="card">
-        <h3 style="margin-top:0; color:var(--blue);">2. مولّد طلب إصدار ترخيص وتوريد المبلغ للوكيل (01122166076)</h3>
+        <h3 style="margin-top:0; color:var(--blue);">2. إتمام الصفقة وإرسال ريسيت الدفع لطلب مفتاح التفعيل (<span dir="ltr">${safeAgentPhone}</span>)</h3>
         <div style="display:grid; gap:10px;">
-          <div><label style="font-size:12px;">اسم العيادة / المركز الطبي:</label><input id="cName" placeholder="مثال: عيادة الشفاء التخصصية" /></div>
-          <div><label style="font-size:12px;">اسم الطبيب وهاتفه:</label><input id="dName" placeholder="مثال: د. أحمد سامي - 010..." /></div>
-          <div><label style="font-size:12px;">بصمة جهاز العيادة (Hardware ID من شاشة التفعيل):</label><input id="hwId" placeholder="24 حرفاً ورقماً" dir="ltr" /></div>
+          <div><label style="font-size:12px;">${isMedical ? 'اسم العيادة / المركز الطبي:' : 'اسم العميل / المنشأة / الجهة:'}</label><input id="cName" placeholder="${isMedical ? 'مثال: عيادة الشفاء التخصصية' : 'مثال: شركة النور للتجارة'}" /></div>
+          <div><label style="font-size:12px;">${isMedical ? 'اسم الطبيب وهاتفه:' : 'اسم المسؤول وهاتفه:'}</label><input id="dName" placeholder="${isMedical ? 'مثال: د. أحمد سامي - 010...' : 'مثال: أ. محمد محمود - 010...'}" /></div>
+          <div><label style="font-size:12px;">${isMedical ? 'بصمة جهاز العيادة (Hardware ID من شاشة التفعيل):' : 'مرجع التفعيل / بصمة الجهاز / كود الطلب:'}</label><input id="hwId" placeholder="${isMedical ? '24 حرفاً ورقماً' : 'كود التفعيل أو بصمة الجهاز'}" dir="ltr" /></div>
           <div>
-            <label style="font-size:12px;">الباقة المتعاقد عليها:</label>
+            <label style="font-size:12px;">الباقة / الفئة المتعاقد عليها:</label>
             <select id="tierSel">
-              <option value="basic|4500">الباقة الأساسية (4,500 ج.م)</option>
-              <option value="pro|8500" selected>الباقة التخصصية (8,500 ج.م)</option>
-              <option value="ent|18500">باقة المراكز الكبرى (18,500 ج.م)</option>
+              <option value="basic|${pBasic}">${escapeHtml(pricing.basic?.nameAr || 'الباقة الأساسية')} (${pBasic.toLocaleString('ar-EG')} ج.م)</option>
+              <option value="pro|${pPro}" selected>${escapeHtml(pricing.professional?.nameAr || 'الباقة التخصصية')} (${pPro.toLocaleString('ar-EG')} ج.م)</option>
+              <option value="ent|${pEnt}">${escapeHtml(pricing.enterprise?.nameAr || 'الباقة الكبرى')} (${pEnt.toLocaleString('ar-EG')} ج.م)</option>
             </select>
           </div>
           <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
             <div>
-              <label style="font-size:12px;">قناة توريد صافي المبلغ للوكيل:</label>
+              <label style="font-size:12px;">🧑‍💼 المندوب المسؤول (الزيارة الأولى):</label>
+              <select id="dealRepSelect"><option value="">— بدون تحديد / مباشر —</option></select>
+            </div>
+            <div>
+              <label style="font-size:12px;">🛠️ الفني المكلّف بالتنفيذ لاحقاً:</label>
+              <select id="dealTechSelect"><option value="">— يُحدد عند صدور المفتاح —</option></select>
+            </div>
+          </div>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+            <div>
+              <label style="font-size:12px;">طريقة الدفع للوكيل:</label>
               <select id="payChannel">
                 <option value="إنستاباي (InstaPay)">⚡ إنستاباي (InstaPay)</option>
-                <option value="فودافون كاش (Vodafone Cash)">📱 فودافون كاش</option>
+                <option value="فودافون كاش (Vodafone Cash)">📱 فودافون كاش / محفظة</option>
                 <option value="تحويل بنكي رسمي">🏛️ تحويل بنكي رسمي</option>
                 <option value="سداد وتوريد نقدي">💵 توريد نقدي</option>
               </select>
@@ -138,18 +199,149 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
               <input id="payRef" placeholder="مثال: IPN-849201" dir="ltr" />
             </div>
           </div>
-          <div style="display:flex; gap:8px; flex-wrap:wrap;">
-            <button type="button" onclick="sendRequestToAgentWa()" style="flex:1; background:linear-gradient(135deg,#10b981,#059669); color:#fff;">📲 إرسال الطلب والتوريد لواتساب الوكيل (01122166076)</button>
-            <button type="button" onclick="genRequest()" class="btn-blue" style="flex:1; color:#fff;">📋 توليد ونسخ النص فقط</button>
+          <div class="sub-card" style="padding:10px; border:1px dashed rgba(16,185,129,0.45); margin:0;">
+            <label style="font-size:12px; color:var(--accent); font-weight:700;">🧾 إرفاق صورة ريسيت الدفع (إيصال التحويل / Screenshot):</label>
+            <input type="file" id="payReceiptFile" accept="image/*,.pdf" onchange="handlePortalReceiptUpload(this)" style="margin-top:6px; padding:6px; font-size:12px;" />
+            <div id="payReceiptPreviewBox" style="display:none; margin-top:8px; text-align:center;">
+              <img id="payReceiptImg" src="" alt="معاينة ريسيت الدفع" style="max-height:130px; max-width:100%; border-radius:8px; border:1px solid var(--border);" />
+              <div id="payReceiptMeta" style="font-size:11px; color:var(--accent); margin-top:4px;"></div>
+            </div>
           </div>
-          <textarea id="outMsg" rows="6" readonly placeholder="ستظهر رسالة الطلب وتفاصيل التوريد الجاهزة هنا..."></textarea>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button type="button" onclick="submitPaymentReceiptRequest(true)" style="flex:1; background:linear-gradient(135deg,#10b981,#059669); color:#fff;">💳 إرسال ريسيت الدفع وطلب التفعيل للوكيل (<span dir="ltr">${safeAgentPhone}</span>)</button>
+            <button type="button" onclick="sendRequestToAgentWa()" class="btn-amber" style="color:#451a03;">📲 إرسال واتساب</button>
+            <button type="button" onclick="genRequest()" class="btn-blue" style="color:#fff;">📋 نسخ النص</button>
+          </div>
+          <textarea id="outMsg" rows="5" readonly placeholder="ستظهر رسالة طلب التفعيل وتفاصيل الريسيت هنا..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Waiting Room for Agent Payment Confirmation & Activation Key -->
+    <div class="card no-print" style="border:1px solid rgba(245,158,11,0.45);">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:10px;">
+        <div>
+          <h3 style="margin:0; color:var(--amber);">⏳ متابعة طلبات الريسيت وانتظار مفتاح التفعيل من الوكيل</h3>
+          <p style="margin:3px 0 0; font-size:12px; color:var(--muted);">بعد إرسال الريسيت يظهر طلبك هنا بحالة «قيد الانتظار» حتى يؤكد الوكيل الدفع ويصدر لك مفتاح التفعيل (تحديث تلقائي عبر الشبكة أو لصق يدوي من واتساب).</p>
+        </div>
+        <button type="button" onclick="refreshAllWaitingRequests()" class="btn-blue" style="padding:7px 12px; font-size:12px; color:#fff;">🔄 تحديث حالة كل الطلبات الآن</button>
+      </div>
+      <div id="waitingKeysContainer" style="display:grid; gap:10px;"></div>
+    </div>
+
+    <!-- Distributor Field Team & 2-Stage Operations Workflow (Rep First -> Tech Execution) -->
+    <div id="distFieldTeamSection" class="card no-print" style="border:1px solid rgba(56,189,248,0.45);">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
+        <div>
+          <h3 style="margin:0; color:var(--sky);">👥 إدارة فريق عمل الموزع في النطاق الجغرافي (<span style="color:var(--accent);">${safeGov}</span>): المناديب أولاً ثم الفنيين</h3>
+          <p style="margin:4px 0 0; font-size:12.5px; color:var(--muted);">
+            لا يتجه الموزع بنفسه للعميل؛ بل يدير من هنا فريق <strong>المناديب</strong> (للزيارة الأولى والعرض والتعاقد) ثم فريق <strong>الفنيين</strong> (للتركيب والتشغيل وإنجاز العمل) داخل نطاق محافظة <strong>${safeGov}</strong>.
+          </p>
+        </div>
+      </div>
+
+      <!-- Field Team KPIs -->
+      <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:8px; margin-bottom:14px;">
+        <div class="sub-card" style="text-align:center; padding:10px;">
+          <div style="font-size:11px; color:var(--muted);">🧑‍💼 المناديب المعتمدون</div>
+          <div id="teamRepCount" style="font-size:20px; font-weight:800; color:var(--sky);">0</div>
+        </div>
+        <div class="sub-card" style="text-align:center; padding:10px;">
+          <div style="font-size:11px; color:var(--muted);">🛠️ الفنيون الميدانيون</div>
+          <div id="teamTechCount" style="font-size:20px; font-weight:800; color:var(--accent);">0</div>
+        </div>
+        <div class="sub-card" style="text-align:center; padding:10px;">
+          <div style="font-size:11px; color:var(--muted);">1️⃣ مرحلة المندوب (أولاً)</div>
+          <div id="teamStageRepCount" style="font-size:20px; font-weight:800; color:var(--amber);">0</div>
+        </div>
+        <div class="sub-card" style="text-align:center; padding:10px;">
+          <div style="font-size:11px; color:var(--muted);">2️⃣ مرحلة الفني (التنفيذ)</div>
+          <div id="teamStageTechCount" style="font-size:20px; font-weight:800; color:var(--purple);">0</div>
+        </div>
+        <div class="sub-card" style="text-align:center; padding:10px;">
+          <div style="font-size:11px; color:var(--muted);">✅ مهام مكتملة 100%</div>
+          <div id="teamDoneCount" style="font-size:20px; font-weight:800; color:#34d399;">0</div>
+        </div>
+      </div>
+
+      <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap:14px;">
+        <!-- Column 1: Team Roster (Reps & Technicians in Geographic Zone) -->
+        <div class="sub-card" style="padding:12px; border:1px solid rgba(56,189,248,0.3); margin:0;">
+          <h4 style="margin:0 0 8px; color:var(--sky); font-size:14px;">📋 سجل المناديب والفنيين في نطاق (${safeGov})</h4>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px;">
+            <div>
+              <label style="font-size:11px; color:var(--muted);">الاسم الكامل:</label>
+              <input id="tmName" placeholder="مثال: م. كريم عادل" style="padding:6px; font-size:12px;" />
+            </div>
+            <div>
+              <label style="font-size:11px; color:var(--muted);">الدور / التخصص:</label>
+              <select id="tmRole" style="padding:6px; font-size:12px;">
+                <option value="rep">🧑‍💼 مندوب (زيارة أولى وإقناع)</option>
+                <option value="tech">🛠️ فني (تركيب وإنجاز العمل)</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:11px; color:var(--muted);">رقم الموبايل / واتساب:</label>
+              <input id="tmPhone" dir="ltr" placeholder="010..." style="padding:6px; font-size:12px;" />
+            </div>
+            <div>
+              <label style="font-size:11px; color:var(--muted);">النطاق / المركز داخل ${safeGov}:</label>
+              <input id="tmZone" placeholder="مثال: وسط المدينة / المراكز" style="padding:6px; font-size:12px;" />
+            </div>
+            <div style="grid-column:1 / -1; display:flex; gap:8px; align-items:flex-end;">
+              <div style="flex:1;">
+                <label style="font-size:11px; color:var(--muted);">بدل / عمولة المهمة (ج.م):</label>
+                <input id="tmFee" type="number" value="300" dir="ltr" style="padding:6px; font-size:12px;" />
+              </div>
+              <button type="button" onclick="addDistTeamMember()" class="btn-blue" style="padding:8px 14px; font-size:12px; color:#fff; width:auto;">➕ إضافة للفريق</button>
+            </div>
+          </div>
+
+          <div style="display:flex; gap:6px; margin-bottom:8px; flex-wrap:wrap;">
+            <button type="button" onclick="setTeamRoleFilter('all')" id="fltTeamAll" class="btn-blue" style="padding:4px 10px; font-size:11px; color:#fff; width:auto;">الكل</button>
+            <button type="button" onclick="setTeamRoleFilter('rep')" id="fltTeamRep" style="padding:4px 10px; font-size:11px; background:#1e293b; color:#cbd5e1; width:auto;">🧑‍💼 المناديب فقط</button>
+            <button type="button" onclick="setTeamRoleFilter('tech')" id="fltTeamTech" style="padding:4px 10px; font-size:11px; background:#1e293b; color:#cbd5e1; width:auto;">🛠️ الفنيين فقط</button>
+          </div>
+          <div id="distTeamMembersList" style="max-height:290px; overflow-y:auto; display:grid; gap:8px;"></div>
+        </div>
+
+        <!-- Column 2: 2-Stage Dispatch Board (Step 1: Rep -> Step 2: Technician) -->
+        <div class="sub-card" style="padding:12px; border:1px solid rgba(16,185,129,0.35); margin:0;">
+          <h4 style="margin:0 0 8px; color:var(--accent); font-size:14px;">🚀 مسار تنفيذ العملاء: (1) إرسال المندوب ← (2) إرسال الفني</h4>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px;">
+            <div>
+              <label style="font-size:11px; color:var(--muted);">اسم العميل / المنشأة:</label>
+              <input id="wfCustomerName" placeholder="اسم العميل أو العيادة..." style="padding:6px; font-size:12px;" />
+            </div>
+            <div>
+              <label style="font-size:11px; color:var(--muted);">المنطقة والهاتف داخل ${safeGov}:</label>
+              <input id="wfCustomerPhone" placeholder="المنطقة + رقم الهاتف..." style="padding:6px; font-size:12px;" />
+            </div>
+            <div>
+              <label style="font-size:11px; color:var(--muted);">1️⃣ المندوب (الزيارة الأولى):</label>
+              <select id="wfRepSelect" style="padding:6px; font-size:12px;"></select>
+            </div>
+            <div>
+              <label style="font-size:11px; color:var(--muted);">2️⃣ الفني (لإنجاز العمل بعده):</label>
+              <select id="wfTechSelect" style="padding:6px; font-size:12px;"></select>
+            </div>
+            <div style="grid-column:1 / -1; display:flex; gap:8px; align-items:flex-end;">
+              <div style="flex:1;">
+                <label style="font-size:11px; color:var(--muted);">المرحلة الابتدائية / ملاحظات:</label>
+                <input id="wfNotes" placeholder="مثال: موعد الزيارة الساعة 4 مساءً + متطلب العميل" style="padding:6px; font-size:12px;" />
+              </div>
+              <button type="button" onclick="addFieldWorkflowTask()" style="background:linear-gradient(135deg,#10b981,#059669); color:#fff; padding:8px 14px; font-size:12px; width:auto;">📌 تكليف وإدراج</button>
+            </div>
+          </div>
+
+          <div id="distWorkflowTasksList" style="max-height:310px; overflow-y:auto; display:grid; gap:8px;"></div>
         </div>
       </div>
     </div>
 
     <!-- Agent-Distributor Direct Hub: Replies, Lead Lock Requests & Remittances -->
     <div class="card no-print">
-      <h3 style="margin-top:0; color:var(--sky);">مركز الردود السريعة، طلبات الحجز، وإشعارات توريد المبالغ إلى الوكيل (01122166076)</h3>
+      <h3 style="margin-top:0; color:var(--sky);">مركز الردود السريعة، طلبات الحجز، وإشعارات توريد المبالغ إلى الوكيل (${safeAgentPhone})</h3>
       <p style="font-size:12.5px; color:var(--muted); margin-top:-4px; margin-bottom:12px;">
         أرسل من هنا مباشرة أي رد على رسائل الوكيل، أو اطلب حجز عيادة جديدة (14 يوماً)، أو أرسل إشعار تحويل وتوريد مبالغ مالية للوكيل بنقرة واحدة (أوفلاين بالكامل عبر واتساب):
       </p>
@@ -182,7 +374,7 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
         <textarea id="distAgentBody" rows="3" placeholder="اكتب ردك للوكيل أو تفاصيل الطلب أو بيانات الطبيب (الاسم والهاتف والعنوان)..."></textarea>
       </div>
       <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
-        <button type="button" onclick="sendDistributorFeedbackToAgentWa()" style="background:linear-gradient(135deg,#10b981,#059669); color:#fff;">📲 إرسال لواتساب الوكيل (01122166076) فوراً</button>
+        <button type="button" onclick="sendDistributorFeedbackToAgentWa()" style="background:linear-gradient(135deg,#10b981,#059669); color:#fff;">📲 إرسال لواتساب الوكيل (${safeAgentPhone}) فوراً</button>
         <button type="button" onclick="copyDistributorFeedbackMsg()" class="btn-amber">📋 نسخ نص الرسالة</button>
       </div>
     </div>
@@ -707,7 +899,7 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
         '━━━━━━━━━━━━━━━━━━━━',
         ...items,
         '━━━━━━━━━━━━━━━━━━━━',
-        'يؤكد الموزع للوكيل (01122166076) إتمام التركيب والتدريب وترك الكتالوج وبناء رضا الطبيب 100%.'
+        'يؤكد الموزع للوكيل (' + (PORTAL_DIST.agentPhone || '') + ') إتمام التركيب والتدريب وترك الكتالوج وبناء رضا الطبيب 100%.'
       ].join('\\n');
       return { clinic, doctor, nowStr, items, msg };
     }
@@ -715,7 +907,7 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
     function sendTechSuccessToAgentWhatsApp() {
       const data = buildTechSuccessPayload(true);
       if (!data) return;
-      const url = 'https://wa.me/201122166076?text=' + encodeURIComponent(data.msg);
+      const url = 'https://wa.me/' + PORTAL_DIST.waAgentDigits + '?text=' + encodeURIComponent(data.msg);
       window.open(url, '_blank');
     }
 
@@ -724,7 +916,7 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
       if (!data) return;
       if (navigator.clipboard) {
         navigator.clipboard.writeText(data.msg).then(() => {
-          alert('تم نسخ نص بطاقة تأكيد نجاح التشغيل بنجاح! جاهزة للإرسال للوكيل 01122166076.');
+          alert('تم نسخ نص بطاقة تأكيد نجاح التشغيل بنجاح! جاهزة للإرسال للوكيل ' + (PORTAL_DIST.agentPhone || ''));
         });
       }
     }
@@ -743,7 +935,7 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
         '.sign{border:1px dashed #94a3b8;border-radius:8px;padding:14px 8px;min-height:80px;}' +
         '@media print{body{background:#fff;padding:0;}.doc{border:1px solid #059669;}.no-print{display:none!important;}}</style></head><body>' +
         '<div class="doc"><div class="no-print" style="margin-bottom:14px;text-align:left;"><button id="btnPrintSuccessCard" style="padding:8px 16px;background:#059669;color:#fff;border:none;border-radius:8px;font-weight:bold;cursor:pointer;">🖨️ طباعة البطاقة للوكيل (A4 / PDF)</button></div>' +
-        '<div class="hdr"><div><h1 style="margin:0;font-size:20px;color:#059669;">✅ بطاقة تأكيد إتمام نجاح التركيب والتشغيل للوكيل</h1><div style="font-size:12px;color:#64748b;">منظومة كالكس الطبية الشاملة · Qalix Medical v1.0</div></div><div style="font-size:12px;text-align:left;">الوكيل الرسمي:<br><strong dir="ltr">01122166076</strong></div></div>' +
+        '<div class="hdr"><div><h1 style="margin:0;font-size:20px;color:#059669;">✅ بطاقة تأكيد إتمام نجاح التركيب والتشغيل للوكيل</h1><div style="font-size:12px;color:#64748b;">' + escHtml(PORTAL_DIST.systemName || 'إدارة المبيعات والعمليات') + '</div></div><div style="font-size:12px;text-align:left;">الوكيل الرسمي:<br><strong dir="ltr">' + escHtml(PORTAL_DIST.agentPhone || '') + '</strong></div></div>' +
         '<div class="row"><div class="box"><strong>الموزع المعتمد المنفّذ:</strong><br>' + escHtml(PORTAL_DIST.name) + ' (' + escHtml(PORTAL_DIST.code) + ')</div><div class="box"><strong>تاريخ الاعتماد:</strong><br>' + escHtml(data.nowStr) + '</div>' +
         '<div class="box"><strong>العيادة / المنشأة الطبية:</strong><br>' + escHtml(data.clinic) + '</div><div class="box"><strong>الطبيب المُخطِر بالتمام:</strong><br>' + escHtml(data.doctor) + '</div></div>' +
         '<h3 style="margin:10px 0 6px;color:#0f172a;font-size:14.5px;">سجل الإنجاز الفني وإخطار الطبيب:</h3><ul style="list-style:none;padding:0;margin:0;font-size:13px;">' + listHtml + '</ul>' +
@@ -786,27 +978,265 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
     }
 
     const rate = Number(PORTAL_DIST.rate);
-    function buildRequestText() {
+    let currentReceiptDataUrl = '';
+    let currentReceiptFilename = '';
+    const WAITING_STORAGE_KEY = 'agent_waiting_requests_' + (PORTAL_DIST.systemId || 'default') + '_' + PORTAL_DIST.code;
+
+    function loadWaitingRequests() {
+      try { return JSON.parse(localStorage.getItem(WAITING_STORAGE_KEY) || '[]'); } catch { return []; }
+    }
+    function saveWaitingRequests(list) {
+      try { localStorage.setItem(WAITING_STORAGE_KEY, JSON.stringify(list.slice(0, 30))); } catch {}
+      renderWaitingRequests();
+      if (typeof renderDistTeamUi === 'function') renderDistTeamUi();
+    }
+
+    function handlePortalReceiptUpload(input) {
+      const file = input.files && input.files[0];
+      if (!file) { currentReceiptDataUrl = ''; currentReceiptFilename = ''; return; }
+      currentReceiptFilename = file.name;
+      const box = document.getElementById('payReceiptPreviewBox');
+      const imgEl = document.getElementById('payReceiptImg');
+      const metaEl = document.getElementById('payReceiptMeta');
+      const reader = new FileReader();
+      reader.onload = function(ev) {
+        const raw = ev.target.result || '';
+        if (file.type && file.type.startsWith('image/')) {
+          const img = new Image();
+          img.onload = function() {
+            const maxDim = 960;
+            let w = img.width, h = img.height;
+            if (w > maxDim || h > maxDim) {
+              const sc = Math.min(maxDim / w, maxDim / h);
+              w = Math.round(w * sc); h = Math.round(h * sc);
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+            currentReceiptDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+            if (imgEl) { imgEl.src = currentReceiptDataUrl; imgEl.style.display = 'inline-block'; }
+            if (metaEl) metaEl.innerText = '✔ تم تجهيز صورة الريسيت: ' + file.name;
+            if (box) box.style.display = 'block';
+          };
+          img.src = raw;
+        } else {
+          currentReceiptDataUrl = raw;
+          if (imgEl) imgEl.style.display = 'none';
+          if (metaEl) metaEl.innerText = '📄 تم إرفاق ملف الإيصال: ' + file.name;
+          if (box) box.style.display = 'block';
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function buildRequestText(reqCodeOpt) {
       const c = document.getElementById('cName').value.trim() || 'غير محدد';
       const d = document.getElementById('dName').value.trim() || 'غير محدد';
       const hw = document.getElementById('hwId').value.trim() || 'غير محدد';
       const [, pStr] = document.getElementById('tierSel').value.split('|');
       const ch = document.getElementById('payChannel')?.value || 'إنستاباي (InstaPay)';
-      const pref = document.getElementById('payRef')?.value.trim() || 'سيُرفق إيصال التحويل بالمحادثة';
+      const pref = document.getElementById('payRef')?.value.trim() || 'مرفق بالصورة في المحادثة';
+      const repPick = document.getElementById('dealRepSelect')?.value || '';
+      const techPick = document.getElementById('dealTechSelect')?.value || '';
       const price = Number(pStr);
       const comm = Math.round(price * rate / 100);
       const net = price - comm;
-      return \`طلب إصدار ترخيص وتأكيد توريد — Qalix Medical Agent
+      const agPhone = PORTAL_DIST.agentPhone || '01000000000';
+      return \`طلب تأكيد دفع بالريسيت وإصدار التفعيل — \${PORTAL_DIST.systemName || 'لوحة الوكيل'}\${reqCodeOpt ? '\\n• كود الطلب الموحد: ' + reqCodeOpt : ''}
 • كود الموزع: \${PORTAL_DIST.code} (\${PORTAL_DIST.name})
-• المنشأة الطبية: \${c}
-• الطبيب والهاتف: \${d}
-• بصمة الجهاز (HWID): \${hw}
+• العميل / المنشأة: \${c}
+• المسؤول والهاتف: \${d}
+• مرجع التفعيل / HWID: \${hw}
 • السعر الرسمي الثابت: \${price} ج.م
 • عمولة الموزع (\${rate}%): \${comm} ج.م
-• صافي التوريد للوكيل (01122166076): \${net} ج.م
-• قناة السداد والتوريد: \${ch}
-• مرجع التحويل: \${pref}\`;
+• صافي التوريد للوكيل (\${agPhone}): \${net} ج.م
+• طريقة الدفع: \${ch}
+• رقم مرجع التحويل: \${pref}\${repPick ? '\\n• المندوب (الزيارة الأولى): ' + repPick : ''}\${techPick ? '\\n• الفني المكلّف (التنفيذ): ' + techPick : ''}\${currentReceiptFilename ? '\\n• ملف الريسيت المرفق: ' + currentReceiptFilename : ''}\`;
     }
+
+    function getCandidateServerUrls() {
+      const urls = [];
+      if (window.location && window.location.protocol.startsWith('http')) urls.push(window.location.origin);
+      if (PORTAL_DIST.serverUrl) urls.push(PORTAL_DIST.serverUrl);
+      if (PORTAL_DIST.lanUrl) urls.push(PORTAL_DIST.lanUrl);
+      return [...new Set(urls)];
+    }
+
+    async function tryFetchAgentApi(pathSuffix, fetchOpts) {
+      const origins = getCandidateServerUrls();
+      for (const base of origins) {
+        try {
+          const ctrl = new AbortController();
+          const timer = setTimeout(() => ctrl.abort(), 2500);
+          const res = await fetch(base.replace(/\\/+$/, '') + pathSuffix, { ...fetchOpts, signal: ctrl.signal });
+          clearTimeout(timer);
+          if (res.ok || res.status === 400 || res.status === 404) {
+            return { origin: base, status: res.status, data: await res.json() };
+          }
+        } catch (_) {}
+      }
+      return null;
+    }
+
+    async function submitPaymentReceiptRequest(openWaFallback) {
+      const customerName = document.getElementById('cName').value.trim();
+      const contactName = document.getElementById('dName').value.trim();
+      const hw = document.getElementById('hwId').value.trim();
+      if (!customerName) return alert('يرجى إدخال اسم العميل أو المنشأة أولاً.');
+      const [tierKey, pStr] = document.getElementById('tierSel').value.split('|');
+      const ch = document.getElementById('payChannel')?.value || 'إنستاباي (InstaPay)';
+      const pref = document.getElementById('payRef')?.value.trim() || '';
+      if (!pref && !currentReceiptDataUrl) {
+        return alert('يرجى إرفاق صورة ريسيت الدفع أو كتابة رقم مرجع عملية التحويل لتأكيد الدفع.');
+      }
+      const price = Number(pStr);
+      const net = price - Math.round(price * rate / 100);
+      const reqCode = 'REQ-' + Math.random().toString(16).slice(2, 8).toUpperCase();
+
+      const msg = buildRequestText(reqCode);
+      const box = document.getElementById('outMsg');
+      if (box) box.value = msg;
+      if (navigator.clipboard) navigator.clipboard.writeText(msg).catch(() => {});
+
+      const list = loadWaitingRequests();
+      const entry = {
+        reqCode,
+        customerName,
+        contactName,
+        hw,
+        tier: tierKey,
+        agentNetAmount: net,
+        paymentChannel: ch,
+        paymentRef: pref || currentReceiptFilename,
+        status: 'pending',
+        deliveredLive: false,
+        activationKey: '',
+        createdAt: new Date().toISOString()
+      };
+
+      const repName = document.getElementById('dealRepSelect')?.value || '';
+      const techName = document.getElementById('dealTechSelect')?.value || '';
+      const notesStr = [repName ? ('المندوب: ' + repName) : '', techName ? ('الفني: ' + techName) : ''].filter(Boolean).join(' | ');
+
+      const apiRes = await tryFetchAgentApi('/api/payment-requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reqCode,
+          distributorId: PORTAL_DIST.id,
+          distributorCode: PORTAL_DIST.code,
+          customerName,
+          contactName,
+          hardwareOrRef: hw,
+          tier: tierKey,
+          paymentChannel: ch,
+          paymentRef: pref,
+          notes: notesStr,
+          receiptFilename: currentReceiptFilename,
+          receiptDataUrl: currentReceiptDataUrl
+        })
+      });
+
+      if (repName || techName) {
+        try {
+          upsertWorkflowTaskFromDeal({ customerName, contactName, repName, techName, reqCode });
+        } catch (_) {}
+      }
+
+      if (apiRes && apiRes.data && apiRes.data.ok) {
+        entry.deliveredLive = true;
+        list.unshift(entry);
+        saveWaitingRequests(list);
+        alert('✅ تم إرسال طلب الدفع والريسيت مباشرة إلى لوحة الوكيل بكود (' + reqCode + ')! حالة الطلب الآن: بانتظار تأكيد الدفع وإصدار المفتاح.');
+      } else {
+        list.unshift(entry);
+        saveWaitingRequests(list);
+        if (openWaFallback) {
+          alert('📲 تعذر الاتصال المباشر بالشبكة؛ تم حفظ الطلب بكود (' + reqCode + ') في قائمة الانتظار، وسيفتح واتساب الآن لإرفاق صورة الريسيت للوكيل.');
+          window.open('https://wa.me/' + PORTAL_DIST.waAgentDigits + '?text=' + encodeURIComponent(msg), '_blank');
+        }
+      }
+    }
+
+    async function pollSingleRequest(reqCode) {
+      const apiRes = await tryFetchAgentApi('/api/payment-requests/status?reqCode=' + encodeURIComponent(reqCode), { method: 'GET' });
+      if (!apiRes || !apiRes.data || !apiRes.data.ok) {
+        return alert('لم يتم الوصول لخادم الوكيل حالياً أو الطلب غير مسجل بعد.');
+      }
+      const srvReq = apiRes.data.request;
+      const list = loadWaitingRequests();
+      const item = list.find(x => x.reqCode === reqCode);
+      if (item) {
+        item.status = srvReq.status;
+        if (srvReq.activation_key) item.activationKey = srvReq.activation_key;
+        if (srvReq.notes) item.notes = srvReq.notes;
+        saveWaitingRequests(list);
+      }
+    }
+
+    async function refreshAllWaitingRequests() {
+      const list = loadWaitingRequests();
+      for (const item of list) {
+        if (item.status === 'pending') {
+          const apiRes = await tryFetchAgentApi('/api/payment-requests/status?reqCode=' + encodeURIComponent(item.reqCode), { method: 'GET' });
+          if (apiRes && apiRes.data && apiRes.data.ok) {
+            item.status = apiRes.data.request.status;
+            if (apiRes.data.request.activation_key) item.activationKey = apiRes.data.request.activation_key;
+            if (apiRes.data.request.notes) item.notes = apiRes.data.request.notes;
+          }
+        }
+      }
+      saveWaitingRequests(list);
+    }
+
+    function applyManualActivationKey(reqCode) {
+      const inp = document.getElementById('manualKey_' + reqCode);
+      const val = inp ? inp.value.trim() : '';
+      if (!val) return alert('أدخل مفتاح التفعيل الوارد من الوكيل أولاً.');
+      const list = loadWaitingRequests();
+      const item = list.find(x => x.reqCode === reqCode);
+      if (item) {
+        item.status = 'approved';
+        item.activationKey = val;
+        saveWaitingRequests(list);
+      }
+    }
+
+    function renderWaitingRequests() {
+      const el = document.getElementById('waitingKeysContainer');
+      if (!el) return;
+      const list = loadWaitingRequests();
+      if (!list.length) {
+        el.innerHTML = '<div style="font-size:12.5px; color:var(--muted);">لا توجد طلبات دفع مرسلة حتى الآن. بمجرد إرسال الريسيت سيظهر الطلب هنا بانتظار مفتاح التفعيل من الوكيل.</div>';
+        return;
+      }
+      el.innerHTML = list.map(r => {
+        const badge = r.status === 'approved'
+          ? '<span style="background:rgba(16,185,129,0.2); color:#34d399; padding:3px 10px; border-radius:999px; font-size:11.5px; font-weight:bold;">✅ مؤكد الدفع · تم إصدار المفتاح</span>'
+          : (r.status === 'rejected'
+            ? '<span style="background:rgba(244,63,94,0.2); color:#fb7185; padding:3px 10px; border-radius:999px; font-size:11.5px; font-weight:bold;">❌ مرفوض / يرجى المراجعة</span>'
+            : '<span style="background:rgba(245,158,11,0.2); color:#fbbf24; padding:3px 10px; border-radius:999px; font-size:11.5px; font-weight:bold;">⏳ بانتظار تأكيد الدفع من الوكيل</span>');
+        return \`<div class="sub-card" style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:10px; margin-bottom:0;">
+          <div>
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:4px;">
+              <strong style="color:var(--sky); font-family:monospace;" dir="ltr">\${r.reqCode}</strong>
+              \${badge}
+              \${r.deliveredLive ? '<span style="font-size:11px; color:var(--accent);">📡 وصل للوحة الوكيل</span>' : ''}
+            </div>
+            <div style="font-size:12.5px;">العميل: <strong>\${r.customerName}</strong> · صافي التوريد: <strong>\${r.agentNetAmount} ج.م</strong> (\${r.paymentChannel})</div>
+            \${r.activationKey ? \`<div style="margin-top:6px; background:rgba(16,185,129,0.12); border:1px solid var(--accent); padding:6px 10px; border-radius:8px; font-size:13px;">🔑 مفتاح التفعيل الصادر: <strong style="font-family:monospace; color:#34d399;" dir="ltr">\${r.activationKey}</strong></div>\` : ''}
+          </div>
+          <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+            \${r.status !== 'approved' ? \`
+              <button type="button" onclick="pollSingleRequest('\${r.reqCode}')" class="btn-blue" style="padding:6px 10px; font-size:11.5px; color:#fff;">🔄 فحص الحالة</button>
+              <input id="manualKey_\${r.reqCode}" placeholder="أو الصق المفتاح من الواتس..." style="width:165px; padding:6px; font-size:11.5px; margin:0;" dir="ltr" />
+              <button type="button" onclick="applyManualActivationKey('\${r.reqCode}')" style="padding:6px 10px; font-size:11.5px;">✔ حفظ</button>
+            \` : ''}
+          </div>
+        </div>\`;
+      }).join('');
+    }
+    setTimeout(renderWaitingRequests, 50);
 
     function genRequest() {
       const msg = buildRequestText();
@@ -814,7 +1244,7 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
       box.value = msg;
       box.select();
       if (navigator.clipboard) navigator.clipboard.writeText(msg).catch(() => {});
-      alert('تم توليد ونسخ رسالة طلب التفعيل والتوريد! يمكنك إرسالها الآن لواتساب الوكيل 01122166076');
+      alert('تم توليد ونسخ رسالة طلب التفعيل والتوريد! يمكنك إرسالها الآن لواتساب الوكيل ' + (PORTAL_DIST.agentPhone || ''));
     }
 
     function sendRequestToAgentWa() {
@@ -822,7 +1252,7 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
       const box = document.getElementById('outMsg');
       if (box) box.value = msg;
       if (navigator.clipboard) navigator.clipboard.writeText(msg).catch(() => {});
-      window.open('https://wa.me/201122166076?text=' + encodeURIComponent(msg), '_blank');
+      window.open('https://wa.me/' + PORTAL_DIST.waAgentDigits + '?text=' + encodeURIComponent(msg), '_blank');
     }
 
     function toggleDistAgentFields() {
@@ -865,7 +1295,7 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
       const msg = buildDistributorFeedbackMsg();
       if (!msg) return;
       if (navigator.clipboard) navigator.clipboard.writeText(msg).catch(() => {});
-      window.open('https://wa.me/201122166076?text=' + encodeURIComponent(msg), '_blank');
+      window.open('https://wa.me/' + PORTAL_DIST.waAgentDigits + '?text=' + encodeURIComponent(msg), '_blank');
     }
 
     function copyDistributorFeedbackMsg() {
@@ -897,6 +1327,282 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
       if (navigator.clipboard) navigator.clipboard.writeText(t);
       alert('تم نسخ الرسالة بنجاح! جاهزة للإرسال في واتساب.');
     }
+
+    /* ==================== DISTRIBUTOR FIELD TEAM (REPS & TECHNICIANS) & 2-STAGE WORKFLOW ==================== */
+    const TEAM_MEMBERS_KEY = 'dist_team_members_' + (PORTAL_DIST.systemId || 'default') + '_' + PORTAL_DIST.code;
+    const TEAM_TASKS_KEY = 'dist_field_tasks_' + (PORTAL_DIST.systemId || 'default') + '_' + PORTAL_DIST.code;
+    let activeTeamRoleFilter = 'all';
+
+    function loadDistTeamMembers() {
+      try { return JSON.parse(localStorage.getItem(TEAM_MEMBERS_KEY) || '[]'); } catch { return []; }
+    }
+    function saveDistTeamMembers(arr) {
+      try { localStorage.setItem(TEAM_MEMBERS_KEY, JSON.stringify(arr.slice(0, 100))); } catch {}
+      renderDistTeamUi();
+    }
+    function loadDistFieldTasks() {
+      try { return JSON.parse(localStorage.getItem(TEAM_TASKS_KEY) || '[]'); } catch { return []; }
+    }
+    function saveDistFieldTasks(arr) {
+      try { localStorage.setItem(TEAM_TASKS_KEY, JSON.stringify(arr.slice(0, 150))); } catch {}
+      renderDistTeamUi();
+    }
+
+    function setTeamRoleFilter(role) {
+      activeTeamRoleFilter = role || 'all';
+      renderDistTeamUi();
+    }
+
+    function addDistTeamMember() {
+      const name = (document.getElementById('tmName')?.value || '').trim();
+      const role = document.getElementById('tmRole')?.value || 'rep';
+      const phone = (document.getElementById('tmPhone')?.value || '').trim();
+      const zone = (document.getElementById('tmZone')?.value || '').trim() || PORTAL_DIST.governorate;
+      const fee = Number(document.getElementById('tmFee')?.value || 0);
+      if (!name) return alert('يرجى إدخال اسم المندوب أو الفني.');
+      const list = loadDistTeamMembers();
+      list.unshift({
+        id: 'tm_' + Math.random().toString(16).slice(2, 8),
+        name,
+        role,
+        phone,
+        zone,
+        fee,
+        status: 'available',
+        createdAt: new Date().toISOString()
+      });
+      document.getElementById('tmName').value = '';
+      document.getElementById('tmPhone').value = '';
+      saveDistTeamMembers(list);
+    }
+
+    function toggleTeamMemberStatus(id) {
+      const list = loadDistTeamMembers();
+      const item = list.find(x => x.id === id);
+      if (!item) return;
+      const order = ['available', 'busy', 'off'];
+      const next = order[(order.indexOf(item.status) + 1) % order.length];
+      item.status = next;
+      saveDistTeamMembers(list);
+    }
+
+    function removeTeamMember(id) {
+      if (!confirm('حذف هذا العضو من قائمة الفريق؟')) return;
+      saveDistTeamMembers(loadDistTeamMembers().filter(x => x.id !== id));
+    }
+
+    function messageTeamMemberWa(phone, text) {
+      const digits = String(phone || '').replace(/[^0-9]/g, '');
+      const waPhone = digits.startsWith('0') ? '2' + digits : digits;
+      const url = waPhone
+        ? ('https://wa.me/' + waPhone + '?text=' + encodeURIComponent(text))
+        : ('https://api.whatsapp.com/send?text=' + encodeURIComponent(text));
+      window.open(url, '_blank');
+    }
+
+    function addFieldWorkflowTask() {
+      const customerName = (document.getElementById('wfCustomerName')?.value || '').trim();
+      const customerInfo = (document.getElementById('wfCustomerPhone')?.value || '').trim();
+      const repName = document.getElementById('wfRepSelect')?.value || '';
+      const techName = document.getElementById('wfTechSelect')?.value || '';
+      const notes = (document.getElementById('wfNotes')?.value || '').trim();
+      if (!customerName) return alert('يرجى إدخال اسم العميل أو المنشأة.');
+      const list = loadDistFieldTasks();
+      list.unshift({
+        id: 'wf_' + Math.random().toString(16).slice(2, 8),
+        customerName,
+        customerInfo,
+        repName,
+        techName,
+        stage: 'rep_pending',
+        reqCode: '',
+        activationKey: '',
+        notes,
+        createdAt: new Date().toISOString()
+      });
+      document.getElementById('wfCustomerName').value = '';
+      document.getElementById('wfCustomerPhone').value = '';
+      document.getElementById('wfNotes').value = '';
+      saveDistFieldTasks(list);
+    }
+
+    function upsertWorkflowTaskFromDeal(info) {
+      const list = loadDistFieldTasks();
+      const existing = list.find(x => x.customerName === info.customerName && x.stage !== 'completed');
+      if (existing) {
+        if (info.repName) existing.repName = info.repName;
+        if (info.techName) existing.techName = info.techName;
+        if (info.reqCode) existing.reqCode = info.reqCode;
+        existing.stage = 'tech_assigned';
+      } else {
+        list.unshift({
+          id: 'wf_' + Math.random().toString(16).slice(2, 8),
+          customerName: info.customerName,
+          customerInfo: info.contactName || '',
+          repName: info.repName || '',
+          techName: info.techName || '',
+          stage: info.techName ? 'tech_assigned' : 'rep_visited',
+          reqCode: info.reqCode || '',
+          activationKey: '',
+          notes: 'مرتبط بطلب تفعيل ' + (info.reqCode || ''),
+          createdAt: new Date().toISOString()
+        });
+      }
+      saveDistFieldTasks(list);
+    }
+
+    function advanceWorkflowStage(id, targetStage) {
+      const list = loadDistFieldTasks();
+      const item = list.find(x => x.id === id);
+      if (!item) return;
+      const stages = ['rep_pending', 'rep_visited', 'tech_assigned', 'completed'];
+      if (targetStage) {
+        item.stage = targetStage;
+      } else {
+        const idx = stages.indexOf(item.stage);
+        item.stage = stages[Math.min(stages.length - 1, idx + 1)];
+      }
+      saveDistFieldTasks(list);
+    }
+
+    function removeWorkflowTask(id) {
+      saveDistFieldTasks(loadDistFieldTasks().filter(x => x.id !== id));
+    }
+
+    function dispatchStageMemberWa(taskId, role) {
+      const tasks = loadDistFieldTasks();
+      const t = tasks.find(x => x.id === taskId);
+      if (!t) return;
+      const members = loadDistTeamMembers();
+      const assignedName = role === 'rep' ? t.repName : t.techName;
+      const mem = members.find(m => m.name === assignedName);
+      const waitingList = loadWaitingRequests();
+      const matchedReq = t.reqCode ? waitingList.find(r => r.reqCode === t.reqCode) : waitingList.find(r => r.customerName === t.customerName);
+      const keyTxt = t.activationKey || (matchedReq && matchedReq.activationKey) || '';
+
+      const msg = role === 'rep'
+        ? [
+            '🧑‍💼 *تكليف زيارة أولى (مندوب مبيعات) — ' + PORTAL_DIST.systemName + '*',
+            '• الموزع / النطاق: ' + PORTAL_DIST.name + ' (' + PORTAL_DIST.governorate + ')',
+            '• المندوب المكلّف: ' + (assignedName || 'غير محدد'),
+            '• العميل / الجهة: ' + t.customerName,
+            t.customerInfo ? ('• المنطقة / الهاتف: ' + t.customerInfo) : '',
+            t.notes ? ('• ملاحظات الزيارة: ' + t.notes) : '',
+            'يرجى إجراء العرض الميداني الأول وإرسال بيانات التعاقد والريسيت للموزع.'
+          ].filter(Boolean).join('\\n')
+        : [
+            '🛠️ *أمر شغل فني (تركيب وإنجاز العمل) — ' + PORTAL_DIST.systemName + '*',
+            '• الموزع / النطاق: ' + PORTAL_DIST.name + ' (' + PORTAL_DIST.governorate + ')',
+            '• الفني المكلّف: ' + (assignedName || 'غير محدد'),
+            '• العميل / الجهة: ' + t.customerName,
+            t.customerInfo ? ('• المنطقة / الهاتف: ' + t.customerInfo) : '',
+            keyTxt ? ('• 🔑 مفتاح التفعيل الصادر: ' + keyTxt) : '• حالة المفتاح: يرجى مراجعة الموزع قبل التفعيل',
+            t.notes ? ('• تفاصيل التركيب: ' + t.notes) : '',
+            'يرجى التوجه للعميل وإتمام التركيب والتدريب وتأكيد الإنجاز للموزع.'
+          ].filter(Boolean).join('\\n');
+
+      messageTeamMemberWa(mem ? mem.phone : '', msg);
+    }
+
+    function renderDistTeamUi() {
+      const members = loadDistTeamMembers();
+      const tasks = loadDistFieldTasks();
+      const waitingList = loadWaitingRequests();
+
+      const reps = members.filter(m => m.role === 'rep');
+      const techs = members.filter(m => m.role === 'tech');
+      if (document.getElementById('teamRepCount')) document.getElementById('teamRepCount').innerText = reps.length;
+      if (document.getElementById('teamTechCount')) document.getElementById('teamTechCount').innerText = techs.length;
+      if (document.getElementById('teamStageRepCount')) document.getElementById('teamStageRepCount').innerText = tasks.filter(t => t.stage === 'rep_pending' || t.stage === 'rep_visited').length;
+      if (document.getElementById('teamStageTechCount')) document.getElementById('teamStageTechCount').innerText = tasks.filter(t => t.stage === 'tech_assigned').length;
+      if (document.getElementById('teamDoneCount')) document.getElementById('teamDoneCount').innerText = tasks.filter(t => t.stage === 'completed').length;
+
+      const repOptions = '<option value="">— اختر مندوباً —</option>' + reps.map(r => '<option value="' + escHtml(r.name) + '">🧑‍💼 ' + escHtml(r.name) + ' (' + escHtml(r.zone) + ')</option>').join('');
+      const techOptions = '<option value="">— اختر فنياً —</option>' + techs.map(tc => '<option value="' + escHtml(tc.name) + '">🛠️ ' + escHtml(tc.name) + ' (' + escHtml(tc.zone) + ')</option>').join('');
+      ['wfRepSelect', 'dealRepSelect'].forEach(id => {
+        const sel = document.getElementById(id);
+        if (sel) {
+          const cur = sel.value;
+          sel.innerHTML = repOptions;
+          if (cur) sel.value = cur;
+        }
+      });
+      ['wfTechSelect', 'dealTechSelect'].forEach(id => {
+        const sel = document.getElementById(id);
+        if (sel) {
+          const cur = sel.value;
+          sel.innerHTML = techOptions;
+          if (cur) sel.value = cur;
+        }
+      });
+
+      const memBox = document.getElementById('distTeamMembersList');
+      if (memBox) {
+        const filtered = activeTeamRoleFilter === 'all' ? members : members.filter(m => m.role === activeTeamRoleFilter);
+        if (!filtered.length) {
+          memBox.innerHTML = '<div style="font-size:12px; color:var(--muted); padding:8px;">لم يتم تسجيل مناديب أو فنيين بعد داخل نطاق ' + escHtml(PORTAL_DIST.governorate) + '. أضف فريقك من النموذج أعلاه.</div>';
+        } else {
+          memBox.innerHTML = filtered.map(m => {
+            const roleBadge = m.role === 'rep'
+              ? '<span style="background:rgba(56,189,248,0.18); color:#38bdf8; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:bold;">🧑‍💼 مندوب زيارة أولى</span>'
+              : '<span style="background:rgba(16,185,129,0.18); color:#34d399; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:bold;">🛠️ فني تركيب وتنفيذ</span>';
+            const stLabel = m.status === 'available' ? '🟢 متاح' : (m.status === 'busy' ? '🟠 في مهمة' : '⚪ إجازة');
+            return '<div style="background:rgba(2,6,23,0.45); border:1px solid var(--border); border-radius:10px; padding:8px 10px; display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">' +
+              '<div><div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;"><strong>' + escHtml(m.name) + '</strong> ' + roleBadge + '</div>' +
+              '<div style="font-size:11.5px; color:var(--muted); margin-top:2px;">📍 ' + escHtml(m.zone) + (m.phone ? ' · 📱 ' + escHtml(m.phone) : '') + (m.fee ? ' · 💰 ' + m.fee + ' ج.م/مهمة' : '') + '</div></div>' +
+              '<div style="display:flex; gap:4px; align-items:center;">' +
+              '<button type="button" onclick="toggleTeamMemberStatus(&apos;' + m.id + '&apos;)" style="padding:4px 8px; font-size:11px; background:#1e293b; color:#e2e8f0; width:auto;">' + stLabel + '</button>' +
+              (m.phone ? '<button type="button" onclick="messageTeamMemberById(&apos;' + m.id + '&apos;)" style="padding:4px 8px; font-size:11px; background:#059669; color:#fff; width:auto;">📲</button>' : '') +
+              '<button type="button" onclick="removeTeamMember(&apos;' + m.id + '&apos;)" style="padding:4px 8px; font-size:11px; background:#7f1d1d; color:#fecaca; width:auto;">✕</button>' +
+              '</div></div>';
+          }).join('');
+        }
+      }
+
+      const taskBox = document.getElementById('distWorkflowTasksList');
+      if (taskBox) {
+        if (!tasks.length) {
+          taskBox.innerHTML = '<div style="font-size:12px; color:var(--muted); padding:8px;">لا توجد مهام عملاء مجدولة حالياً. أضف عميلاً وحدد المندوب أولاً ثم الفني لإنجاز العمل.</div>';
+        } else {
+          taskBox.innerHTML = tasks.map(t => {
+            const linkedReq = t.reqCode ? waitingList.find(r => r.reqCode === t.reqCode) : waitingList.find(r => r.customerName === t.customerName);
+            const resolvedKey = t.activationKey || (linkedReq && linkedReq.activationKey) || '';
+            const stageMeta = {
+              rep_pending: { txt: '1️⃣ بانتظار زيارة المندوب الأولى', bg: 'rgba(245,158,11,0.18)', clr: '#fbbf24', nextTxt: '✔ تمت زيارة المندوب' },
+              rep_visited: { txt: '🤝 زاره المندوب (بانتظار الدفع/الفني)', bg: 'rgba(56,189,248,0.18)', clr: '#38bdf8', nextTxt: '🛠️ إرسال الفني الآن' },
+              tech_assigned: { txt: '2️⃣ لدى الفني للتنفيذ والتشغيل', bg: 'rgba(167,139,250,0.18)', clr: '#a78bfa', nextTxt: '✅ تم إنجاز العمل 100%' },
+              completed: { txt: '✅ منجز بالكامل (مندوب ← فني)', bg: 'rgba(16,185,129,0.2)', clr: '#34d399', nextTxt: '' }
+            }[t.stage] || { txt: 'قيد المتابعة', bg: 'rgba(148,163,184,0.2)', clr: '#cbd5e1', nextTxt: 'التالي' };
+
+            return '<div style="background:rgba(2,6,23,0.45); border:1px solid var(--border); border-radius:10px; padding:10px;">' +
+              '<div style="display:flex; justify-content:space-between; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:4px;">' +
+              '<strong>' + escHtml(t.customerName) + '</strong>' +
+              '<span style="background:' + stageMeta.bg + '; color:' + stageMeta.clr + '; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:bold;">' + stageMeta.txt + '</span></div>' +
+              '<div style="font-size:11.5px; color:var(--muted); line-height:1.55;">' +
+              (t.customerInfo ? '📞 ' + escHtml(t.customerInfo) + '<br>' : '') +
+              '1️⃣ المندوب: <strong style="color:var(--sky);">' + escHtml(t.repName || 'غير محدد') + '</strong> · ' +
+              '2️⃣ الفني: <strong style="color:var(--accent);">' + escHtml(t.techName || 'غير محدد') + '</strong>' +
+              (resolvedKey ? '<br>🔑 مفتاح التفعيل الجاهز للفني: <strong style="font-family:monospace; color:#34d399;" dir="ltr">' + escHtml(resolvedKey) + '</strong>' : '') +
+              (t.notes ? '<br>📝 ' + escHtml(t.notes) : '') +
+              '</div>' +
+              '<div style="display:flex; gap:5px; flex-wrap:wrap; margin-top:8px;">' +
+              '<button type="button" onclick="dispatchStageMemberWa(&apos;' + t.id + '&apos;, &apos;rep&apos;)" style="padding:4px 8px; font-size:11px; background:#0369a1; color:#fff; width:auto;">📲 تكليف المندوب</button>' +
+              '<button type="button" onclick="dispatchStageMemberWa(&apos;' + t.id + '&apos;, &apos;tech&apos;)" style="padding:4px 8px; font-size:11px; background:#059669; color:#fff; width:auto;">📲 أمر شغل الفني</button>' +
+              (stageMeta.nextTxt ? '<button type="button" onclick="advanceWorkflowStage(&apos;' + t.id + '&apos;)" style="padding:4px 8px; font-size:11px; background:#d97706; color:#fff; width:auto;">' + stageMeta.nextTxt + '</button>' : '') +
+              '<button type="button" onclick="removeWorkflowTask(&apos;' + t.id + '&apos;)" style="padding:4px 8px; font-size:11px; background:#7f1d1d; color:#fecaca; width:auto;">✕</button>' +
+              '</div></div>';
+          }).join('');
+        }
+      }
+    }
+
+    function messageTeamMemberById(id) {
+      const m = loadDistTeamMembers().find(x => x.id === id);
+      if (!m) return;
+      const roleLabel = m.role === 'rep' ? 'مندوب المبيعات (الزيارة الأولى)' : 'فني التركيب والتنفيذ';
+      messageTeamMemberWa(m.phone, 'مرحباً ' + m.name + ' (' + roleLabel + ')، يوجد تكليف عمل جديد في نطاق ' + PORTAL_DIST.governorate + ' (' + (m.zone || '') + ').');
+    }
+    setTimeout(renderDistTeamUi, 80);
   </script>
 </body>
 </html>`;

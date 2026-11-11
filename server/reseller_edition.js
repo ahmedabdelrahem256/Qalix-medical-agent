@@ -41,7 +41,7 @@ function buildCleanResellerEdition(options = {}) {
   fs.mkdirSync(outputBaseDir, { recursive: true });
 
   const stamp = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 14);
-  const editionName = String(options.editionName || `Qalix_MultiSystem_Clean_Edition_${stamp}`).replace(/[^a-zA-Z0-9_-]/g, '_');
+  const editionName = String(options.editionName || `Universal_MultiSystem_Clean_Edition_${stamp}`).replace(/[^a-zA-Z0-9_-]/g, '_');
   const editionDir = path.join(outputBaseDir, editionName);
   const zipFilename = `${editionName}.zip`;
   const zipPath = path.join(outputBaseDir, zipFilename);
@@ -69,10 +69,10 @@ function buildCleanResellerEdition(options = {}) {
   const startBat = [
     '@echo off',
     'chcp 65001 >nul',
-    'title Qalix Multi-System Agent — لوحة الوكيل متعددة المنظومات',
+    'title Universal Agent & Distributors Platform — لوحة إدارة الوكيل والموزعين',
     'echo ============================================================================',
-    'echo   Qalix Multi-System Agent — النسخة التجارية المصفّرة',
-    'echo   تعمل 100%% أوفلاين بالكامل (Air-Gapped) بدون أي تبعيات خارجية',
+    'echo   Universal Multi-System Agent Platform — النسخة التجارية المصفّرة',
+    'echo   لإدارة الموزعين والمبيعات والعمولات وتأكيد الدفع (أوفلاين 100%%)',
     'echo ============================================================================',
     'cd /d "%~dp0"',
     'set AUTO_OPEN_BROWSER=1',
@@ -80,7 +80,7 @@ function buildCleanResellerEdition(options = {}) {
     'pause',
     ''
   ].join('\r\n');
-  fs.writeFileSync(path.join(editionDir, 'START_QALIX_AGENT.bat'), startBat, 'utf8');
+  fs.writeFileSync(path.join(editionDir, 'START_AGENT_PANEL.bat'), startBat, 'utf8');
 
   // Legal docs (~3MB, helpful for new buyers)
   const legalSrc = path.join(rootDir, 'الوثائق_القانونية_والتسليم');
@@ -108,19 +108,19 @@ function buildCleanResellerEdition(options = {}) {
 
   // 2. Customize clean buyer profile (never copy seller's private owner phone!)
   const buyerPhone = String(options.buyerAgentPhone || '01000000000').replace(/[^0-9]/g, '').slice(0, 15) || '01000000000';
-  const buyerTitleAr = String(options.buyerAgentTitleAr || 'وكيل منظومة كالكس المعتمد').trim() || 'وكيل منظومة كالكس المعتمد';
-  const buyerOwnerName = String(options.buyerOwnerName || 'صاحب منصة كالكس').trim() || 'صاحب منصة كالكس';
+  const buyerTitleAr = String(options.buyerAgentTitleAr || 'وكيل المنظومة المعتمد').trim() || 'وكيل المنظومة المعتمد';
+  const buyerOwnerName = String(options.buyerOwnerName || 'صاحب المنصة / الوكيل الرئيسي').trim() || 'صاحب المنصة / الوكيل الرئيسي';
 
   const defaultPresetId = (options.defaultSystemId && SYSTEM_PRESETS[options.defaultSystemId])
     ? options.defaultSystemId
-    : 'qalix_platform';
+    : 'universal_agent';
   const defaultPreset = SYSTEM_PRESETS[defaultPresetId];
 
   const buyerAgentInfo = buildAgentInfoFromSystem({
-    projectName: defaultPreset.projectName || 'Qalix Multi-System Agent',
+    projectName: defaultPreset.projectName || 'Universal Agent Platform',
     titleAr: buyerTitleAr,
     phone: buyerPhone,
-    facebookPageUrl: String(options.facebookPageUrl || DEFAULT_AGENT_INFO.facebookPageUrl),
+    facebookPageUrl: String(options.facebookPageUrl || ''),
     megaTrialUrl: String(options.megaTrialUrl !== undefined ? options.megaTrialUrl : ''),
     packageSha256: ''
   }, buyerTitleAr);
@@ -129,8 +129,8 @@ function buildCleanResellerEdition(options = {}) {
     id: defaultPreset.id,
     nameAr: defaultPreset.nameAr,
     subtitleAr: defaultPreset.subtitleAr,
-    projectName: defaultPreset.projectName || 'Qalix Multi-System Agent',
-    licensePrefix: defaultPreset.licensePrefix || 'QLX2',
+    projectName: defaultPreset.projectName || 'Universal Agent Platform',
+    licensePrefix: defaultPreset.licensePrefix || 'AGT2',
     isPrimaryDefault: true,
     createdAt: new Date().toISOString(),
     agentInfo: buyerAgentInfo,
@@ -177,15 +177,16 @@ function buildCleanResellerEdition(options = {}) {
   // Write buyer quick-start guide
   const readmeText = [
     '====================================================================',
-    '  منصة وكيل كالكس متعددة المنظومات — النسخة التجارية المصفّرة',
+    '  منظومة إدارة الوكيل والموزعين الشاملة — النسخة التجارية المصفّرة',
     '====================================================================',
     '',
     '1. للتشغيل المباشر على ويندوز:',
-    '   شغّل ملف START_QALIX_AGENT.bat أو نفّذ: node server/agent_server.js',
+    '   شغّل ملف START_AGENT_PANEL.bat أو نفّذ: node server/agent_server.js',
     '',
-    '2. حالة البيانات الابتدائية:',
-    '   - هذه النسخة مصفّرة تماماً وجاهزة للبيع والتسليم (0 موزعين، 0 صفقات، 0 حجز نطاق).',
-    '   - وضع clean_production_mode مفعّل لمنع حقن أي بيانات تجريبية عند أول تشغيل.',
+    '2. طبيعة هذه النسخة:',
+    '   - نظام عام لإدارة الموزعين لبيع أي منتج أو خدمة أو منظومة برمجية.',
+    '   - مصفّرة بالكامل وجاهزة للبيع والتسليم (0 موزعين، 0 صفقات، 0 طلبات دفع).',
+    '   - يمكنك من داخل اللوحة إضافة منظومات متخصصة معزولة (مثل منظومات كالكس أو غيرها).',
     '',
     '3. تعدد المنظومات والعزل الكامل:',
     '   - كل منظومة تضيفها من شريط «إدارة المنظومات المعزولة» تحصل على قاعدة بيانات مستقلة',

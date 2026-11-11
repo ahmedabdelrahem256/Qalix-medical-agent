@@ -52,6 +52,7 @@ const {
 const { buildCleanResellerEdition } = require('./reseller_edition');
 
 const PORT = Number(process.env.PORT) || 4000;
+let activePort = PORT;
 const HOST = process.env.HOST || '127.0.0.1';
 const ROOT = path.join(__dirname, '..');
 const PUBLIC_DIR = path.join(ROOT, 'public');
@@ -550,9 +551,34 @@ function calculateDealFinancials(tierId, _isAssiut, commissionRate) {
   };
 }
 
+function getAgentPaymentAccounts(targetDb, agentInfo) {
+  const fallback = {
+    instapay: agentInfo?.phone || '',
+    instapayName: agentInfo?.titleAr || 'حساب الوكيل الرسمي',
+    vodafoneCash: agentInfo?.phone || '',
+    bankName: '',
+    bankAccount: '',
+    cashNote: 'توريد نقدي مباشر أو عبر المندوب المعتمد'
+  };
+  try {
+    const row = (targetDb || db).prepare("SELECT value FROM agent_private_settings WHERE key = 'payment_accounts'").get();
+    if (row && row.value) {
+      return { ...fallback, ...JSON.parse(row.value) };
+    }
+  } catch (_) {}
+  return fallback;
+}
+
 const { generateStandaloneDistributorPortalHtml: genPortal } = require('./portal_template');
 function generateStandaloneDistributorPortalHtml(dist) {
-  return genPortal(dist, AGENT_INFO);
+  const netInfo = getLocalNetworkInfo(activePort || PORT);
+  return genPortal(dist, AGENT_INFO, {
+    activeSystem: ACTIVE_SYSTEM,
+    pricing: OFFICIAL_PRICING,
+    paymentAccounts: getAgentPaymentAccounts(db, AGENT_INFO),
+    serverUrl: `http://${HOST}:${activePort || PORT}`,
+    lanUrl: netInfo?.primaryMobileUrl || ''
+  });
 }
 
 function writeDistributorKitFile(dist) {
@@ -571,18 +597,21 @@ function sendJson(res, status, data) {
   res.writeHead(status, {
     'Content-Type': 'application/json; charset=utf-8',
     'Content-Length': body.length,
-    'Cache-Control': 'no-store'
+    'Cache-Control': 'no-store',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type'
   });
   res.end(body);
 }
 
-function readJsonBody(req) {
+function readJsonBody(req, maxBytes = 1e6) {
   return new Promise((resolve, reject) => {
     let chunks = [];
     let size = 0;
     req.on('data', c => {
       size += c.length;
-      if (size > 1e6) {
+      if (size > maxBytes) {
         const err = new Error('Payload too large');
         err.statusCode = 413;
         req.destroy();
@@ -659,9 +688,15 @@ function getSummaryResponse() {
   }));
 
   const audits = db.prepare('SELECT * FROM audit_log ORDER BY id DESC LIMIT 50').all();
+  let pendingPaymentRequestsCount = 0;
+  try {
+    pendingPaymentRequestsCount = db.prepare("SELECT COUNT(*) AS c FROM payment_requests WHERE status = 'pending'").get().c;
+  } catch (_) {}
 
   return {
     agent: AGENT_INFO,
+    paymentAccounts: getAgentPaymentAccounts(db, AGENT_INFO),
+    pendingPaymentRequestsCount,
     activeSystem: {
       id: ACTIVE_SYSTEM.id,
       nameAr: ACTIVE_SYSTEM.nameAr,
@@ -699,6 +734,15 @@ function getSummaryResponse() {
 
 const server = http.createServer(async (req, res) => {
   try {
+    if (req.method === 'OPTIONS') {
+      res.writeHead(204, {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Max-Age': '86400'
+      });
+      return res.end();
+    }
     const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
     let pathname = url.pathname;
     try {
@@ -1347,6 +1391,180 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, 200, { ok: true, ownerName, ownerPhone });
     }
 
+    /* ---------------- Agent Payment Accounts & Distributor Receipt Confirmation Workflow ---------------- */
+    if (req.method === 'GET' && pathname === '/api/agent/payment-accounts') {
+      return sendJson(res, 200, { ok: true, accounts: getAgentPaymentAccounts(db, AGENT_INFO) });
+    }
+
+    if (req.method === 'POST' && pathname === '/api/agent/payment-accounts') {
+      const body = await readJsonBody(req);
+      const accounts = {
+        instapay: String(body.instapay || '').trim().slice(0, 80),
+        instapayName: String(body.instapayName || '').trim().slice(0, 120),
+        vodafoneCash: String(body.vodafoneCash || '').trim().slice(0, 40),
+        bankName: String(body.bankName || '').trim().slice(0, 100),
+        bankAccount: String(body.bankAccount || '').trim().slice(0, 80),
+        cashNote: String(body.cashNote || 'توريد نقدي مباشر أو عبر المندوب المعتمد').trim().slice(0, 160)
+      };
+      db.prepare('INSERT INTO agent_private_settings(key, value) VALUES(?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value')
+        .run('payment_accounts', JSON.stringify(accounts));
+      // Sync distributor portal kits with updated payment channels
+      try {
+        for (const d of db.prepare('SELECT * FROM distributors').all()) writeDistributorKitFile(d);
+      } catch (_) {}
+      logAudit('payment_accounts_update', 'تحديث حسابات وقنوات استلام الدفع للمنظومة النشطة');
+      return sendJson(res, 200, { ok: true, accounts });
+    }
+
+    if (req.method === 'GET' && pathname === '/api/payment-requests') {
+      const rows = db.prepare(`
+        SELECT pr.*, d.name AS distributor_name, d.code AS distributor_code, d.phone AS distributor_phone
+        FROM payment_requests pr
+        JOIN distributors d ON d.id = pr.distributor_id
+        ORDER BY CASE pr.status WHEN 'pending' THEN 0 ELSE 1 END, pr.created_at DESC
+      `).all();
+      return sendJson(res, 200, { ok: true, requests: rows });
+    }
+
+    if (req.method === 'GET' && pathname === '/api/payment-requests/status') {
+      const reqCode = String(url.searchParams.get('reqCode') || '').trim().toUpperCase();
+      if (!reqCode) return sendJson(res, 400, { error: 'يرجى تحديد كود الطلب (reqCode)' });
+      const row = db.prepare(`
+        SELECT pr.id, pr.req_code, pr.customer_name, pr.tier, pr.fixed_price, pr.agent_net_amount,
+               pr.payment_channel, pr.payment_ref, pr.status, pr.activation_key, pr.deal_id,
+               pr.notes, pr.created_at, pr.reviewed_at, dl.deal_no
+        FROM payment_requests pr
+        LEFT JOIN deals dl ON dl.id = pr.deal_id
+        WHERE UPPER(pr.req_code) = ?
+      `).get(reqCode);
+      if (!row) return sendJson(res, 404, { error: 'طلب التفعيل غير موجود في هذه المنظومة' });
+      return sendJson(res, 200, { ok: true, request: row });
+    }
+
+    if (req.method === 'POST' && pathname === '/api/payment-requests') {
+      const body = await readJsonBody(req, 5 * 1024 * 1024);
+      const rawDistCode = String(body.distributorCode || '').trim();
+      const rawDistId = String(body.distributorId || '').trim();
+      const dist = rawDistId
+        ? db.prepare('SELECT * FROM distributors WHERE id = ?').get(rawDistId)
+        : db.prepare('SELECT * FROM distributors WHERE UPPER(code) = ?').get(rawDistCode.toUpperCase());
+      if (!dist) return sendJson(res, 404, { error: 'الموزع غير مسجل في هذه المنظومة' });
+      if (body.accessPin && String(body.accessPin).trim() !== String(dist.access_pin)) {
+        return sendJson(res, 403, { error: 'رمز PIN غير صحيح لهذا الموزع' });
+      }
+
+      const customerName = String(body.customerName || body.clinicName || '').trim().slice(0, 140);
+      if (!customerName) return sendJson(res, 400, { error: 'اسم العميل أو المنشأة مطلوب' });
+      const contactName = String(body.contactName || body.doctorName || customerName).trim().slice(0, 120);
+      const customerPhone = String(body.customerPhone || body.clinicPhone || '').trim().slice(0, 40);
+      const city = String(body.city || dist.governorate || '').trim().slice(0, 80);
+      const tierRaw = String(body.tier || 'professional').trim();
+      const normalizedTier = tierRaw === 'pro' ? 'professional' : (tierRaw === 'ent' ? 'enterprise' : tierRaw);
+      const calc = calculateDealFinancials(normalizedTier, 0, dist.commission_rate);
+
+      const hardwareOrRef = String(body.hardwareOrRef || body.hardwareId || '').trim().toUpperCase().slice(0, 120);
+      const paymentChannel = String(body.paymentChannel || 'إنستاباي (InstaPay)').trim().slice(0, 80);
+      const paymentRef = String(body.paymentRef || '').trim().slice(0, 100);
+      const receiptFilename = String(body.receiptFilename || '').replace(/[^a-zA-Z0-9_.\-\u0600-\u06FF]/g, '_').slice(0, 100);
+      let receiptDataUrl = String(body.receiptDataUrl || '').trim();
+      if (receiptDataUrl && !/^data:(image\/(png|jpeg|jpg|webp|gif)|application\/pdf);base64,[A-Za-z0-9+/=]+$/.test(receiptDataUrl)) {
+        receiptDataUrl = '';
+      }
+      if (receiptDataUrl.length > 3.5 * 1024 * 1024) {
+        return sendJson(res, 413, { error: 'حجم صورة الإيصال يتجاوز الحد الأقصى المسموح (3.5 ميجابايت)' });
+      }
+
+      const providedCode = String(body.reqCode || '').trim().toUpperCase().replace(/[^A-Z0-9\-]/g, '').slice(0, 24);
+      const reqCode = providedCode || ('REQ-' + crypto.randomBytes(3).toString('hex').toUpperCase());
+      const id = 'preq_' + crypto.randomBytes(6).toString('hex');
+      const now = new Date().toISOString();
+
+      db.prepare(`INSERT INTO payment_requests(
+        id, req_code, distributor_id, customer_name, contact_name, customer_phone, city,
+        tier, fixed_price, commission_rate, distributor_commission, agent_net_amount,
+        hardware_or_ref, payment_channel, payment_ref, receipt_filename, receipt_data_url,
+        status, activation_key, deal_id, notes, created_at, reviewed_at
+      ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', '', '', ?, ?, '')`).run(
+        id, reqCode, dist.id, customerName, contactName, customerPhone, city,
+        calc.tierId, calc.fixedPrice, calc.commissionRate, calc.distributorCommission, calc.agentNetAmount,
+        hardwareOrRef, paymentChannel, paymentRef, receiptFilename, receiptDataUrl,
+        String(body.notes || '').slice(0, 500), now
+      );
+
+      logAudit('payment_request_submitted', `استلام طلب تأكيد دفع بالريسيت (${reqCode}) من الموزع ${dist.code} لصالح "${customerName}" بمبلغ صافي ${calc.agentNetAmount} ج.م عبر ${paymentChannel}`);
+      const createdRow = db.prepare(`
+        SELECT pr.*, d.name AS distributor_name, d.code AS distributor_code, d.phone AS distributor_phone
+        FROM payment_requests pr JOIN distributors d ON d.id = pr.distributor_id WHERE pr.id = ?
+      `).get(id);
+      return sendJson(res, 201, { ok: true, request: createdRow });
+    }
+
+    if (req.method === 'POST' && pathname.startsWith('/api/payment-requests/') && pathname.endsWith('/approve')) {
+      const id = pathname.split('/')[3];
+      const pr = db.prepare(`
+        SELECT pr.*, d.name AS distributor_name, d.code AS distributor_code, d.phone AS distributor_phone
+        FROM payment_requests pr JOIN distributors d ON d.id = pr.distributor_id WHERE pr.id = ?
+      `).get(id);
+      if (!pr) return sendJson(res, 404, { error: 'طلب الدفع غير موجود' });
+      if (pr.status === 'approved') {
+        return sendJson(res, 200, { ok: true, request: pr, summary: getSummaryResponse() });
+      }
+
+      const body = await readJsonBody(req);
+      const count = db.prepare('SELECT COUNT(*) AS n FROM deals').get().n + 101;
+      const dealId = 'deal_' + crypto.randomBytes(6).toString('hex');
+      const dealNo = `DEAL-2026-${count}`;
+      const sysPrefix = ACTIVE_SYSTEM.licensePrefix || 'QLX2';
+      const activationKey = String(body.activationKey || `${sysPrefix}-${pr.tier.toUpperCase().slice(0, 3)}-${count}`).trim();
+      const now = new Date().toISOString();
+
+      db.prepare(`INSERT INTO deals(
+        id, deal_no, distributor_id, clinic_name, doctor_name, clinic_phone, city, is_assiut,
+        tier, fixed_price, commission_rate, distributor_commission, agent_net_amount,
+        hardware_id, status, license_key_ref, notes, created_at, settled_at
+      ) VALUES(?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, 'completed', ?, ?, ?, ?)`).run(
+        dealId, dealNo, pr.distributor_id, pr.customer_name, pr.contact_name || pr.customer_name, pr.customer_phone || '', pr.city || '',
+        pr.tier, pr.fixed_price, pr.commission_rate, pr.distributor_commission, pr.agent_net_amount,
+        pr.hardware_or_ref || '', activationKey,
+        `تأكيد ريسيت الدفع (${pr.req_code}) عبر ${pr.payment_channel}${pr.payment_ref ? ' - مرجع ' + pr.payment_ref : ''}`,
+        now, now
+      );
+
+      db.prepare("UPDATE payment_requests SET status = 'approved', activation_key = ?, deal_id = ?, reviewed_at = ?, notes = COALESCE(?, notes) WHERE id = ?")
+        .run(activationKey, dealId, now, body.notes ? String(body.notes).slice(0, 500) : null, id);
+
+      logAudit('payment_request_approved', `تأكيد استلام الدفع لطلب ${pr.req_code} (${dealNo}) وتفعيل المفتاح ${activationKey} للموزع ${pr.distributor_code}`);
+
+      const waText = [
+        `✅ *تم تأكيد استلام الدفع وإصدار مفتاح التفعيل — ${ACTIVE_SYSTEM.nameAr}*`,
+        `• كود الطلب: ${pr.req_code}`,
+        `• رقم الصفقة: ${dealNo}`,
+        `• العميل: ${pr.customer_name}`,
+        `• صافي المبلغ المؤكد: ${pr.agent_net_amount} ج.م (${pr.payment_channel})`,
+        `• 🔑 *مفتاح التفعيل / التوثيق:* ${activationKey}`,
+        ``,
+        `يمكنك الآن تسليم العميل المفتاح وطباعة محضر التسليم من بوابتك.`
+      ].join('\n');
+
+      const updatedReq = db.prepare(`
+        SELECT pr.*, d.name AS distributor_name, d.code AS distributor_code, d.phone AS distributor_phone
+        FROM payment_requests pr JOIN distributors d ON d.id = pr.distributor_id WHERE pr.id = ?
+      `).get(id);
+      return sendJson(res, 200, { ok: true, request: updatedReq, dealNo, activationKey, waText, summary: getSummaryResponse() });
+    }
+
+    if (req.method === 'POST' && pathname.startsWith('/api/payment-requests/') && pathname.endsWith('/reject')) {
+      const id = pathname.split('/')[3];
+      const pr = db.prepare('SELECT * FROM payment_requests WHERE id = ?').get(id);
+      if (!pr) return sendJson(res, 404, { error: 'طلب الدفع غير موجود' });
+      const body = await readJsonBody(req);
+      const reason = String(body.reason || body.notes || 'لم يتم العثور على التحويل أو الإيصال غير واضح').trim().slice(0, 400);
+      const now = new Date().toISOString();
+      db.prepare("UPDATE payment_requests SET status = 'rejected', notes = ?, reviewed_at = ? WHERE id = ?").run(reason, now, id);
+      logAudit('payment_request_rejected', `رفض طلب الدفع ${pr.req_code}: ${reason}`);
+      return sendJson(res, 200, { ok: true, reqCode: pr.req_code, reason, summary: getSummaryResponse() });
+    }
+
     /* ---------------- Multi-System Isolation & Clean Reseller Edition API ---------------- */
     if (req.method === 'GET' && pathname === '/api/systems') {
       systemsRegistry = loadSystemsRegistry(BASE_DATA_DIR, BASE_KITS_DIR);
@@ -1408,6 +1626,7 @@ const server = http.createServer(async (req, res) => {
           buyerAgentPhone: body.buyerAgentPhone,
           buyerAgentTitleAr: body.buyerAgentTitleAr,
           buyerOwnerName: body.buyerOwnerName,
+          defaultSystemId: body.defaultSystemId,
           includeMediaAssets: body.includeMediaAssets === true,
           extraSystemPresets: Array.isArray(body.extraSystemPresets) ? body.extraSystemPresets : []
         });
@@ -1618,7 +1837,6 @@ try {
   console.error('Warning syncing distributor kits on startup:', e.message);
 }
 
-let activePort = PORT;
 const explicitPortLocked = Boolean(process.env.PORT);
 
 server.on('error', err => {

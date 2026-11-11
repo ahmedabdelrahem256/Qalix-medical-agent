@@ -1188,17 +1188,18 @@ function req(method, urlPath, body) {
       await new Promise(r => setTimeout(r, 400));
     }
 
-    const hasNeutralBat = fs.existsSync(path.join(ed.folderPath, 'START_QALIX_AGENT.bat')) && !fs.existsSync(path.join(ed.folderPath, 'START_QALIX_MEDICAL_AGENT.bat'));
+    const hasNeutralBat = fs.existsSync(path.join(ed.folderPath, 'START_AGENT_PANEL.bat')) && !fs.existsSync(path.join(ed.folderPath, 'START_QALIX_MEDICAL_AGENT.bat'));
     const cleanHtmlClean = cleanBootRes &&
-      cleanBootRes.body.activeSystem.id === 'qalix_platform' &&
+      cleanBootRes.body.activeSystem.id === 'universal_agent' &&
       !cleanBootRes.body.activeSystem.nameAr.includes('الطبية') &&
+      !cleanBootRes.body.activeSystem.nameAr.includes('كالكس') &&
       !cleanBootRes.body.agent.titleAr.includes('الطبية') &&
       cleanBootRes.body.proposals.every(p => p.id.startsWith('gen_')) &&
       cleanDashHtml && cleanDashHtml.status === 200 &&
       !cleanDashHtml.body.includes('G:\\Qalix medical agent') &&
       !cleanDashHtml.body.includes('01122166076');
 
-    check('71. تصدير نسخة وكلاء متعددة المنظومات مصفّرة البيانات وجاهزة للبيع وتشغيلها الفعلي بدون أي بيانات تجريبية أو عناوين طبية مقيدة',
+    check('71. تصدير نسخة وكلاء عامة متعددة المنظومات مصفّرة البيانات وجاهزة للبيع وتشغيلها الفعلي بدون أي بيانات تجريبية أو تسريب لعناوين كالكس الطبية',
       buildEditionRes.status === 201 &&
       ed.verification.distributors === 0 &&
       ed.verification.deals === 0 &&
@@ -1227,7 +1228,65 @@ function req(method, urlPath, body) {
       }
     );
 
-    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/71 PASSED ===`);
+    // Test 72: End-to-End Distributor Payment Receipt Upload + Agent Approval + Key Polling + Field Team Portal Sections
+    await req('POST', '/api/systems/select', { systemId: 'qalix_medical' });
+    const updateAccRes = await req('POST', '/api/agent/payment-accounts', {
+      instapay: 'agentpay@instapay',
+      instapayName: 'شركة الوكيل المعتمدة',
+      vodafoneCash: '01055443322',
+      bankName: 'CIB Bank',
+      bankAccount: 'EG99001122334455',
+      cashNote: 'توريد نقدي بمقر الوكيل أو عبر المندوب'
+    });
+    const fakeReceiptB64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+    const submitPayReq = await req('POST', '/api/payment-requests', {
+      distributorId: sampleDistId,
+      customerName: 'عيادة الأمل النموذجية للتحصيل',
+      contactName: 'د. حاتم فؤاد - 01012345678',
+      hardwareOrRef: 'HW-PAY-TEST-99',
+      tier: 'professional',
+      paymentChannel: 'إنستاباي (InstaPay)',
+      paymentRef: 'IPN-998811',
+      receiptFilename: 'instapay_receipt.png',
+      receiptDataUrl: fakeReceiptB64,
+      notes: 'المندوب: كريم عادل | الفني: م. سامح'
+    });
+    const createdReqId = submitPayReq.body?.request?.id;
+    const createdReqCode = submitPayReq.body?.request?.req_code;
+    const listPendingPay = await req('GET', '/api/payment-requests');
+    const approvePayRes = await req('POST', `/api/payment-requests/${createdReqId}/approve`, {
+      activationKey: 'QLX2-PRO-9991'
+    });
+    const pollStatusRes = await req('GET', `/api/payment-requests/status?reqCode=${encodeURIComponent(createdReqCode)}`);
+    const portalAfterPay = await req('GET', `/api/distributors/${sampleDistId}/kit?preview=1`);
+
+    check('72. دورة تأكيد الدفع الكاملة (ريسيت الموزع ⇄ موافقة الوكيل وإصدار المفتاح) + أقسام فريق الموزع (مندوب ثم فني) داخل البوابة',
+      updateAccRes.status === 200 &&
+      submitPayReq.status === 201 &&
+      submitPayReq.body.request.status === 'pending' &&
+      listPendingPay.status === 200 &&
+      listPendingPay.body.requests.some(r => r.req_code === createdReqCode && r.receipt_data_url === fakeReceiptB64) &&
+      approvePayRes.status === 200 &&
+      approvePayRes.body.activationKey === 'QLX2-PRO-9991' &&
+      pollStatusRes.status === 200 &&
+      pollStatusRes.body.request.status === 'approved' &&
+      pollStatusRes.body.request.activation_key === 'QLX2-PRO-9991' &&
+      portalAfterPay.status === 200 &&
+      typeof portalAfterPay.body === 'string' &&
+      portalAfterPay.body.includes('agentpay@instapay') &&
+      portalAfterPay.body.includes('distFieldTeamSection') &&
+      portalAfterPay.body.includes('addDistTeamMember') &&
+      portalAfterPay.body.includes('addFieldWorkflowTask'),
+      {
+        reqCode: createdReqCode,
+        approvedKey: pollStatusRes.body?.request?.activation_key,
+        dealNo: approvePayRes.body?.dealNo,
+        hasPaymentAccountsInPortal: typeof portalAfterPay.body === 'string' && portalAfterPay.body.includes('agentpay@instapay'),
+        hasFieldTeamInPortal: typeof portalAfterPay.body === 'string' && portalAfterPay.body.includes('distFieldTeamSection')
+      }
+    );
+
+    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/72 PASSED ===`);
     for (const r of results) console.log(' ✅', r);
   } finally {
     srv.kill('SIGINT');

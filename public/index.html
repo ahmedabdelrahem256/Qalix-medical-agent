@@ -585,6 +585,108 @@
         </div>
       </div>
 
+      <!-- Payment Confirmation & Receipt Review Workflow (Distributor Receipt -> Agent Activation Key) -->
+      <div id="paymentRequestsSection" class="glass" style="border:1px solid rgba(56,189,248,0.4); margin-bottom:18px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
+          <div>
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:4px;">
+              <span class="badge b-sky">تأكيد الدفع بالريسيت</span>
+              <span id="pendingPaymentBadge" class="badge b-amber">0 طلبات بالانتظار</span>
+            </div>
+            <h3 style="margin:0; font-size:17px; color:var(--sky);">💳 حسابات استلام الدفع وصندوق مراجعة ريسيت الموزعين لإصدار مفاتيح التفعيل</h3>
+            <p style="margin:4px 0 0; font-size:12.5px; color:var(--muted);">
+              يقوم الموزع بالتحويل وإرفاق صورة الريسيت من بوابتة المستقلة، فتظهر هنا فوراً للمراجعة وتأكيد الاستلام وإصدار مفتاح التفعيل التلقائي للموزع.
+            </p>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button type="button" class="btn btn-sm btn-emerald" onclick="toggleManualPaymentBox()">➕ تسجيل طلب يدوي من واتساب</button>
+            <button type="button" class="btn btn-sm btn-sky" onclick="loadPaymentRequestsPanel()">🔄 تحديث الطلبات</button>
+          </div>
+        </div>
+
+        <div id="manualPaymentReqBox" class="sub-card" style="display:none; margin-bottom:14px; border:1px dashed var(--emerald); background:rgba(16,185,129,0.06);">
+          <div style="font-weight:800; color:var(--emerald); margin-bottom:8px;">📥 تسجيل طلب تأكيد دفع استلمت صورته عبر واتساب</div>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:8px; margin-bottom:8px;">
+            <div>
+              <label style="font-size:11px; color:var(--muted);">الموزع:</label>
+              <select id="mprDistId" style="padding:6px; font-size:12px;"></select>
+            </div>
+            <div>
+              <label style="font-size:11px; color:var(--muted);">اسم العميل / المنشأة:</label>
+              <input id="mprCustomerName" placeholder="مثال: شركة النور / عيادة..." style="padding:6px; font-size:12px;" />
+            </div>
+            <div>
+              <label style="font-size:11px; color:var(--muted);">الباقة:</label>
+              <select id="mprTier" style="padding:6px; font-size:12px;">
+                <option value="basic">الأساسية</option>
+                <option value="professional" selected>الاحترافية</option>
+                <option value="enterprise">المؤسسات Enterprise</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:11px; color:var(--muted);">طريقة الدفع:</label>
+              <select id="mprChannel" style="padding:6px; font-size:12px;">
+                <option value="إنستاباي (InstaPay)">إنستاباي (InstaPay)</option>
+                <option value="فودافون كاش / محفظة">فودافون كاش / محفظة</option>
+                <option value="تحويل بنكي">تحويل بنكي</option>
+                <option value="توريد نقدي">توريد نقدي</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:11px; color:var(--muted);">مرجع التحويل / رقم العملية:</label>
+              <input id="mprRef" dir="ltr" placeholder="REF-..." style="padding:6px; font-size:12px;" />
+            </div>
+            <div style="display:flex; align-items:flex-end;">
+              <button type="button" class="btn btn-sm btn-emerald" style="width:100%;" onclick="submitManualPaymentReq()">💾 حفظ في الصندوق</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap:14px;">
+          <!-- Agent Receiving Payment Accounts Card -->
+          <div id="agentPaymentAccountsCard" class="sub-card" style="padding:14px; border:1px solid rgba(251,191,36,0.35);">
+            <h4 style="margin:0 0 8px; color:var(--amber); font-size:14.5px;">🏦 حسابات الوكيل لاستلام التحويلات (تظهر في بوابة كل موزع)</h4>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px;">
+              <div>
+                <label style="font-size:11px; color:var(--muted);">حساب / عنوان InstaPay:</label>
+                <input id="paInstapay" dir="ltr" placeholder="agent@instapay أو 010..." style="padding:6px; font-size:12px;" />
+              </div>
+              <div>
+                <label style="font-size:11px; color:var(--muted);">اسم صاحب الحساب (InstaPay):</label>
+                <input id="paInstapayName" placeholder="الاسم الظاهر عند التحويل" style="padding:6px; font-size:12px;" />
+              </div>
+              <div>
+                <label style="font-size:11px; color:var(--muted);">محفظة إلكترونية (فودافون/أورانج كاش):</label>
+                <input id="paVodafone" dir="ltr" placeholder="010..." style="padding:6px; font-size:12px;" />
+              </div>
+              <div>
+                <label style="font-size:11px; color:var(--muted);">اسم البنك:</label>
+                <input id="paBankName" placeholder="مثال: البنك الأهلي / CIB" style="padding:6px; font-size:12px;" />
+              </div>
+              <div style="grid-column:1 / -1;">
+                <label style="font-size:11px; color:var(--muted);">رقم الحساب البنكي أو IBAN:</label>
+                <input id="paBankAcc" dir="ltr" placeholder="EG..." style="padding:6px; font-size:12px;" />
+              </div>
+              <div style="grid-column:1 / -1;">
+                <label style="font-size:11px; color:var(--muted);">تعليمات التحصيل النقدي / المندوب:</label>
+                <input id="paCashNote" placeholder="توريد نقدي مباشر أو عبر المندوب المعتمد" style="padding:6px; font-size:12px;" />
+              </div>
+            </div>
+            <button type="button" class="btn btn-amber btn-sm" style="width:100%; font-weight:800;" onclick="saveAgentPaymentAccounts()">
+              💾 حفظ قنوات التحصيل وتحديث بوابات الموزعين
+            </button>
+          </div>
+
+          <!-- Incoming Distributor Payment Receipt Requests Inbox -->
+          <div id="paymentRequestsInboxCard" class="sub-card" style="padding:14px; border:1px solid rgba(56,189,248,0.3);">
+            <h4 style="margin:0 0 8px; color:var(--sky); font-size:14.5px;">📥 طلبات مفاتيح التفعيل الواردة بإيصالات الدفع</h4>
+            <div id="paymentRequestsContainer" style="max-height:360px; overflow-y:auto; display:flex; flex-direction:column; gap:10px;">
+              <div style="font-size:12px; color:var(--muted); padding:10px;">⏳ جاري تحميل طلبات الدفع...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Distributor Recruitment & Onboarding Cards (New) -->
       <div class="glass" style="border:1px solid rgba(16,185,129,0.35); margin-bottom:18px;">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
@@ -3270,7 +3372,8 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
         loadBroadcastCampaigns(),
         loadFinancialForecast('balanced'),
         loadDevStatus(),
-        loadSystemsRegistryUi()
+        loadSystemsRegistryUi(),
+        loadPaymentRequestsPanel()
       ]);
     }
 
@@ -3543,6 +3646,223 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
     load();
     loadOwnerChannelConfig();
 
+    /* ==================== PAYMENT ACCOUNTS & RECEIPT REQUESTS JS ==================== */
+    let paymentRequestsCache = [];
+
+    function escPayHtml(s) {
+      return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    async function loadPaymentRequestsPanel() {
+      try {
+        const [accRes, reqRes] = await Promise.all([
+          fetch('/api/agent/payment-accounts'),
+          fetch('/api/payment-requests')
+        ]);
+        const accJson = await accRes.json();
+        const reqJson = await reqRes.json();
+        if (accJson && accJson.ok && accJson.accounts) {
+          const a = accJson.accounts;
+          if (document.getElementById('paInstapay')) document.getElementById('paInstapay').value = a.instapay || '';
+          if (document.getElementById('paInstapayName')) document.getElementById('paInstapayName').value = a.instapayName || '';
+          if (document.getElementById('paVodafone')) document.getElementById('paVodafone').value = a.vodafoneCash || '';
+          if (document.getElementById('paBankName')) document.getElementById('paBankName').value = a.bankName || '';
+          if (document.getElementById('paBankAcc')) document.getElementById('paBankAcc').value = a.bankAccount || '';
+          if (document.getElementById('paCashNote')) document.getElementById('paCashNote').value = a.cashNote || '';
+        }
+        paymentRequestsCache = (reqJson && reqJson.ok && Array.isArray(reqJson.requests)) ? reqJson.requests : [];
+        populateManualPaymentDistSelect();
+        renderPaymentRequestsList();
+      } catch (e) {
+        console.error('Error loading payment panel:', e);
+      }
+    }
+
+    function populateManualPaymentDistSelect() {
+      const sel = document.getElementById('mprDistId');
+      if (!sel) return;
+      const list = Array.isArray(window.lastSummaryDistributors) ? window.lastSummaryDistributors : [];
+      if (!list.length) {
+        sel.innerHTML = '<option value="">— أضف موزعاً أولاً —</option>';
+      } else {
+        sel.innerHTML = list.map(d => `<option value="${escPayHtml(d.id)}">${escPayHtml(d.name)} (${escPayHtml(d.code)})</option>`).join('');
+      }
+    }
+
+    function toggleManualPaymentBox() {
+      const box = document.getElementById('manualPaymentReqBox');
+      if (!box) return;
+      populateManualPaymentDistSelect();
+      box.style.display = box.style.display === 'none' ? 'block' : 'none';
+    }
+
+    async function submitManualPaymentReq() {
+      const distributorId = document.getElementById('mprDistId')?.value || '';
+      const customerName = (document.getElementById('mprCustomerName')?.value || '').trim();
+      const tier = document.getElementById('mprTier')?.value || 'professional';
+      const paymentChannel = document.getElementById('mprChannel')?.value || 'إنستاباي (InstaPay)';
+      const paymentRef = (document.getElementById('mprRef')?.value || '').trim();
+      if (!distributorId) return alert('اختر الموزع أولاً.');
+      if (!customerName) return alert('أدخل اسم العميل / المنشأة.');
+      try {
+        const r = await fetch('/api/payment-requests', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ distributorId, customerName, tier, paymentChannel, paymentRef })
+        });
+        const j = await r.json();
+        if (!j.ok) return alert('❌ تعذر التسجيل: ' + (j.error || 'خطأ'));
+        document.getElementById('mprCustomerName').value = '';
+        document.getElementById('mprRef').value = '';
+        document.getElementById('manualPaymentReqBox').style.display = 'none';
+        await loadPaymentRequestsPanel();
+      } catch (e) {
+        alert('❌ خطأ: ' + e.message);
+      }
+    }
+
+    async function saveAgentPaymentAccounts() {
+      const payload = {
+        instapay: (document.getElementById('paInstapay')?.value || '').trim(),
+        instapayName: (document.getElementById('paInstapayName')?.value || '').trim(),
+        vodafoneCash: (document.getElementById('paVodafone')?.value || '').trim(),
+        bankName: (document.getElementById('paBankName')?.value || '').trim(),
+        bankAccount: (document.getElementById('paBankAcc')?.value || '').trim(),
+        cashNote: (document.getElementById('paCashNote')?.value || '').trim()
+      };
+      try {
+        const r = await fetch('/api/agent/payment-accounts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const j = await r.json();
+        if (j.ok) {
+          alert('✅ تم حفظ حسابات استلام الدفع وتحديث ملفات بوابات الموزعين بنجاح.');
+        } else {
+          alert('❌ تعذر الحفظ: ' + (j.error || 'خطأ'));
+        }
+      } catch (e) {
+        alert('❌ خطأ: ' + e.message);
+      }
+    }
+
+    function renderPaymentRequestsList() {
+      const cont = document.getElementById('paymentRequestsContainer');
+      const badge = document.getElementById('pendingPaymentBadge');
+      if (!cont) return;
+      const pendingCount = paymentRequestsCache.filter(r => r.status === 'pending').length;
+      if (badge) {
+        badge.innerText = pendingCount + (pendingCount === 1 ? ' طلب بالانتظار' : ' طلبات بالانتظار');
+        badge.className = 'badge ' + (pendingCount > 0 ? 'b-amber' : 'b-emerald');
+      }
+      if (!paymentRequestsCache.length) {
+        cont.innerHTML = '<div style="font-size:12px; color:var(--muted); padding:10px;">لا توجد طلبات تأكيد دفع واردة حالياً في هذه المنظومة.</div>';
+        return;
+      }
+      const sysPrefix = (window.ACTIVE_SYSTEM_INFO && window.ACTIVE_SYSTEM_INFO.licensePrefix) ? window.ACTIVE_SYSTEM_INFO.licensePrefix : 'AGT2';
+      cont.innerHTML = paymentRequestsCache.map((r, idx) => {
+        const tierShort = String(r.tier || 'PRO').toUpperCase().slice(0, 3);
+        const suggestedKey = sysPrefix + '-' + tierShort + '-' + (101 + idx);
+        const statusHtml = r.status === 'approved'
+          ? '<span class="badge b-emerald">✅ مؤكد الدفع</span>'
+          : (r.status === 'rejected'
+            ? '<span class="badge b-rose">❌ مرفوض</span>'
+            : '<span class="badge b-amber">⏳ بانتظار المراجعة</span>');
+        const hasImg = r.receipt_data_url && r.receipt_data_url.startsWith('data:image/');
+        const receiptPreviewHtml = hasImg
+          ? `<img src="${escPayHtml(r.receipt_data_url)}" alt="ريسيت" style="width:72px; height:72px; object-fit:cover; border-radius:8px; border:1px solid var(--sky); cursor:pointer;" onclick="openLightbox(this.src, 'إيصال دفع: ${escPayHtml(r.req_code)}', '${escPayHtml(r.distributor_name)} — ${escPayHtml(r.customer_name)}', '${escPayHtml(r.payment_channel)}')" />`
+          : (r.receipt_data_url ? '<span class="badge b-sky" style="font-size:10px;">📄 مرفق PDF</span>' : '<span class="badge" style="font-size:10px; opacity:0.7;">بدون صورة مرفقة</span>');
+
+        return `<div class="sub-card" style="padding:10px; border:1px solid ${r.status === 'pending' ? 'rgba(251,191,36,0.45)' : 'var(--border)'}; margin:0;">
+          <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+            <div style="flex:1; min-width:200px;">
+              <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:4px;">
+                <strong style="color:var(--sky); font-family:monospace;" dir="ltr">${escPayHtml(r.req_code)}</strong>
+                ${statusHtml}
+                <span style="font-size:11px; color:var(--muted);">${escPayHtml(r.distributor_name)} (${escPayHtml(r.distributor_code)})</span>
+              </div>
+              <div style="font-size:12px; color:var(--text);">
+                العميل: <strong>${escPayHtml(r.customer_name)}</strong> · الصافي للوكيل: <strong style="color:var(--emerald);">${fmt(r.agent_net_amount)}</strong>
+              </div>
+              <div style="font-size:11.5px; color:var(--muted); margin-top:2px;">
+                الوسيلة: ${escPayHtml(r.payment_channel)}${r.payment_ref ? ' · المرجع: <code dir="ltr">' + escPayHtml(r.payment_ref) + '</code>' : ''}
+              </div>
+              ${r.status === 'approved' ? `<div style="margin-top:6px; font-size:12px; color:var(--emerald);">🔑 المفتاح الصادر: <strong style="font-family:monospace;" dir="ltr">${escPayHtml(r.activation_key)}</strong></div>` : ''}
+              ${r.status === 'rejected' && r.notes ? `<div style="margin-top:4px; font-size:11.5px; color:var(--rose);">سبب الرفض: ${escPayHtml(r.notes)}</div>` : ''}
+            </div>
+            <div style="display:flex; align-items:center;">${receiptPreviewHtml}</div>
+          </div>
+          ${r.status === 'pending' ? `
+            <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; padding-top:8px; border-top:1px dashed var(--border);">
+              <input id="prKey_${escPayHtml(r.id)}" value="${escPayHtml(suggestedKey)}" dir="ltr" style="flex:1; min-width:140px; padding:5px 8px; font-size:12px;" placeholder="مفتاح التفعيل..." />
+              <button type="button" class="btn btn-sm btn-emerald" onclick="approvePaymentRequest('${escPayHtml(r.id)}')">✔ تأكيد وإصدار المفتاح</button>
+              <button type="button" class="btn btn-sm btn-rose" onclick="rejectPaymentRequest('${escPayHtml(r.id)}')">✕ رفض</button>
+            </div>
+          ` : (r.status === 'approved' ? `
+            <div style="margin-top:8px; display:flex; gap:6px; flex-wrap:wrap;">
+              <button type="button" class="btn btn-sm btn-sky" onclick="sendApprovedKeyWhatsApp('${escPayHtml(r.id)}')">📲 إرسال المفتاح واتساب للموزع</button>
+            </div>
+          ` : '')}
+        </div>`;
+      }).join('');
+    }
+
+    async function approvePaymentRequest(id) {
+      const keyInput = document.getElementById('prKey_' + id);
+      const activationKey = keyInput ? keyInput.value.trim() : '';
+      try {
+        const r = await fetch('/api/payment-requests/' + encodeURIComponent(id) + '/approve', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ activationKey })
+        });
+        const j = await r.json();
+        if (!j.ok) return alert('❌ تعذر التأكيد: ' + (j.error || 'خطأ'));
+        await load();
+        if (confirm('✅ تم تأكيد استلام الدفع وإصدار المفتاح (' + j.activationKey + ') وتوثيق الصفقة (' + j.dealNo + ').\nهل تريد فتح واتساب لإرسال المفتاح للموزع الآن؟')) {
+          openWaForRequest(j.request, j.waText);
+        }
+      } catch (e) {
+        alert('❌ خطأ: ' + e.message);
+      }
+    }
+
+    async function rejectPaymentRequest(id) {
+      const reason = prompt('اكتب سبب رفض الإيصال للموزع (أو اتركه افتراضياً):', 'لم يتم العثور على التحويل أو الإيصال غير واضح');
+      if (reason === null) return;
+      try {
+        const r = await fetch('/api/payment-requests/' + encodeURIComponent(id) + '/reject', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reason })
+        });
+        const j = await r.json();
+        if (!j.ok) return alert('❌ تعذر الرفض: ' + (j.error || 'خطأ'));
+        await loadPaymentRequestsPanel();
+      } catch (e) {
+        alert('❌ خطأ: ' + e.message);
+      }
+    }
+
+    function openWaForRequest(reqObj, customText) {
+      const digits = String((reqObj && reqObj.distributor_phone) || '').replace(/[^0-9]/g, '');
+      const waPhone = digits.startsWith('0') ? '2' + digits : digits;
+      const text = customText || ('✅ تم تأكيد الدفع لطلب ' + reqObj.req_code + ' وإصدار مفتاح التفعيل: ' + reqObj.activation_key + ' للعميل: ' + reqObj.customer_name);
+      const url = waPhone ? ('https://wa.me/' + waPhone + '?text=' + encodeURIComponent(text)) : ('https://api.whatsapp.com/send?text=' + encodeURIComponent(text));
+      window.open(url, '_blank');
+    }
+
+    function sendApprovedKeyWhatsApp(id) {
+      const reqObj = paymentRequestsCache.find(x => x.id === id);
+      if (!reqObj) return;
+      openWaForRequest(reqObj);
+    }
+
     /* ==================== MULTI-SYSTEM & CLEAN RESELLER EDITION JS ==================== */
     let systemsPresetsCache = [];
 
@@ -3667,9 +3987,11 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
 
     async function buildAndExportResellerEdition() {
       const buyerAgentPhone = (document.getElementById('rsAgentPhone')?.value || '01000000000').trim();
-      const buyerAgentTitleAr = (document.getElementById('rsAgentTitle')?.value || 'وكيل منظومة كالكس المعتمد').trim();
+      const buyerAgentTitleAr = (document.getElementById('rsAgentTitle')?.value || 'وكيل المنظومة المعتمد').trim();
+      const defaultSystemId = (document.getElementById('rsDefaultSystem')?.value || 'universal_agent').trim();
       const includeMediaAssets = Boolean(document.getElementById('rsIncludeMedia')?.checked);
       const presets = [];
+      if (document.getElementById('rsAddMedical')?.checked) presets.push('qalix_medical');
       if (document.getElementById('rsAddPharma')?.checked) presets.push('qalix_pharmacy');
       if (document.getElementById('rsAddPos')?.checked) presets.push('qalix_pos');
       if (document.getElementById('rsAddErp')?.checked) presets.push('qalix_erp');
@@ -3685,6 +4007,7 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
           body: JSON.stringify({
             buyerAgentPhone,
             buyerAgentTitleAr,
+            defaultSystemId,
             includeMediaAssets,
             extraSystemPresets: presets
           })
@@ -3823,9 +4146,10 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
       </div>
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
         <div style="grid-column:1 / -1;">
-          <label style="font-size:12px; color:var(--muted);">اختر قالب منظومة كالكس جاهز (أو خصص من الصفر):</label>
+          <label style="font-size:12px; color:var(--muted);">اختر قالب منظومة جاهز (عام أو من منظومات كالكس، أو خصص من الصفر):</label>
           <select id="msPreset" onchange="applySystemPresetForm(this.value)" style="padding:7px; font-size:12.5px;">
             <option value="">— منظومة مخصصة بالكامل —</option>
+            <option value="universal_agent">🌐 منظومة إدارة الوكلاء والموزعين العامة لبيع أي منتج/خدمة (AGT2)</option>
             <option value="qalix_medical">🏥 منظومة كالكس ميديكال الطبية (QLX2)</option>
             <option value="qalix_pharmacy">💊 منظومة كالكس فارما للصيدليات (QPH2)</option>
             <option value="qalix_pos">🛒 منظومة كالكس كاشير ونقاط البيع (QPS2)</option>
@@ -3893,11 +4217,19 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
         </div>
         <div>
           <label style="font-size:12px; color:var(--muted);">الصفة التجارية الظاهرة للوكيل:</label>
-          <input id="rsAgentTitle" value="وكيل منظومة كالكس المعتمد" style="padding:6px; font-size:12px;" />
+          <input id="rsAgentTitle" value="وكيل المنظومة المعتمد" style="padding:6px; font-size:12px;" />
+        </div>
+        <div style="grid-column:1 / -1;">
+          <label style="font-size:12px; color:var(--muted);">القالب الافتراضي الرئيسي للنسخة المصدّرة:</label>
+          <select id="rsDefaultSystem" style="padding:6px; font-size:12px;">
+            <option value="universal_agent" selected>🌐 اللوحة العامة لإدارة الوكلاء والموزعين (لبيع أي منتج أو خدمة — AGT2)</option>
+            <option value="qalix_platform">🏢 نسخة مخصصة لوكلاء منظومة كالكس (QLXP)</option>
+          </select>
         </div>
       </div>
       <div class="sub-card" style="padding:10px; margin-bottom:12px; font-size:12px;">
-        <div style="font-weight:700; color:var(--sky); margin-bottom:6px;">قوالب منظومات إضافية تُجهّز مصفرة مع النسخة (اختياري):</div>
+        <div style="font-weight:700; color:var(--sky); margin-bottom:6px;">قوالب منظومات إضافية تُجهّز مصفرة ومعزولة مع النسخة (اختياري):</div>
+        <label style="display:inline-flex; align-items:center; gap:5px; margin-left:12px; cursor:pointer;"><input type="checkbox" id="rsAddMedical" /> كالكس الطبية (QLX2)</label>
         <label style="display:inline-flex; align-items:center; gap:5px; margin-left:12px; cursor:pointer;"><input type="checkbox" id="rsAddPharma" /> صيدليات (QPH2)</label>
         <label style="display:inline-flex; align-items:center; gap:5px; margin-left:12px; cursor:pointer;"><input type="checkbox" id="rsAddPos" /> كاشير POS (QPS2)</label>
         <label style="display:inline-flex; align-items:center; gap:5px; cursor:pointer;"><input type="checkbox" id="rsAddErp" /> شركات ERP (QER2)</label>

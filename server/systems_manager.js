@@ -31,6 +31,18 @@ const DEFAULT_AGENT_INFO = {
 };
 
 const SYSTEM_PRESETS = {
+  universal_agent: {
+    id: 'universal_agent',
+    nameAr: 'منظومة إدارة الوكيل والموزعين الشاملة (عامة لأي نشاط)',
+    subtitleAr: 'منصة مستقلة لإدارة الموزعين والمبيعات والعمولات والإيصالات — لبيع أي منتج أو برنامج أو خدمة',
+    projectName: 'Universal Agent & Distributors Platform',
+    licensePrefix: 'AGT2',
+    pricing: {
+      basic:        { id: 'basic',        nameAr: 'الباقة الأساسية (الفئة الأولى)',      price: 3000,  maxDoctors: 2,  maxUsers: 4 },
+      professional: { id: 'professional', nameAr: 'الباقة المتقدمة (الفئة المتوسطة)',    price: 6000,  maxDoctors: 5,  maxUsers: 12 },
+      enterprise:   { id: 'enterprise',   nameAr: 'الباقة الاحترافية / المؤسسات',        price: 12000, maxDoctors: 99, maxUsers: 99 }
+    }
+  },
   qalix_platform: {
     id: 'qalix_platform',
     nameAr: 'منصة كالكس الشاملة (متعددة المنظومات)',
@@ -216,6 +228,33 @@ function initSystemSchema(targetDb) {
       key TEXT PRIMARY KEY,
       value TEXT NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS payment_requests (
+      id TEXT PRIMARY KEY,
+      req_code TEXT UNIQUE NOT NULL,
+      distributor_id TEXT NOT NULL,
+      customer_name TEXT NOT NULL,
+      contact_name TEXT DEFAULT '',
+      customer_phone TEXT DEFAULT '',
+      city TEXT DEFAULT '',
+      tier TEXT NOT NULL DEFAULT 'professional',
+      fixed_price REAL NOT NULL DEFAULT 0,
+      commission_rate REAL NOT NULL DEFAULT 0,
+      distributor_commission REAL NOT NULL DEFAULT 0,
+      agent_net_amount REAL NOT NULL DEFAULT 0,
+      hardware_or_ref TEXT DEFAULT '',
+      payment_channel TEXT NOT NULL,
+      payment_ref TEXT DEFAULT '',
+      receipt_filename TEXT DEFAULT '',
+      receipt_data_url TEXT DEFAULT '',
+      status TEXT NOT NULL DEFAULT 'pending',
+      activation_key TEXT DEFAULT '',
+      deal_id TEXT DEFAULT '',
+      notes TEXT DEFAULT '',
+      created_at TEXT NOT NULL,
+      reviewed_at TEXT DEFAULT '',
+      FOREIGN KEY (distributor_id) REFERENCES distributors(id)
+    );
   `);
 
   initializeTerritoryTables(targetDb);
@@ -236,13 +275,13 @@ function seedGenericSystemProposals(targetDb, sysMeta) {
   if (propCount > 0) return;
   const now = new Date().toISOString();
   const ins = targetDb.prepare('INSERT INTO excellence_proposals(id, pillar, title, description, impact, priority, status, created_at) VALUES(?, ?, ?, ?, ?, ?, ?, ?)');
-  const phone = sysMeta?.agentInfo?.phone || DEFAULT_AGENT_INFO.phone;
-  const prefix = sysMeta?.licensePrefix || 'QLX2';
-  const sysName = sysMeta?.nameAr || 'منظومة كالكس';
+  const phone = sysMeta?.agentInfo?.phone || '01000000000';
+  const prefix = sysMeta?.licensePrefix || 'AGT2';
+  const sysName = sysMeta?.nameAr || 'منظومة إدارة الوكيل والموزعين';
   const genericProps = [
-    { id: 'gen_01', pillar: 'presentation', title: `سيناريو العرض الميداني في 5 دقائق لـ ${sysName}`, description: `عرض مزايا العمل 100% أوفلاين بدون إنترنت، سرعة البحث والفواتير، والتشفير الكامل على جهاز العميل مقارنة بالأنظمة السحابية ذات الاشتراك الشهري.`, impact: 'يرفع نسبة الإغلاق فوق 75%', priority: 'أولوية قصوى', status: 'معتمد للتنفيذ' },
-    { id: 'gen_02', pillar: 'sales', title: 'استراتيجية التجربة الميدانية ببيانات العميل الفعلية لمدة 14 يوماً', description: 'تهيئة النسخة التجريبية ببيانات العميل الأساسية خلال 5 دقائق لتبدأ المنشأة بالعمل الفعلي من اليوم الأول.', impact: 'تحويل سريع للتعاقد الدائم', priority: 'أولوية قصوى', status: 'معتمد ومطبق' },
-    { id: 'gen_03', pillar: 'management', title: `القاعدة الحديدية: إصدار مفتاح التفعيل ${prefix} مقابل صافي التوريد`, description: `لا يصدر مفتاح التفعيل الدائم (${prefix}) إلا بعد استلام الوكيل (${phone}) لبصمة الجهاز HWID وصافي المبلغ المستحق وتوثيقه في سلسلة التدقيق الجنائي.`, impact: 'صفر مديونيات أو تسريب', priority: 'أولوية قصوى', status: 'مفعل برمجياً' }
+    { id: 'gen_01', pillar: 'presentation', title: `سيناريو العرض الميداني السريع لـ ${sysName}`, description: `إبراز القيمة التنافسية للعميل والموزع مع عمل اللوحة 100% أوفلاين بدون اشتراكات قسرية وتوثيق كامل للمبيعات.`, impact: 'يرفع نسبة الإغلاق فوق 75%', priority: 'أولوية قصوى', status: 'معتمد للتنفيذ' },
+    { id: 'gen_02', pillar: 'sales', title: 'استراتيجية العرض التجريبي ببيانات العميل الفعلية', description: 'تجهيز عرض مبدئي أو نسخة تجربة سريعة ببيانات العميل ليلمس العائد الفوري خلال دقائق.', impact: 'تحويل سريع للتعاقد الدائم', priority: 'أولوية قصوى', status: 'معتمد ومطبق' },
+    { id: 'gen_03', pillar: 'management', title: `حوكمة التسليم: التفعيل/التوريد (${prefix}) مقابل تأكيد ريسيت الدفع`, description: `لا يصدر كود التفعيل أو إذن التسليم النهائي (${prefix}) إلا بعد إرسال الموزع لريسيت الدفع ومراجعته وتأكيد الوكيل (${phone}) لوصول صافي المبلغ.`, impact: 'صفر مديونيات أو تسريب', priority: 'أولوية قصوى', status: 'مفعل برمجياً' }
   ];
   for (const p of genericProps) {
     ins.run(p.id, p.pillar, p.title, p.description, p.impact, p.priority, p.status, now);
