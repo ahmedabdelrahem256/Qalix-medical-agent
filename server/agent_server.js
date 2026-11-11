@@ -16,7 +16,7 @@ const { getLocalNetworkInfo } = require('./network_diagnostics');
 const { generateDistributorContractHtml, generateClinicHandoverHtml } = require('./contract_generator');
 const { generateDistributorStatementHtml } = require('./financial_ledger');
 const { generateQuotationData, generateQuotationHtml } = require('./quotation_engine');
-const { getAllObjections, getObjectionById } = require('./objection_playbook');
+const { getAllObjections, getObjectionById, renderObjectionsPlaybookA4 } = require('./objection_playbook');
 const { calculateDealTimeline, RETENTION_MILESTONES } = require('./after_sales_tracker');
 const { createDatabaseSnapshot, listDatabaseSnapshots, exportFullSystemJson } = require('./backup_manager');
 const { getAnalyticsPayload } = require('./visual_analytics');
@@ -802,6 +802,15 @@ const server = http.createServer(async (req, res) => {
     /* ---------------- Doctor Objections Playbook (Phase 5) ---------------- */
     if (req.method === 'GET' && pathname === '/api/playbook/objections') {
       return sendJson(res, 200, { ok: true, playbook: getAllObjections() });
+    }
+
+    if (req.method === 'GET' && pathname === '/api/playbook/objections/a4') {
+      return sendHtmlWithOptionalDownload(
+        res,
+        renderObjectionsPlaybookA4(AGENT_INFO),
+        'Qalix-8-Objections-Playbook.html',
+        url.searchParams.get('download') === '1'
+      );
     }
 
     /* ---------------- After-Sales Success & Retention Tracker (Phase 5) ---------------- */

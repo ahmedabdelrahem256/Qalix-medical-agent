@@ -79,8 +79,80 @@ function getObjectionById(id) {
   return OBJECTION_PLAYBOOK.find(o => o.id === id) || null;
 }
 
+function renderObjectionsPlaybookA4(agentInfo = {}) {
+  const phone = agentInfo.phone || '01122166076';
+  const cardsHtml = OBJECTION_PLAYBOOK.map((o, idx) => `
+    <div class="obj-card">
+      <div class="obj-head">
+        <div>
+          <span class="num">#${idx + 1}</span>
+          <strong>«${o.objection}»</strong>
+        </div>
+        <span class="tag">${o.tag}</span>
+      </div>
+      <div class="row ans"><strong>💬 الرد المفحم:</strong> ${o.killerResponse}</div>
+      <div class="row act"><strong>🎯 الحركة الميدانية:</strong> ${o.actionStep}</div>
+      <div class="row wa"><strong>📲 نص واتساب جاهز:</strong> «${o.suggestedWaSnippet}»</div>
+    </div>
+  `).join('');
+
+  return `<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <title>دليل الرد على 8 اعتراضات ميدانية وحلولها (A4) | Qalix Medical</title>
+  <style>
+    @page { size: A4; margin: 12mm; }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 20px; background: #f1f5f9; color: #0f172a; font-family: 'Segoe UI', Tahoma, Arial, sans-serif; line-height: 1.55; }
+    .sheet { max-width: 820px; margin: 0 auto; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 14px; padding: 22px 26px; box-shadow: 0 12px 30px rgba(15,23,42,0.08); }
+    .toolbar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 10px 14px; margin-bottom: 16px; }
+    .btn { padding: 8px 14px; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; font-family: inherit; font-size: 12.5px; }
+    .btn-print { background: #0284c7; color: #fff; }
+    .hdr { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #f59e0b; padding-bottom: 12px; margin-bottom: 16px; gap: 12px; }
+    .hdr h1 { margin: 0 0 4px; font-size: 20px; color: #b45309; }
+    .hdr p { margin: 0; font-size: 12.5px; color: #475569; }
+    .contact { text-align: left; background: #fffbeb; border: 1px solid #fcd34d; border-radius: 10px; padding: 8px 12px; font-size: 12px; }
+    .obj-card { border: 1px solid #e2e8f0; border-right: 4px solid #f59e0b; border-radius: 10px; padding: 10px 14px; margin-bottom: 10px; background: #f8fafc; break-inside: avoid; }
+    .obj-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 13.5px; color: #0f172a; }
+    .num { display: inline-block; background: #f59e0b; color: #fff; font-weight: 800; border-radius: 6px; padding: 1px 7px; font-size: 11.5px; margin-left: 6px; }
+    .tag { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+    .row { font-size: 12px; margin-top: 4px; padding: 5px 8px; border-radius: 6px; }
+    .ans { background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; }
+    .act { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; }
+    .wa { background: #ffffff; border: 1px dashed #94a3b8; color: #334155; }
+    @media print {
+      body { background: #fff; padding: 0; }
+      .sheet { box-shadow: none; border: none; max-width: 100%; padding: 0; }
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="sheet">
+    <div class="toolbar no-print">
+      <span style="font-size:12.5px; font-weight:700; color:#334155;">🛡️ دليل الرد على اعتراضات الأطباء الميدانية (8 اعتراضات وحلولها — A4)</span>
+      <button onclick="window.print()" class="btn btn-print">🖨️ طباعة / حفظ PDF</button>
+    </div>
+    <div class="hdr">
+      <div>
+        <h1>🛡️ دليل التعامل مع 8 اعتراضات ميدانية للأطباء وحلولها</h1>
+        <p>كتيب الجيب الرسمي للموزع المعتمد لإغلاق الصفقات الميدانية لمنظومة كالكس الطبية (Qalix Medical)</p>
+      </div>
+      <div class="contact">
+        <div>وكيل المنظومة المعتمد</div>
+        <strong dir="ltr" style="font-size:15px; color:#b45309;">${phone}</strong>
+      </div>
+    </div>
+    ${cardsHtml}
+  </div>
+</body>
+</html>`;
+}
+
 module.exports = {
   OBJECTION_PLAYBOOK,
   getAllObjections,
-  getObjectionById
+  getObjectionById,
+  renderObjectionsPlaybookA4
 };

@@ -279,13 +279,18 @@ function req(method, urlPath, body) {
 
     // 22. Field Objections Playbook with Killer Responses & WA Snippets (Phase 5)
     const objRes = await req('GET', '/api/playbook/objections');
-    check('22. التحقق من كتيب الرد على اعتراضات الأطباء (8 سيناريوهات ميدانية ورسائل واتساب)',
+    const objA4Res = await req('GET', '/api/playbook/objections/a4');
+    check('22. التحقق من كتيب الرد على اعتراضات الأطباء (8 سيناريوهات ميدانية ورسائل واتساب + A4)',
       objRes.status === 200 &&
       objRes.body.ok === true &&
       Array.isArray(objRes.body.playbook) &&
       objRes.body.playbook.length === 8 &&
       objRes.body.playbook.some(o => o.id === 'price_too_high') &&
-      objRes.body.playbook.some(o => o.id === 'internet_issues')
+      objRes.body.playbook.some(o => o.id === 'internet_issues') &&
+      objA4Res.status === 200 &&
+      typeof objA4Res.body === 'string' &&
+      objA4Res.body.includes('8 اعتراضات ميدانية للأطباء') &&
+      objA4Res.body.includes('01122166076')
     );
 
     // 23. After-Sales Retention Milestones & Customer Success Timeline (Phase 5)
