@@ -9,21 +9,21 @@ const SCENARIOS = {
     id: 'conservative',
     nameAr: 'السيناريو المتحفظ (الحد الأدنى)',
     monthlyStandardDeals: 5,
-    avgDistCommissionRate: 20,
+    avgDistCommissionRate: 27,
     desc: 'معدل بيع 5 عيادات شهرياً عبر 2 موزعين نشطين فقط.'
   },
   balanced: {
     id: 'balanced',
     nameAr: 'السيناريو المتوازن (المستهدف التشغيلي الرسمي)',
     monthlyStandardDeals: 12,
-    avgDistCommissionRate: 22,
+    avgDistCommissionRate: 29,
     desc: 'معدل بيع 12 عيادة شهرياً بتغطية أسيوط، القاهرة، والجيزة، والدلتا.'
   },
   aggressive: {
     id: 'aggressive',
     nameAr: 'السيناريو التوسعي (الريادة والانتشار الشامل)',
     monthlyStandardDeals: 25,
-    avgDistCommissionRate: 25,
+    avgDistCommissionRate: 32,
     desc: 'معدل بيع 25 عيادة شهرياً بتغطية محافظات الصعيد والدلتا والقناة.'
   }
 };

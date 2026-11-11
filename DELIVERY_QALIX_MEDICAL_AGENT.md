@@ -116,7 +116,7 @@
    - قوالب جاهزة للتخصصات الـ 5 (أسنان، أطفال، قلب وباطنة، نساء، عيون).
    - مسارات API: `GET /api/rx-designer/templates`، `POST /api/rx-designer/render`، و `GET /api/rx-designer/preview`.
 2. **محرك شرائح تميز الموزعين والامتياز الإقليمي ([`server/commission_hierarchy.js`](file:///G:/Qalix%20medical%20agent/server/commission_hierarchy.js)):**
-   - 4 شرائح تصاعدية (Bronze 20%، Silver 22%، Gold 25%، و Platinum Franchise 28%).
+   - 4 شرائح تصاعدية (Bronze 27%، Silver 29%، Gold 32%، و Platinum Franchise 35%).
    - حساب آلي للترقيات، المبيعات المحققة، وعدد الصفقات المتبقية للشريحة التالية.
    - إصدار **خطاب ترقية واعتماد شريحة التميز التجاري A4** موثق برمز التحقق وبصمة الوكيل.
    - مسارات API: `GET /api/hierarchy/tiers`، `GET /api/hierarchy/distributor/:id`، و `GET /api/hierarchy/distributor/:id/letter`.
@@ -192,7 +192,7 @@
 ### 3. فهرس ملفات المشروع المعتمدة (`G:\Qalix medical agent`)
 | المسار | الوصف الوظيفي | الحالة |
 | :--- | :--- | :--- |
-| [`DELIVERY_QALIX_MEDICAL_AGENT.md`](file:///G:/Qalix%20medical%20agent/DELIVERY_QALIX_MEDICAL_AGENT.md) | وثيقة التسليم الرسمية المحدثة للمشروع | **محدث (المرحلة 9)** |
+| [`DELIVERY_QALIX_MEDICAL_AGENT.md`](file:///G:/Qalix%20medical%20agent/DELIVERY_QALIX_MEDICAL_AGENT.md) | وثيقة التسليم الرسمية المحدثة للمشروع (عمولات 27%–35%) | **محدث** |
 | [`START_QALIX_MEDICAL_AGENT.bat`](file:///G:/Qalix%20medical%20agent/START_QALIX_MEDICAL_AGENT.bat) | مشغل ويندوز المباشر من المسار `G:\Qalix medical agent` | **مكتمل** |
 | [`DEPLOY_TO_G_DRIVE.ps1`](file:///G:/Qalix%20medical%20agent/DEPLOY_TO_G_DRIVE.ps1) | سكربت النشر والبناء التلقائي في `G:\` | **مكتمل** |
 | [`server/agent_server.js`](file:///G:/Qalix%20medical%20agent/server/agent_server.js) | خادم الوكيل والموزعين والـ REST API وخدمة كافة الملفات | **مكتمل ومختبر 100%** |

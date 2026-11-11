@@ -14,8 +14,8 @@ const COMMISSION_TIERS = {
     badgeColor: '#cd7f32',
     minDeals: 0,
     maxDeals: 4,
-    commissionRate: 20,
-    perks: ['بوابة موزع مستقلة كاملة', 'الأسعار الرسمية الثابتة', 'دعم فني مباشر على مدار الساعة']
+    commissionRate: 27,
+    perks: ['عمولة افتتاحية 27%', 'بوابة موزع مستقلة كاملة', 'الأسعار الرسمية الثابتة', 'دعم فني مباشر على مدار الساعة']
   },
   silver: {
     id: 'silver',
@@ -23,8 +23,8 @@ const COMMISSION_TIERS = {
     badgeColor: '#94a3b8',
     minDeals: 5,
     maxDeals: 9,
-    commissionRate: 22,
-    perks: ['عمولة ترقية 22% (+2%)', 'حزمة مطبوعات تسويقية مجانية A4', 'شهادة اعتماد وتوصية رسمية']
+    commissionRate: 29,
+    perks: ['عمولة ترقية 29% (+2% إضافية)', 'حزمة مطبوعات تسويقية مجانية A4', 'شهادة اعتماد وتوصية رسمية']
   },
   gold: {
     id: 'gold',
@@ -32,8 +32,8 @@ const COMMISSION_TIERS = {
     badgeColor: '#f59e0b',
     minDeals: 10,
     maxDeals: 19,
-    commissionRate: 25,
-    perks: ['عمولة مميزة 25% (+5%)', 'أولوية توجيه صفقات المحافظة الواردة للوكيل', 'درع التميز السنوي']
+    commissionRate: 32,
+    perks: ['عمولة مميزة 32% (+5% إضافية)', 'أولوية توجيه صفقات المحافظة الواردة للوكيل', 'درع التميز السنوي']
   },
   platinum: {
     id: 'platinum',
@@ -41,8 +41,8 @@ const COMMISSION_TIERS = {
     badgeColor: '#38bdf8',
     minDeals: 20,
     maxDeals: 9999,
-    commissionRate: 28,
-    perks: ['عمولة قصوى 28% (+8%)', 'حماية حصرية للنطاق الجغرافي', 'مكافأة سنوية إضافية على حجم المبيعات']
+    commissionRate: 35,
+    perks: ['عمولة قصوى 35% (+8% إضافية)', 'حماية حصرية للنطاق الجغرافي', 'مكافأة سنوية إضافية على حجم المبيعات']
   }
 };
 

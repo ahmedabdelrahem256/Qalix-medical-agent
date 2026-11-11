@@ -344,15 +344,15 @@
               <div>
                 <label style="font-size:12px; color:var(--muted);">الشريحة التعاقدية الافتتاحية:</label>
                 <select id="dTierSelect" onchange="document.getElementById('dRate').value = this.value">
-                  <option value="20" selected>شريحة برونزية قياسية (عمولة 20%)</option>
-                  <option value="22">شريحة فضية متقدمة (عمولة 22%)</option>
-                  <option value="25">شريحة ذهبية متميزة (عمولة 25%)</option>
-                  <option value="28">شريحة امتياز إقليمي بلاتينيوم (28%)</option>
+                  <option value="27" selected>شريحة برونزية قياسية (عمولة 27%)</option>
+                  <option value="29">شريحة فضية متقدمة (عمولة 29%)</option>
+                  <option value="32">شريحة ذهبية متميزة (عمولة 32%)</option>
+                  <option value="35">شريحة امتياز إقليمي بلاتينيوم (35%)</option>
                 </select>
               </div>
               <div>
                 <label style="font-size:12px; color:var(--muted);">نسبة عمولة الموزع من السعر الثابت (%):</label>
-                <input id="dRate" type="number" min="5" max="45" value="20" />
+                <input id="dRate" type="number" min="5" max="45" value="27" />
               </div>
             </div>
           </div>
@@ -925,9 +925,10 @@
             <div>
               <label style="font-size:11.5px; color:var(--muted);">نسبة عمولة الموزع الأساسية:</label>
               <select id="calcBaseRate" onchange="calcDistEarnings()">
-                <option value="20" selected>20% (الشريحة البرونزية)</option>
-                <option value="22">22% (الشريحة الفضية - 5+ صفقات)</option>
-                <option value="25">25% (الشريحة الذهبية - 10+ صفقات)</option>
+                <option value="27" selected>27% (الشريحة البرونزية)</option>
+                <option value="29">29% (الشريحة الفضية - 5+ صفقات)</option>
+                <option value="32">32% (الشريحة الذهبية - 10+ صفقات)</option>
+                <option value="35">35% (الشريحة البلاتينية - 20+ صفقة)</option>
               </select>
             </div>
           </div>
@@ -1276,7 +1277,7 @@
         <div class="glass">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
             <h2 style="margin:0; font-size:16px; color:var(--amber);">🎖️ سلم شرائح التميز ونظام الامتياز الإقليمي للموزعين</h2>
-            <span class="badge b-amber">عمولات من 20% لـ 28%</span>
+            <span class="badge b-amber">عمولات من 27% لـ 35%</span>
           </div>
           <p style="font-size:12px; color:var(--muted); margin-top:0;">
             نظام الترقية التلقائي لحجم مبيعات الموزعين المستقلين وحوافز الاستقرار وحماية النطاقات الجغرافية:

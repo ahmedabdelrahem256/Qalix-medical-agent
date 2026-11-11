@@ -19,8 +19,8 @@ function renderDistributorRecruitmentCardHtml(agentInfo) {
 هل لديك خبرة في التسويق الطبي أو التعامل مع العيادات والمراكز الطبية أو المعامل؟
 انضم الآن لشبكة الموزعين المعتمدين لأحدث منظومة إدارة عيادات في مصر (تعمل 100% أوفلاين بدون إنترنت):
 
-✅ عمولة فورية ومباشرة تبدأ من 20% وتصل إلى 28% من قيمة كل صفقة!
-✅ أرباح تصل إلى 3,700 ج.م على البيعة الواحدة (أو 21,250+ ج.م شهرياً عند 10 عيادات فقط).
+✅ عمولة فورية ومباشرة تبدأ من 27% وتصل إلى 35% من قيمة كل صفقة!
+✅ أرباح تصل إلى 6,475 ج.م على البيعة الواحدة (أو 27,200+ ج.م شهرياً عند 10 عيادات تخصصية فقط).
 ✅ سهولة إغلاق البيع بفضل النسخة التجريبية المجانية 14 يوماً وشاشة الانتظار بالنداء الصوتي.
 ✅ حماية كاملة للنطاق الجغرافي وحجز العيادات باسم الموزع لمدة 14 يوماً.
 ✅ أسعار رسمية موحدة وتفعيل مركزي موثق عبر الوكيل.
@@ -105,7 +105,7 @@ https://wa.me/${intlClean}`;
 
     <div class="grid-3">
       <div class="perk green">
-        <strong>💰 عمولات تبدأ من 20% وتصل لـ 28%</strong>
+        <strong>💰 عمولات تبدأ من 27% وتصل لـ 35%</strong>
         <span>عمولة فورية تُخصم مباشرة لصالحك من أول صفقة، وتزداد شريحتك تلقائياً كلما حققت مبيعات أعلى.</span>
       </div>
       <div class="perk">
@@ -124,42 +124,42 @@ https://wa.me/${intlClean}`;
         <tr>
           <th>الباقة الرسمية</th>
           <th>السعر الرسمي الموحد</th>
-          <th>عمولتك (شريحة 20%)</th>
-          <th>عمولتك (شريحة 22%)</th>
-          <th>عمولتك (شريحة 25%)</th>
+          <th>عمولتك (شريحة 27%)</th>
+          <th>عمولتك (شريحة 29%)</th>
+          <th>عمولتك (شريحة 32%)</th>
         </tr>
       </thead>
       <tbody>
         <tr>
           <td>الباقة الأساسية (عيادة طبيب فردي)</td>
           <td>4,500 ج.م</td>
-          <td style="color:#059669; font-weight:bold;">900 ج.م</td>
-          <td style="color:#0d9488; font-weight:bold;">990 ج.م</td>
-          <td style="color:#0284c7; font-weight:bold;">1,125 ج.م</td>
+          <td style="color:#059669; font-weight:bold;">1,215 ج.م</td>
+          <td style="color:#0d9488; font-weight:bold;">1,305 ج.م</td>
+          <td style="color:#0284c7; font-weight:bold;">1,440 ج.م</td>
         </tr>
         <tr style="background:#f0fdf4;">
           <td>الباقة التخصصية ⭐ الأكثر طلباً</td>
           <td><strong>8,500 ج.م</strong></td>
-          <td style="color:#059669; font-weight:bold;">1,700 ج.م</td>
-          <td style="color:#0d9488; font-weight:bold;">1,870 ج.م</td>
-          <td style="color:#0284c7; font-weight:bold;">2,125 ج.م</td>
+          <td style="color:#059669; font-weight:bold;">2,295 ج.م</td>
+          <td style="color:#0d9488; font-weight:bold;">2,465 ج.م</td>
+          <td style="color:#0284c7; font-weight:bold;">2,720 ج.م</td>
         </tr>
         <tr>
           <td>باقة المراكز الكبرى والفروع (Enterprise)</td>
           <td>18,500 ج.م</td>
-          <td style="color:#059669; font-weight:bold;">3,700 ج.م</td>
-          <td style="color:#0d9488; font-weight:bold;">4,070 ج.م</td>
-          <td style="color:#0284c7; font-weight:bold;">4,625 ج.م</td>
+          <td style="color:#059669; font-weight:bold;">4,995 ج.م</td>
+          <td style="color:#0d9488; font-weight:bold;">5,365 ج.م</td>
+          <td style="color:#0284c7; font-weight:bold;">5,920 ج.م</td>
         </tr>
       </tbody>
     </table>
 
     <div class="section-title">سلم ترقية شرائح تميز الموزعين</div>
     <div class="tier-grid">
-      <div class="tier-pill"><b>🥉 البرونزية</b><div class="pct">20%</div><small>البداية الفورية (1 - 4 صفقات)</small></div>
-      <div class="tier-pill"><b>🥈 الفضية</b><div class="pct" style="color:#0284c7;">22%</div><small>من 5 صفقات فأكثر</small></div>
-      <div class="tier-pill"><b>🥇 الذهبية</b><div class="pct" style="color:#d97706;">25%</div><small>من 10 صفقات + دعم إعلاني</small></div>
-      <div class="tier-pill"><b>💎 البلاتينية</b><div class="pct" style="color:#7c3aed;">28%</div><small>امتياز إقليمي (20+ صفقة)</small></div>
+      <div class="tier-pill"><b>🥉 البرونزية</b><div class="pct">27%</div><small>البداية الفورية (1 - 4 صفقات)</small></div>
+      <div class="tier-pill"><b>🥈 الفضية</b><div class="pct" style="color:#0284c7;">29%</div><small>من 5 صفقات فأكثر</small></div>
+      <div class="tier-pill"><b>🥇 الذهبية</b><div class="pct" style="color:#d97706;">32%</div><small>من 10 صفقات + دعم إعلاني</small></div>
+      <div class="tier-pill"><b>💎 البلاتينية</b><div class="pct" style="color:#7c3aed;">35%</div><small>امتياز إقليمي (20+ صفقة)</small></div>
     </div>
 
     <div class="req-box">
@@ -270,12 +270,12 @@ function renderDistributorOnboardingCardHtml(agentInfo) {
 
       <table>
         <thead>
-          <tr><th>الباقة الرسمية</th><th>السعر الرسمي الموحد</th><th>عمولتك الافتتاحية (20%)</th><th>عمولة الفضية (22%)</th><th>عمولة الذهبية (25%)</th></tr>
+          <tr><th>الباقة الرسمية</th><th>السعر الرسمي الموحد</th><th>عمولتك الافتتاحية (27%)</th><th>عمولة الفضية (29%)</th><th>عمولة الذهبية (32%)</th></tr>
         </thead>
         <tbody>
-          <tr><td>الباقة الأساسية (طبيب فردي)</td><td>4,500 ج.م</td><td style="color:#34d399; font-weight:bold;">900 ج.م</td><td>990 ج.م</td><td>1,125 ج.م</td></tr>
-          <tr><td>الباقة التخصصية (الأكثر مبيعاً)</td><td>8,500 ج.م</td><td style="color:#34d399; font-weight:bold;">1,700 ج.م</td><td>1,870 ج.م</td><td>2,125 ج.م</td></tr>
-          <tr><td>باقة المراكز الكبرى والفروع</td><td>18,500 ج.م</td><td style="color:#34d399; font-weight:bold;">3,700 ج.م</td><td>4,070 ج.م</td><td>4,625 ج.م</td></tr>
+          <tr><td>الباقة الأساسية (طبيب فردي)</td><td>4,500 ج.م</td><td style="color:#34d399; font-weight:bold;">1,215 ج.م</td><td>1,305 ج.م</td><td>1,440 ج.م</td></tr>
+          <tr><td>الباقة التخصصية (الأكثر مبيعاً)</td><td>8,500 ج.م</td><td style="color:#34d399; font-weight:bold;">2,295 ج.م</td><td>2,465 ج.م</td><td>2,720 ج.م</td></tr>
+          <tr><td>باقة المراكز الكبرى والفروع</td><td>18,500 ج.م</td><td style="color:#34d399; font-weight:bold;">4,995 ج.م</td><td>5,365 ج.م</td><td>5,920 ج.م</td></tr>
         </tbody>
       </table>
     </div>
@@ -312,9 +312,9 @@ function renderDistributorOnboardingCardHtml(agentInfo) {
         <div>
           <label>متوسط المبيعات المستهدف شهرياً:</label>
           <select id="appTarget">
-            <option value="2 إلى 4 عيادات شهرياً (الشريحة البرونزية 20%)">2 إلى 4 عيادات شهرياً (الشريحة البرونزية 20%)</option>
-            <option value="5 إلى 9 عيادات شهرياً (الشريحة الفضية 22%)">5 إلى 9 عيادات شهرياً (الشريحة الفضية 22%)</option>
-            <option value="10 عيادات فأكثر شهرياً (الشريحة الذهبية 25%)">10 عيادات فأكثر شهرياً (الشريحة الذهبية 25%)</option>
+            <option value="2 إلى 4 عيادات شهرياً (الشريحة البرونزية 27%)">2 إلى 4 عيادات شهرياً (الشريحة البرونزية 27%)</option>
+            <option value="5 إلى 9 عيادات شهرياً (الشريحة الفضية 29%)">5 إلى 9 عيادات شهرياً (الشريحة الفضية 29%)</option>
+            <option value="10 عيادات فأكثر شهرياً (الشريحة الذهبية 32%)">10 عيادات فأكثر شهرياً (الشريحة الذهبية 32%)</option>
           </select>
         </div>
         <div style="grid-column: 1 / -1;">

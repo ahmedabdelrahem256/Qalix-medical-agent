@@ -64,7 +64,7 @@ function calculateCommercialAlerts(db) {
           type: 'tier_upgrade_near',
           level: 'success',
           badge: 'فرصة ترقية موزع',
-          title: `الموزع "${d.name}" على بعد صفقة واحدة من الشريحة الفضية (22%)`,
+          title: `الموزع "${d.name}" على بعد صفقة واحدة من الشريحة الفضية (29%)`,
           message: `أنجز الموزع 4 صفقات مكتملة، وبإتمامه الصفقة القادمة سيرتقي تلقائياً للشريحة الفضية.`,
           actionUrl: '#pane-prescription',
           actionText: 'عرض ملف الترقية'
@@ -75,7 +75,7 @@ function calculateCommercialAlerts(db) {
           type: 'tier_upgrade_near',
           level: 'success',
           badge: 'فرصة ترقية ممتازة',
-          title: `الموزع "${d.name}" على بعد صفقة واحدة من الشريحة الذهبية (25%)`,
+          title: `الموزع "${d.name}" على بعد صفقة واحدة من الشريحة الذهبية (32%)`,
           message: `أنجز الموزع 9 صفقات، وصفقة واحدة تفصله عن الامتياز الإقليمي والنسبة الذهبية.`,
           actionUrl: '#pane-prescription',
           actionText: 'عرض ملف الترقية'

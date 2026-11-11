@@ -69,12 +69,12 @@ function req(method, urlPath, body) {
       b1.body.pricing.enterprise.assiutPrice === undefined
     );
 
-    // 3. Create Independent Distributor with 20% commission
+    // 3. Create Independent Distributor with 27% commission
     const newDist = await req('POST', '/api/distributors', {
       name: 'مكتب الصعيد للأنظمة الطبية',
       phone: '01099887766',
       governorate: 'أسيوط وسوهاج',
-      commissionRate: 20
+      commissionRate: 27
     });
     check('3. إضافة موزع مستقل جديد وتوليد كوده وبوابته المستقلة (.html)',
       newDist.status === 200 && newDist.body.distributor.code.startsWith('QMA-DIST-') && fs.existsSync(newDist.body.kitFile)
@@ -83,11 +83,11 @@ function req(method, urlPath, body) {
 
     // 4. Download Standalone Distributor Kit HTML
     const kitRes = await req('GET', `/api/distributors/${distId}/kit`);
-    check('4. تنزيل بوابة الموزع المستقلة والتأكد من تضمين الرقم 01122166076 ونسبة العمولة 20%',
-      kitRes.status === 200 && String(kitRes.body).includes('01122166076') && String(kitRes.body).includes('20%')
+    check('4. تنزيل بوابة الموزع المستقلة والتأكد من تضمين الرقم 01122166076 ونسبة العمولة 27%',
+      kitRes.status === 200 && String(kitRes.body).includes('01122166076') && String(kitRes.body).includes('27%')
     );
 
-    // 5. Register Deal at Standard Fixed Price (Professional = 8500 EGP, 20% = 1700 EGP, Agent Net = 6800 EGP)
+    // 5. Register Deal at Standard Fixed Price (Professional = 8500 EGP, 27% = 2295 EGP, Agent Net = 6205 EGP)
     const dl1 = await req('POST', '/api/deals', {
       distributorId: distId,
       clinicName: 'مركز النيل التخصصي',
@@ -99,15 +99,15 @@ function req(method, urlPath, body) {
       hardwareId: 'A1B2C3D4E5F60718293A4B5C'
     });
     const createdDeal = dl1.body.summary.deals[0];
-    check('5. تسجيل صفقة بالسعر الثابت (8,500 ج.م) وحساب نسبة الموزع (1,700 ج.م) وصافي الوكيل (6,800 ج.م)',
+    check('5. تسجيل صفقة بالسعر الثابت (8,500 ج.م) وحساب نسبة الموزع (2,295 ج.م) وصافي الوكيل (6,205 ج.م)',
       dl1.status === 200 &&
       createdDeal.fixed_price === 8500 &&
-      createdDeal.distributor_commission === 1700 &&
-      createdDeal.agent_net_amount === 6800 &&
+      createdDeal.distributor_commission === 2295 &&
+      createdDeal.agent_net_amount === 6205 &&
       createdDeal.status === 'pending'
     );
 
-    // 6. Verify Passing isAssiut: true Still Enforces Unified Basic Price (4500 EGP, 20% = 900 EGP, Agent Net = 3600 EGP)
+    // 6. Verify Passing isAssiut: true Still Enforces Unified Basic Price (4500 EGP, 27% = 1215 EGP, Agent Net = 3285 EGP)
     const dl2 = await req('POST', '/api/deals', {
       distributorId: distId,
       clinicName: 'عيادة الرحمة التخصصية بأسيوط',
@@ -119,11 +119,11 @@ function req(method, urlPath, body) {
       hardwareId: 'F1E2D3C4B5A69788695A4B3C'
     });
     const assiutDeal = dl2.body.summary.deals[0];
-    check('6. فرض السعر الرسمي الموحد للباقة الأساسية (4,500 ج.م) وحساب العمولة (900 ج.م) وصافي الوكيل (3,600 ج.م) حتى مع إرسال isAssiut=true',
+    check('6. فرض السعر الرسمي الموحد للباقة الأساسية (4,500 ج.م) وحساب العمولة (1,215 ج.م) وصافي الوكيل (3,285 ج.م) حتى مع إرسال isAssiut=true',
       dl2.status === 200 &&
       assiutDeal.fixed_price === 4500 &&
-      assiutDeal.distributor_commission === 900 &&
-      assiutDeal.agent_net_amount === 3600 &&
+      assiutDeal.distributor_commission === 1215 &&
+      assiutDeal.agent_net_amount === 3285 &&
       assiutDeal.is_assiut === 0
     );
 
@@ -251,7 +251,7 @@ function req(method, urlPath, body) {
       typeof ctrRes.body === 'string' &&
       ctrRes.body.includes('عقد تعيين موزع مستقل معتمد') &&
       ctrRes.body.includes('01122166076') &&
-      ctrRes.body.includes('20%')
+      ctrRes.body.includes('27%')
     );
 
     // 19. Generate Clinic Handover & Operation Sign-off Certificate (Phase 4)
@@ -427,7 +427,7 @@ function req(method, urlPath, body) {
       hierRes.body.ok === true &&
       hierRes.body.profile &&
       hierRes.body.profile.currentTier &&
-      hierRes.body.profile.currentTier.commissionRate >= 20
+      hierRes.body.profile.currentTier.commissionRate >= 27
     );
 
     // 34. Generate Official Distributor Tier Promotion Letter A4 (Phase 7)
@@ -630,12 +630,12 @@ function req(method, urlPath, body) {
 
     // 52. Distributor Recruitment Flyer (Marketing Card A4)
     const recruitFlyerRes = await req('GET', '/api/recruitment/flyer');
-    check('52. توليد بطاقة تسويق وطلب موزعين معتمدين (A4) بنسبة عمولة 20% إلى 28%',
+    check('52. توليد بطاقة تسويق وطلب موزعين معتمدين (A4) بنسبة عمولة 27% إلى 35%',
       recruitFlyerRes.status === 200 &&
       recruitFlyerRes.headers['content-type'] === 'text/html; charset=utf-8' &&
       typeof recruitFlyerRes.body === 'string' &&
       recruitFlyerRes.body.includes('انضم كموزع معتمد') &&
-      recruitFlyerRes.body.includes('28%') &&
+      recruitFlyerRes.body.includes('35%') &&
       recruitFlyerRes.body.includes('01122166076')
     );
 

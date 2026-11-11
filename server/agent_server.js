@@ -96,7 +96,7 @@ db.exec(`
     name TEXT NOT NULL,
     phone TEXT NOT NULL,
     governorate TEXT NOT NULL,
-    commission_rate REAL NOT NULL DEFAULT 20,
+    commission_rate REAL NOT NULL DEFAULT 27,
     status TEXT NOT NULL DEFAULT 'active',
     access_pin TEXT NOT NULL,
     notes TEXT DEFAULT '',
@@ -162,9 +162,9 @@ function seedInitialData(targetDb) {
   const dbase = targetDb || db;
   const now = new Date().toISOString();
   const seedDists = [
-    { id: 'dist_assiut_01', code: 'QMA-DIST-01', name: 'مكتب النخبة للحلول الطبية (قطاع أسيوط)', phone: '01098765431', gov: 'أسيوط', rate: 20, pin: '1001', notes: 'موزع معتمد لنطاق عيادات ومراكز محافظة أسيوط' },
-    { id: 'dist_cairo_02',  code: 'QMA-DIST-02', name: 'شركة ميديكال تك للتوريدات (القاهرة والجيزة)', phone: '01234567892', gov: 'القاهرة الكبرى', rate: 25, pin: '1002', notes: 'موزع مستقل لعيادات مدينة نصر والمعادي والدقي' },
-    { id: 'dist_delta_03',  code: 'QMA-DIST-03', name: 'مجموعة الدلتا للأنظمة الطبية (المنصورة وطنطا)', phone: '01145678903', gov: 'الدلتا والإسكندرية', rate: 20, pin: '1003', notes: 'موزع مستقل لقطاع الدلتا' }
+    { id: 'dist_assiut_01', code: 'QMA-DIST-01', name: 'مكتب النخبة للحلول الطبية (قطاع أسيوط)', phone: '01098765431', gov: 'أسيوط', rate: 27, pin: '1001', notes: 'موزع معتمد لنطاق عيادات ومراكز محافظة أسيوط' },
+    { id: 'dist_cairo_02',  code: 'QMA-DIST-02', name: 'شركة ميديكال تك للتوريدات (القاهرة والجيزة)', phone: '01234567892', gov: 'القاهرة الكبرى', rate: 32, pin: '1002', notes: 'موزع مستقل لعيادات مدينة نصر والمعادي والدقي' },
+    { id: 'dist_delta_03',  code: 'QMA-DIST-03', name: 'مجموعة الدلتا للأنظمة الطبية (المنصورة وطنطا)', phone: '01145678903', gov: 'الدلتا والإسكندرية', rate: 27, pin: '1003', notes: 'موزع مستقل لقطاع الدلتا' }
   ];
   const insDist = dbase.prepare('INSERT INTO distributors(id, code, name, phone, governorate, commission_rate, status, access_pin, notes, created_at) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
   for (const d of seedDists) {
@@ -179,15 +179,15 @@ function seedInitialData(targetDb) {
 
   insDeal.run(
     'deal_01', 'DEAL-2026-101', 'dist_assiut_01', 'عيادة النور التخصصية للباطنة والقلب', 'د. عمرو عبد العليم', '01011223344', 'أسيوط', 0,
-    'professional', 8500, 20, 1700, 6800, '7F8A9C12B4E09911A2B3C4D5', 'completed', 'QLX2-ISSUED-ASSIUT-101', 'تم التفعيل وتوريد صافي الوكيل', now, now
+    'professional', 8500, 27, 2295, 6205, '7F8A9C12B4E09911A2B3C4D5', 'completed', 'QLX2-ISSUED-ASSIUT-101', 'تم التفعيل وتوريد صافي الوكيل', now, now
   );
   insDeal.run(
     'deal_02', 'DEAL-2026-102', 'dist_cairo_02', 'مركز الصفوة لطب وجراحة الأسنان', 'د. كريم المنشاوي', '01022334455', 'القاهرة', 0,
-    'professional', 8500, 25, 2125, 6375, '9A1B2C3D4E5F60718293A4B5', 'completed', 'QLX2-ISSUED-CAIRO-102', 'تم التفعيل وتحصيل صافي الوكيل', now, now
+    'professional', 8500, 32, 2720, 5780, '9A1B2C3D4E5F60718293A4B5', 'completed', 'QLX2-ISSUED-CAIRO-102', 'تم التفعيل وتحصيل صافي الوكيل', now, now
   );
   insDeal.run(
     'deal_03', 'DEAL-2026-103', 'dist_cairo_02', 'مجمع الشفاء الطبي المتكامل (3 فروع)', 'د. هاني محمود', '01288990011', 'الجيزة', 0,
-    'enterprise', 18500, 25, 4625, 13875, '3C4D5E6F7A8B9C0D1E2F3A4B', 'pending', '', 'بانتظار مراجعة الوكيل وإصدار مفتاح التفعيل', now, ''
+    'enterprise', 18500, 32, 5920, 12580, '3C4D5E6F7A8B9C0D1E2F3A4B', 'pending', '', 'بانتظار مراجعة الوكيل وإصدار مفتاح التفعيل', now, ''
   );
   logAudit('system_init', 'تأسيس قاعدة بيانات مشروع Qalix Medical Agent بنظام السعر الثابت ونسب الموزعين');
 }
@@ -222,7 +222,7 @@ if (propCount === 0) {
     { id: 'prop_10', pillar: 'followup', title: 'فحص الاطمئنان الدوري بعد البيع (اليوم 30 واليوم 90)', description: 'رسالة واتساب تلقائية من الوكيل بعد شهر من الشراء للتأكد من انتظام النسخ الاحتياطي المشفر على الفلاشة الخارجية، مما يبني ثقة مطلقة وسمعة ذهبية للمنظومة في السوق الطبي.', impact: 'سمعة رقم #1 في السوق الطبي', priority: 'أولوية عالية', status: 'معتمد للتنفيذ' },
 
     // Pillar 5: تحسين الإدارة والحوكمة لشبكة الموزعين (Management & Governance)
-    { id: 'prop_11', pillar: 'management', title: 'نظام شرائح حوافز الموزعين التصاعدي (Bronze / Silver / Gold)', description: 'الموزع يبدأ بنسبة 20% من السعر الثابت، وإذا حقق 10 مبيعات مكتملة في الشهر ترتفع نسبته تلقائياً إلى 25% عن ذلك الشهر، مع حماية النطاق الجغرافي لكل موزع نشط.', impact: 'تحفيز الموزعين على مضاعفة المبيعات', priority: 'أولوية قصوى', status: 'معتمد في لوحة الوكيل' },
+    { id: 'prop_11', pillar: 'management', title: 'نظام شرائح حوافز الموزعين التصاعدي (Bronze / Silver / Gold / Platinum)', description: 'الموزع يبدأ بنسبة 27% من السعر الثابت، وترتفع نسبته تلقائياً إلى 29% (فضية) ثم 32% (ذهبية عند 10 مبيعات) وصولاً إلى 35% (بلاتينية عند 20+ صفقة)، مع حماية النطاق الجغرافي لكل موزع نشط.', impact: 'تحفيز الموزعين على مضاعفة المبيعات', priority: 'أولوية قصوى', status: 'معتمد في لوحة الوكيل' },
     { id: 'prop_12', pillar: 'management', title: 'القاعدة الحديدية: التفعيل مقابل صافي التوريد وبصمة العتاد (HWID)', description: 'حوكمة مالية صارمة 100%: لا يصدر مفتاح التفعيل `QLX2` إلا بعد استلام الوكيل (01122166076) لبصمة جهاز العيادة وصافي المبلغ، وتُسجل كل عملية في سلسلة التدقيق الجنائي المشفرة.', impact: 'صفر مديونيات أو تسريب للتراخيص', priority: 'أولوية قصوى', status: 'مفعل برمجياً' }
   ];
   const insProp = db.prepare('INSERT INTO excellence_proposals(id, pillar, title, description, impact, priority, status, created_at) VALUES(?, ?, ?, ?, ?, ?, ?, ?)');
@@ -726,7 +726,7 @@ const server = http.createServer(async (req, res) => {
       const name = String(body.name || '').trim();
       const phone = String(body.phone || '').trim();
       const governorate = String(body.governorate || 'مصر').trim();
-      const commissionRate = Math.max(5, Math.min(45, Number(body.commissionRate) || 20));
+      const commissionRate = Math.max(5, Math.min(45, Number(body.commissionRate) || 27));
       const notes = String(body.notes || '').trim();
       if (!name || !phone) return sendJson(res, 400, { error: 'اسم الموزع ورقم الهاتف مطلوبان' });
 
