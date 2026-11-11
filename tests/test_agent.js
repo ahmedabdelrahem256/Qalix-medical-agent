@@ -965,7 +965,33 @@ function req(method, urlPath, body) {
       }
     );
 
-    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/65 PASSED ===`);
+    // 66. Agent-Only & Distributor-Only Illustrated A-Z Offline Catalogs (Embedded Base64 Screenshots + Isolation)
+    const agCatRes = await req('GET', '/api/catalogs/agent');
+    const dsCatRes = await req('GET', '/api/catalogs/distributor');
+    const dsStaticCatRes = await req('GET', '/presentations/' + encodeURIComponent('كتالوج_تشغيل_الموزع_الميداني.html'));
+    const kitRefreshed = await req('GET', `/api/distributors/${sampleDistId}/kit?preview=1`);
+    check('66. كتالوج الوكيل الحصري وكتالوج الموزع الميداني المصوران بالصور الحية مع العزل التام للبيانات',
+      agCatRes.status === 200 &&
+      typeof agCatRes.body === 'string' &&
+      agCatRes.body.includes('data:image/png;base64,') &&
+      agCatRes.body.includes('مركز التصفير الآمن') &&
+      dsCatRes.status === 200 &&
+      dsStaticCatRes.status === 200 &&
+      dsCatRes.body.includes('data:image/png;base64,') &&
+      !dsCatRes.body.includes('لوحة المطور') &&
+      !dsCatRes.body.includes('فحص نسخة MEGA') &&
+      kitRefreshed.body.includes('/api/catalogs/distributor') &&
+      !kitRefreshed.body.includes('/api/catalogs/agent'),
+      {
+        agStatus: agCatRes.status,
+        dsStatus: dsCatRes.status,
+        dsStaticStatus: dsStaticCatRes.status,
+        portalHasDistCat: kitRefreshed.body.includes('/api/catalogs/distributor'),
+        portalNoAgentCat: !kitRefreshed.body.includes('/api/catalogs/agent')
+      }
+    );
+
+    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/66 PASSED ===`);
     for (const r of results) console.log(' ✅', r);
   } finally {
     srv.kill('SIGINT');

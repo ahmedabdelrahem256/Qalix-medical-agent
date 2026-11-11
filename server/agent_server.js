@@ -1252,6 +1252,22 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, 200, { ok: true, channels: PAYMENT_CHANNELS });
     }
 
+    if (req.method === 'GET' && pathname === '/api/catalogs/agent') {
+      const catPath = path.join(ROOT, 'كتالوج_تشغيل_الوكيل_الحصري.html');
+      if (!fs.existsSync(catPath)) return sendJson(res, 404, { error: 'كتالوج الوكيل غير متاح' });
+      const html = fs.readFileSync(catPath, 'utf8');
+      const dl = url.searchParams.get('download') === '1';
+      return sendHtmlWithOptionalDownload(res, html, 'Qalix-Agent-Operations-Catalog-A-Z.html', dl);
+    }
+
+    if (req.method === 'GET' && pathname === '/api/catalogs/distributor') {
+      const catPath = path.join(PRESENTATIONS_DIR, 'كتالوج_تشغيل_الموزع_الميداني.html');
+      if (!fs.existsSync(catPath)) return sendJson(res, 404, { error: 'كتالوج الموزع غير متاح' });
+      const html = fs.readFileSync(catPath, 'utf8');
+      const dl = url.searchParams.get('download') === '1';
+      return sendHtmlWithOptionalDownload(res, html, 'Qalix-Distributor-Field-Catalog-A-Z.html', dl);
+    }
+
     if (req.method === 'GET' && pathname === '/api/receipts/generate') {
       const qParams = Object.fromEntries(url.searchParams.entries());
       const dealId = qParams.dealId;

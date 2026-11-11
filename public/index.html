@@ -298,6 +298,10 @@
             <div style="font-size:12px; color:var(--muted);">نسخة العميل v1.0 (محمية بدون أي لمس)</div>
             <div style="font-size:14px; font-weight:800; color:var(--sky);">مفحوصة 18/18 · بصمة SHA-256 مطابقة</div>
           </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button type="button" class="btn-emerald" style="font-size:12px; padding:8px 12px;" onclick="openCardPreviewModal({ title: '📘 كتالوج تشغيل الوكيل الحصري (من أ إلى ي)', subtitle: 'دليل مصور خاص بوكيل المنظومة فقط (يعمل أوفلاين + طباعة A4)', previewUrl: '/api/catalogs/agent', downloadUrl: '/api/catalogs/agent?download=1' })">📘 كتالوج الوكيل المصور (A–Z)</button>
+            <button type="button" class="btn-sky" style="font-size:12px; padding:8px 12px;" onclick="openCardPreviewModal({ title: '💼 كتالوج عمل الموزع الميداني (من أ إلى ي)', subtitle: 'دليل مصور خاص بعمل الموزع وبوابته المستقلة فقط (جاهز للإرسال للموزع)', previewUrl: '/api/catalogs/distributor', downloadUrl: '/api/catalogs/distributor?download=1' })">💼 كتالوج الموزع المصور (A–Z)</button>
+          </div>
         </div>
       </div>
 

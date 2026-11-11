@@ -67,6 +67,7 @@ if (fs.existsSync(customDevPath)) {
 console.log('[3/4] نسخ ملفات الوثائق والتشغيل...');
 const rootFiles = [
   'DELIVERY_QALIX_MEDICAL_AGENT.md',
+  'كتالوج_تشغيل_الوكيل_الحصري.html',
   'START_QALIX_MEDICAL_AGENT.bat',
   'DEPLOY_TO_G_DRIVE.ps1',
   'CREATE_BACKUP.bat',

@@ -220,6 +220,7 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
           <option value="statement">💼 كشف الحساب المالي وسلسلة التدقيق</option>
           <option value="certificate">🏅 شهادة الاعتماد الميداني الرسمي (A4 Certificate)</option>
           <option value="letter">🎖️ خطاب شريحة التميز التجاري (A4)</option>
+          <option value="distcatalog">📘 كتالوج عمل الموزع الميداني المصور (من أ إلى ي)</option>
         </select>
         <button type="button" onclick="handleDistDocSelection('preview')" style="background:#059669; color:#fff;">👁️ معاينة / طباعة</button>
         <button type="button" onclick="handleDistDocSelection('download')" class="btn-blue">⬇️ تحميل الملف</button>
@@ -229,6 +230,7 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
         <button type="button" style="background:#8b5cf6; color:white;" onclick="openDistDocByKey('statement', 'preview')">💼 كشف الحساب المالي وسلسلة التدقيق</button>
         <button type="button" style="background:#d97706; color:white;" onclick="openDistDocByKey('certificate', 'preview')">🏅 شهادة الاعتماد الميداني الرسمي (A4)</button>
         <button type="button" style="background:#0ea5e9; color:white;" onclick="openDistDocByKey('letter', 'preview')">🎖️ خطاب شريحة التميز التجاري (A4)</button>
+        <button type="button" style="background:#10b981; color:#052e16;" onclick="openDistDocByKey('distcatalog', 'preview')">📘 كتالوج عمل الموزع المصور (A–Z)</button>
       </div>
     </div>
 
@@ -496,6 +498,13 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
         url: '/api/hierarchy/distributor/${dist.id}/letter',
         downloadUrl: '/api/hierarchy/distributor/${dist.id}/letter?download=1',
         downloadFilename: 'Qalix-Tier-Letter-${dist.code}.html'
+      },
+      distcatalog: {
+        title: '📘 كتالوج عمل الموزع الميداني المصور (من أ إلى ي)',
+        subtitle: 'دليل الموزع الشامل مدعوماً بالصور لكل مراحل العمل الميداني أوفلاين',
+        url: '/api/catalogs/distributor',
+        downloadUrl: '/api/catalogs/distributor?download=1',
+        downloadFilename: 'Qalix-Distributor-Field-Catalog-A-Z.html'
       }
     };
 
