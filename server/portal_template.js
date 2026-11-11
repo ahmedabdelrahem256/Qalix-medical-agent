@@ -4,9 +4,11 @@
 'use strict';
 
 const { renderBattleCardA4 } = require('./marketing_kit');
+const { renderTechnicalFieldSectionHtml } = require('./technical_field_guide');
 
 function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
   const battleCardB64 = Buffer.from(renderBattleCardA4(dist), 'utf8').toString('base64');
+  const techSec = renderTechnicalFieldSectionHtml(dist, agentInfo);
   return `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -228,20 +230,26 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
         </a>
       </div>
     </div>
+
+    ${techSec.html}
   </div>
   <script>
     const API_BASE = (window.location.protocol === 'file:') ? 'http://127.0.0.1:4000' : '';
     const BATTLE_CARD_B64 = "${battleCardB64}";
+    const DOC_CATALOG_B64 = "${techSec.catalogFallbackB64}";
 
-    function printBattleCardA4(autoPrint) {
+    function decodeB64Utf8(b64) {
+      const binStr = atob(b64);
+      const bytes = new Uint8Array(binStr.length);
+      for (let i = 0; i < binStr.length; i++) bytes[i] = binStr.charCodeAt(i);
+      return new TextDecoder('utf-8').decode(bytes);
+    }
+
+    function openHtmlPopup(html, autoPrint, errMsg) {
       try {
-        const binStr = atob(BATTLE_CARD_B64);
-        const bytes = new Uint8Array(binStr.length);
-        for (let i = 0; i < binStr.length; i++) bytes[i] = binStr.charCodeAt(i);
-        const html = new TextDecoder('utf-8').decode(bytes);
         const w = window.open('', '_blank');
         if (!w) {
-          alert('يرجى السماح للنوافذ المنبثقة (Popups) لفتح بطاقة المقارنة للطباعة.');
+          alert('يرجى السماح للنوافذ المنبثقة (Popups) لإتمام العرض والطباعة.');
           return;
         }
         w.document.open();
@@ -250,15 +258,109 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
         if (autoPrint) {
           setTimeout(() => { try { w.focus(); w.print(); } catch (_) {} }, 350);
         }
+        return w;
       } catch (err) {
-        alert('تعذر فتح بطاقة المقارنة: ' + err.message);
+        alert((errMsg || 'تعذر الفتح: ') + err.message);
+        return null;
       }
     }
 
-    // Automatically resolve local /api/ links when the kit HTML is opened offline via file://
+    function printBattleCardA4(autoPrint) {
+      openHtmlPopup(decodeB64Utf8(BATTLE_CARD_B64), autoPrint, 'تعذر فتح بطاقة المقارنة: ');
+    }
+
+    function openOfflineDoctorCatalog() {
+      openHtmlPopup(decodeB64Utf8(DOC_CATALOG_B64), false, 'تعذر فتح كتالوج الطبيب: ');
+    }
+
+    function buildTechSuccessPayload(requireNotice) {
+      const clinic = (document.getElementById('techClinicName')?.value || '').trim();
+      const doctor = (document.getElementById('techDoctorName')?.value || '').trim();
+      const chkPc = Boolean(document.getElementById('chkPc')?.checked);
+      const chkNet = Boolean(document.getElementById('chkNet')?.checked);
+      const chkCat = Boolean(document.getElementById('chkCatalog')?.checked);
+      const chkNotice = Boolean(document.getElementById('chkDocNotice')?.checked);
+
+      if (!clinic || !doctor) {
+        alert('يرجى إدخال اسم العيادة واسم الطبيب المُخطِر بإتمام التركيب.');
+        return null;
+      }
+      if (requireNotice && !chkNotice) {
+        alert('يرجى التأشير على خانة إخطار الطبيب/العيادة بإتمام العملية وتشغيل كافة الأجهزة بنجاح.');
+        return null;
+      }
+
+      const nowStr = new Date().toLocaleString('ar-EG');
+      const items = [
+        (chkPc ? '✔' : '☐') + ' تنزيل المنظومة على الجهاز الرئيسي وتأمين كلمة المرور ومفتاح الاسترجاع',
+        (chkNet ? '✔' : '☐') + ' ربط الراوتر المحلي والطابعة وهاتف الطبيب وشاشة الانتظار وبوابة المريض',
+        (chkCat ? '✔' : '☐') + ' تدريب فريق العيادة وترك كتالوج استخدام المنظومة للطبيب',
+        (chkNotice ? '✔' : '☐') + ' إخطار الطبيب للموزع بإتمام العملية وتشغيل كافة الأجهزة بنجاح'
+      ];
+      const msg = [
+        '✅ *بطاقة تأكيد نجاح التركيب والتشغيل للوكيل — Qalix Medical Agent*',
+        '━━━━━━━━━━━━━━━━━━━━',
+        '🆔 *كود الموزع:* ${dist.code} — ${dist.name}',
+        '🏥 *العيادة / المركز:* ' + clinic,
+        '👨‍⚕️ *الطبيب المُخطِر:* ' + doctor,
+        '📅 *التاريخ والوقت:* ' + nowStr,
+        '━━━━━━━━━━━━━━━━━━━━',
+        ...items,
+        '━━━━━━━━━━━━━━━━━━━━',
+        'يؤكد الموزع للوكيل (01122166076) إتمام التركيب والتدريب وترك الكتالوج وبناء رضا الطبيب 100%.'
+      ].join('\\n');
+      return { clinic, doctor, nowStr, items, msg };
+    }
+
+    function sendTechSuccessToAgentWhatsApp() {
+      const data = buildTechSuccessPayload(true);
+      if (!data) return;
+      const url = 'https://wa.me/201122166076?text=' + encodeURIComponent(data.msg);
+      window.open(url, '_blank');
+    }
+
+    function copyTechSuccessCard() {
+      const data = buildTechSuccessPayload(false);
+      if (!data) return;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(data.msg).then(() => {
+          alert('تم نسخ نص بطاقة تأكيد نجاح التشغيل بنجاح! جاهزة للإرسال للوكيل 01122166076.');
+        });
+      }
+    }
+
+    function openTechSuccessCardA4(autoPrint) {
+      const data = buildTechSuccessPayload(true);
+      if (!data) return;
+      const listHtml = data.items.map(i => '<li style="padding:6px 0; border-bottom:1px dashed #cbd5e1;">' + i + '</li>').join('');
+      const cardHtml = '<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>بطاقة تأكيد نجاح التشغيل للوكيل</title>' +
+        '<style>@page{size:A4 portrait;margin:12mm;}body{font-family:Segoe UI,Tahoma,sans-serif;background:#f1f5f9;color:#0f172a;padding:24px;direction:rtl;margin:0;}' +
+        '.doc{max-width:780px;margin:0 auto;background:#fff;border:2px solid #059669;border-radius:14px;padding:28px;}' +
+        '.hdr{border-bottom:2px solid #0284c7;padding-bottom:12px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;}' +
+        '.row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;font-size:13px;}' +
+        '.box{background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:10px;}' +
+        '.signs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:24px;text-align:center;font-size:12px;}' +
+        '.sign{border:1px dashed #94a3b8;border-radius:8px;padding:14px 8px;min-height:80px;}' +
+        '@media print{body{background:#fff;padding:0;}.doc{border:1px solid #059669;}.no-print{display:none!important;}}</style></head><body>' +
+        '<div class="doc"><div class="no-print" style="margin-bottom:14px;text-align:left;"><button id="btnPrintSuccessCard" style="padding:8px 16px;background:#059669;color:#fff;border:none;border-radius:8px;font-weight:bold;cursor:pointer;">🖨️ طباعة البطاقة للوكيل (A4 / PDF)</button></div>' +
+        '<div class="hdr"><div><h1 style="margin:0;font-size:20px;color:#059669;">✅ بطاقة تأكيد إتمام نجاح التركيب والتشغيل للوكيل</h1><div style="font-size:12px;color:#64748b;">منظومة كالكس الطبية الشاملة · Qalix Medical v1.0</div></div><div style="font-size:12px;text-align:left;">الوكيل الرسمي:<br><strong dir="ltr">01122166076</strong></div></div>' +
+        '<div class="row"><div class="box"><strong>الموزع المعتمد المنفّذ:</strong><br>${dist.name} (${dist.code})</div><div class="box"><strong>تاريخ الاعتماد:</strong><br>' + data.nowStr + '</div>' +
+        '<div class="box"><strong>العيادة / المنشأة الطبية:</strong><br>' + data.clinic + '</div><div class="box"><strong>الطبيب المُخطِر بالتمام:</strong><br>' + data.doctor + '</div></div>' +
+        '<h3 style="margin:10px 0 6px;color:#0f172a;font-size:14.5px;">سجل الإنجاز الفني وإخطار الطبيب:</h3><ul style="list-style:none;padding:0;margin:0;font-size:13px;">' + listHtml + '</ul>' +
+        '<div style="margin-top:14px;background:#ecfdf5;border:1px solid #10b981;border-radius:8px;padding:10px 14px;font-size:12.5px;color:#065f46;">يُقر الموزع بإتمام تشغيل كافة الأجهزة بالعيادة، وترك كتالوج الاستخدام للطبيب، وتلقي إخطار الطبيب بتمام النجاح.</div>' +
+        '<div class="signs"><div class="sign"><strong>إخطار وموافقة الطبيب</strong><br><br>' + data.doctor + '</div><div class="sign"><strong>تأكيد الموزع المنفّذ</strong><br><br>${dist.name}</div><div class="sign"><strong>اعتماد وكيل المنظومة</strong><br><br>01122166076</div></div>' +
+        '</div></body></html>';
+      const w = openHtmlPopup(cardHtml, autoPrint, 'تعذر فتح بطاقة التأكيد: ');
+      if (w) {
+        const pBtn = w.document.getElementById('btnPrintSuccessCard');
+        if (pBtn) pBtn.onclick = () => w.print();
+      }
+    }
+
+    // Automatically resolve local /api/ and /legal-docs/ links when the kit HTML is opened offline via file://
     if (API_BASE) {
       document.addEventListener('DOMContentLoaded', () => {
-        document.querySelectorAll('a[href^="/api/"]').forEach(a => {
+        document.querySelectorAll('a[href^="/api/"], a[href^="/legal-docs/"]').forEach(a => {
           a.setAttribute('href', API_BASE + a.getAttribute('href'));
         });
       });

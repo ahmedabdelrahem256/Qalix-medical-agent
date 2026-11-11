@@ -29,6 +29,7 @@ const { PROTECTED_TERRITORIES, initializeTerritoryTables, lockClinicLead, getLea
 const { PAYMENT_CHANNELS, generateReceiptHtml } = require('./payment_receipt_engine');
 const { calculateCommercialAlerts, generateExecutiveWeeklyDigestHtml } = require('./executive_digest');
 const { generateProposalsDocumentHtml } = require('./rd_proposals_exporter');
+const { renderDistributorRecruitmentCardHtml, renderDistributorOnboardingCardHtml } = require('./distributor_recruitment');
 const {
   resetDealsOnly,
   resetAllDataFactory,
@@ -711,6 +712,27 @@ const server = http.createServer(async (req, res) => {
       const dist = distId ? db.prepare('SELECT * FROM distributors WHERE id = ?').get(distId) : null;
       const html = renderBattleCardA4(dist);
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      return res.end(html);
+    }
+
+    /* ---------------- Distributor Recruitment & Onboarding Cards API ---------------- */
+    if (req.method === 'GET' && pathname === '/api/recruitment/flyer') {
+      const html = renderDistributorRecruitmentCardHtml(AGENT_INFO);
+      const headers = { 'Content-Type': 'text/html; charset=utf-8' };
+      if (url.searchParams.get('download') === '1') {
+        headers['Content-Disposition'] = 'attachment; filename="Qalix-Distributor-Recruitment-Card.html"';
+      }
+      res.writeHead(200, headers);
+      return res.end(html);
+    }
+
+    if (req.method === 'GET' && pathname === '/api/recruitment/onboarding-card') {
+      const html = renderDistributorOnboardingCardHtml(AGENT_INFO);
+      const headers = { 'Content-Type': 'text/html; charset=utf-8' };
+      if (url.searchParams.get('download') === '1') {
+        headers['Content-Disposition'] = 'attachment; filename="Qalix-New-Distributor-Onboarding-Card.html"';
+      }
+      res.writeHead(200, headers);
       return res.end(html);
     }
 

@@ -216,16 +216,18 @@
 | [`server/financial_ledger.js`](file:///G:/Qalix%20medical%20agent/server/financial_ledger.js) | مولد كشوف الحسابات والتسوية المالية للموزعين المعتمدين | **مكتمل** |
 | [`server/portal_template.js`](file:///G:/Qalix%20medical%20agent/server/portal_template.js) | مولد البوابات المستقلة للموزعين مع أدوات كافة المراحل | **مكتمل** |
 | [`server/dev_console.js`](file:///G:/Qalix%20medical%20agent/server/dev_console.js) | لوحة المطور وإدارة النظام: تصفير آمن مع لقطات استعادة ورفع الفيديوهات وقوالب واتساب | **مكتمل (المرحلة 10)** |
+| [`server/distributor_recruitment.js`](file:///G:/Qalix%20medical%20agent/server/distributor_recruitment.js) | بطاقة تسويق طلب الموزعين (A4) واستمارة بيانات الموزع الجديد للإرسال للوكيل | **مكتمل (المرحلة 11)** |
+| [`server/technical_field_guide.js`](file:///G:/Qalix%20medical%20agent/server/technical_field_guide.js) | القسم الفني ببوابة الموزع: دليل الأجهزة والراوتر والطابعة والهواتف وكتالوج الطبيب وبطاقة النجاح للوكيل | **مكتمل (المرحلة 11)** |
 | [`public/index.html`](file:///G:/Qalix%20medical%20agent/public/index.html) | لوحة تحكم الوكيل الزجاجية العصرية (13 قسماً متكاملاً) | **مكتمل ومختبر** |
 | [`distributors_kits/`](file:///G:/Qalix%20medical%20agent/distributors_kits) | بوابات الموزعين المستقلين المولّدة تلقائياً | **مفعل (4 موزعين)** |
-| [`tests/test_agent.js`](file:///G:/Qalix%20medical%20agent/tests/test_agent.js) | حزمة الاختبارات الآلية الشاملة (51/51 اختباراً) | **ناجح 51/51 (100%)** |
+| [`tests/test_agent.js`](file:///G:/Qalix%20medical%20agent/tests/test_agent.js) | حزمة الاختبارات الآلية الشاملة (54/54 اختباراً) | **ناجح 54/54 (100%)** |
 | [`.gitignore`](file:///G:/Qalix%20medical%20agent/.gitignore) | استثناء ملفات التشغيل المؤقتة وفصلها عن Git | **مكتمل** |
 
 ---
 
 ### 📌 ملخص الحالة وجاهزية الاستخدام
 - **المنظومة:** تعمل بكامل طاقتها بنسبة 100% أوفلاين Air-Gapped.
-- **الاختبارات:** 51 اختباراً آلياً ناجحاً (100% Pass Rate).
+- **الاختبارات:** 54 اختباراً آلياً ناجحاً (100% Pass Rate).
 - **الهوية:** معتمدة رسمياً باسم «وكيل منظومة كالكس ميديكال الطبية — 01122166076».
 - **نظافة المستودع:** تم تطهير مجلد المشروع من كافة الملفات المؤقتة والمسودات ومخلفات البناء.
 - **النسخة الاحتياطية الشاملة:** متوفرة ومحدثة بالملف [`Qalix_Medical_Agent_Backup_20261110.zip`](file:///G:/Qalix%20medical%20agent/Qalix_Medical_Agent_Backup_20261110.zip) (بحجم 123.50 ميجابايت).

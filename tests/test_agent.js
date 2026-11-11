@@ -604,7 +604,43 @@ function req(method, urlPath, body) {
       eulaRes.status === 200
     );
 
-    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/51 PASSED ===`);
+    // 52. Distributor Recruitment Flyer (Marketing Card A4)
+    const recruitFlyerRes = await req('GET', '/api/recruitment/flyer');
+    check('52. توليد بطاقة تسويق وطلب موزعين معتمدين (A4) بنسبة عمولة 20% إلى 28%',
+      recruitFlyerRes.status === 200 &&
+      recruitFlyerRes.headers['content-type'] === 'text/html; charset=utf-8' &&
+      typeof recruitFlyerRes.body === 'string' &&
+      recruitFlyerRes.body.includes('انضم كموزع معتمد') &&
+      recruitFlyerRes.body.includes('28%') &&
+      recruitFlyerRes.body.includes('01122166076')
+    );
+
+    // 53. Interactive Distributor Onboarding Application Card (Preview & Downloadable HTML)
+    const onboardRes = await req('GET', '/api/recruitment/onboarding-card');
+    const onboardDlRes = await req('GET', '/api/recruitment/onboarding-card?download=1');
+    check('53. توليد وتحميل بطاقة تفاصيل واستمارة بيانات الموزع الجديد التفاعلية للإرسال للوكيل',
+      onboardRes.status === 200 &&
+      typeof onboardRes.body === 'string' &&
+      onboardRes.body.includes('استمارة بيانات الموزع الجديد') &&
+      onboardRes.body.includes('sendToAgentWhatsApp') &&
+      onboardRes.body.includes('201122166076') &&
+      onboardDlRes.status === 200 &&
+      String(onboardDlRes.headers['content-disposition'] || '').includes('Qalix-New-Distributor-Onboarding-Card.html')
+    );
+
+    // 54. Technical Setup Section, Doctor Catalog & Completion Card inside Distributor Portal
+    check('54. تضمين القسم الفني ببوابة الموزع (الراوتر والطابعة والهواتف، كتالوج الطبيب، إخطار الطبيب، وبطاقة تأكيد النجاح للوكيل)',
+      portalKitRes.status === 200 &&
+      portalKitRes.body.includes('الراوتر المحلي') &&
+      portalKitRes.body.includes('هاتف الطبيب') &&
+      portalKitRes.body.includes('بوابة هاتف المريض') &&
+      portalKitRes.body.includes('openOfflineDoctorCatalog') &&
+      portalKitRes.body.includes('chkDocNotice') &&
+      portalKitRes.body.includes('sendTechSuccessToAgentWhatsApp') &&
+      portalKitRes.body.includes('openTechSuccessCardA4')
+    );
+
+    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/54 PASSED ===`);
     for (const r of results) console.log(' ✅', r);
   } finally {
     srv.kill('SIGINT');
