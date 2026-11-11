@@ -1061,8 +1061,8 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (req.method === 'POST' && pathname === '/api/dev/upload-media') {
-      const filename = (query && query.filename) || ('upload_' + Date.now() + '.mp4');
-      const category = (query && query.category) || 'video';
+      const filename = url.searchParams.get('filename') || ('upload_' + Date.now() + '.mp4');
+      const category = url.searchParams.get('category') || 'video';
       try {
         const uploadResult = await uploadMediaFileStream(req, filename, category);
         logAudit('dev_upload_media', `رفع وسائط تسويقية جديدة (${category}): ${uploadResult.filename}`);

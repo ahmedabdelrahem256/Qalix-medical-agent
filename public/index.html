@@ -2803,7 +2803,8 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
       }
 
       try {
-        const filename = (customTitle ? customTitle.replace(/\\s+/g, '_') : '') + '_' + file.name;
+        const prefix = customTitle ? customTitle.replace(/\s+/g, '_') + '_' : '';
+        const filename = prefix + file.name;
         const uploadUrl = `/api/dev/upload-media?category=${encodeURIComponent(category)}&filename=${encodeURIComponent(filename)}`;
         const r = await fetch(uploadUrl, {
           method: 'POST',

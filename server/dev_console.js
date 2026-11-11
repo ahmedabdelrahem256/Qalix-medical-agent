@@ -9,10 +9,10 @@ const { createDatabaseSnapshot } = require('./backup_manager');
 const { MARKETING_MATERIALS } = require('./marketing_kit');
 
 const ROOT_DIR = path.resolve(__dirname, '..');
-const DATA_DIR = path.join(ROOT_DIR, 'data');
+const DATA_DIR = process.env.DATA_DIR || path.join(ROOT_DIR, 'data');
 const CUSTOM_DATA_FILE = path.join(DATA_DIR, 'custom_dev_data.json');
 
-const PRESENTATIONS_DIR = path.join(ROOT_DIR, 'ملفات_العروض_التقديمية');
+const PRESENTATIONS_DIR = process.env.DATA_DIR ? path.join(DATA_DIR, 'presentations') : path.join(ROOT_DIR, 'ملفات_العروض_التقديمية');
 const VIDEOS_DIR = path.join(PRESENTATIONS_DIR, 'فيديو_تسويقي');
 const IMAGES_DIR = path.join(PRESENTATIONS_DIR, 'صور');
 
@@ -59,6 +59,13 @@ function syncCustomMaterials() {
     for (const v of custom.customVideos) {
       if (!MARKETING_MATERIALS.marketingVideos.some(x => x.id === v.id)) {
         MARKETING_MATERIALS.marketingVideos.push(v);
+      }
+    }
+  }
+  if (Array.isArray(custom.customImages)) {
+    for (const img of custom.customImages) {
+      if (!MARKETING_MATERIALS.clinicalGallery.some(x => x.id === img.id)) {
+        MARKETING_MATERIALS.clinicalGallery.unshift(img);
       }
     }
   }
@@ -175,7 +182,7 @@ function uploadMediaFileStream(req, filename, category) {
       const fileUrl = urlPrefix + encodeURIComponent(safeName);
 
       // If it's a video, automatically register it in marketing videos list
-      if (category === 'video' || ext === '.mp4') {
+      if (category === 'video' || ext === '.mp4' || ext === '.webm') {
         const videoEntry = {
           id: 'video_custom_' + Date.now(),
           title: safeBase.replace(/_/g, ' '),
@@ -187,6 +194,19 @@ function uploadMediaFileStream(req, filename, category) {
         custom.customVideos.push(videoEntry);
         saveCustomData(custom);
         MARKETING_MATERIALS.marketingVideos.unshift(videoEntry);
+      } else if (category === 'screenshot' || ext === '.jpg' || ext === '.jpeg' || ext === '.png' || ext === '.webp') {
+        const imgEntry = {
+          id: 'img_custom_' + Date.now(),
+          title: safeBase.replace(/_/g, ' '),
+          subtitle: `صورة مخصصة تم رفعها بتاريخ ${new Date().toLocaleDateString('ar-EG')}`,
+          image: fileUrl,
+          tags: ['مرفوعة من لوحة المطور', 'تسويق']
+        };
+        const custom = loadCustomData();
+        custom.customImages = custom.customImages || [];
+        custom.customImages.push(imgEntry);
+        saveCustomData(custom);
+        MARKETING_MATERIALS.clinicalGallery.unshift(imgEntry);
       }
 
       resolve({

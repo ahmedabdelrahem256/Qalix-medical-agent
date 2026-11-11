@@ -640,7 +640,39 @@ function req(method, urlPath, body) {
       portalKitRes.body.includes('openTechSuccessCardA4')
     );
 
-    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/54 PASSED ===`);
+    // 55. Developer Console: Raw Binary Media Upload (Video & Screenshot)
+    const uploadRaw = (urlPath, buf) => new Promise((resolve, reject) => {
+      const r = http.request({
+        hostname: '127.0.0.1',
+        port: TEST_PORT,
+        path: urlPath,
+        method: 'POST',
+        headers: { 'Content-Type': 'application/octet-stream', 'Content-Length': buf.length }
+      }, res => {
+        let b = '';
+        res.on('data', d => b += d);
+        res.on('end', () => resolve({ status: res.statusCode, body: JSON.parse(b) }));
+      });
+      r.on('error', reject);
+      r.write(buf);
+      r.end();
+    });
+    const vidUp = await uploadRaw('/api/dev/upload-media?category=video&filename=promo_test.mp4', Buffer.from('FAKE_MP4_STREAM_DATA'));
+    const imgUp = await uploadRaw('/api/dev/upload-media?category=screenshot&filename=screen_test.png', Buffer.from('FAKE_PNG_STREAM_DATA'));
+    const mList = await req('GET', '/api/dev/media-list');
+    check('55. لوحة المطور: رفع فيديوهات تسويقية وصور شاشات بالبث المباشر وحفظها بنجاح',
+      vidUp.status === 200 &&
+      vidUp.body.ok === true &&
+      vidUp.body.sizeBytes === 20 &&
+      imgUp.status === 200 &&
+      imgUp.body.ok === true &&
+      imgUp.body.sizeBytes === 20 &&
+      mList.status === 200 &&
+      mList.body.media.videos.length >= 1 &&
+      mList.body.media.images.length >= 1
+    );
+
+    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/55 PASSED ===`);
     for (const r of results) console.log(' ✅', r);
   } finally {
     srv.kill('SIGINT');
