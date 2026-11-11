@@ -902,18 +902,22 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (req.method === 'GET' && pathname === '/api/marketing/whatsapp-catalog') {
+      const distId = url.searchParams.get('distId');
+      const dist = distId ? db.prepare('SELECT * FROM distributors WHERE id = ?').get(distId) : null;
       return sendHtmlWithOptionalDownload(
         res,
-        renderWhatsAppCatalogA4(),
+        renderWhatsAppCatalogA4(dist),
         'Qalix-WhatsApp-Sales-Catalog.html',
         url.searchParams.get('download') === '1'
       );
     }
 
     if (req.method === 'GET' && pathname === '/api/marketing/wow-demo') {
+      const distId = url.searchParams.get('distId');
+      const dist = distId ? db.prepare('SELECT * FROM distributors WHERE id = ?').get(distId) : null;
       return sendHtmlWithOptionalDownload(
         res,
-        renderWowDemoA4(),
+        renderWowDemoA4(dist),
         'Qalix-WOW-5Min-Demo-Guide.html',
         url.searchParams.get('download') === '1'
       );
@@ -1017,9 +1021,11 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (req.method === 'GET' && pathname === '/api/playbook/objections/a4') {
+      const distId = url.searchParams.get('distId');
+      const dist = distId ? db.prepare('SELECT * FROM distributors WHERE id = ?').get(distId) : null;
       return sendHtmlWithOptionalDownload(
         res,
-        renderObjectionsPlaybookA4(AGENT_INFO),
+        renderObjectionsPlaybookA4(dist || {}),
         'Qalix-8-Objections-Playbook.html',
         url.searchParams.get('download') === '1'
       );
@@ -1031,7 +1037,13 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (req.method === 'GET' && pathname === '/api/after-sales/deals') {
-      const deals = db.prepare("SELECT * FROM deals WHERE status = 'completed' ORDER BY created_at DESC").all();
+      const deals = db.prepare(`
+        SELECT d.*, dist.name AS distributor_name, dist.phone AS distributor_phone
+        FROM deals d
+        LEFT JOIN distributors dist ON d.distributor_id = dist.id
+        WHERE d.status = 'completed'
+        ORDER BY d.created_at DESC
+      `).all();
       const enriched = deals.map(d => calculateDealTimeline(d));
       return sendJson(res, 200, { ok: true, deals: enriched });
     }

@@ -220,7 +220,7 @@
 | [`server/technical_field_guide.js`](file:///G:/Qalix%20medical%20agent/server/technical_field_guide.js) | القسم الفني ببوابة الموزع: دليل الأجهزة والراوتر والطابعة والهواتف وكتالوج الطبيب وبطاقة النجاح للوكيل | **مكتمل (المرحلة 11)** |
 | [`public/index.html`](file:///G:/Qalix%20medical%20agent/public/index.html) | لوحة تحكم الوكيل الزجاجية العصرية (13 قسماً متكاملاً) | **مكتمل ومختبر** |
 | [`distributors_kits/`](file:///G:/Qalix%20medical%20agent/distributors_kits) | بوابات الموزعين المستقلين المولّدة تلقائياً | **مفعل (4 موزعين)** |
-| [`tests/test_agent.js`](file:///G:/Qalix%20medical%20agent/tests/test_agent.js) | حزمة الاختبارات الآلية الشاملة (58/58 اختباراً) | **ناجح 58/58 (100%)** |
+| [`tests/test_agent.js`](file:///G:/Qalix%20medical%20agent/tests/test_agent.js) | حزمة الاختبارات الآلية الشاملة (59/59 اختباراً) | **ناجح 59/59 (100%)** |
 | [`.gitignore`](file:///G:/Qalix%20medical%20agent/.gitignore) | استثناء ملفات التشغيل المؤقتة وفصلها عن Git | **مكتمل** |
 
 ---

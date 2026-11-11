@@ -62,7 +62,7 @@ function generateQuotationData(params, pricingCatalog) {
 }
 
 function generateQuotationHtml(quo) {
-  const qrSvg = generateSimpleSvgQr(`QALIX-QUO:${quo.quotationNo}|VAL:${quo.unitPrice}EGP|PH:01122166076`);
+  const qrSvg = generateSimpleSvgQr(`QALIX-QUO:${quo.quotationNo}|VAL:${quo.unitPrice}EGP|DIST:${quo.distributorCode || 'DIST'}`);
   
   return `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -128,8 +128,7 @@ function generateQuotationHtml(quo) {
       <div class="agent-contact">
         <strong>الموزع المعتمد لمنظومة كالكس</strong><br>
         ${quo.distributorName ? `<span>${quo.distributorName}${quo.distributorCode ? ' (' + quo.distributorCode + ')' : ''}</span><br>` : ''}
-        الدعم الفني والتفعيل: <strong>01122166076</strong><br>
-        البريد / الدعم: +20 112 216 6076
+        ${quo.distributorPhone ? `هاتف / واتساب: <strong dir="ltr">${quo.distributorPhone}</strong>` : 'التوريد والدعم الفني عبر الموزع المعتمد'}
       </div>
     </div>
 

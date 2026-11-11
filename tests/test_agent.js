@@ -277,7 +277,8 @@ function req(method, urlPath, body) {
       quoRes.body.includes('عــرض ســعـر وتـوريــد رســمـي مـعـتـمـد') &&
       quoRes.body.includes('د. أحمد صلاح') &&
       quoRes.body.includes('مركز الشفاء التخصصي') &&
-      quoRes.body.includes('01122166076') &&
+      quoRes.body.includes('الموزع المعتمد') &&
+      !quoRes.body.includes('01122166076') &&
       quoRes.body.includes('5,100'),
       { status: quoRes.status, bodyLen: typeof quoRes.body === 'string' ? quoRes.body.length : null, bodySub: typeof quoRes.body === 'string' ? quoRes.body.substring(0, 300) : quoRes.body }
     );
@@ -295,7 +296,8 @@ function req(method, urlPath, body) {
       objA4Res.status === 200 &&
       typeof objA4Res.body === 'string' &&
       objA4Res.body.includes('8 اعتراضات ميدانية للأطباء') &&
-      objA4Res.body.includes('01122166076')
+      objA4Res.body.includes('الموزع المعتمد') &&
+      !objA4Res.body.includes('01122166076')
     );
 
     // 23. After-Sales Retention Milestones & Customer Success Timeline (Phase 5)
@@ -507,7 +509,8 @@ function req(method, urlPath, body) {
       typeof receiptRes.body === 'string' &&
       receiptRes.body.includes('سند قبض وتوريد مالي رسمي') &&
       receiptRes.body.includes('إنستاباي') &&
-      receiptRes.body.includes('01122166076')
+      receiptRes.body.includes('الموزع المعتمد') &&
+      !receiptRes.body.includes('01122166076')
     );
 
     // 42. Commercial Deals Alerts & Pipeline Monitoring (Phase 9)
@@ -534,7 +537,8 @@ function req(method, urlPath, body) {
       waCatRes.headers['content-type'] === 'text/html; charset=utf-8' &&
       typeof waCatRes.body === 'string' &&
       waCatRes.body.includes('كتالوج رسائل واتساب البيعية') &&
-      waCatRes.body.includes('01122166076')
+      waCatRes.body.includes('الموزع المعتمد') &&
+      !waCatRes.body.includes('01122166076')
     );
 
     // 45. 5-Minute WOW Live Demo A4 Field Guide
@@ -544,7 +548,8 @@ function req(method, urlPath, body) {
       wowDemoRes.headers['content-type'] === 'text/html; charset=utf-8' &&
       typeof wowDemoRes.body === 'string' &&
       wowDemoRes.body.includes('سيناريو العرض الميداني الحاسم في 5 دقائق') &&
-      wowDemoRes.body.includes('01122166076')
+      wowDemoRes.body.includes('الموزع المعتمد') &&
+      !wowDemoRes.body.includes('01122166076')
     );
 
     // 46. Developer Console: System Diagnostics & Health Status
@@ -587,7 +592,8 @@ function req(method, urlPath, body) {
       typeof battleRes.body === 'string' &&
       battleRes.body.includes('بطاقة المقارنة التنافسية') &&
       battleRes.body.includes('40,000') &&
-      battleRes.body.includes('01122166076')
+      battleRes.body.includes('الموزع المعتمد') &&
+      !battleRes.body.includes('01122166076')
     );
 
     // 50. Distributor Portal Isolated Battle Card Printing (never prints full kit)
@@ -739,7 +745,45 @@ function req(method, urlPath, body) {
       staticHandoverRes.body.includes('عن المسلِّم (الموزع المعتمد)')
     );
 
-    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/58 PASSED ===`);
+    // 59. Strict Agent Isolation: Zero Agent Identity or Phone Exposed to Clinics, Doctors, or Public Ads
+    const slaRes = await req('GET', '/legal-docs/' + encodeURIComponent('اتفاقية_مستوى_الخدمة_والدعم_SLA.html'));
+    const fbHtmlRes = await req('GET', '/presentations/' + encodeURIComponent('إعلانات_فيسبوك.html'));
+    const broadRes = await req('POST', '/api/broadcast/compose', { campaignId: 'camp_assiut_support', vars: { doctorName: 'د. عمر', distributorName: 'موزع الصعيد', distributorPhone: '01077665544' } });
+    const auditHtmlRes = await req('GET', `/api/checklist/report?clinicName=${encodeURIComponent('عيادة الرحمة')}&doctorName=${encodeURIComponent('د. طارق')}`);
+    check('59. حصر معرفة والتواصل مع الوكيل على الموزعين فقط وعزله عن الأطباء والعيادات وكافة الإعلانات',
+      !afsDealsRes.body.deals[0].milestones[0].waText.includes('01122166076') &&
+      !afsDealsRes.body.deals[0].milestones[0].waText.includes('وكيل') &&
+      broadRes.status === 200 &&
+      broadRes.body.message.text.includes('01077665544') &&
+      !broadRes.body.message.text.includes('01122166076') &&
+      !broadRes.body.message.text.includes('وكيل') &&
+      !slaRes.body.includes('01122166076') &&
+      !fbHtmlRes.body.includes('216 6076') &&
+      auditHtmlRes.status === 200 &&
+      typeof auditHtmlRes.body === 'string' &&
+      !auditHtmlRes.body.includes('01122166076') &&
+      !auditHtmlRes.body.includes('وكيل') &&
+      !staticHandoverRes.body.includes('216 6076') &&
+      !handRes.body.includes('01122166076') &&
+      !receiptRes.body.includes('01122166076'),
+      {
+        afsNoPhone: !afsDealsRes.body.deals[0].milestones[0].waText.includes('01122166076'),
+        afsNoAgent: !afsDealsRes.body.deals[0].milestones[0].waText.includes('وكيل'),
+        broadOk: broadRes.status === 200,
+        broadDistPhone: broadRes.body.message.text.includes('01077665544'),
+        broadNoAgentPhone: !broadRes.body.message.text.includes('01122166076'),
+        broadNoAgent: !broadRes.body.message.text.includes('وكيل'),
+        slaNoPhone: !slaRes.body.includes('01122166076'),
+        fbNoPhone: !fbHtmlRes.body.includes('216 6076'),
+        auditNoPhone: !String(auditHtmlRes.body).includes('01122166076'),
+        auditNoAgent: !String(auditHtmlRes.body).includes('وكيل'),
+        staticHandoverNoPhone: !staticHandoverRes.body.includes('216 6076'),
+        handNoPhone: !handRes.body.includes('01122166076'),
+        receiptNoPhone: !receiptRes.body.includes('01122166076')
+      }
+    );
+
+    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/59 PASSED ===`);
     for (const r of results) console.log(' ✅', r);
   } finally {
     srv.kill('SIGINT');

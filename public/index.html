@@ -958,7 +958,7 @@
           <div>
             <div style="display:flex; align-items:center; gap:8px;">
               <span class="badge b-sky">حملات فيسبوك وإنستجرام المعتمدة</span>
-              <span class="badge b-emerald">01122166076 (خط المبيعات)</span>
+              <span class="badge b-emerald">التواصل عبر الموزعين المعتمدين فقط</span>
             </div>
             <h2 style="margin:6px 0 2px; font-size:18px; color:var(--sky);">📢 استوديو حملات إعلانات فيسبوك (Facebook Ads Studio)</h2>
             <p style="margin:0; font-size:12.5px; color:var(--muted);">
@@ -967,7 +967,7 @@
           </div>
           <div style="display:flex; gap:8px;">
             <a href="https://www.facebook.com/profile.php?id=61596117518854" target="_blank" class="btn btn-sm btn-sky" style="text-decoration:none;">🌐 صفحة المنظومة الرسمية</a>
-            <a href="https://wa.me/201122166076" target="_blank" class="btn btn-sm btn-emerald" style="text-decoration:none;">💬 واتساب المبيعات 01122166076</a>
+            <span class="badge b-sky">يُوجه العملاء إلى الموزع المعتمد</span>
           </div>
         </div>
 
@@ -1089,7 +1089,7 @@
             <span class="badge b-emerald">توليد فوري مع رمز QR</span>
           </div>
           <p style="font-size:12.5px; color:var(--muted); margin-top:0;">
-            أصدر عرض سعر رسمي وتوريد معتمد موجهاً مباشرة للطبيب أو إدارة المركز، بالأسعار الرسمية الثابتة وضمان الوكيل (01122166076) وحزم التخصصات المشمولة.
+            أصدر عرض سعر رسمي وتوريد معتمد موجهاً مباشرة للطبيب أو إدارة المركز، بالأسعار الرسمية الثابتة وضمان وتوقيع الموزع المعتمد وحزم التخصصات المشمولة.
           </p>
           <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:12px;">
             <div>
@@ -2357,7 +2357,7 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
     function openCampaignWhatsApp() {
       const txt = document.getElementById('campPreviewText').value;
       const ph = document.getElementById('campPhone').value.replace(/[^0-9]/g, '');
-      const url = ph ? `https://wa.me/2${ph}?text=${encodeURIComponent(txt)}` : `https://wa.me/201122166076?text=${encodeURIComponent(txt)}`;
+      const url = ph ? `https://wa.me/2${ph}?text=${encodeURIComponent(txt)}` : `https://api.whatsapp.com/send?text=${encodeURIComponent(txt)}`;
       window.open(url, '_blank');
     }
 

@@ -60,9 +60,10 @@ function generateClinicAuditReportHtml(params, evalResult) {
   const doctorName = (params.doctorName || 'السيد الدكتور المحترم').trim();
   const clinicName = (params.clinicName || 'العيادة التخصصية').trim();
   const inspectorName = (params.inspectorName || 'الموزع المعتمد').trim();
+  const inspectorPhone = (params.inspectorPhone || '').trim();
   const dateStr = new Date().toISOString().split('T')[0];
   const auditSerial = `QMA-AUD-${dateStr.replace(/-/g, '')}-${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
-  const qrSvg = generateSimpleSvgQr(`AUDIT:${auditSerial}|CLINIC:${clinicName}|STATUS:${evalResult.status}|AGENT:01122166076`);
+  const qrSvg = generateSimpleSvgQr(`AUDIT:${auditSerial}|CLINIC:${clinicName}|STATUS:${evalResult.status}|DIST:${inspectorName}`);
 
   return `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -108,8 +109,8 @@ function generateClinicAuditReportHtml(params, evalResult) {
         <p class="brand-sub">إدارة العيادات والمراكز التخصصية · بروتوكول الفحص الفني قبل التشغيل الميداني</p>
       </div>
       <div style="text-align:left; font-size:11.5px; color:#475569;">
-        <strong>وكيل المنظومة الرسمي</strong><br>
-        هاتف / واتساب: <strong>01122166076</strong>
+        <strong>الموزع المعتمد لمنظومة كالكس</strong><br>
+        ${inspectorPhone ? `هاتف / واتساب: <strong dir="ltr">${inspectorPhone}</strong>` : 'تحت إشراف الموزع الميداني المعتمد'}
       </div>
     </div>
 

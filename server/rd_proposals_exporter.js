@@ -87,7 +87,7 @@ function generateProposalsDocumentHtml(proposalsList, agentInfo) {
   }).join('')}
 
   <div style="border-top:1.5px solid #0f172a; padding-top:14px; margin-top:24px; display:flex; justify-content:space-between; font-size:11.5px; color:#475569;">
-    <div>جهة الإصدار: <b>مكتب وكيل منظومة كالكس الطبية (01122166076 / 01122166076)</b></div>
+    <div>جهة الإصدار: <b>فريق التطوير والتوزيع — منظومة كالكس الطبية (التواصل عبر الموزع المعتمد)</b></div>
     <div>المستودع الرسمي: <b>GitHub / Qalix-medical-agent</b></div>
   </div>
 </div>

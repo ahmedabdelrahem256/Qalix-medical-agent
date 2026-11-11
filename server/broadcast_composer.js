@@ -4,6 +4,13 @@
  */
 'use strict';
 
+function fmtDistributorContact(vars) {
+  if (vars && vars.distributorName) {
+    return `${vars.distributorName}${vars.distributorPhone ? ' (' + vars.distributorPhone + ')' : ''}`;
+  }
+  return (vars && vars.distributorPhone) ? `الموزع المعتمد (${vars.distributorPhone})` : 'الموزع المعتمد لمنظومة كالكس في محافظتك';
+}
+
 const BROADCAST_CAMPAIGNS = [
   {
     id: 'camp_assiut_support',
@@ -13,7 +20,7 @@ const BROADCAST_CAMPAIGNS = [
     emoji: '🌟',
     headline: 'دعم خاص 40% لأطباء أسيوط والصعيد على منظومة كالكس الطبية',
     bodyTemplate: (vars) => `مساء الخير يا دكتور ${vars.doctorName || 'العزيز'} 🌹
-يسعدنا إعلام سيادتكم بإطلاق مبادرة دعم التحول الرقمي للعيادات في صعيد مصر بخصم 40% دائم من وكيل منظومة "كالكس ميديكال" الطبية.
+يسعدنا إعلام سيادتكم بإطلاق مبادرة دعم التحول الرقمي للعيادات في صعيد مصر بخصم 40% دائم من منظومة "كالكس ميديكال" الطبية.
 
 ✅ الباقة التخصصية الكاملة: 5,100 ج.م فقط بدلاً من 8,500 ج.م.
 ✅ الباقة الأساسية: 2,700 ج.م فقط بدلاً من 4,500 ج.م.
@@ -22,8 +29,8 @@ const BROADCAST_CAMPAIGNS = [
 ✅ تشمل الحزم الطبية التخصصية + الربط اللاسلكي بالموبايل.
 
 لتجربة النسخة المجانية 14 يوماً أو طلب زيارة للمعاينة بالعيادة:
-تواصلوا معنا مباشرة أو عبر وكيل المنظومة: 01122166076`,
-    actionUrl: 'https://wa.me/201122166076'
+تواصلوا مباشرة مع ${fmtDistributorContact(vars)}`,
+    actionUrl: 'https://api.whatsapp.com/send'
   },
   {
     id: 'camp_specialty_turnkey',
@@ -42,9 +49,8 @@ const BROADCAST_CAMPAIGNS = [
 🤰 النساء والتوليد: حاسبة حمل وولادة وسونار + 20 دواء ومكمل حمل.
 👁️ العيون: كروت فحص قاع العين والنظارات + 18 قطرة وعلاج عيون.
 
-احصل على حزمتك التخصصية مجاناً مع الترخيص الدائم.
-وكيل كالكس ميديكال المعتمد: 01122166076`,
-    actionUrl: 'https://wa.me/201122166076'
+احصل على حزمتك التخصصية مجاناً مع الترخيص الدائم عبر ${fmtDistributorContact(vars)}`,
+    actionUrl: 'https://api.whatsapp.com/send'
   },
   {
     id: 'camp_security_offline',
@@ -61,8 +67,8 @@ const BROADCAST_CAMPAIGNS = [
 💰 ترخيص دائم مدى الحياة بدون اشتراكات شهرية متكررة (وفر أكثر من 50,000 ج.م في 3 سنين).
 🔄 محول هجرة بيانات إكسيل ينقل بيانات مرضاك القدامى في دقيقة واحدة.
 
-اطلب نسختك التجريبية المجانية اليوم مع وكيل المنظومة: 01122166076`,
-    actionUrl: 'https://wa.me/201122166076'
+اطلب نسختك التجريبية المجانية اليوم عبر ${fmtDistributorContact(vars)}`,
+    actionUrl: 'https://api.whatsapp.com/send'
   },
   {
     id: 'camp_annual_continuity',
@@ -79,8 +85,8 @@ const BROADCAST_CAMPAIGNS = [
 🔄 تحديث قوائم الأدوية والإجراءات وفق أحدث المعايير الطبية.
 👨‍🏫 تدريب مجاني لأي كوادر سكرتارية جديدة في العيادة.
 
-فريق وكيل المنظومة دائماً في خدمتكم: 01122166076`,
-    actionUrl: 'https://wa.me/201122166076'
+تواصلوا معنا في أي وقت عبر ${fmtDistributorContact(vars)}`,
+    actionUrl: 'https://api.whatsapp.com/send'
   }
 ];
 
@@ -92,7 +98,7 @@ function composeCampaignMessage(campaignId, vars = {}) {
   const camp = BROADCAST_CAMPAIGNS.find(c => c.id === campaignId) || BROADCAST_CAMPAIGNS[0];
   const text = camp.bodyTemplate(vars);
   const targetPhone = (vars.doctorPhone || '').replace(/[^0-9]/g, '');
-  const waUrl = targetPhone ? `https://wa.me/2${targetPhone}?text=${encodeURIComponent(text)}` : `https://wa.me/201122166076?text=${encodeURIComponent(text)}`;
+  const waUrl = targetPhone ? `https://wa.me/2${targetPhone}?text=${encodeURIComponent(text)}` : `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
 
   return {
     campaignId: camp.id,

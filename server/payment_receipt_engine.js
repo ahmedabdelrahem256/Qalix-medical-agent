@@ -7,7 +7,7 @@
 const crypto = require('crypto');
 
 const PAYMENT_CHANNELS = {
-  instapay: { id: 'instapay', nameAr: 'إنستاباي (InstaPay IPN)', icon: '⚡', reqRef: true, desc: 'تحويل فوري لحظي لحساب الوكيل المعتمد' },
+  instapay: { id: 'instapay', nameAr: 'إنستاباي (InstaPay IPN)', icon: '⚡', reqRef: true, desc: 'تحويل فوري لحظي عبر إنستاباي للموزع المعتمد' },
   vodafone_cash: { id: 'vodafone_cash', nameAr: 'فودافون كاش (Vodafone Cash)', icon: '📱', reqRef: true, desc: 'محفظة إلكترونية معتمدة' },
   bank_wire: { id: 'bank_wire', nameAr: 'تحويل بنكي رسمي (Bank Wire)', icon: '🏛️', reqRef: true, desc: 'حساب بنكي تجاري (البنك الأهلي / CIB / بنك مصر)' },
   cash_handover: { id: 'cash_handover', nameAr: 'نقداً بتوريد مباشر (Official Cash)', icon: '💵', reqRef: false, desc: 'تسليم نقدي مباشر مع محضر التسليم' }
@@ -137,7 +137,7 @@ function generateReceiptHtml(receiptData, agentInfo) {
   </div>
 
   <div class="footer">
-    صدر هذا السند إلكترونياً من منصة كالكس الطبية — للدعم الفني وتفعيل التراخيص: 01122166076
+    صدر هذا السند إلكترونياً من منصة كالكس الطبية — الموزع المعتمد: ${d.distributorName} (${d.distributorCode})${d.distributorPhone ? ' · هاتف: ' + d.distributorPhone : ''}
   </div>
 </div>
 </body>

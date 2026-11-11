@@ -58,7 +58,7 @@ const MARKETING_MATERIALS = {
       category: 'استقطاب',
       target: 'عيادات ومراكز جديدة',
       text: `السلام عليكم ورحمة الله دكتورنا العزيز 🌹
-مع حضرتك من مكتب الوكيل الرسمي لمنظومة "كالكس ميديكال" الطبية (01122166076).
+مع حضرتك الموزع المعتمد لمنظومة "كالكس ميديكال" الطبية.
 
 طورنا لحضرتك أحدث منظومة طبية ذكية لإدارة العيادات والمراكز:
 ✅ تعمل 100% بدون إنترنت (Air-Gapped) وبسرية مطلقة لبيانات مرضاك وأرباحك.
@@ -73,8 +73,7 @@ const MARKETING_MATERIALS = {
 https://mega.nz/file/T6hxgRaK#j7_5EtTGN3TJcgxoOHd_eP-JENFmXHgaxXNlrKO6qGI
 (حساب الدخول: admin / كلمة المرور: Qalix@11)
 
-لطلب زيارة فنية أو المساعدة في التثبيت، يسعدنا تواصلكم على واتساب الوكيل:
-https://wa.me/201122166076`
+لطلب زيارة فنية أو المساعدة في التثبيت، يسعدنا تواصلكم مباشرة مع الموزع المعتمد في محافظتك.`
     },
     {
       id: 'cloud_objection',
@@ -92,7 +91,7 @@ https://wa.me/201122166076`
 • قاعدة بيانات مشفرة عسكرياً داخل جهاز عيادتك أنت فقط ولا يراها أحد سواك.
 
 يسعدنا نوفر لحضرتك أداة هجرة مجانية ننقل بيها بيانات مرضاك القديمة لكالكس في ثوانٍ معدودة!
-تواصل مباشر مع الوكيل المعتمد: https://wa.me/201122166076`
+تواصل مباشرة مع الموزع المعتمد بمنطقتك.`
     },
     {
       id: 'pricing_closing',
@@ -102,16 +101,14 @@ https://wa.me/201122166076`
       text: `أهلاً بحضرتك د. [اسم الطبيب] 🌹
 يسعدنا انتظام العمل في [اسم العيادة] عبر منظومة كالكس ميديكال الطبية.
 
-لإصدار مفتاح الترخيص الدائم مدى الحياة (QLX2) مع الدعم الفني المباشر من الوكيل المعتمد:
+لإصدار وتثبيت مفتاح الترخيص الدائم مدى الحياة (QLX2) مع الدعم الفني المباشر عبر الموزع المعتمد:
 • الباقة المتعاقد عليها: [الباقة التخصصية / الأساسية]
 • السعر الرسمي الثابت: [8,500 ج.م / 5,100 ج.م] دفعة واحدة مدى الحياة
 • بصمة جهاز العيادة (HWID): [تنسخ من شاشة التفعيل بالبرنامج]
 
-فور تحويل صافي الرسوم، يصدر مفتاح التفعيل الدائم الموثق رقمياً ويعمل جهاز العيادة مدى الحياة بدون توقف وبدون أي رسوم خفية.
+فور إتمام السداد لدى الموزع المعتمد، يتم تفعيل الترخيص الدائم الموثق ويعمل جهاز العيادة مدى الحياة بدون توقف وبدون أي رسوم خفية.
 
-تواصل مباشر مع الإدارة المالية للوكيل:
-رقم الوكيل المعتمد: 01122166076
-واتساب: https://wa.me/201122166076`
+للمتابعة والتفعيل تواصل مع الموزع المعتمد: [اسم ورقم الموزع]`
     },
     {
       id: 'medical_tower_blitz',
@@ -121,22 +118,20 @@ https://wa.me/201122166076`
       text: `السادة الأفاضل إدارة وأطباء [اسم البرج الطبي / المركز] 🏥
 تحية طيبة وبعد،،
 
-يقدم وكيل منظومة "كالكس ميديكال" الطبية عرض التجهيز الجماعي الحصري للأبراج والمراكز التخصصية:
+يقدم الموزع المعتمد لمنظومة "كالكس ميديكال" الطبية عرض التجهيز الجماعي الحصري للأبراج والمراكز التخصصية:
 🔹 شاشات انتظار موحدة ونداء صوتي بالاسم ورقم الغرفة لكل عيادة داخل البرج.
 🔹 ربط الصيدلية الداخلية والمختبر والأشعة مع جميع غرف الكشف بدون أسلاك وبدون إنترنت.
 🔹 توفير أكثر من 150,000 جنيه للبرج مقارنة بالاشتراكات السحابية السنوية للعيادات.
 🔹 خصم المجموعة الميداني مع توريد راوتر العيادات المجهز والنسخ الاحتياطي المشفر.
 
-يسعدنا حجز موعد لمعاينة ميدانية وعرض حي (Live Demo) في مقر برجكم الطبي:
-وكيل منظومة كالكس ميديكال: 01122166076
-واتساب: https://wa.me/201122166076`
+يسعدنا حجز موعد لمعاينة ميدانية وعرض حي (Live Demo) في مقر برجكم الطبي عبر الموزع المعتمد: [اسم ورقم الموزع]`
     }
   ],
 
   battleCardData: {
     title: 'بطاقة المقارنة البصرية والتنافسية الميدانية (A4 Field Battle Card)',
     subtitle: 'لماذا كالكس ميديكال هي الخيار رقم #1 للأطباء والمراكز الطبية في مصر 2026؟',
-    agentContact: '01122166076 (وكيل منظومة كالكس ميديكال الطبية)',
+    agentContact: 'الموزع المعتمد لمنظومة كالكس ميديكال الطبية (التواصل عبر الموزعين المعتمدين فقط)',
     comparisonPoints: [
       {
         feature: 'نموذج التكلفة والاستثمار',
@@ -199,7 +194,7 @@ https://wa.me/201122166076`
 💎 ترخيص دائم — تدفع مرة واحدة بدون اشتراك شهري
 جرّبها في عيادتك 14 يوم مجاناً 👇`,
       targetAudience: 'الأطباء، أصحاب العيادات والمجمعات، طب الأسنان، الصيدلة، إدارة العيادات (28–65 سنة)',
-      ctaText: 'إرسال رسالة واتساب (01122166076)',
+      ctaText: 'تواصل واتساب مع الموزع المعتمد',
       facebookPageUrl: 'https://www.facebook.com/profile.php?id=61596117518854'
     },
     {
@@ -221,7 +216,7 @@ https://wa.me/201122166076`
 صالة انتظار هادية، وسكرتارية مرتاحة.
 منظومة كالكس الطبية — جرّبها 14 يوم مجاناً 👇`,
       targetAudience: 'عيادات الأطفال، العظام، النساء والتوليد، المراكز التخصصية المزدحمة',
-      ctaText: 'إرسال رسالة واتساب (01122166076)',
+      ctaText: 'تواصل واتساب مع الموزع المعتمد',
       facebookPageUrl: 'https://www.facebook.com/profile.php?id=61596117518854'
     },
     {
@@ -245,7 +240,7 @@ https://wa.me/201122166076`
 
 السعر يشمل التثبيت والتدريب والدعم الفني. الأسعار لا تشمل الأجهزة.`,
       targetAudience: 'أطباء يبحثون عن شراء برنامج للعيادة، المتضررون من التكلفة السنوية للبرامج السحابية',
-      ctaText: 'إرسال رسالة واتساب (01122166076)',
+      ctaText: 'تواصل واتساب مع الموزع المعتمد',
       facebookPageUrl: 'https://www.facebook.com/profile.php?id=61596117518854'
     }
   ],
@@ -432,8 +427,10 @@ https://wa.me/201122166076`
 
 const { generateSimpleSvgQr } = require('./network_diagnostics');
 
-function renderWhatsAppCatalogA4() {
-  const qrSvg = generateSimpleSvgQr('https://wa.me/201122166076', 90);
+function renderWhatsAppCatalogA4(dist) {
+  const qrPayload = dist && dist.phone ? `https://wa.me/2${dist.phone.replace(/[^0-9]/g, '')}` : 'https://www.facebook.com/profile.php?id=61596117518854';
+  const qrSvg = generateSimpleSvgQr(qrPayload, 90);
+  const distTitle = dist ? `${dist.name} (${dist.code})${dist.phone ? ' — ' + dist.phone : ''}` : 'الموزع المعتمد لمنظومة كالكس ميديكال';
   const cardsHtml = MARKETING_MATERIALS.whatsAppTemplates.map((t, idx) => `
     <div class="template-card">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-bottom:1px solid #e2e8f0; padding-bottom:6px;">
@@ -496,7 +493,7 @@ function renderWhatsAppCatalogA4() {
         <div style="width:48px; height:48px; border-radius:10px; background:linear-gradient(135deg,#0284c7,#0369a1); display:flex; align-items:center; justify-content:center; color:#fff; font-size:24px;">💬</div>
         <div class="title-box">
           <h1>كتالوج رسائل واتساب البيعية وسيناريوهات الاستقطاب الميداني</h1>
-          <p>منظومة كالكس ميديكال الطبية الشاملة · الوكيل الرسمي المعتمد: 01122166076</p>
+          <p>منظومة كالكس ميديكال الطبية الشاملة · ${distTitle}</p>
         </div>
       </div>
       <div>
@@ -512,8 +509,8 @@ function renderWhatsAppCatalogA4() {
 
     <div class="footer">
       <div>
-        <strong>وكيل منظومة كالكس ميديكال — جمهورية مصر العربية</strong><br>
-        هاتف وواتساب الدعم والمبيعات الموحد: 01122166076
+        <strong>منظومة كالكس ميديكال — الموزع المعتمد</strong><br>
+        ${dist && dist.phone ? `هاتف وواتساب الموزع المعتمد: <strong dir="ltr">${dist.phone}</strong>` : 'التواصل مع العيادات والأطباء يتم حصرياً عبر الموزع المعتمد'}
       </div>
       <div style="text-align:left;">
         وثيقة معتمدة ومحدثة دورياً · ترخيص دائم مدى الحياة 100% أوفلاين
@@ -524,8 +521,10 @@ function renderWhatsAppCatalogA4() {
 </html>`;
 }
 
-function renderWowDemoA4() {
-  const qrSvg = generateSimpleSvgQr('https://wa.me/201122166076', 90);
+function renderWowDemoA4(dist) {
+  const qrPayload = dist && dist.phone ? `https://wa.me/2${dist.phone.replace(/[^0-9]/g, '')}` : 'https://www.facebook.com/profile.php?id=61596117518854';
+  const qrSvg = generateSimpleSvgQr(qrPayload, 90);
+  const distTitle = dist ? `${dist.name} (${dist.code})${dist.phone ? ' — ' + dist.phone : ''}` : 'الموزع المعتمد لمنظومة كالكس';
   const stepsHtml = MARKETING_MATERIALS.fiveMinuteDemo.steps.map(s => `
     <div class="step-card">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
@@ -580,7 +579,7 @@ function renderWowDemoA4() {
         <div style="width:48px; height:48px; border-radius:10px; background:linear-gradient(135deg,#8b5cf6,#6d28d9); display:flex; align-items:center; justify-content:center; color:#fff; font-size:24px;">⏱️</div>
         <div class="title-box">
           <h1>سيناريو العرض الميداني الحاسم في 5 دقائق (WOW Demo)</h1>
-          <p>خطة الإبهار الفوري في العيادة · وكيل المنظومة الرسمي: 01122166076</p>
+          <p>خطة الإبهار الفوري في العيادة · ${distTitle}</p>
         </div>
       </div>
       <div>
@@ -597,7 +596,7 @@ function renderWowDemoA4() {
     <div class="footer">
       <div>
         <strong>منظومة كالكس ميديكال الطبية الشاملة</strong><br>
-        هاتف وواتساب الوكيل المعتمد: 01122166076
+        ${dist && dist.phone ? `هاتف وواتساب الموزع المعتمد: <strong dir="ltr">${dist.phone}</strong>` : 'التواصل والمبيعات عبر الموزع المعتمد في محافظتك'}
       </div>
       <div style="text-align:left;">
         دليل معتمد للموزعين الميدانيين · معدل إغلاق صفقات +80%
@@ -609,7 +608,10 @@ function renderWowDemoA4() {
 }
 
 function renderBattleCardA4(distributor) {
-  const qrSvg = generateSimpleSvgQr('https://wa.me/201122166076', 84);
+  const qrPayload = distributor && distributor.phone
+    ? `https://wa.me/2${distributor.phone.replace(/[^0-9]/g, '')}`
+    : 'https://www.facebook.com/profile.php?id=61596117518854';
+  const qrSvg = generateSimpleSvgQr(qrPayload, 84);
   const bc = MARKETING_MATERIALS.battleCardData;
   const rowsHtml = bc.comparisonPoints.map(p => `
     <tr>
@@ -621,7 +623,7 @@ function renderBattleCardA4(distributor) {
 
   const distLine = distributor
     ? `الموزع المعتمد: <strong>${distributor.name} (${distributor.code})</strong>`
-    : `وكيل منظومة كالكس ميديكال الطبية المعتمد`;
+    : `الموزع المعتمد لمنظومة كالكس ميديكال الطبية`;
 
   return `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -720,7 +722,7 @@ function renderBattleCardA4(distributor) {
     <div class="footer">
       <div>
         <div style="margin-bottom:2px;">${distLine}</div>
-        <div>المبيعات والاشتراكات والدعم الفني المعتمد (واتساب واتصال): <strong dir="ltr" style="font-size:14px; color:#0284c7;">01122166076</strong></div>
+        <div>${distributor && distributor.phone ? `المبيعات والاشتراكات والدعم الفني (الموزع المعتمد): <strong dir="ltr" style="font-size:14px; color:#0284c7;">${distributor.phone}</strong>` : 'للمعاينة والتجربة والتعاقد: تواصل مباشرة مع الموزع المعتمد في محافظتك'}</div>
       </div>
       <div style="text-align:left;">
         <strong>تجربة مجانية 14 يوماً بكامل المزايا</strong><br/>
