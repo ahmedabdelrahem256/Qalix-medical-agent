@@ -31,14 +31,14 @@ PrivilegesRequired=lowest
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
-Source: "${srcWin}\\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "${srcWin}\\*"; DestDir: "{app}"; Excludes: "BUILD_INSTALLER.bat,*.iss"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{autodesktop}\\${appNameAr}"; Filename: "{sys}\\wscript.exe"; Parameters: "//nologo ""{app}\\Qalix_Desktop_App.vbs"""; WorkingDir: "{app}"; IconFilename: "{app}\\public\\img\\qalix-agents.ico"
 Name: "{group}\\${appNameAr}"; Filename: "{sys}\\wscript.exe"; Parameters: "//nologo ""{app}\\Qalix_Desktop_App.vbs"""; WorkingDir: "{app}"; IconFilename: "{app}\\public\\img\\qalix-agents.ico"
 
 [Run]
-Filename: "{sys}\\wscript.exe"; Parameters: "//nologo ""{app}\\Qalix_Desktop_App.vbs"""; Description: "تشغيل المنظومة كبرنامج ويندوز الآن"; Flags: nowait postinstall skipifsilent
+Filename: "{sys}\\wscript.exe"; Parameters: "//nologo ""{app}\\Qalix_Desktop_App.vbs"""; Description: "Launch ${appNameAr}"; Flags: nowait postinstall skipifsilent
 `;
 }
 
@@ -82,7 +82,7 @@ function buildWindowsInstallerKit({ rootDir, baseDataDir, edition = 'qalix11', i
     setupFilename: setupBaseName
   });
   const issPath = path.join(stageDir, 'Qalix_Agents_Setup.iss');
-  fs.writeFileSync(issPath, issContent, 'utf8');
+  fs.writeFileSync(issPath, '\uFEFF' + issContent, 'utf8');
 
   const compileBat = [
     '@echo off',
@@ -96,6 +96,7 @@ function buildWindowsInstallerKit({ rootDir, baseDataDir, edition = 'qalix11', i
     'where iscc >nul 2>&1 && set "ISCC_EXE=iscc"',
     'if "%ISCC_EXE%"=="" if exist "%ProgramFiles(x86)%\\Inno Setup 6\\ISCC.exe" set "ISCC_EXE=%ProgramFiles(x86)%\\Inno Setup 6\\ISCC.exe"',
     'if "%ISCC_EXE%"=="" if exist "%ProgramFiles%\\Inno Setup 6\\ISCC.exe" set "ISCC_EXE=%ProgramFiles%\\Inno Setup 6\\ISCC.exe"',
+    'if "%ISCC_EXE%"=="" if exist "%LOCALAPPDATA%\\Programs\\Inno Setup 6\\ISCC.exe" set "ISCC_EXE=%LOCALAPPDATA%\\Programs\\Inno Setup 6\\ISCC.exe"',
     'if "%ISCC_EXE%"=="" (',
     '  echo [تنبيه] أداة Inno Setup 6 غير مثبتة على هذا الجهاز.',
     '  echo لتوليد ملف Setup.exe ثبّت Inno Setup 6 المجاني ثم شغّل هذا الملف مرة أخرى.',
@@ -128,7 +129,8 @@ function buildWindowsInstallerKit({ rootDir, baseDataDir, edition = 'qalix11', i
   try {
     const candidates = [
       path.join(process.env['ProgramFiles(x86)'] || '', 'Inno Setup 6', 'ISCC.exe'),
-      path.join(process.env.ProgramFiles || '', 'Inno Setup 6', 'ISCC.exe')
+      path.join(process.env.ProgramFiles || '', 'Inno Setup 6', 'ISCC.exe'),
+      path.join(process.env.LOCALAPPDATA || '', 'Programs', 'Inno Setup 6', 'ISCC.exe')
     ].filter(p => p && fs.existsSync(p));
     if (candidates.length) {
       execFileSync(candidates[0], [issPath], { stdio: 'pipe' });
