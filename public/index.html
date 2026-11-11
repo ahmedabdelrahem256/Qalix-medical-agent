@@ -257,18 +257,18 @@
         </div>
         <div class="sub-card">
           <div style="font-size:12px; color:var(--muted);">إجمالي المبيعات المعتمدة (بالسعر الثابت)</div>
-          <div id="kpiGrossSales" style="font-size:20px; font-weight:800; color:var(--text); margin-top:4px;">13,600 ج.م</div>
-          <div id="kpiDealsCount" style="font-size:12px; color:var(--muted);">2 صفقة مكتملة · 1 معلقة</div>
+          <div id="kpiGrossSales" style="font-size:20px; font-weight:800; color:var(--text); margin-top:4px;">0 ج.م</div>
+          <div id="kpiDealsCount" style="font-size:12px; color:var(--muted);">0 صفقة مكتملة · 0 معلقة</div>
         </div>
         <div class="sub-card">
           <div style="font-size:12px; color:var(--muted);">إجمالي عمولات الموزعين المستحقة</div>
-          <div id="kpiDistComm" style="font-size:20px; font-weight:800; color:var(--amber); margin-top:4px;">3,145 ج.م</div>
+          <div id="kpiDistComm" style="font-size:20px; font-weight:800; color:var(--amber); margin-top:4px;">0 ج.م</div>
           <div style="font-size:12px; color:var(--muted);">نسبة من سعر البيع الرسمي الثابت</div>
         </div>
         <div class="sub-card">
           <div style="font-size:12px; color:var(--muted);">صافي إيراد الوكيل المحصّل (01122166076)</div>
-          <div id="kpiAgentNet" style="font-size:20px; font-weight:800; color:var(--emerald); margin-top:4px;">10,455 ج.م</div>
-          <div id="kpiPendingNet" style="font-size:12px; color:var(--muted);">+13,875 ج.م قيد التحصيل</div>
+          <div id="kpiAgentNet" style="font-size:20px; font-weight:800; color:var(--emerald); margin-top:4px;">0 ج.م</div>
+          <div id="kpiPendingNet" style="font-size:12px; color:var(--muted);">+0 ج.م قيد التحصيل</div>
         </div>
         <div class="sub-card">
           <div style="font-size:12px; color:var(--muted);">ركن مقترحات التطوير والريادة (#1)</div>
@@ -2037,7 +2037,7 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
       const b = Number(document.getElementById('calcBasic').value) || 0;
       const p = Number(document.getElementById('calcPro').value) || 0;
       const e = Number(document.getElementById('calcEnt').value) || 0;
-      const r = Number(document.getElementById('calcBaseRate').value) || 20;
+      const r = Number(document.getElementById('calcBaseRate').value) || 27;
 
       const gross = (b * 4500) + (p * 8500) + (e * 18500);
       const distComm = Math.round(gross * (r / 100));

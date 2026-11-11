@@ -643,7 +643,11 @@ function req(method, urlPath, body) {
       recruitFlyerRes.headers['content-type'] === 'text/html; charset=utf-8' &&
       typeof recruitFlyerRes.body === 'string' &&
       recruitFlyerRes.body.includes('انضم كموزع معتمد') &&
+      recruitFlyerRes.body.includes('27%') &&
+      recruitFlyerRes.body.includes('29%') &&
+      recruitFlyerRes.body.includes('32%') &&
       recruitFlyerRes.body.includes('35%') &&
+      !/(?<!\d)(20|22|25|28)%/.test(recruitFlyerRes.body.replace(/https:\/\/wa\.me\/[^\s"']+|width:\s*\d+%/g, '')) &&
       recruitFlyerRes.body.includes('01122166076')
     );
 
@@ -654,6 +658,10 @@ function req(method, urlPath, body) {
       onboardRes.status === 200 &&
       typeof onboardRes.body === 'string' &&
       onboardRes.body.includes('استمارة بيانات الموزع الجديد') &&
+      onboardRes.body.includes('27%') &&
+      onboardRes.body.includes('29%') &&
+      onboardRes.body.includes('32%') &&
+      !/(?<!\d)(20|22|25|28)%/.test(onboardRes.body.replace(/https:\/\/wa\.me\/[^\s"']+|width:\s*\d+%/g, '')) &&
       onboardRes.body.includes('sendToAgentWhatsApp') &&
       onboardRes.body.includes('201122166076') &&
       !onboardRes.body.includes('appNationalId') &&
