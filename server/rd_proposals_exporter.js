@@ -4,6 +4,8 @@
  */
 'use strict';
 
+const { escapeHtml } = require('./html_escape');
+
 function generateProposalsDocumentHtml(proposalsList, agentInfo) {
   const byPillar = {
     product: { title: '1. تطوير المنظومة والمنتج السريري (Clinical Product R&D)', items: [] },
@@ -73,12 +75,12 @@ function generateProposalsDocumentHtml(proposalsList, agentInfo) {
         <h2>${p.title} (${p.items.length} مقترحات معتمدة)</h2>
         ${p.items.map(item => `
           <div class="prop-card">
-            <h3>💡 ${item.title}</h3>
-            <p style="font-size:12px; color:#334155; margin:4px 0;">${item.description}</p>
+            <h3>💡 ${escapeHtml(item.title)}</h3>
+            <p style="font-size:12px; color:#334155; margin:4px 0;">${escapeHtml(item.description)}</p>
             <div class="prop-meta">
-              <span style="color:#15803d; font-weight:bold;">الأثر المتوقع: ${item.impact}</span>
-              <span style="color:#0284c7;">الأولوية: ${item.priority}</span>
-              <span style="color:#64748b;">الحالة: ${item.status}</span>
+              <span style="color:#15803d; font-weight:bold;">الأثر المتوقع: ${escapeHtml(item.impact)}</span>
+              <span style="color:#0284c7;">الأولوية: ${escapeHtml(item.priority)}</span>
+              <span style="color:#64748b;">الحالة: ${escapeHtml(item.status)}</span>
             </div>
           </div>
         `).join('')}

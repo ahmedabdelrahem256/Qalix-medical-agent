@@ -79,9 +79,13 @@ function getObjectionById(id) {
   return OBJECTION_PLAYBOOK.find(o => o.id === id) || null;
 }
 
+const { escapeHtml } = require('./html_escape');
+
 function renderObjectionsPlaybookA4(distInfo = {}) {
-  const distName = (distInfo && distInfo.name) ? `${distInfo.name}${distInfo.code ? ' (' + distInfo.code + ')' : ''}` : 'الموزع المعتمد لمنظومة كالكس';
-  const distPhone = (distInfo && distInfo.phone) ? distInfo.phone : '';
+  const distName = (distInfo && distInfo.name)
+    ? escapeHtml(`${distInfo.name}${distInfo.code ? ' (' + distInfo.code + ')' : ''}`)
+    : 'الموزع المعتمد لمنظومة كالكس';
+  const distPhone = (distInfo && distInfo.phone) ? escapeHtml(distInfo.phone) : '';
   const cardsHtml = OBJECTION_PLAYBOOK.map((o, idx) => `
     <div class="obj-card">
       <div class="obj-head">

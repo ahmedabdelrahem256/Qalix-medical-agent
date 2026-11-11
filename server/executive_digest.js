@@ -4,6 +4,8 @@
  */
 'use strict';
 
+const { escapeHtml } = require('./html_escape');
+
 function calculateCommercialAlerts(db) {
   const alerts = [];
   const now = new Date();
@@ -165,13 +167,13 @@ function generateExecutiveWeeklyDigestHtml(summaryData, agentInfo) {
     <tbody>
       ${dists.map(d => `
         <tr>
-          <td style="font-family:monospace; font-weight:bold;">${d.code}</td>
-          <td><strong>${d.name}</strong></td>
-          <td>${d.governorate}</td>
-          <td>${d.commission_rate}%</td>
-          <td>${d.metrics.completedDeals}</td>
-          <td>${d.metrics.grossSales.toLocaleString('en-US')} ج.م</td>
-          <td style="color:#15803d; font-weight:bold;">${d.metrics.totalAgentNet.toLocaleString('en-US')} ج.م</td>
+          <td style="font-family:monospace; font-weight:bold;">${escapeHtml(d.code)}</td>
+          <td><strong>${escapeHtml(d.name)}</strong></td>
+          <td>${escapeHtml(d.governorate)}</td>
+          <td>${Number(d.commission_rate) || 27}%</td>
+          <td>${Number(d.metrics?.completedDeals) || 0}</td>
+          <td>${(Number(d.metrics?.grossSales) || 0).toLocaleString('en-US')} ج.م</td>
+          <td style="color:#15803d; font-weight:bold;">${(Number(d.metrics?.totalAgentNet) || 0).toLocaleString('en-US')} ج.م</td>
         </tr>
       `).join('')}
     </tbody>
@@ -192,11 +194,11 @@ function generateExecutiveWeeklyDigestHtml(summaryData, agentInfo) {
     <tbody>
       ${deals.slice(0, 8).map(dl => `
         <tr>
-          <td><strong>${dl.clinic_name}</strong> (${dl.doctor_name})</td>
-          <td>${dl.city}</td>
-          <td>${dl.tier}</td>
-          <td>${dl.fixed_price.toLocaleString('en-US')} ج.م</td>
-          <td style="color:#15803d; font-weight:bold;">${dl.agent_net_amount.toLocaleString('en-US')} ج.م</td>
+          <td><strong>${escapeHtml(dl.clinic_name)}</strong> (${escapeHtml(dl.doctor_name)})</td>
+          <td>${escapeHtml(dl.city)}</td>
+          <td>${escapeHtml(dl.tier)}</td>
+          <td>${(Number(dl.fixed_price) || 0).toLocaleString('en-US')} ج.م</td>
+          <td style="color:#15803d; font-weight:bold;">${(Number(dl.agent_net_amount) || 0).toLocaleString('en-US')} ج.م</td>
           <td>${dl.status === 'completed' ? '✔ مكتملة ومفعلة' : '⏳ قيد التحصيل'}</td>
         </tr>
       `).join('')}

@@ -423,27 +423,29 @@ https://mega.nz/file/T6hxgRaK#j7_5EtTGN3TJcgxoOHd_eP-JENFmXHgaxXNlrKO6qGI
   ]
 };
 
+const { escapeHtml } = require('./html_escape');
 const { generateSimpleSvgQr } = require('./network_diagnostics');
 
 function renderWhatsAppCatalogA4(dist) {
-  const qrPayload = dist && dist.phone ? `https://wa.me/2${dist.phone.replace(/[^0-9]/g, '')}` : 'https://www.facebook.com/profile.php?id=61596117518854';
+  const qrPayload = dist && dist.phone ? `https://wa.me/2${String(dist.phone).replace(/[^0-9]/g, '')}` : 'https://www.facebook.com/profile.php?id=61596117518854';
   const qrSvg = generateSimpleSvgQr(qrPayload, 90);
-  const distTitle = dist ? `${dist.name} (${dist.code})${dist.phone ? ' — ' + dist.phone : ''}` : 'الموزع المعتمد لمنظومة كالكس ميديكال';
+  const distTitle = dist ? escapeHtml(`${dist.name} (${dist.code})${dist.phone ? ' — ' + dist.phone : ''}`) : 'الموزع المعتمد لمنظومة كالكس ميديكال';
+  const safeDistPhone = dist && dist.phone ? escapeHtml(dist.phone) : '';
   const cardsHtml = MARKETING_MATERIALS.whatsAppTemplates.map((t, idx) => `
     <div class="template-card">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-bottom:1px solid #e2e8f0; padding-bottom:6px;">
         <div>
-          <span class="badge" style="background:#0284c7; color:#fff; font-size:11px; padding:2px 8px; border-radius:6px;">${t.category}</span>
-          <strong style="margin-right:8px; font-size:14px; color:#0f172a;">${t.title}</strong>
+          <span class="badge" style="background:#0284c7; color:#fff; font-size:11px; padding:2px 8px; border-radius:6px;">${escapeHtml(t.category)}</span>
+          <strong style="margin-right:8px; font-size:14px; color:#0f172a;">${escapeHtml(t.title)}</strong>
         </div>
-        <span style="font-size:11.5px; color:#64748b;">🎯 الفئة المستهدفة: ${t.target}</span>
+        <span style="font-size:11.5px; color:#64748b;">🎯 الفئة المستهدفة: ${escapeHtml(t.target)}</span>
       </div>
-      <pre class="script-box">${t.text}</pre>
+      <pre class="script-box">${escapeHtml(t.text)}</pre>
       <div class="no-print" style="display:flex; gap:10px; margin-top:10px; justify-content:flex-end;">
         <a href="https://api.whatsapp.com/send?text=${encodeURIComponent(t.text)}" target="_blank" class="action-btn wa-btn">
           📲 فتح وإرسال عبر تطبيق واتساب مباشرة
         </a>
-        <button onclick="navigator.clipboard.writeText(${JSON.stringify(t.text).replace(/"/g, '&quot;')}); alert('تم نسخ نص الرسالة للحافظة بنجاح!');" class="action-btn copy-btn">
+        <button onclick="navigator.clipboard.writeText(${escapeHtml(JSON.stringify(t.text))}); alert('تم نسخ نص الرسالة للحافظة بنجاح!');" class="action-btn copy-btn">
           📋 نسخ النص
         </button>
       </div>
@@ -508,7 +510,7 @@ function renderWhatsAppCatalogA4(dist) {
     <div class="footer">
       <div>
         <strong>منظومة كالكس ميديكال — الموزع المعتمد</strong><br>
-        ${dist && dist.phone ? `هاتف وواتساب الموزع المعتمد: <strong dir="ltr">${dist.phone}</strong>` : 'التواصل مع العيادات والأطباء يتم حصرياً عبر الموزع المعتمد'}
+        ${safeDistPhone ? `هاتف وواتساب الموزع المعتمد: <strong dir="ltr">${safeDistPhone}</strong>` : 'التواصل مع العيادات والأطباء يتم حصرياً عبر الموزع المعتمد'}
       </div>
       <div style="text-align:left;">
         وثيقة معتمدة ومحدثة دورياً · ترخيص دائم مدى الحياة 100% أوفلاين
@@ -520,9 +522,10 @@ function renderWhatsAppCatalogA4(dist) {
 }
 
 function renderWowDemoA4(dist) {
-  const qrPayload = dist && dist.phone ? `https://wa.me/2${dist.phone.replace(/[^0-9]/g, '')}` : 'https://www.facebook.com/profile.php?id=61596117518854';
+  const qrPayload = dist && dist.phone ? `https://wa.me/2${String(dist.phone).replace(/[^0-9]/g, '')}` : 'https://www.facebook.com/profile.php?id=61596117518854';
   const qrSvg = generateSimpleSvgQr(qrPayload, 90);
-  const distTitle = dist ? `${dist.name} (${dist.code})${dist.phone ? ' — ' + dist.phone : ''}` : 'الموزع المعتمد لمنظومة كالكس';
+  const distTitle = dist ? escapeHtml(`${dist.name} (${dist.code})${dist.phone ? ' — ' + dist.phone : ''}`) : 'الموزع المعتمد لمنظومة كالكس';
+  const safeDistPhone = dist && dist.phone ? escapeHtml(dist.phone) : '';
   const stepsHtml = MARKETING_MATERIALS.fiveMinuteDemo.steps.map(s => `
     <div class="step-card">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
@@ -594,7 +597,7 @@ function renderWowDemoA4(dist) {
     <div class="footer">
       <div>
         <strong>منظومة كالكس ميديكال الطبية الشاملة</strong><br>
-        ${dist && dist.phone ? `هاتف وواتساب الموزع المعتمد: <strong dir="ltr">${dist.phone}</strong>` : 'التواصل والمبيعات عبر الموزع المعتمد في محافظتك'}
+        ${safeDistPhone ? `هاتف وواتساب الموزع المعتمد: <strong dir="ltr">${safeDistPhone}</strong>` : 'التواصل والمبيعات عبر الموزع المعتمد في محافظتك'}
       </div>
       <div style="text-align:left;">
         دليل معتمد للموزعين الميدانيين · معدل إغلاق صفقات +80%
@@ -607,7 +610,7 @@ function renderWowDemoA4(dist) {
 
 function renderBattleCardA4(distributor) {
   const qrPayload = distributor && distributor.phone
-    ? `https://wa.me/2${distributor.phone.replace(/[^0-9]/g, '')}`
+    ? `https://wa.me/2${String(distributor.phone).replace(/[^0-9]/g, '')}`
     : 'https://www.facebook.com/profile.php?id=61596117518854';
   const qrSvg = generateSimpleSvgQr(qrPayload, 84);
   const bc = MARKETING_MATERIALS.battleCardData;
@@ -620,8 +623,9 @@ function renderBattleCardA4(distributor) {
   `).join('');
 
   const distLine = distributor
-    ? `الموزع المعتمد: <strong>${distributor.name} (${distributor.code})</strong>`
+    ? `الموزع المعتمد: <strong>${escapeHtml(distributor.name)} (${escapeHtml(distributor.code)})</strong>`
     : `الموزع المعتمد لمنظومة كالكس ميديكال الطبية`;
+  const safeDistributorPhone = distributor && distributor.phone ? escapeHtml(distributor.phone) : '';
 
   return `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -720,7 +724,7 @@ function renderBattleCardA4(distributor) {
     <div class="footer">
       <div>
         <div style="margin-bottom:2px;">${distLine}</div>
-        <div>${distributor && distributor.phone ? `المبيعات والاشتراكات والدعم الفني (الموزع المعتمد): <strong dir="ltr" style="font-size:14px; color:#0284c7;">${distributor.phone}</strong>` : 'للمعاينة والتجربة والتعاقد: تواصل مباشرة مع الموزع المعتمد في محافظتك'}</div>
+        <div>${safeDistributorPhone ? `المبيعات والاشتراكات والدعم الفني (الموزع المعتمد): <strong dir="ltr" style="font-size:14px; color:#0284c7;">${safeDistributorPhone}</strong>` : 'للمعاينة والتجربة والتعاقد: تواصل مباشرة مع الموزع المعتمد في محافظتك'}</div>
       </div>
       <div style="text-align:left;">
         <strong>تجربة مجانية 14 يوماً بكامل المزايا</strong><br/>
