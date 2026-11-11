@@ -844,7 +844,32 @@ function req(method, urlPath, body) {
       }
     );
 
-    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/60 PASSED ===`);
+    // 61. Dev Console Safe Reset Center: Expandable Accordions + Clear Audits + Factory Reset
+    const clearAuditRes = await req('POST', '/api/dev/clear-audits');
+    const factoryRes = await req('POST', '/api/dev/factory-reset');
+    const postFactoryBoot = await req('GET', '/api/bootstrap');
+    const accordionCount = (dashHtmlRes.body.match(/<details class="reset-guide"/g) || []).length;
+    check('61. مركز تصفير وتطهير البيانات بأمان: الشرح المنسدل ووظائف التصفير وضبط المصنع مع النسخ الاحتياطي',
+      accordionCount >= 4 &&
+      dashHtmlRes.body.includes('showDevResetResult') &&
+      clearAuditRes.status === 200 &&
+      clearAuditRes.body.ok === true &&
+      typeof clearAuditRes.body.safetyBackup === 'string' &&
+      factoryRes.status === 200 &&
+      factoryRes.body.ok === true &&
+      typeof factoryRes.body.safetyBackup === 'string' &&
+      postFactoryBoot.status === 200 &&
+      postFactoryBoot.body.distributors.length >= 3 &&
+      postFactoryBoot.body.distributors.every(d => d.commission_rate >= 27),
+      {
+        accordionCount,
+        clearAuditStatus: clearAuditRes.status,
+        factoryStatus: factoryRes.status,
+        factoryBody: factoryRes.body
+      }
+    );
+
+    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/61 PASSED ===`);
     for (const r of results) console.log(' ✅', r);
   } finally {
     srv.kill('SIGINT');

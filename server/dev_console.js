@@ -100,9 +100,9 @@ function resetAllDataFactory(db, seedDistributorsFn) {
   try { db.prepare('DELETE FROM audit_log').run(); } catch (_) {}
   try { db.prepare('DELETE FROM audit_logs').run(); } catch (_) {}
 
-  // Try clearing lead locks if table exists
+  // Clear territory lead locks if table exists
   try {
-    db.prepare('DELETE FROM territory_lead_locks').run();
+    db.prepare('DELETE FROM lead_locks').run();
   } catch (_) {}
 
   // Re-seed distributors if function provided

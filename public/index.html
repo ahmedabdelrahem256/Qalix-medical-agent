@@ -201,6 +201,48 @@
       border-color: transparent;
     }
     #svgChartsRow svg, #forecastSvgContainer svg { max-width: 100%; height: auto; display: block; direction: ltr; }
+    .reset-guide {
+      margin: 8px 0 10px;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      background: var(--card);
+      overflow: hidden;
+    }
+    .reset-guide summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 8px 11px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--sky);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      user-select: none;
+      transition: background 0.2s ease;
+    }
+    .reset-guide summary::-webkit-details-marker { display: none; }
+    .reset-guide summary:hover { background: rgba(56, 189, 248, 0.08); }
+    .reset-guide summary .chev {
+      display: inline-block;
+      transition: transform 0.22s ease;
+      font-size: 11px;
+      opacity: 0.85;
+    }
+    .reset-guide[open] summary .chev { transform: rotate(180deg); }
+    .reset-guide .guide-body {
+      padding: 10px 12px;
+      border-top: 1px solid var(--border);
+      font-size: 11.5px;
+      line-height: 1.65;
+      color: var(--muted);
+    }
+    .reset-guide .guide-body ul {
+      margin: 4px 0 0;
+      padding-right: 18px;
+    }
+    .reset-guide .guide-body li { margin-bottom: 4px; }
     @media (max-width: 960px) {
       .glass table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
     }
@@ -1396,37 +1438,91 @@
 
         <div class="grid-2" style="align-items:stretch; gap:18px;">
           <!-- Left Column: Safe Data Reset Operations -->
-          <div class="sub-card" style="display:flex; flex-direction:column; justify-content:space-between; background:rgba(15,23,42,0.6); border:1px solid rgba(244,63,94,0.3);">
+          <div class="sub-card" style="display:flex; flex-direction:column; justify-content:space-between; background:var(--card-2); border:1px solid rgba(244,63,94,0.3);">
             <div>
-              <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+              <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
                 <h3 style="margin:0; font-size:16px; color:var(--rose);">🧹 مركز تصفير وتطهير البيانات بأمان</h3>
                 <span class="badge b-rose">حماية النسخ الاحتياطي التلقائي</span>
               </div>
-              <p style="font-size:12px; color:var(--muted); line-height:1.6; margin-top:0;">
-                ⚠️ <strong>صمام أمان رقمي:</strong> أي إجراء تصفير يتم حمايته بأخذ لقطة استعادة فورية (SQLite Snapshot) مشفرة وموثقة في <code>data/backups/</code> تلقائياً قبل الحذف لمنع أي فقدان للبيانات.
+              <p style="font-size:12px; color:var(--muted); line-height:1.6; margin-top:0; margin-bottom:8px;">
+                ⚠️ <strong>صمام أمان رقمي:</strong> أي إجراء تصفير يأخذ تلقائياً لقطة استعادة فورية (<code>SQLite Snapshot</code> + بصمة <code>SHA-256</code>) داخل <code>data/backups/</code> قبل التنفيذ.
               </p>
 
-              <div style="display:flex; flex-direction:column; gap:12px; margin:16px 0;">
+              <details class="reset-guide" style="border-color:rgba(16,185,129,0.35);">
+                <summary style="color:var(--emerald);">
+                  <span>🛡️ إرشادات الأمان العامة وطريقة التراجع واستعادة أي لقطة احتياطية</span>
+                  <span class="chev">▼</span>
+                </summary>
+                <div class="guide-body">
+                  <ul>
+                    <li><strong>الأولوية الآمنة:</strong> اختر <b>(1)</b> لتنظيف المبيعات فقط دون المساس بالموزعين، أو <b>(2)</b> لتصفير سجل التدقيق فقط، ولا تستخدم <b>(3)</b> إلا لإعادة ضبط المنظومة من الصفر.</li>
+                    <li><strong>قبل الحذف:</strong> يحفظ الخادم ملفاً باسم <code>agent_snapshot_YYYY-MM-DD....db</code> في مجلد <code>data/backups/</code> دون لمس النسخ اليدوية السابقة.</li>
+                    <li><strong>بوابات الموزعين والوسائط:</strong> الفيديوهات المرفوعة وقوالب واتساب المخصصة ومقترحات التطوير تبقى محفوظة في كل الخيارات الثلاثة.</li>
+                    <li><strong>الاستعادة عند الخطأ:</strong> يمكنك استعراض اللقطات المحفوظة من <strong>القسم 9 (ما بعد البيع والنسخ الاحتياطي)</strong> أو استبدال <code>data/agent.db</code> باللقطة بعد إيقاف الخادم.</li>
+                  </ul>
+                </div>
+              </details>
+
+              <div style="display:flex; flex-direction:column; gap:12px; margin:14px 0;">
                 <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:10px; padding:12px;">
                   <div style="font-size:13px; font-weight:bold; color:var(--text); margin-bottom:4px;">1. تصفير الصفقات التجريبية فقط</div>
-                  <div style="font-size:11.5px; color:var(--muted); margin-bottom:8px;">يحذف كافة الصفقات المسجلة للبدء بسجل مبيعات فارغ وجديد تماماً، مع الحفاظ الكامل على الموزعين وبواباتهم.</div>
+                  <div style="font-size:11.5px; color:var(--muted);">يحذف كافة الصفقات المسجلة للبدء بسجل مبيعات فارغ وجديد تماماً، مع الحفاظ الكامل على الموزعين وبواباتهم.</div>
+                  <details class="reset-guide">
+                    <summary>
+                      <span>📖 إرشادات وشرح مفصل — اضغط للعرض</span>
+                      <span class="chev">▼</span>
+                    </summary>
+                    <div class="guide-body">
+                      <ul>
+                        <li><strong style="color:var(--rose);">ماذا يُحذف؟</strong> جميع الصفوف في جدول الصفقات (<code>deals</code>) وسجلات إنشاء/تسوية الصفقات المرتبطة بها في التدقيق.</li>
+                        <li><strong style="color:var(--emerald);">ماذا يبقى محفوظاً؟</strong> جميع الموزعين المعتمدين وأكوادهم وبواباتهم (<code>distributors_kits</code>)، ونسب العمولة الجديدة، وحجوزات العيادات، ومقترحات التطوير.</li>
+                        <li><strong style="color:var(--sky);">متى يُستخدم؟</strong> بعد انتهاء تجارب التشغيل أو الاختبارات وقبل بدء تسجيل الصفقات الحقيقية، وتُحفظ لقطة احتياطية تلقائية قبله مباشرة.</li>
+                      </ul>
+                    </div>
+                  </details>
                   <button class="btn btn-sm" style="background:#e11d48; color:#fff;" onclick="devResetDeals()">🧹 تصفير الصفقات التجريبية (Reset Deals)</button>
                 </div>
 
                 <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:10px; padding:12px;">
                   <div style="font-size:13px; font-weight:bold; color:var(--text); margin-bottom:4px;">2. تصفير سجل التدقيق الجنائي</div>
-                  <div style="font-size:11.5px; color:var(--muted); margin-bottom:8px;">يفرغ سجل العمليات وسلسلة الهاش لبدء مراقبة جديدة بعد مرحلة الاختبار والتسليم.</div>
+                  <div style="font-size:11.5px; color:var(--muted);">يفرغ سجل العمليات وسلسلة الهاش لبدء مراقبة جديدة بعد مرحلة الاختبار والتسليم.</div>
+                  <details class="reset-guide">
+                    <summary>
+                      <span>📖 إرشادات وشرح مفصل — اضغط للعرض</span>
+                      <span class="chev">▼</span>
+                    </summary>
+                    <div class="guide-body">
+                      <ul>
+                        <li><strong style="color:var(--rose);">ماذا يُحذف؟</strong> جدول سجل التدقيق الجنائي وسلسلة التحقق (<code>audit_log</code>) فقط.</li>
+                        <li><strong style="color:var(--emerald);">ماذا يبقى محفوظاً؟</strong> جميع الموزعين وجميع الصفقات النشطة والمكتملة وإيصالاتها وتراخيصها وحجوزات العيادات بالكامل.</li>
+                        <li><strong style="color:var(--sky);">متى يُستخدم؟</strong> لبدء سجل تدقيق نظيف بالبصمة المشفرة بعد انتهاء تهيئة النظام وتجربته مع أرشفة السجل القديم في <code>data/backups/</code>.</li>
+                      </ul>
+                    </div>
+                  </details>
                   <button class="btn btn-sm" style="background:#ea580c; color:#fff;" onclick="devClearAudits()">🗑️ تصفير سجل التدقيق (Clear Audit Log)</button>
                 </div>
 
                 <div style="background:rgba(244,63,94,0.08); border:1px dashed #f43f5e; border-radius:10px; padding:12px;">
                   <div style="font-size:13px; font-weight:bold; color:var(--rose); margin-bottom:4px;">3. استعادة ضبط المصنع الكامل (Factory Reset)</div>
-                  <div style="font-size:11.5px; color:var(--muted); margin-bottom:8px;">يعيد المنظومة كأنها مثبتة الآن: يصفر كل شيء ويغرس الموزعين المعتمدين الأوائل بصورة نظيفة.</div>
+                  <div style="font-size:11.5px; color:var(--muted);">يعيد المنظومة لحالة التأسيس النظيفة: يمسح الموزعين المضافين والصفقات وحجوزات العيادات وسجل التدقيق ويغرس التهيئة الأولية.</div>
+                  <details class="reset-guide" style="border-color:rgba(244,63,94,0.35);">
+                    <summary style="color:var(--amber);">
+                      <span>⚠️ إرشادات وشرح مفصل (إجراء شامل) — اضغط للعرض</span>
+                      <span class="chev">▼</span>
+                    </summary>
+                    <div class="guide-body">
+                      <ul>
+                        <li><strong style="color:var(--rose);">ماذا يُحذف؟</strong> جميع الموزعين الحاليين، جميع الصفقات، جميع حجوزات العيادات (<code>lead_locks</code>)، وسجل التدقيق الكامل، ثم تُغرس بيانات التأسيس الافتراضية من الصفر بنسب العمولة المعتمدة (<code>27% / 32%</code>).</li>
+                        <li><strong style="color:var(--emerald);">ماذا يبقى محفوظاً؟</strong> الفيديوهات التسويقية والوسائط المرفوعة، مقترحات التطوير الـ 14، وقوالب واتساب المخصصة، إضافة إلى لقطة أمان تلقائية كاملة قبل المسح.</li>
+                        <li><strong style="color:var(--amber);">تحذير ومتى يُستخدم؟</strong> يتطلب <strong>تأكيدين متتاليين</strong>، ولا يُنصح به إلا عند الرغبة في إعادة تهيئة المنظومة بالكامل على جهاز جديد أو من نقطة البداية.</li>
+                      </ul>
+                    </div>
+                  </details>
                   <button class="btn btn-sm" style="background:#991b1b; color:#fff; font-weight:bold;" onclick="devFactoryReset()">⚠️ استعادة ضبط المصنع بالكامل (Factory Reset)</button>
                 </div>
               </div>
             </div>
-            <div id="devResetResult" style="display:none; font-size:12px; padding:10px; border-radius:8px; margin-top:10px;"></div>
+            <div id="devResetResult" style="display:none; font-size:12px; padding:10px 12px; border-radius:8px; margin-top:10px; line-height:1.6;"></div>
           </div>
 
           <!-- Right Column: Media & Marketing Video Uploader -->
@@ -2876,6 +2972,16 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
       } catch (_) {}
     }
 
+    function showDevResetResult(ok, msg, backupFile) {
+      const box = document.getElementById('devResetResult');
+      if (!box) return;
+      box.style.display = 'block';
+      box.style.background = ok ? 'rgba(16,185,129,0.12)' : 'rgba(244,63,94,0.12)';
+      box.style.border = ok ? '1px solid var(--emerald)' : '1px solid var(--rose)';
+      box.style.color = 'var(--text)';
+      box.innerHTML = (ok ? '✅ ' : '❌ ') + msg + (backupFile ? `<br><span style="color:var(--sky);">📁 لقطة الأمان المحفوظة في <code>data/backups/</code>: <code dir="ltr">${backupFile}</code></span>` : '');
+    }
+
     async function devResetDeals() {
       const ok = confirm('⚠️ تحذير أمني:\nهل أنت متأكد من رغبتك في تصفير وحذف كافة الصفقات التجريبية؟\n\n(سيتم أخذ لقطة استعادة فورية لقاعدة البيانات تلقائياً قبل الحذف)');
       if (!ok) return;
@@ -2883,13 +2989,16 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
         const r = await fetch('/api/dev/reset-deals', { method: 'POST' });
         const res = await r.json();
         if (res.ok) {
+          showDevResetResult(true, res.message, res.safetyBackup);
           alert('✅ ' + res.message + '\n\n📁 ملف النسخة الاحتياطية: ' + res.safetyBackup);
           load();
           loadDevStatus();
         } else {
+          showDevResetResult(false, res.error || 'خطأ غير معروف');
           alert('❌ فشل الإجراء: ' + (res.error || 'خطأ غير معروف'));
         }
       } catch (e) {
+        showDevResetResult(false, 'خطأ في الاتصال: ' + e.message);
         alert('❌ خطأ في الاتصال: ' + e.message);
       }
     }
@@ -2901,19 +3010,22 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
         const r = await fetch('/api/dev/clear-audits', { method: 'POST' });
         const res = await r.json();
         if (res.ok) {
-          alert('✅ ' + res.message);
+          showDevResetResult(true, res.message, res.safetyBackup);
+          alert('✅ ' + res.message + '\n\n📁 ملف النسخة الاحتياطية: ' + (res.safetyBackup || ''));
           load();
           loadDevStatus();
         } else {
+          showDevResetResult(false, res.error || 'خطأ غير معروف');
           alert('❌ فشل الإجراء: ' + (res.error || 'خطأ غير معروف'));
         }
       } catch (e) {
+        showDevResetResult(false, 'خطأ في الاتصال: ' + e.message);
         alert('❌ خطأ في الاتصال: ' + e.message);
       }
     }
 
     async function devFactoryReset() {
-      const ok1 = confirm('⚠️ تحذير بالغ الخطورة:\nأنت على وشك استعادة ضبط المصنع الكامل للمنظومة بالكامل!\n\nسيتم مسح الصفقات والموزعين وسجل العمليات، مع زرع التهيئات الافتراضية الصافية.\n(سيتم أخذ لقطة استعادة أمان فورية لكامل البيانات تلقائياً قبل التصفير)\n\nهل تريد المتابعة؟');
+      const ok1 = confirm('⚠️ تحذير بالغ الخطورة:\nأنت على وشك استعادة ضبط المصنع الكامل للمنظومة بالكامل!\n\nسيتم مسح الصفقات والموزعين وحجوزات العيادات وسجل العمليات، مع زرع التهيئات الافتراضية الصافية.\n(سيتم أخذ لقطة استعادة أمان فورية لكامل البيانات تلقائياً قبل التصفير)\n\nهل تريد المتابعة؟');
       if (!ok1) return;
       const ok2 = confirm('تأكيد نهائي: اضغط موافق لتنفيذ استعادة ضبط المصنع الآن.');
       if (!ok2) return;
@@ -2921,12 +3033,15 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
         const r = await fetch('/api/dev/factory-reset', { method: 'POST' });
         const res = await r.json();
         if (res.ok) {
+          showDevResetResult(true, res.message, res.safetyBackup);
           alert('✅ ' + res.message + '\n\n📁 ملف الأمان: ' + res.safetyBackup);
           window.location.reload();
         } else {
+          showDevResetResult(false, res.error || 'خطأ غير معروف');
           alert('❌ فشل الإجراء: ' + (res.error || 'خطأ غير معروف'));
         }
       } catch (e) {
+        showDevResetResult(false, 'خطأ في الاتصال: ' + e.message);
         alert('❌ خطأ في الاتصال: ' + e.message);
       }
     }
