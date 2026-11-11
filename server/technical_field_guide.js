@@ -3,6 +3,21 @@
  */
 'use strict';
 
+const fs = require('node:fs');
+const path = require('node:path');
+
+const LEGAL_DOCS_DIR = path.join(__dirname, '..', 'الوثائق_القانونية_والتسليم');
+
+function readLegalDocB64(filename) {
+  try {
+    const p = path.join(LEGAL_DOCS_DIR, filename);
+    if (fs.existsSync(p)) {
+      return fs.readFileSync(p).toString('base64');
+    }
+  } catch (_) {}
+  return '';
+}
+
 const TECH_SETUP_STEPS = [
   {
     num: '1',
@@ -133,6 +148,8 @@ function renderDoctorCatalogFallbackHtml(agentInfo) {
 function renderTechnicalFieldSectionHtml(dist, agentInfo) {
   const phone = (agentInfo && agentInfo.phone) || '01122166076';
   const catalogFallbackB64 = Buffer.from(renderDoctorCatalogFallbackHtml(agentInfo), 'utf8').toString('base64');
+  const quickStartFallbackB64 = readLegalDocB64('دليل_التشغيل_السريع_للمنشأة.html');
+  const warrantyFallbackB64 = readLegalDocB64('شهادة_الضمان_والتسليم_السيادي.html');
 
   const stepsCards = TECH_SETUP_STEPS.map(s => `
     <div class="sub-card" style="border-right:3px solid var(--sky);">
@@ -148,6 +165,8 @@ function renderTechnicalFieldSectionHtml(dist, agentInfo) {
 
   return {
     catalogFallbackB64,
+    quickStartFallbackB64,
+    warrantyFallbackB64,
     html: `
     <!-- 9. Technical Setup Guide, Doctor Catalog & Completion Confirmation to Agent -->
     <div class="card no-print" style="border:1px solid rgba(14,165,233,0.4);">
@@ -167,20 +186,26 @@ function renderTechnicalFieldSectionHtml(dist, agentInfo) {
       <!-- Part B: Leave Usage Catalog for the Doctor -->
       <div class="sub-card" style="background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.35); margin-bottom:16px;">
         <h4 style="margin:0 0 6px; color:var(--accent); font-size:14px;">ثانياً: تسليم وترك كتالوج استخدام المنظومة للطبيب قبل المغادرة:</h4>
-        <p style="margin:0 0 10px; font-size:12.5px; color:var(--muted);">
-          اطبع أو احفظ للطبيب على جهاز العيادة نسخة من كتالوج الاستخدام المختصر ودليل المدير المصور وشهادة الضمان:
+        <p style="margin:0 0 12px; font-size:12.5px; color:var(--muted);">
+          اختر المستند من القائمة أو استخدم أزرار المعاينة والتحميل الفورية لحفظ وطباعة نسخة الطبيب على جهاز العيادة (تعمل أوفلاين بالكامل):
         </p>
+
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:12px; background:rgba(15,23,42,0.55); padding:10px; border-radius:10px; border:1px solid var(--border);">
+          <select id="doctorCatalogActionSelect" style="flex:1; min-width:240px; margin-top:0;">
+            <option value="catalog">📖 كتالوج الاستخدام المختصر للطبيب (أوفلاين A4)</option>
+            <option value="quickstart">📄 دليل التشغيل السريع الرسمي للمنشأة (HTML)</option>
+            <option value="pdfguide">📘 دليل المدير المصور الكامل (PDF)</option>
+            <option value="warranty">🛡️ شهادة الضمان والتسليم السيادي (HTML)</option>
+          </select>
+          <button type="button" onclick="handleDoctorCatalogSelection('preview')" style="background:#059669; color:#fff;">👁️ معاينة / طباعة</button>
+          <button type="button" onclick="handleDoctorCatalogSelection('download')" class="btn-blue">⬇️ تحميل الملف</button>
+        </div>
+
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
-          <button type="button" onclick="openOfflineDoctorCatalog()" style="background:#059669; color:#fff;">📖 طباعة / فتح كتالوج الاستخدام للطبيب (أوفلاين A4)</button>
-          <a href="/legal-docs/دليل_التشغيل_السريع_للمنشأة.html" target="_blank" style="text-decoration:none;">
-            <button type="button" class="btn-blue">📄 دليل التشغيل السريع الرسمي (HTML)</button>
-          </a>
-          <a href="/legal-docs/دليل_المدير_المصور.pdf" target="_blank" style="text-decoration:none;">
-            <button type="button" class="btn-amber">📘 دليل المدير المصور (PDF)</button>
-          </a>
-          <a href="/legal-docs/شهادة_الضمان_والتسليم_السيادي.html" target="_blank" style="text-decoration:none;">
-            <button type="button" style="background:#7c3aed; color:#fff;">🛡️ شهادة الضمان السيادي</button>
-          </a>
+          <button type="button" onclick="openOfflineDoctorCatalog()" style="background:#059669; color:#fff;">📖 كتالوج الاستخدام للطبيب (معاينة وتحميل A4)</button>
+          <button type="button" onclick="openQuickStartDoc()" class="btn-blue">📄 دليل التشغيل السريع (HTML)</button>
+          <button type="button" onclick="openDirectorPdfGuide()" class="btn-amber">📘 دليل المدير المصور (PDF)</button>
+          <button type="button" onclick="openWarrantyCertDoc()" style="background:#7c3aed; color:#fff;">🛡️ شهادة الضمان السيادي</button>
         </div>
       </div>
 

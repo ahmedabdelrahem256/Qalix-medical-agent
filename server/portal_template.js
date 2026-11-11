@@ -17,6 +17,7 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
   <title>حقيبة الموزع المستقل: ${dist.name} | Qalix Medical Agent</title>
   <style>
     :root {
+      color-scheme: dark;
       --bg: #0b1120;
       --card: #111827;
       --card2: #1e293b;
@@ -25,6 +26,7 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
       --muted: #9ca3af;
       --accent: #10b981;
       --blue: #0ea5e9;
+      --sky: #38bdf8;
       --amber: #f59e0b;
       --rose: #f43f5e;
       --purple: #a855f7;
@@ -37,6 +39,7 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
     .badge { display: inline-block; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; background: rgba(16,185,129,0.15); color: var(--accent); border: 1px solid rgba(16,185,129,0.3); }
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 16px; }
     input, select, textarea { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border); background: #0f172a; color: var(--text); font-size: 13px; margin-top: 4px; }
+    select option, select optgroup { background-color: #0f172a; color: #f9fafb; }
     button { cursor: pointer; padding: 10px 16px; border-radius: 10px; border: none; font-weight: 700; font-size: 13px; background: var(--accent); color: #052e16; transition: 0.2s; }
     button:hover { opacity: 0.9; }
     .btn-blue { background: var(--blue); color: #082f49; }
@@ -139,9 +142,7 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
     <div class="card">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
         <h3 style="margin:0; color:var(--accent);">5. رسائل واتساب البيعية الجاهزة للإرسال للأطباء</h3>
-        <a href="/api/marketing/whatsapp-catalog" target="_blank" style="text-decoration:none;">
-          <button type="button" style="background:#0284c7; color:white; font-size:12px; padding:6px 12px; border-radius:6px; cursor:pointer; border:none;">📄 فتح كتالوج الرسائل كاملاً (A4)</button>
-        </a>
+        <button type="button" onclick="openPortalDocPreview({ title: '📄 كتالوج رسائل واتساب البيعية كاملاً (A4)', subtitle: 'معاينة الكتالوج قبل الطباعة أو التحميل', url: '/api/marketing/whatsapp-catalog', downloadUrl: '/api/marketing/whatsapp-catalog?download=1', downloadFilename: 'Qalix-WhatsApp-Sales-Catalog.html' })" style="background:#0284c7; color:white; font-size:12px; padding:6px 12px; border-radius:6px; cursor:pointer; border:none;">📄 معاينة / تحميل كتالوج الرسائل (A4)</button>
       </div>
       <div class="grid">
         <div class="sub-card">
@@ -213,62 +214,304 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
     <!-- 8. Distributor Legal & Accounting Access (Phase 5) -->
     <div class="card no-print">
       <h3 style="margin-top:0; color:var(--purple);">8. الوثائق الرسمية وكشف الحساب المالي للموزع</h3>
-      <div style="display:flex; gap:12px; flex-wrap:wrap;">
-        <a href="/api/contracts/distributor/${dist.id}" target="_blank" style="text-decoration:none;">
-          <button type="button" class="btn-blue">📜 طباعة عقد التوزيع المستقل المعتمد (A4)</button>
-        </a>
-        <a href="/api/distributors/${dist.id}/statement" target="_blank" style="text-decoration:none;">
-          <button type="button" style="background:#8b5cf6; color:white;">💼 استخراج كشف الحساب المالي وسلسلة التدقيق</button>
-        </a>
-        <a href="/api/training/certificate/${dist.id}" target="_blank" style="text-decoration:none;">
-          <button type="button" style="background:#d97706; color:white;">🏅 شهادة الاعتماد الميداني الرسمي (A4 Certificate)</button>
-        </a>
-        <a href="/api/hierarchy/distributor/${dist.id}/letter" target="_blank" style="text-decoration:none;">
-          <button type="button" style="background:#0ea5e9; color:white;">🎖️ خطاب شريحة التميز التجاري (A4)</button>
-        </a>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:12px; background:rgba(15,23,42,0.55); padding:10px; border-radius:10px; border:1px solid var(--border);">
+        <select id="distDocsActionSelect" style="flex:1; min-width:240px; margin-top:0;">
+          <option value="contract">📜 عقد التوزيع المستقل المعتمد (A4)</option>
+          <option value="statement">💼 كشف الحساب المالي وسلسلة التدقيق</option>
+          <option value="certificate">🏅 شهادة الاعتماد الميداني الرسمي (A4 Certificate)</option>
+          <option value="letter">🎖️ خطاب شريحة التميز التجاري (A4)</option>
+        </select>
+        <button type="button" onclick="handleDistDocSelection('preview')" style="background:#059669; color:#fff;">👁️ معاينة / طباعة</button>
+        <button type="button" onclick="handleDistDocSelection('download')" class="btn-blue">⬇️ تحميل الملف</button>
+      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button type="button" class="btn-blue" onclick="openDistDocByKey('contract', 'preview')">📜 معاينة وطباعة عقد التوزيع المعتمد (A4)</button>
+        <button type="button" style="background:#8b5cf6; color:white;" onclick="openDistDocByKey('statement', 'preview')">💼 كشف الحساب المالي وسلسلة التدقيق</button>
+        <button type="button" style="background:#d97706; color:white;" onclick="openDistDocByKey('certificate', 'preview')">🏅 شهادة الاعتماد الميداني الرسمي (A4)</button>
+        <button type="button" style="background:#0ea5e9; color:white;" onclick="openDistDocByKey('letter', 'preview')">🎖️ خطاب شريحة التميز التجاري (A4)</button>
       </div>
     </div>
 
     ${techSec.html}
   </div>
+
+  <!-- In-Portal Document & Catalog Preview / Print / Download Modal -->
+  <div id="portalDocModal" class="no-print" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(2,6,23,0.88); backdrop-filter:blur(6px); align-items:center; justify-content:center; padding:14px;" onclick="closePortalDocModal(event)">
+    <div style="position:relative; max-width:1050px; width:100%; height:90vh; display:flex; flex-direction:column; background:#0f172a; border:1px solid #10b981; border-radius:14px; overflow:hidden; box-shadow:0 25px 60px rgba(0,0,0,0.85);" onclick="event.stopPropagation()">
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; border-bottom:1px solid #1e293b; background:#0f172a; gap:10px; flex-wrap:wrap;">
+        <div>
+          <h3 id="portalDocTitle" style="margin:0; font-size:15px; color:#f8fafc;">معاينة المستند</h3>
+          <p id="portalDocSubtitle" style="margin:2px 0 0; font-size:12px; color:#94a3b8;"></p>
+        </div>
+        <button type="button" onclick="closePortalDocDirect()" style="background:#ef4444; color:#fff; padding:6px 12px; border-radius:8px;">✕ إغلاق</button>
+      </div>
+      <div style="position:relative; flex:1; background:#e2e8f0; overflow:hidden;">
+        <div id="portalDocLoading" style="position:absolute; inset:0; display:none; align-items:center; justify-content:center; background:rgba(15,23,42,0.88); color:#38bdf8; font-size:14px; font-weight:700; padding:20px; text-align:center;">⏳ جاري تحميل المعاينة...</div>
+        <iframe id="portalDocFrame" src="about:blank" style="width:100%; height:100%; border:none; background:#fff;" title="معاينة مستند الموزع"></iframe>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 16px; border-top:1px solid #1e293b; background:#0f172a; gap:8px; flex-wrap:wrap;">
+        <span style="font-size:12px; color:#94a3b8;">عاين المستند أعلاه ثم اضغط طباعة أو تحميل النسخة مباشرة</span>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button type="button" onclick="downloadPortalDoc()" style="background:#10b981; color:#052e16; font-weight:800;">⬇️ تحميل الملف</button>
+          <button type="button" onclick="printPortalDoc()" class="btn-blue">🖨️ طباعة / حفظ PDF</button>
+          <button type="button" onclick="openPortalDocNewTab()" class="btn-amber">↗️ فتح في تبويب مستقل</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     const API_BASE = (window.location.protocol === 'file:') ? 'http://127.0.0.1:4000' : '';
     const BATTLE_CARD_B64 = "${battleCardB64}";
     const DOC_CATALOG_B64 = "${techSec.catalogFallbackB64}";
+    const QUICK_START_B64 = "${techSec.quickStartFallbackB64 || ''}";
+    const WARRANTY_CERT_B64 = "${techSec.warrantyFallbackB64 || ''}";
 
     function decodeB64Utf8(b64) {
+      if (!b64) return '';
       const binStr = atob(b64);
       const bytes = new Uint8Array(binStr.length);
       for (let i = 0; i < binStr.length; i++) bytes[i] = binStr.charCodeAt(i);
       return new TextDecoder('utf-8').decode(bytes);
     }
 
-    function openHtmlPopup(html, autoPrint, errMsg) {
+    function resolvePortalUrl(u) {
+      if (!u) return '';
+      if (u.startsWith('http://') || u.startsWith('https://') || u.startsWith('blob:') || u.startsWith('data:')) return u;
+      return API_BASE + u;
+    }
+
+    let currentPortalDocState = null;
+
+    function triggerPortalDownload(opts) {
+      if (opts.htmlContent || opts.htmlB64) {
+        const html = opts.htmlContent || decodeB64Utf8(opts.htmlB64);
+        const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+        const bUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = bUrl;
+        a.download = opts.downloadFilename || 'qalix-document.html';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(bUrl), 4000);
+        return;
+      }
+      const dlUrl = resolvePortalUrl(opts.downloadUrl || opts.url);
+      if (!dlUrl) return;
+      const a = document.createElement('a');
+      a.href = dlUrl;
+      a.download = opts.downloadFilename || '';
+      a.target = '_blank';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+
+    function openPortalDocPreview(opts) {
+      const m = document.getElementById('portalDocModal');
+      const frame = document.getElementById('portalDocFrame');
+      const loader = document.getElementById('portalDocLoading');
+      if (!m || !frame) return;
+
+      currentPortalDocState = opts || {};
+      document.getElementById('portalDocTitle').innerText = opts.title || 'معاينة المستند';
+      document.getElementById('portalDocSubtitle').innerText = opts.subtitle || 'معاينة مباشرة قبل الطباعة أو التحميل';
+
+      const htmlStr = opts.htmlContent || (opts.htmlB64 ? decodeB64Utf8(opts.htmlB64) : '');
+      if (htmlStr) {
+        if (loader) loader.style.display = 'none';
+        frame.removeAttribute('src');
+        frame.srcdoc = htmlStr;
+        if (opts.autoPrint) {
+          setTimeout(() => { try { frame.contentWindow.focus(); frame.contentWindow.print(); } catch (_) {} }, 350);
+        }
+      } else if (opts.url) {
+        const resolvedUrl = resolvePortalUrl(opts.url);
+        frame.removeAttribute('srcdoc');
+        if (loader) {
+          loader.innerText = '⏳ جاري تحميل المعاينة المباشرة...';
+          loader.style.display = 'flex';
+        }
+        frame.onload = () => {
+          if (loader) loader.style.display = 'none';
+          if (opts.autoPrint) {
+            setTimeout(() => { try { frame.contentWindow.focus(); frame.contentWindow.print(); } catch (_) {} }, 350);
+          }
+        };
+        if (API_BASE) {
+          fetch(resolvedUrl, { method: 'HEAD' }).catch(() => {
+            if (loader) {
+              loader.innerText = '⚠️ تعذر الاتصال بالخادم المحلي (127.0.0.1:4000) لأن هذا الملف يتطلب تشغيل خادم الوكيل أو استخدم الوثائق المدمجة أوفلاين.';
+              loader.style.display = 'flex';
+            }
+          });
+        }
+        frame.src = resolvedUrl;
+      }
+      m.style.display = 'flex';
+    }
+
+    function downloadPortalDoc() {
+      if (!currentPortalDocState) return;
+      triggerPortalDownload(currentPortalDocState);
+    }
+
+    function printPortalDoc() {
+      const frame = document.getElementById('portalDocFrame');
+      if (!frame) return;
       try {
-        const w = window.open('', '_blank');
-        if (!w) {
-          alert('يرجى السماح للنوافذ المنبثقة (Popups) لإتمام العرض والطباعة.');
-          return;
-        }
-        w.document.open();
-        w.document.write(html);
-        w.document.close();
-        if (autoPrint) {
-          setTimeout(() => { try { w.focus(); w.print(); } catch (_) {} }, 350);
-        }
-        return w;
-      } catch (err) {
-        alert((errMsg || 'تعذر الفتح: ') + err.message);
-        return null;
+        frame.contentWindow.focus();
+        frame.contentWindow.print();
+      } catch (_) {
+        openPortalDocNewTab();
       }
     }
 
-    function printBattleCardA4(autoPrint) {
-      openHtmlPopup(decodeB64Utf8(BATTLE_CARD_B64), autoPrint, 'تعذر فتح بطاقة المقارنة: ');
+    function openPortalDocNewTab() {
+      if (!currentPortalDocState) return;
+      const htmlStr = currentPortalDocState.htmlContent || (currentPortalDocState.htmlB64 ? decodeB64Utf8(currentPortalDocState.htmlB64) : '');
+      if (htmlStr) {
+        const w = window.open('', '_blank');
+        if (w) {
+          w.document.open();
+          w.document.write(htmlStr);
+          w.document.close();
+          return;
+        }
+        const blob = new Blob([htmlStr], { type: 'text/html;charset=utf-8' });
+        window.open(URL.createObjectURL(blob), '_blank');
+        return;
+      }
+      if (currentPortalDocState.url) {
+        window.open(resolvePortalUrl(currentPortalDocState.url), '_blank');
+      }
     }
 
-    function openOfflineDoctorCatalog() {
-      openHtmlPopup(decodeB64Utf8(DOC_CATALOG_B64), false, 'تعذر فتح كتالوج الطبيب: ');
+    function closePortalDocModal(e) {
+      if (e.target && e.target.id === 'portalDocModal') closePortalDocDirect();
+    }
+
+    function closePortalDocDirect() {
+      const m = document.getElementById('portalDocModal');
+      const frame = document.getElementById('portalDocFrame');
+      if (m) m.style.display = 'none';
+      if (frame) {
+        frame.removeAttribute('srcdoc');
+        frame.src = 'about:blank';
+      }
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closePortalDocDirect();
+    });
+
+    function printBattleCardA4(autoPrint) {
+      openPortalDocPreview({
+        title: '⚖️ بطاقة المقارنة التنافسية (A4 Battle Card)',
+        subtitle: 'معاينة وطباعة بطاقة التوفير التنافسية مقابل الأنظمة السحابية',
+        htmlB64: BATTLE_CARD_B64,
+        downloadFilename: 'Qalix-Competitive-Battle-Card.html',
+        autoPrint: Boolean(autoPrint)
+      });
+    }
+
+    const DOCTOR_CATALOG_DOCS = {
+      catalog: {
+        title: '📖 كتالوج الاستخدام المختصر للطبيب (أوفلاين A4)',
+        subtitle: 'دليل الاستخدام اليومي وخطوات البدء السريعة لتسليمها للطبيب (يعمل أوفلاين بالكامل)',
+        htmlB64: DOC_CATALOG_B64,
+        downloadFilename: 'Qalix-Doctor-Quick-Catalog-A4.html'
+      },
+      quickstart: {
+        title: '📄 دليل التشغيل السريع الرسمي للمنشأة (HTML)',
+        subtitle: 'النسخة الرسمية الكاملة لتشغيل العيادة والشبكة المحلية',
+        htmlB64: QUICK_START_B64,
+        url: '/legal-docs/دليل_التشغيل_السريع_للمنشأة.html',
+        downloadUrl: '/legal-docs/دليل_التشغيل_السريع_للمنشأة.html?download=1',
+        downloadFilename: 'دليل_التشغيل_السريع_للمنشأة.html'
+      },
+      pdfguide: {
+        title: '📘 دليل المدير المصور لمنظومة كالكس الطبية (PDF)',
+        subtitle: 'معاينة الدليل المصور الكامل أو تحميل ملف PDF على جهاز العيادة',
+        url: '/legal-docs/دليل_المدير_المصور.pdf',
+        downloadUrl: '/legal-docs/دليل_المدير_المصور.pdf?download=1',
+        downloadFilename: 'دليل_المدير_المصور.pdf'
+      },
+      warranty: {
+        title: '🛡️ شهادة الضمان والتسليم السيادي للمنظومة',
+        subtitle: 'شهادة الضمان الفني لمدة 12 شهراً وسيادة البيانات أوفلاين 100%',
+        htmlB64: WARRANTY_CERT_B64,
+        url: '/legal-docs/شهادة_الضمان_والتسليم_السيادي.html',
+        downloadUrl: '/legal-docs/شهادة_الضمان_والتسليم_السيادي.html?download=1',
+        downloadFilename: 'شهادة_الضمان_والتسليم_السيادي.html'
+      }
+    };
+
+    function openDoctorCatalogDoc(key, mode) {
+      const item = DOCTOR_CATALOG_DOCS[key] || DOCTOR_CATALOG_DOCS.catalog;
+      if (mode === 'download') {
+        triggerPortalDownload(item);
+      } else {
+        openPortalDocPreview(item);
+      }
+    }
+
+    function handleDoctorCatalogSelection(mode) {
+      const sel = document.getElementById('doctorCatalogActionSelect');
+      const key = sel ? sel.value : 'catalog';
+      openDoctorCatalogDoc(key, mode || 'preview');
+    }
+
+    function openOfflineDoctorCatalog() { openDoctorCatalogDoc('catalog', 'preview'); }
+    function openQuickStartDoc() { openDoctorCatalogDoc('quickstart', 'preview'); }
+    function openDirectorPdfGuide() { openDoctorCatalogDoc('pdfguide', 'preview'); }
+    function openWarrantyCertDoc() { openDoctorCatalogDoc('warranty', 'preview'); }
+
+    const DIST_OFFICIAL_DOCS = {
+      contract: {
+        title: '📜 عقد التوزيع المستقل المعتمد (A4)',
+        subtitle: 'عقد الموزع المعتمد (${dist.name} - ${dist.code}) والالتزام بالأسعار الثابتة',
+        url: '/api/contracts/distributor/${dist.id}',
+        downloadUrl: '/api/contracts/distributor/${dist.id}?download=1',
+        downloadFilename: 'Qalix-Contract-${dist.code}.html'
+      },
+      statement: {
+        title: '💼 كشف الحساب المالي وسلسلة التدقيق (${dist.code})',
+        subtitle: 'تفاصيل الصفقات والعمولات وصافي التوريد للوكيل',
+        url: '/api/distributors/${dist.id}/statement',
+        downloadUrl: '/api/distributors/${dist.id}/statement?download=1',
+        downloadFilename: 'Qalix-Statement-${dist.code}.html'
+      },
+      certificate: {
+        title: '🏅 شهادة الاعتماد الميداني الرسمي (A4)',
+        subtitle: 'شهادة اعتماد الموزع الميداني ${dist.name}',
+        url: '/api/training/certificate/${dist.id}',
+        downloadUrl: '/api/training/certificate/${dist.id}?download=1',
+        downloadFilename: 'Qalix-Certificate-${dist.code}.html'
+      },
+      letter: {
+        title: '🎖️ خطاب شريحة التميز التجاري (A4)',
+        subtitle: 'خطاب الترقية وشريحة العمولة الحالية للموزع ${dist.code}',
+        url: '/api/hierarchy/distributor/${dist.id}/letter',
+        downloadUrl: '/api/hierarchy/distributor/${dist.id}/letter?download=1',
+        downloadFilename: 'Qalix-Tier-Letter-${dist.code}.html'
+      }
+    };
+
+    function openDistDocByKey(key, mode) {
+      const item = DIST_OFFICIAL_DOCS[key] || DIST_OFFICIAL_DOCS.contract;
+      if (mode === 'download') {
+        triggerPortalDownload(item);
+      } else {
+        openPortalDocPreview(item);
+      }
+    }
+
+    function handleDistDocSelection(mode) {
+      const sel = document.getElementById('distDocsActionSelect');
+      const key = sel ? sel.value : 'contract';
+      openDistDocByKey(key, mode || 'preview');
     }
 
     function buildTechSuccessPayload(requireNotice) {
@@ -348,11 +591,13 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
         '<div style="margin-top:14px;background:#ecfdf5;border:1px solid #10b981;border-radius:8px;padding:10px 14px;font-size:12.5px;color:#065f46;">يُقر الموزع بإتمام تشغيل كافة الأجهزة بالعيادة، وترك كتالوج الاستخدام للطبيب، وتلقي إخطار الطبيب بتمام النجاح.</div>' +
         '<div class="signs"><div class="sign"><strong>إخطار وموافقة الطبيب</strong><br><br>' + data.doctor + '</div><div class="sign"><strong>تأكيد وتوقيع الموزع المنفّذ</strong><br><br>${dist.name} (${dist.code})</div></div>' +
         '</div></body></html>';
-      const w = openHtmlPopup(cardHtml, autoPrint, 'تعذر فتح بطاقة التأكيد: ');
-      if (w) {
-        const pBtn = w.document.getElementById('btnPrintSuccessCard');
-        if (pBtn) pBtn.onclick = () => w.print();
-      }
+      openPortalDocPreview({
+        title: '✅ بطاقة تأكيد نجاح التركيب والتشغيل للوكيل (A4)',
+        subtitle: 'معاينة وطباعة أو تحميل بطاقة إتمام التركيب وتوقيع الطبيب والموزع',
+        htmlContent: cardHtml,
+        downloadFilename: 'Qalix-Tech-Completion-Card-${dist.code}.html',
+        autoPrint: Boolean(autoPrint)
+      });
     }
 
     // Automatically resolve local /api/ and /legal-docs/ links when the kit HTML is opened offline via file://
@@ -370,8 +615,15 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
       const spec = document.getElementById('quoSpecialty').value;
       const tier = document.getElementById('quoTier').value;
       const gov = encodeURIComponent('${dist.governorate}');
-      const url = API_BASE + \`/api/quotations/generate?doctor_name=\${doc}&clinic_name=\${cln}&specialty=\${spec}&tier=\${tier}&governorate=\${gov}&distributor_name=\${encodeURIComponent('${dist.name}')}&distributor_code=\${encodeURIComponent('${dist.code}')}&distributor_phone=\${encodeURIComponent('${dist.phone || ''}')}\`;
-      window.open(url, '_blank');
+      const qs = \`doctor_name=\${doc}&clinic_name=\${cln}&specialty=\${spec}&tier=\${tier}&governorate=\${gov}&distributor_name=\${encodeURIComponent('${dist.name}')}&distributor_code=\${encodeURIComponent('${dist.code}')}&distributor_phone=\${encodeURIComponent('${dist.phone || ''}')}\`;
+      const url = \`/api/quotations/generate?\${qs}\`;
+      openPortalDocPreview({
+        title: '📄 عرض السعر الرسمي المعتمد (A4 Official Quotation)',
+        subtitle: 'معاينة عرض السعر باسم الموزع المعتمد قبل الطباعة أو التحميل',
+        url,
+        downloadUrl: \`\${url}&download=1\`,
+        downloadFilename: 'Qalix-Official-Quotation-${dist.code}.html'
+      });
     }
 
     const rate = ${Number(dist.commission_rate)};

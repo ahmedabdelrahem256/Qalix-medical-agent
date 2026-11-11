@@ -53,9 +53,12 @@ fs.mkdirSync(DATA_DIR, { recursive: true });
 fs.mkdirSync(KITS_DIR, { recursive: true });
 
 function sendHtmlWithOptionalDownload(res, html, downloadFilename, forceDownload) {
-  const headers = { 'Content-Type': 'text/html; charset=utf-8' };
+  const headers = {
+    'Content-Type': 'text/html; charset=utf-8',
+    'Access-Control-Allow-Origin': '*'
+  };
   if (forceDownload && downloadFilename) {
-    headers['Content-Disposition'] = `attachment; filename="${downloadFilename}"`;
+    headers['Content-Disposition'] = `attachment; filename="${downloadFilename}"; filename*=UTF-8''${encodeURIComponent(downloadFilename)}`;
   }
   res.writeHead(200, headers);
   return res.end(html);
@@ -1422,10 +1425,14 @@ const server = http.createServer(async (req, res) => {
       };
       const mime = mimeTypes[ext] || 'application/octet-stream';
       const stat = fs.statSync(filePath);
+      const forceDownload = url.searchParams.get('download') === '1';
+      const baseName = path.basename(filePath);
+      const encodedName = encodeURIComponent(baseName);
+      const asciiFallback = baseName.replace(/[^\x20-\x7E]/g, '_') || (`file${ext}`);
 
       // Simple Range header handling for video playback
       const range = req.headers.range;
-      if (range && ext === '.mp4') {
+      if (range && ext === '.mp4' && !forceDownload) {
         const parts = range.replace(/bytes=/, '').split('-');
         const start = parseInt(parts[0], 10);
         const end = parts[1] ? parseInt(parts[1], 10) : stat.size - 1;
@@ -1435,17 +1442,22 @@ const server = http.createServer(async (req, res) => {
           'Content-Range': `bytes ${start}-${end}/${stat.size}`,
           'Accept-Ranges': 'bytes',
           'Content-Length': chunksize,
-          'Content-Type': mime
+          'Content-Type': mime,
+          'Access-Control-Allow-Origin': '*'
         });
         return fileStream.pipe(res);
       }
 
-      res.writeHead(200, {
+      const headers = {
         'Content-Type': mime,
         'Content-Length': stat.size,
         'Cache-Control': 'no-cache',
-        'Accept-Ranges': 'bytes'
-      });
+        'Accept-Ranges': 'bytes',
+        'Access-Control-Allow-Origin': '*',
+        'Content-Disposition': `${forceDownload ? 'attachment' : 'inline'}; filename="${asciiFallback}"; filename*=UTF-8''${encodedName}`
+      };
+
+      res.writeHead(200, headers);
       return fs.createReadStream(filePath).pipe(res);
     }
 

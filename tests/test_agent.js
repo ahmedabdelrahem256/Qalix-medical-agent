@@ -869,7 +869,33 @@ function req(method, urlPath, body) {
       }
     );
 
-    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/61 PASSED ===`);
+    // 62. Portal & Dashboard Preview/Download Modal + Select Dropdown Visibility + Static ?download=1
+    const legalPdfDlRes = await req('GET', '/legal-docs/' + encodeURIComponent('دليل_المدير_المصور.pdf') + '?download=1');
+    const legalHtmlRes = await req('GET', '/legal-docs/' + encodeURIComponent('دليل_التشغيل_السريع_للمنشأة.html'));
+    const kitNestedMatch = /<a\b[^>]*>[\s\S]*?<button\b/i.test(kitPreviewRes.body);
+    check('62. فحص بوابة الموزع والقوائم المنسدلة ونوافذ المعاينة والتحميل (الأوفلاين والأونلاين)',
+      !kitNestedMatch &&
+      kitPreviewRes.body.includes('id="portalDocModal"') &&
+      kitPreviewRes.body.includes('id="doctorCatalogActionSelect"') &&
+      kitPreviewRes.body.includes('id="distDocsActionSelect"') &&
+      kitPreviewRes.body.includes('QUICK_START_B64 = "') &&
+      kitPreviewRes.body.includes('WARRANTY_CERT_B64 = "') &&
+      kitPreviewRes.body.includes('openPortalDocPreview') &&
+      dashHtmlRes.body.includes('select option, select optgroup') &&
+      dashHtmlRes.body.includes('resetExamCertState()') &&
+      legalHtmlRes.status === 200 &&
+      legalPdfDlRes.status === 200 &&
+      (legalPdfDlRes.headers['content-disposition'] || '').includes('attachment'),
+      {
+        kitNestedMatch,
+        hasPortalModal: kitPreviewRes.body.includes('id="portalDocModal"'),
+        hasSelectOptCss: dashHtmlRes.body.includes('select option, select optgroup'),
+        legalPdfStatus: legalPdfDlRes.status,
+        legalPdfDisposition: legalPdfDlRes.headers['content-disposition']
+      }
+    );
+
+    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/62 PASSED ===`);
     for (const r of results) console.log(' ✅', r);
   } finally {
     srv.kill('SIGINT');
