@@ -779,11 +779,31 @@ function openManagerHubDb(baseDataDir) {
       created_at TEXT NOT NULL,
       delivered_at TEXT NOT NULL DEFAULT ''
     );
+
+    CREATE TABLE IF NOT EXISTS manager_sessions (
+      token TEXT PRIMARY KEY,
+      created_at TEXT NOT NULL,
+      expires_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS synced_agent_snapshots (
+      id TEXT PRIMARY KEY,
+      system_id TEXT NOT NULL,
+      packet_type TEXT NOT NULL,
+      packet_sha256 TEXT NOT NULL,
+      source_label TEXT NOT NULL DEFAULT '',
+      cases_count INTEGER NOT NULL DEFAULT 0,
+      deals_count INTEGER NOT NULL DEFAULT 0,
+      gross_sales REAL NOT NULL DEFAULT 0,
+      payload_json TEXT NOT NULL,
+      imported_at TEXT NOT NULL
+    );
   `);
   mdb.prepare("INSERT OR IGNORE INTO manager_settings(key, value) VALUES('manager_name', 'مدير الوكلاء العام')").run();
   mdb.prepare("INSERT OR IGNORE INTO manager_settings(key, value) VALUES('manager_phone', '')").run();
   mdb.prepare("INSERT OR IGNORE INTO manager_settings(key, value) VALUES('platform_owner_name', 'صاحب المنصة (سري - خاص بمدير الوكلاء فقط)')").run();
   mdb.prepare("INSERT OR IGNORE INTO manager_settings(key, value) VALUES('platform_owner_phone', '')").run();
+  mdb.prepare("INSERT OR IGNORE INTO manager_settings(key, value) VALUES('sla_max_days', '5')").run();
   return mdb;
 }
 

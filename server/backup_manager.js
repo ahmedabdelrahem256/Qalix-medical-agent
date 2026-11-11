@@ -7,6 +7,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
+const { DatabaseSync } = require('node:sqlite');
 
 function ensureBackupsDir(dataDir) {
   const backupsDir = path.join(dataDir, 'backups');
@@ -136,8 +137,90 @@ function exportFullSystemJson(db) {
   };
 }
 
+/**
+ * يتحقق من سلامة ملف نسخة احتياطية SQLite عبر PRAGMA integrity_check ووجود الجداول الأساسية.
+ */
+function verifySnapshotFile(backupPath) {
+  if (!backupPath || !fs.existsSync(backupPath)) {
+    throw new Error('ملف نقطة الاستعادة غير موجود');
+  }
+  const st = fs.statSync(backupPath);
+  if (!st.isFile() || st.size < 1024) {
+    throw new Error('ملف نقطة الاستعادة تالف أو فارغ');
+  }
+  const sha256 = crypto.createHash('sha256').update(fs.readFileSync(backupPath)).digest('hex');
+  const chkDb = new DatabaseSync(backupPath, { readOnly: true });
+  try {
+    const chk = chkDb.prepare('PRAGMA integrity_check;').get();
+    if (!chk || chk.integrity_check !== 'ok') {
+      throw new Error(`فشل فحص سلامة قاعدة البيانات: ${chk?.integrity_check || 'corrupted'}`);
+    }
+    const tables = new Set(
+      chkDb.prepare("SELECT name FROM sqlite_master WHERE type='table'").all().map(r => r.name)
+    );
+    for (const reqTable of ['distributors', 'deals', 'audit_log']) {
+      if (!tables.has(reqTable)) {
+        throw new Error(`الملف لا يحتوي على الجدول الأساسي المطلوب: ${reqTable}`);
+      }
+    }
+    return {
+      ok: true,
+      integrity: 'ok',
+      sha256,
+      sizeBytes: st.size,
+      counts: {
+        distributors: chkDb.prepare('SELECT COUNT(*) AS c FROM distributors').get().c,
+        deals: chkDb.prepare('SELECT COUNT(*) AS c FROM deals').get().c,
+        auditLogs: chkDb.prepare('SELECT COUNT(*) AS c FROM audit_log').get().c
+      }
+    };
+  } finally {
+    try { chkDb.close(); } catch (_) {}
+  }
+}
+
+/**
+ * استعادة آمنة لقاعدة بيانات الوكيل مع التحقق المسبق وأخذ نقطة أمان لحظية قبل الاستبدال.
+ */
+function restoreDatabaseSnapshot(currentDb, dataDir, filename, targetDbPath, hooks = {}) {
+  const safeName = path.basename(String(filename || '').trim());
+  if (!safeName || !safeName.endsWith('.db') || safeName !== String(filename || '').trim()) {
+    throw new Error('اسم ملف النسخة الاحتياطية غير صالح');
+  }
+  const backupsDir = ensureBackupsDir(dataDir);
+  const backupPath = path.join(backupsDir, safeName);
+  const verification = verifySnapshotFile(backupPath);
+  const preRestoreSnapshot = createDatabaseSnapshot(currentDb, dataDir);
+
+  if (typeof hooks.closeActiveDb === 'function') {
+    hooks.closeActiveDb();
+  }
+  try {
+    for (const suffix of ['-wal', '-shm']) {
+      const sidecar = targetDbPath + suffix;
+      if (fs.existsSync(sidecar)) {
+        try { fs.unlinkSync(sidecar); } catch (_) {}
+      }
+    }
+    fs.copyFileSync(backupPath, targetDbPath);
+  } finally {
+    if (typeof hooks.reopenActiveDb === 'function') {
+      hooks.reopenActiveDb();
+    }
+  }
+
+  return {
+    ok: true,
+    restoredFilename: safeName,
+    verification,
+    preRestoreSnapshot
+  };
+}
+
 module.exports = {
   createDatabaseSnapshot,
   listDatabaseSnapshots,
-  exportFullSystemJson
+  exportFullSystemJson,
+  verifySnapshotFile,
+  restoreDatabaseSnapshot
 };

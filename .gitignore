@@ -6,6 +6,7 @@ node_modules/
 .backup_stage/
 data/.test_run/
 data/backups/
+data/installer_stage/
 data/systems/
 data/exports/
 data/systems.json

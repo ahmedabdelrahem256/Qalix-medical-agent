@@ -313,7 +313,11 @@
             <span class="badge b-amber">👑 اللوحة الرئيسية لمدير الوكلاء (المستوى 2)</span>
             <span class="badge b-sky" style="font-size:10.5px;">سلسلة الإدارة: صاحب المنصة (مخفي) ← مدير الوكلاء (أنت) ← الوكيل ← الموزع ← المندوب ← الفني</span>
           </div>
-          <span id="topPendingKeyReqBadge" class="badge b-purple" style="cursor:pointer;" onclick="document.getElementById('managerKeyInboxSection')?.scrollIntoView({behavior:'smooth'})">🔑 0 طلبات مفاتيح لمدير الوكلاء</span>
+          <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+            <span id="topSlaBadge" class="badge b-amber" style="cursor:pointer;" onclick="document.getElementById('agentsManagerOversightSection')?.scrollIntoView({behavior:'smooth'})">⏱️ SLA: 0 تنبيهات</span>
+            <span id="topPendingKeyReqBadge" class="badge b-purple" style="cursor:pointer;" onclick="document.getElementById('managerKeyInboxSection')?.scrollIntoView({behavior:'smooth'})">🔑 0 طلبات مفاتيح لمدير الوكلاء</span>
+            <button type="button" id="mgrAuthToggleBtn" class="btn btn-sm btn-sky" onclick="handleManagerPinAction()">🔐 حماية PIN / وضع الوكيل</button>
+          </div>
         </div>
         <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px;">
           <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
@@ -329,6 +333,10 @@
             <button type="button" class="btn btn-sm btn-emerald" onclick="assignSystemAgentTop()">✔ تعيين / حفظ الوكيل</button>
             <button type="button" class="btn btn-sm btn-sky" onclick="openMultiSystemModal()">➕ إضافة منظومة معزولة</button>
             <button type="button" class="btn btn-sm btn-amber" onclick="openResellerEditionModal()">📦 تصدير نسخة مصفّرة (.zip)</button>
+            <button type="button" class="btn btn-sm btn-purple" onclick="exportAgentSyncFile()">📤 مزامنة .qlxsync</button>
+            <input type="file" id="qlxSyncFileInput" accept=".qlxsync,.json" style="display:none;" onchange="handleSyncFileChosen(this)" />
+            <button type="button" class="btn btn-sm btn-sky" onclick="document.getElementById('qlxSyncFileInput')?.click()">📥 استيراد .qlxsync</button>
+            <button type="button" class="btn btn-sm btn-emerald" onclick="buildWindowsInstallerKitUi()">💿 تجهيز مُثبِّت ويندوز 32/64</button>
           </div>
         </div>
       </div>
@@ -638,11 +646,15 @@
               <h4 style="margin:0; color:var(--amber); font-size:15px;">🏛️ لوحة مدير الوكلاء المتقدمة: متابعة نشاط عمل جميع الوكلاء والمنظومات الـ 11 والفرق الميدانية</h4>
               <p style="margin:2px 0 0; font-size:11.5px; color:var(--muted);">يرى مدير الوكلاء هنا أداء كل وكيل ومنظومة (منظومة كالكس الطبية ببياناتها المدمجة + باقي المنظومات المصفّرة)، ويمكنه الانتقال لأي منظومة أو وكيل بضغطة واحدة.</p>
             </div>
-            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+              <input type="date" id="mgrFilterFrom" dir="ltr" style="padding:4px 6px; font-size:11px;" title="من تاريخ" onchange="loadAgentsManagerOversight()" />
+              <input type="date" id="mgrFilterTo" dir="ltr" style="padding:4px 6px; font-size:11px;" title="إلى تاريخ" onchange="loadAgentsManagerOversight()" />
+              <button type="button" class="btn btn-sm btn-sky" onclick="openManagerExecutiveReport()">📄 تقرير تنفيذي A4</button>
               <button type="button" class="btn btn-sm btn-emerald" onclick="downloadAgentsManagerReportJson()">📥 تصدير تقرير نشاط الوكلاء (SHA-256)</button>
               <button type="button" class="btn btn-sm btn-amber" onclick="sendAgentsActivityBriefToOwnerWa()">📲 إرسال الملخص التنفيذي واتساب</button>
             </div>
           </div>
+          <div id="slaAlertsBanner" style="margin-bottom:8px;"></div>
           <div id="ownerGrandKpis" class="grid" style="grid-template-columns:repeat(auto-fit, minmax(125px, 1fr)); gap:8px; margin-bottom:10px;"></div>
           <div id="ownerAgentsActivityList" style="max-height:260px; overflow-y:auto; display:grid; gap:8px;">
             <div style="font-size:12px; color:var(--muted);">⏳ جاري تحميل نشاط عمل الوكلاء...</div>
@@ -2706,16 +2718,50 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
           cont.innerHTML = '<div style="color:var(--muted); font-size:12px;">لا توجد نقاط استعادة حتى الآن. اضغط الزر أعلاه لإنشاء أول نقطة.</div>';
           return;
         }
-        cont.innerHTML = '<table style="width:100%; font-size:11.5px;"><thead><tr><th>اسم الملف</th><th>التاريخ</th><th>الحجم</th><th>بصمة التجزئة</th></tr></thead><tbody>' +
+        cont.innerHTML = '<table style="width:100%; font-size:11.5px;"><thead><tr><th>اسم الملف</th><th>التاريخ</th><th>الحجم</th><th>بصمة التجزئة</th><th>إجراءات الفحص والاستعادة</th></tr></thead><tbody>' +
           j.snapshots.map(s => `
             <tr>
-              <td style="font-family:monospace; color:var(--sky);">${s.filename}</td>
-              <td>${s.createdAt.split('T')[0]}</td>
-              <td>${Math.round(s.sizeBytes / 1024)} KB</td>
-              <td style="font-family:monospace; color:var(--muted);" title="${s.sha256}">${s.sha256.substring(0, 14)}...</td>
+              <td style="font-family:monospace; color:var(--sky);">${escPayHtml(s.filename)}</td>
+              <td>${escPayHtml(String(s.createdAt || '').split('T')[0])}</td>
+              <td>${Math.round(Number(s.sizeBytes || 0) / 1024)} KB</td>
+              <td style="font-family:monospace; color:var(--muted);" title="${escPayHtml(s.sha256 || '')}">${escPayHtml(String(s.sha256 || '').substring(0, 12))}...</td>
+              <td style="display:flex; gap:6px; flex-wrap:wrap;">
+                <button class="btn btn-sky" style="padding:3px 8px; font-size:11px;" onclick="verifyAgentSnapshot('${escAttr(s.filename)}')">🛡️ فحص</button>
+                <button class="btn btn-emerald" style="padding:3px 8px; font-size:11px;" onclick="restoreAgentSnapshot('${escAttr(s.filename)}')">♻️ استعادة</button>
+              </td>
             </tr>
           `).join('') + '</tbody></table>';
       } catch (e) { console.error(e); }
+    }
+
+    async function verifyAgentSnapshot(filename) {
+      try {
+        const r = await fetch('/api/backup/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filename })
+        });
+        const j = await r.json();
+        if (!r.ok || j.error) return alert('❌ فشل الفحص: ' + (j.error || r.status));
+        const v = j.verification;
+        alert(`✅ النسخة سليمة (PRAGMA integrity_check: ${v.integrity})\n• الموزعون: ${v.counts.distributors}\n• الصفقات: ${v.counts.deals}\n• سجلات التدقيق: ${v.counts.auditLogs}\n• بصمة SHA-256: ${v.sha256.substring(0, 16)}...`);
+      } catch (e) { alert('خطأ أثناء الفحص: ' + e.message); }
+    }
+
+    async function restoreAgentSnapshot(filename) {
+      if (!confirm(`هل أنت متأكد من استعادة قاعدة البيانات من:\n${filename}؟\n\nسيقوم النظام تلقائياً بأخذ نقطة أمان للوضع الحالي وفحص سلامة النسخة قبل الاستبدال.`)) return;
+      try {
+        const r = await fetch('/api/backup/restore', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filename })
+        });
+        const j = await r.json();
+        if (!r.ok || j.error) return alert('❌ تعذرت الاستعادة: ' + (j.error || r.status));
+        alert(`✅ تمت الاستعادة الآمنة بنجاح!\nتم حفظ نسخة أمان تلقائية للوضع السابق:\n${j.restored.preRestoreSnapshot.filename}`);
+        loadSnapshotsList();
+        if (typeof load === 'function') load();
+      } catch (e) { alert('فشل الاستعادة: ' + e.message); }
     }
 
     /* ---------------- Phase 6 Interactive Handlers ---------------- */
@@ -3920,9 +3966,10 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
 
     async function loadManagerHubOverview() {
       try {
-        const r = await fetch('/api/manager/overview');
+        const r = await fetch('/api/manager/overview', { headers: mgrHeaders() });
         const j = await r.json();
         if (!j || !j.ok) return;
+        if (j.auth) updateMgrAuthBadge(j.auth);
         const p = j.profile || {};
         if (document.getElementById('mgrHubNameInput') && !document.getElementById('mgrHubNameInput').value) {
           document.getElementById('mgrHubNameInput').value = p.managerName || '';
@@ -3978,10 +4025,11 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
       try {
         const r = await fetch('/api/manager/profile', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: mgrHeaders({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({ managerName, managerPhone })
         });
         const j = await r.json();
+        if (!r.ok || !j.ok) return alert('❌ ' + (j.error || 'يرجى تسجيل دخول مدير الوكلاء'));
         if (j.ok) {
           alert('✅ تم حفظ بيانات مدير الوكلاء (يستعملها الوكلاء فقط للتواصل معك، ومخفية عن الموزعين والعملاء).');
           await loadManagerHubOverview();
@@ -4002,7 +4050,7 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
       try {
         const r = await fetch('/api/manager/assign-agent', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: mgrHeaders({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({ systemId, agentName, agentPhone })
         });
         const j = await r.json();
@@ -4080,7 +4128,7 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
       try {
         const r = await fetch('/api/manager/key-requests/' + encodeURIComponent(krId) + '/deliver', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: mgrHeaders({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({ manualLicenseKey })
         });
         const j = await r.json();
@@ -4099,20 +4147,160 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
       }
     }
 
+    function getManagerToken() {
+      return localStorage.getItem('qalix_mgr_token') || '';
+    }
+    function mgrHeaders(extra = {}) {
+      const tok = getManagerToken();
+      return tok ? Object.assign({}, extra, { 'X-Qalix-Manager-Token': tok }) : Object.assign({}, extra);
+    }
+
+    async function handleManagerPinAction() {
+      try {
+        const stRes = await fetch('/api/manager/auth/status', { headers: mgrHeaders() });
+        const stJson = await stRes.json();
+        const a = stJson.auth || {};
+        if (a.locked) {
+          const pin = prompt('🔒 اللوحة مقفلة حالياً (وضع الوكيل فقط).\nأدخل رمز PIN الخاص بمدير الوكلاء للفتح:');
+          if (!pin) return;
+          const lr = await fetch('/api/manager/auth/login', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pin })
+          });
+          const lj = await lr.json();
+          if (!lr.ok || lj.error) return alert('❌ ' + (lj.error || 'فشل التحقق'));
+          if (lj.session?.token) localStorage.setItem('qalix_mgr_token', lj.session.token);
+          document.getElementById('ownerChannelCard')?.style && (document.getElementById('ownerChannelCard').style.display = 'block');
+          loadAgentsManagerOversight();
+          return alert('🔓 تم تسجيل دخول مدير الوكلاء بنجاح!');
+        }
+        const choice = prompt(
+          a.pinEnabled
+            ? 'حماية PIN مفعّلة:\n- اكتب [1] لقفل الجلسة الآن (وضع الوكيل فقط)\n- اكتب [2] لتغيير/إلغاء رمز PIN\n- اضغط Cancel للإلغاء'
+            : 'تعيين رمز PIN لمدير الوكلاء (4 أرقام فأكثر لإخفاء القناة السرية وصلاحيات المدير في وضع العرض):\nأدخل رمز PIN الجديد الآن:'
+        );
+        if (choice === null) return;
+        if (a.pinEnabled && choice.trim() === '1') {
+          await fetch('/api/manager/auth/logout', { method: 'POST', headers: mgrHeaders() });
+          localStorage.removeItem('qalix_mgr_token');
+          const oc = document.getElementById('ownerChannelCard');
+          if (oc) oc.style.display = 'none';
+          updateMgrAuthBadge({ pinEnabled: true, locked: true });
+          return alert('🔒 تم التبديل إلى وضع الوكيل فقط وإخفاء قسم مدير الوكلاء.');
+        }
+        let currentPin = '';
+        let newPin = choice.trim();
+        if (a.pinEnabled) {
+          currentPin = prompt('أدخل رمز PIN الحالي:') || '';
+          newPin = prompt('أدخل رمز PIN الجديد (أو اتركه فارغاً لإلغاء القفل):') || '';
+        }
+        const sr = await fetch('/api/manager/auth/set-pin', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ newPin, currentPin })
+        });
+        const sj = await sr.json();
+        if (!sr.ok || sj.error) return alert('❌ ' + (sj.error || 'تعذر حفظ PIN'));
+        if (sj.session?.token) localStorage.setItem('qalix_mgr_token', sj.session.token);
+        else if (!sj.pinEnabled) localStorage.removeItem('qalix_mgr_token');
+        updateMgrAuthBadge(sj.auth || { pinEnabled: sj.pinEnabled, locked: false });
+        alert(sj.pinEnabled ? '🔐 تم تفعيل/تحديث رمز PIN بنجاح.' : '🔓 تم إلغاء قفل PIN.');
+      } catch (e) { alert(e.message); }
+    }
+
+    function updateMgrAuthBadge(auth) {
+      const btn = document.getElementById('mgrAuthToggleBtn');
+      const oc = document.getElementById('ownerChannelCard');
+      if (btn && auth) {
+        btn.textContent = auth.locked ? '🔓 فتح وضع مدير الوكلاء (PIN)' : (auth.pinEnabled ? '🔒 قفل / وضع الوكيل' : '🔐 تعيين PIN للمدير');
+      }
+      if (oc && auth) {
+        oc.style.display = auth.locked ? 'none' : 'block';
+      }
+    }
+
+    async function exportAgentSyncFile() {
+      window.open('/api/sync/export?download=1', '_blank');
+    }
+
+    async function handleSyncFileChosen(input) {
+      const file = input?.files?.[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const packet = JSON.parse(text);
+        const r = await fetch('/api/sync/import', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ packet })
+        });
+        const j = await r.json();
+        input.value = '';
+        if (!r.ok || j.error) return alert('❌ تعذر الاستيراد: ' + (j.error || r.status));
+        alert('✅ تمت مزامنة الحزمة الأوفلاين والتحقق من البصمة الرقمية بنجاح!\nبصمة SHA-256: ' + (j.integritySha256 || '').slice(0, 14) + '...');
+        if (typeof load === 'function') load();
+        loadAgentsManagerOversight();
+      } catch (e) {
+        input.value = '';
+        alert('❌ ملف .qlxsync غير صالح: ' + e.message);
+      }
+    }
+
+    function openManagerExecutiveReport() {
+      const f = document.getElementById('mgrFilterFrom')?.value || '';
+      const t = document.getElementById('mgrFilterTo')?.value || '';
+      const q = new URLSearchParams();
+      if (f) q.set('from', f);
+      if (t) q.set('to', t);
+      const tok = getManagerToken();
+      if (tok) q.set('managerToken', tok);
+      window.open('/api/manager/executive-report?' + q.toString(), '_blank');
+    }
+
+    async function buildWindowsInstallerKitUi() {
+      const ed = confirm('هل تريد تجهيز حزمة مُثبِّت ويندوز لـ [جميع منظومات كالكس الـ 11]؟\n(موافق = كالكس 11 منظومة | إلغاء = النسخة العامة المصفّرة)') ? 'qalix11' : 'universal';
+      try {
+        const r = await fetch('/api/systems/build-installer-kit', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ edition: ed })
+        });
+        const j = await r.json();
+        if (!r.ok || j.error) return alert('❌ ' + (j.error || 'تعذر التجهيز'));
+        alert(
+          '✅ تم تجهيز حزمة المُثبِّت المحمولة ومخطط Inno Setup (.iss) بنجاح!\n' +
+          '• المسار: ' + j.stageDir + '\n' +
+          '• ملف المخطط: ' + j.issPath + '\n' +
+          '• معمارية Node المرفقة: ' + (j.bundledNodeArch || 'محايد') +
+          (j.compiledExePath ? ('\n• ملف Setup.exe جاهز: ' + j.compiledExePath) : '\n• يمكنك تشغيل BUILD_INSTALLER.bat لبناء Setup.exe عبر Inno Setup 6.')
+        );
+      } catch (e) { alert(e.message); }
+    }
+
     async function loadAgentsManagerOversight() {
       try {
-        const r = await fetch('/api/owner/agents-activity');
+        const f = document.getElementById('mgrFilterFrom')?.value || '';
+        const t = document.getElementById('mgrFilterTo')?.value || '';
+        const qs = new URLSearchParams();
+        if (f) qs.set('from', f);
+        if (t) qs.set('to', t);
+        const r = await fetch('/api/owner/agents-activity' + (qs.toString() ? '?' + qs.toString() : ''), { headers: mgrHeaders() });
         const j = await r.json();
         if (!j || !j.ok) return;
         ownerActivityReportCache = j;
+        if (j.auth) updateMgrAuthBadge(j.auth);
         const kpiEl = document.getElementById('ownerGrandKpis');
         const listEl = document.getElementById('ownerAgentsActivityList');
+        const slaEl = document.getElementById('slaAlertsBanner');
+        const topSla = document.getElementById('topSlaBadge');
         const g = j.grandTotals || {};
+        const fn = j.funnel || {};
+        const sla = j.slaSummary || { alertsCount: 0, alerts: [] };
+        if (topSla) topSla.textContent = `⏱️ SLA: ${sla.alertsCount || 0} تنبيهات`;
+        if (slaEl) {
+          slaEl.innerHTML = sla.alertsCount > 0
+            ? `<div style="padding:8px 10px; border-radius:8px; border:1px solid rgba(245,158,11,0.5); background:rgba(245,158,11,0.08); font-size:11.5px; color:#fcd34d;">⏱️ <strong>منبّه SLA:</strong> توجد <strong>${sla.alertsCount}</strong> حالات متأخرة (أكثر من ${sla.thresholdDays} أيام دون تحديث) — أبرزها: ${sla.alerts.slice(0,2).map(a => escPayHtml(a.customerName) + ' (' + a.ageDays + ' يوم)').join(' · ')}</div>`
+            : `<div style="padding:6px 10px; border-radius:8px; border:1px solid rgba(16,185,129,0.35); background:rgba(16,185,129,0.06); font-size:11.5px; color:#6ee7b7;">✅ التزام SLA: جميع الحالات الميدانية ضمن المهلة الزمنية (${sla.thresholdDays || 5} أيام).</div>`;
+        }
         if (kpiEl) {
           kpiEl.innerHTML = `
             <div class="sub-card" style="padding:7px; text-align:center;"><div style="font-size:10.5px; color:var(--muted);">المنظومات/الوكلاء</div><div style="font-size:16px; font-weight:800; color:var(--amber);">${g.systemsCount || 0}</div></div>
             <div class="sub-card" style="padding:7px; text-align:center;"><div style="font-size:10.5px; color:var(--muted);">الموزعون | المناديب | الفنيون</div><div style="font-size:14px; font-weight:800; color:var(--sky);">${g.distributorsCount || 0} · ${g.repsCount || 0} · ${g.techsCount || 0}</div></div>
-            <div class="sub-card" style="padding:7px; text-align:center;"><div style="font-size:10.5px; color:var(--muted);">الحالات الموحدة / التجريبية</div><div style="font-size:15px; font-weight:800; color:var(--purple);">${g.unifiedCasesCount || 0} / ${g.trialsCount || 0}</div></div>
+            <div class="sub-card" style="padding:7px; text-align:center;"><div style="font-size:10.5px; color:var(--muted);">معدل التحويل (Funnel)</div><div style="font-size:15px; font-weight:800; color:var(--purple);">${fn.overallConversionPct || 0}%</div></div>
             <div class="sub-card" style="padding:7px; text-align:center;"><div style="font-size:10.5px; color:var(--muted);">إجمالي المبيعات (ج.م)</div><div style="font-size:15px; font-weight:800; color:var(--text);">${fmt(g.grossSales || 0)}</div></div>
             <div class="sub-card" style="padding:7px; text-align:center;"><div style="font-size:10.5px; color:var(--muted);">صافي إيراد الوكلاء</div><div style="font-size:15px; font-weight:800; color:var(--emerald);">${fmt(g.agentNetRevenue || 0)}</div></div>
           `;

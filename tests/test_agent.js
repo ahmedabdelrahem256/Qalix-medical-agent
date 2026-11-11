@@ -1653,7 +1653,128 @@ function req(method, urlPath, body) {
       }
     );
 
-    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/76 PASSED ===`);
+    // Test 77: Phase 1 - Safe One-Click Backup Verify (PRAGMA integrity_check) & Restore with Pre-Restore Safety Snapshot
+    await req('POST', '/api/systems/select', { systemId: 'qalix_medical' });
+    const preBoot = await req('GET', '/api/bootstrap');
+    const preDistCount = (preBoot.body?.distributors || []).length;
+    const p77SnapRes = await req('POST', '/api/backup/create');
+    const p77SnapName = p77SnapRes.body?.snapshot?.filename;
+    const verSnapRes = await req('POST', '/api/backup/verify', { filename: p77SnapName });
+    const tmpDistAdd = await req('POST', '/api/distributors', { name: 'موزع مؤقت قبل الاستعادة', phone: '01099001122', governorate: 'سوهاج' });
+    const restoreRes = await req('POST', '/api/backup/restore', { filename: p77SnapName });
+    const postBoot = await req('GET', '/api/bootstrap');
+    const postDistCount = (postBoot.body?.distributors || []).length;
+    check('77. المرحلة 1: فحص سلامة النسخ الاحتياطية (PRAGMA integrity_check) والاستعادة الآمنة مع نقطة أمان تلقائية',
+      p77SnapRes.status === 201 &&
+      verSnapRes.status === 200 &&
+      verSnapRes.body?.verification?.integrity === 'ok' &&
+      tmpDistAdd.status === 200 &&
+      restoreRes.status === 200 &&
+      Boolean(restoreRes.body?.restored?.preRestoreSnapshot?.filename) &&
+      postDistCount === preDistCount,
+      { p77SnapName, integrity: verSnapRes.body?.verification?.integrity, preDistCount, postDistCount, restoreStatus: restoreRes.status }
+    );
+
+    // Test 78: Phase 2 - Strict Key-Request Validator & SLA Watchdog Alerts
+    const badTierRes = await req('POST', '/api/manager/key-requests', { customerName: 'عميل باقة خطأ', tier: 'invalid_tier' });
+    const badHwRes = await req('POST', '/api/manager/key-requests', { customerName: 'عميل بصمة قصيرة', hardwareId: '123', tier: 'basic' });
+    const goodHexRes = await req('POST', '/api/manager/key-requests', {
+      customerName: 'مركز النخبة التحققي',
+      hardwareId: 'A1B2C3D4E5F67890AABBCCDD',
+      tier: 'professional',
+      amountPaid: 8500
+    });
+    const slaWatchRes = await req('GET', '/api/manager/sla-alerts?slaDays=0');
+    check('78. المرحلة 2: مدقق طلبات المفاتيح (البصمة والباقة) ومنبه التأخير الميداني SLA Watchdog',
+      badTierRes.status === 400 &&
+      badHwRes.status === 400 &&
+      goodHexRes.status === 201 &&
+      goodHexRes.body?.validation?.hwidValid24Hex === true &&
+      goodHexRes.body?.validation?.amountMatchesTier === true &&
+      slaWatchRes.status === 200 &&
+      typeof slaWatchRes.body?.alertsCount === 'number' &&
+      Array.isArray(slaWatchRes.body?.alerts),
+      { badTierStatus: badTierRes.status, badHwStatus: badHwRes.status, goodVal: goodHexRes.body?.validation, slaAlerts: slaWatchRes.body?.alertsCount }
+    );
+
+    // Test 79: Phase 3 - Offline Signed Sync Packets (.qlxsync) Export, Tamper Rejection, & Valid Import
+    const syncExpRes = await req('GET', '/api/sync/export');
+    const validPkt = syncExpRes.body?.packet;
+    const tamperedPkt = validPkt ? { ...validPkt, agentName: 'تم التلاعب بالاسم' } : {};
+    const tamperImpRes = await req('POST', '/api/sync/import', { packet: tamperedPkt });
+    const validImpRes = await req('POST', '/api/sync/import', { packet: validPkt });
+    const syncSnapsRes = await req('GET', '/api/sync/snapshots');
+    check('79. المرحلة 3: حزم المزامنة الموقعة أوفلاين (.qlxsync) مع رفض التلاعب ودعم بوابة الموزع',
+      syncExpRes.status === 200 &&
+      validPkt?.format === 'QLXSYNC-1.0' &&
+      typeof validPkt?.integritySha256 === 'string' &&
+      tamperImpRes.status === 400 &&
+      validImpRes.status === 200 &&
+      syncSnapsRes.status === 200 &&
+      (syncSnapsRes.body?.snapshots || []).length >= 1 &&
+      portalBodyStr.includes('exportPortalSyncPacket'),
+      { format: validPkt?.format, tamperStatus: tamperImpRes.status, validStatus: validImpRes.status, snapsCount: syncSnapsRes.body?.snapshots?.length }
+    );
+
+    // Test 80: Phase 4 - Manager PIN Lock & Role Guard (401 without PIN session -> 200 after PIN login)
+    const reqHdr = (method, p, body, headers = {}) => new Promise((resolve, reject) => {
+      const dataStr = body ? JSON.stringify(body) : null;
+      const h = Object.assign({ 'Content-Type': 'application/json' }, headers);
+      if (dataStr) h['Content-Length'] = Buffer.byteLength(dataStr);
+      const r = http.request({ hostname: '127.0.0.1', port: TEST_PORT, path: p, method, headers: h }, res => {
+        let chunks = ''; res.on('data', c => chunks += c);
+        res.on('end', () => { try { resolve({ status: res.statusCode, body: JSON.parse(chunks) }); } catch { resolve({ status: res.statusCode, body: chunks }); } });
+      });
+      r.on('error', reject);
+      if (dataStr) r.write(dataStr);
+      r.end();
+    });
+    const setPinRes = await req('POST', '/api/manager/auth/set-pin', { newPin: '2468' });
+    const lockedWriteRes = await reqHdr('POST', '/api/manager/profile', { managerName: 'محاولة غير مصرحة' });
+    const badLoginRes = await req('POST', '/api/manager/auth/login', { pin: '9999' });
+    const goodLoginRes = await req('POST', '/api/manager/auth/login', { pin: '2468' });
+    const mgrTok = goodLoginRes.body?.session?.token;
+    const unlockedWriteRes = await reqHdr('POST', '/api/manager/profile', { managerName: 'مدير الوكلاء المعتمد' }, { 'X-Qalix-Manager-Token': mgrTok });
+    const clearPinRes = await req('POST', '/api/manager/auth/set-pin', { currentPin: '2468', newPin: '' });
+    check('80. المرحلة 4: حماية صلاحيات مدير الوكلاء برمز PIN وتقييد القناة السرية في وضع الوكيل فقط',
+      setPinRes.status === 200 &&
+      setPinRes.body?.pinEnabled === true &&
+      lockedWriteRes.status === 401 &&
+      badLoginRes.status === 401 &&
+      goodLoginRes.status === 200 &&
+      Boolean(mgrTok) &&
+      unlockedWriteRes.status === 200 &&
+      clearPinRes.status === 200 &&
+      clearPinRes.body?.pinEnabled === false,
+      { setPin: setPinRes.status, lockedWrite: lockedWriteRes.status, badLogin: badLoginRes.status, unlockedWrite: unlockedWriteRes.status, cleared: clearPinRes.body?.pinEnabled }
+    );
+
+    // Test 81: Phase 5 - Timed Executive Funnel Analytics & Printable A4 Manager Report
+    const funnelRes = await req('GET', '/api/owner/agents-activity?from=2020-01-01&to=2030-12-31&slaDays=0');
+    const execReportRes = await req('GET', '/api/manager/executive-report');
+    check('81. المرحلة 5: التحليلات الزمنية ومعدل التحويل التنفيذي Funnel + التقرير التنفيذي A4 لمدير الوكلاء',
+      funnelRes.status === 200 &&
+      typeof funnelRes.body?.funnel?.overallConversionPct === 'number' &&
+      Boolean(funnelRes.body?.slaSummary) &&
+      execReportRes.status === 200 &&
+      String(execReportRes.body || '').includes('التقرير التنفيذي لمدير الوكلاء'),
+      { conversionPct: funnelRes.body?.funnel?.overallConversionPct, reportLen: String(execReportRes.body || '').length }
+    );
+
+    // Test 82: Phase 6 - Windows Setup.exe Installer Kit Stage Builder (Inno Setup .iss + Portable Node Runtime)
+    const instKitRes = await req('POST', '/api/systems/build-installer-kit', { edition: 'qalix11' });
+    const issExists = instKitRes.body?.issPath && fs.existsSync(instKitRes.body.issPath);
+    const compileBatExists = instKitRes.body?.compileBatPath && fs.existsSync(instKitRes.body.compileBatPath);
+    const bundledRuntimeExists = instKitRes.body?.stageDir && fs.existsSync(path.join(instKitRes.body.stageDir, 'runtime', 'node.exe'));
+    check('82. المرحلة 6: تجهيز حزمة ومخطط مُثبِّت ويندوز المستقل (Inno Setup .iss + runtime/node.exe)',
+      instKitRes.status === 201 &&
+      issExists &&
+      compileBatExists &&
+      bundledRuntimeExists,
+      { status: instKitRes.status, issExists, compileBatExists, bundledRuntimeExists, arch: instKitRes.body?.bundledNodeArch }
+    );
+
+    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/82 PASSED ===`);
     for (const r of results) console.log(' ✅', r);
   } finally {
     srv.kill('SIGINT');

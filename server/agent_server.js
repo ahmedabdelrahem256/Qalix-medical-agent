@@ -18,7 +18,7 @@ const { generateDistributorStatementHtml } = require('./financial_ledger');
 const { generateQuotationData, generateQuotationHtml } = require('./quotation_engine');
 const { getAllObjections, getObjectionById, renderObjectionsPlaybookA4 } = require('./objection_playbook');
 const { calculateDealTimeline, RETENTION_MILESTONES } = require('./after_sales_tracker');
-const { createDatabaseSnapshot, listDatabaseSnapshots, exportFullSystemJson } = require('./backup_manager');
+const { createDatabaseSnapshot, listDatabaseSnapshots, exportFullSystemJson, verifySnapshotFile, restoreDatabaseSnapshot } = require('./backup_manager');
 const { getAnalyticsPayload } = require('./visual_analytics');
 const { TRAINING_MODULES, EXAM_QUESTIONS, evaluateExam, generateAccreditationCertificateHtml } = require('./distributor_training_simulator');
 const { AUDIT_CHECKPOINTS, evaluateClinicChecklist, generateClinicAuditReportHtml } = require('./clinic_audit_checklist');
@@ -55,6 +55,18 @@ const {
 } = require('./systems_manager');
 const { buildCleanResellerEdition } = require('./reseller_edition');
 const appLicense = require('./license');
+const {
+  validateKeyRequestInput,
+  collectSlaAlerts,
+  getManagerAuthStatus,
+  isManagerAuthorized,
+  configureManagerPin,
+  loginWithManagerPin,
+  buildManagerExecutiveAnalytics,
+  generateManagerExecutiveReportHtml
+} = require('./manager_security');
+const { buildAgentSyncPacket, importSyncPacket } = require('./sync_engine');
+const { buildWindowsInstallerKit } = require('./installer_builder');
 
 const PORT = Number(process.env.PORT) || 4000;
 let activePort = PORT;
@@ -1359,6 +1371,42 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, 200, { ok: true, snapshots });
     }
 
+    if (req.method === 'POST' && pathname === '/api/backup/verify') {
+      const body = await readJsonBody(req);
+      const safeName = path.basename(String(body.filename || '').trim());
+      if (!safeName || !safeName.endsWith('.db') || safeName !== String(body.filename || '').trim()) {
+        return sendJson(res, 400, { error: 'اسم ملف النسخة الاحتياطية غير صالح' });
+      }
+      try {
+        const result = verifySnapshotFile(path.join(DATA_DIR, 'backups', safeName));
+        return sendJson(res, 200, { ok: true, filename: safeName, verification: result });
+      } catch (e) {
+        return sendJson(res, 400, { error: e.message });
+      }
+    }
+
+    if (req.method === 'POST' && pathname === '/api/backup/restore') {
+      const body = await readJsonBody(req);
+      try {
+        const restored = restoreDatabaseSnapshot(db, DATA_DIR, body.filename, dbPath, {
+          closeActiveDb: () => {
+            const openConn = dbPool.get(ACTIVE_SYSTEM.id);
+            if (openConn) {
+              try { openConn.close(); } catch (_) {}
+              dbPool.delete(ACTIVE_SYSTEM.id);
+            }
+          },
+          reopenActiveDb: () => {
+            activateRuntimeSystem(ACTIVE_SYSTEM.id);
+          }
+        });
+        logAudit('backup_restored', `استعادة آمنة لقاعدة بيانات المنظومة (${ACTIVE_SYSTEM.id}) من نقطة: ${restored.restoredFilename} — بعد أخذ نقطة أمان: ${restored.preRestoreSnapshot.filename}`);
+        return sendJson(res, 200, { ok: true, restored, summary: getSummaryResponse() });
+      } catch (e) {
+        return sendJson(res, 400, { error: e.message });
+      }
+    }
+
     if (req.method === 'GET' && pathname === '/api/backup/export-data') {
       const exportData = exportFullSystemJson(db);
       res.writeHead(200, {
@@ -2103,11 +2151,60 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, 200, { ok: true, caseItem: savedCase });
     }
 
+    /* ---------------- Agents Manager PIN Lock & Role Session Guard ---------------- */
+    if (req.method === 'GET' && pathname === '/api/manager/auth/status') {
+      return sendJson(res, 200, { ok: true, auth: getManagerAuthStatus(managerHubDb, req) });
+    }
+
+    if (req.method === 'POST' && pathname === '/api/manager/auth/set-pin') {
+      const body = await readJsonBody(req);
+      const resCfg = configureManagerPin(managerHubDb, {
+        newPin: body.newPin !== undefined ? body.newPin : body.pin,
+        currentPin: body.currentPin
+      });
+      if (!resCfg.ok) return sendJson(res, resCfg.status || 400, { error: resCfg.error });
+      logAudit('manager_pin_configured', resCfg.pinEnabled ? 'تفعيل/تحديث قفل PIN الخاص بمدير الوكلاء' : 'إلغاء قفل PIN الخاص بمدير الوكلاء');
+      return sendJson(res, 200, {
+        ok: true,
+        pinEnabled: resCfg.pinEnabled,
+        session: resCfg.session,
+        auth: getManagerAuthStatus(managerHubDb, { headers: resCfg.session ? { 'x-qalix-manager-token': resCfg.session.token } : {} })
+      });
+    }
+
+    if (req.method === 'POST' && pathname === '/api/manager/auth/login') {
+      const body = await readJsonBody(req);
+      const authRes = loginWithManagerPin(managerHubDb, body.pin);
+      if (!authRes.ok) return sendJson(res, authRes.status || 401, { error: authRes.error });
+      logAudit('manager_pin_unlocked', 'تسجيل دخول مدير الوكلاء بنجاح');
+      return sendJson(res, 200, { ok: true, pinEnabled: authRes.pinEnabled, session: authRes.session });
+    }
+
+    if (req.method === 'POST' && pathname === '/api/manager/auth/logout') {
+      const hdrTok = String(req.headers['x-qalix-manager-token'] || '').trim();
+      if (hdrTok) {
+        try { managerHubDb.prepare('DELETE FROM manager_sessions WHERE token = ?').run(hdrTok); } catch (_) {}
+      }
+      return sendJson(res, 200, { ok: true, auth: getManagerAuthStatus(managerHubDb, { headers: {} }) });
+    }
+
     /* ---------------- Agents Manager (مدير الوكلاء) Main Control, Agent Assignment & Manual Key Inbox ---------------- */
     if (req.method === 'GET' && pathname === '/api/manager/overview') {
+      const auth = getManagerAuthStatus(managerHubDb, req);
       systemsRegistry = loadSystemsRegistry(BASE_DATA_DIR, BASE_KITS_DIR);
-      const profile = getManagerHubProfile();
+      const rawProfile = getManagerHubProfile();
+      const profile = auth.locked
+        ? { managerName: rawProfile.managerName, managerPhone: rawProfile.managerPhone, ownerName: 'مخفي (يتطلب فتح قفل مدير الوكلاء)', ownerPhone: '' }
+        : rawProfile;
       const keyRequests = managerHubDb.prepare('SELECT * FROM agent_key_requests ORDER BY created_at DESC LIMIT 200').all();
+      const slaSummary = collectSlaAlerts({
+        systemsRegistry,
+        baseDataDir: BASE_DATA_DIR,
+        baseKitsDir: BASE_KITS_DIR,
+        activeSystemId: ACTIVE_SYSTEM.id,
+        activeDb: db,
+        slaMaxDays: Number(url.searchParams.get('slaDays') || 5)
+      });
       const systems = systemsRegistry.systems.map(s => {
         const st = summarizeSystemStats(BASE_DATA_DIR, BASE_KITS_DIR, s);
         return {
@@ -2119,8 +2216,10 @@ const server = http.createServer(async (req, res) => {
       });
       return sendJson(res, 200, {
         ok: true,
+        auth,
         activeSystemId: ACTIVE_SYSTEM.id,
         profile,
+        slaSummary,
         hierarchy: [
           { level: 1, role: 'صاحب المنصة (المطور)', visibility: 'مخفي تماماً — لا يعرفه ولا يتواصل معه إلا مدير الوكلاء فقط (مفاتيح التفعيل وأدوات إنشائها خارجه تماماً)' },
           { level: 2, role: 'مدير الوكلاء (صاحب هذه اللوحة الرئيسية)', visibility: 'يرى جميع الوكلاء والمنظومات الـ 11 ويحضر المفاتيح يدوياً من صاحب المنصة — لا يعرفه إلا الوكلاء فقط' },
@@ -2135,6 +2234,9 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (req.method === 'POST' && pathname === '/api/manager/profile') {
+      if (!isManagerAuthorized(managerHubDb, req)) {
+        return sendJson(res, 401, { error: 'يرجى إدخال رمز PIN لمدير الوكلاء لتعديل القناة السرية', managerPinRequired: true });
+      }
       const body = await readJsonBody(req);
       const upsertSetting = managerHubDb.prepare('INSERT INTO manager_settings(key, value) VALUES(?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value');
       if (body.managerName !== undefined) upsertSetting.run('manager_name', String(body.managerName || '').trim().slice(0, 120) || 'مدير الوكلاء العام');
@@ -2146,6 +2248,9 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (req.method === 'POST' && pathname === '/api/manager/assign-agent') {
+      if (!isManagerAuthorized(managerHubDb, req)) {
+        return sendJson(res, 401, { error: 'يرجى تسجيل دخول مدير الوكلاء لتعيين أو تعديل وكيل المنظومة', managerPinRequired: true });
+      }
       const body = await readJsonBody(req);
       const systemId = String(body.systemId || ACTIVE_SYSTEM.id).trim();
       try {
@@ -2187,7 +2292,11 @@ const server = http.createServer(async (req, res) => {
       const targetSysId = String(body.systemId || ACTIVE_SYSTEM.id).trim();
       const targetSys = systemsRegistry.systems.find(s => s.id === targetSysId) || ACTIVE_SYSTEM;
       const tier = String(body.tier || 'professional').trim();
-      const amountPaid = Number(body.amountPaid || targetSys.pricing?.[tier]?.price || 0) || 0;
+      const amountPaid = body.amountPaid !== undefined ? (Number(body.amountPaid) || 0) : Number(targetSys.pricing?.[tier]?.price || 0);
+      const keyValCheck = validateKeyRequestInput({ targetSys, tier, hardwareId, amountPaid });
+      if (!keyValCheck.ok) {
+        return sendJson(res, 400, { error: keyValCheck.error });
+      }
       const distributorCode = String(body.distributorCode || '').trim().toUpperCase().slice(0, 32);
       const distributorName = String(body.distributorName || '').trim().slice(0, 120);
       const paymentRef = String(body.paymentRef || '').trim().slice(0, 80);
@@ -2228,10 +2337,13 @@ const server = http.createServer(async (req, res) => {
       ].filter(Boolean).join('\n');
 
       const created = managerHubDb.prepare('SELECT * FROM agent_key_requests WHERE id = ?').get(id);
-      return sendJson(res, 201, { ok: true, request: created, waToAgentsManager, agentsManagerContact: mgr });
+      return sendJson(res, 201, { ok: true, request: created, validation: keyValCheck, waToAgentsManager, agentsManagerContact: mgr });
     }
 
     if (req.method === 'POST' && /^\/api\/manager\/key-requests\/[^/]+\/deliver$/.test(pathname)) {
+      if (!isManagerAuthorized(managerHubDb, req)) {
+        return sendJson(res, 401, { error: 'يرجى تسجيل دخول مدير الوكلاء لتسليم المفاتيح يدوياً', managerPinRequired: true });
+      }
       const id = pathname.split('/')[4];
       const body = await readJsonBody(req);
       const manualKey = String(body.manualLicenseKey || body.activationKey || '').trim();
@@ -2300,95 +2412,95 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, 200, { ok: true, request: updated, waToAgent });
     }
 
-    /* ---------------- Agents Manager (مدير الوكلاء) Consolidated Cross-System Oversight ---------------- */
+    /* ---------------- SLA Watchdog, Sync Packets (.qlxsync) & Executive Funnel Report ---------------- */
+    if (req.method === 'GET' && pathname === '/api/manager/sla-alerts') {
+      systemsRegistry = loadSystemsRegistry(BASE_DATA_DIR, BASE_KITS_DIR);
+      const slaDaysParam = url.searchParams.get('slaDays');
+      const sysFilter = String(url.searchParams.get('systemId') || '').trim();
+      const cfgRow = managerHubDb.prepare("SELECT value FROM manager_settings WHERE key = 'sla_max_days'").get();
+      const slaDays = slaDaysParam !== null ? Number(slaDaysParam) : Number(cfgRow?.value || 5);
+      const summary = collectSlaAlerts({
+        systemsRegistry,
+        baseDataDir: BASE_DATA_DIR,
+        baseKitsDir: BASE_KITS_DIR,
+        activeSystemId: ACTIVE_SYSTEM.id,
+        activeDb: db,
+        slaMaxDays: slaDays,
+        systemIdFilter: sysFilter
+      });
+      return sendJson(res, 200, { ok: true, ...summary });
+    }
+
+    if (req.method === 'POST' && pathname === '/api/manager/sla-config') {
+      if (!isManagerAuthorized(managerHubDb, req)) {
+        return sendJson(res, 401, { error: 'يرجى تسجيل دخول مدير الوكلاء لتعديل حد المتابعة SLA', managerPinRequired: true });
+      }
+      const body = await readJsonBody(req);
+      const days = Math.max(1, Math.min(90, Number(body.slaMaxDays) || 5));
+      managerHubDb.prepare("INSERT INTO manager_settings(key, value) VALUES('sla_max_days', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").run(String(days));
+      return sendJson(res, 200, { ok: true, slaMaxDays: days });
+    }
+
+    if (req.method === 'GET' && pathname === '/api/sync/export') {
+      const pkt = buildAgentSyncPacket(db, ACTIVE_SYSTEM, managerHubDb, { upsertUnifiedCase });
+      if (url.searchParams.get('download') === '1') {
+        const fname = `Qalix-Sync-${ACTIVE_SYSTEM.id}-${new Date().toISOString().slice(0, 10)}.qlxsync`;
+        res.writeHead(200, {
+          'Content-Type': 'application/json; charset=utf-8',
+          'Content-Disposition': `attachment; filename="${fname}"`
+        });
+        return res.end(JSON.stringify(pkt, null, 2));
+      }
+      return sendJson(res, 200, { ok: true, packet: pkt });
+    }
+
+    if (req.method === 'POST' && pathname === '/api/sync/import') {
+      const body = await readJsonBody(req);
+      const packet = body && body.packet && typeof body.packet === 'object' ? body.packet : body;
+      const impRes = importSyncPacket({
+        db,
+        activeSystem: ACTIVE_SYSTEM,
+        managerHubDb,
+        packet,
+        upsertUnifiedCase
+      });
+      if (!impRes.ok) {
+        return sendJson(res, impRes.status || 400, { error: impRes.error });
+      }
+      logAudit('sync_packet_imported', `استيراد حزمة مزامنة أوفلاين موثقة (${impRes.packetType}) — بصمة: ${impRes.integritySha256.slice(0, 12)}...`);
+      return sendJson(res, 200, impRes);
+    }
+
+    if (req.method === 'GET' && pathname === '/api/sync/snapshots') {
+      const rows = managerHubDb.prepare('SELECT id, system_id, packet_type, packet_sha256, source_label, cases_count, deals_count, gross_sales, imported_at FROM synced_agent_snapshots ORDER BY imported_at DESC LIMIT 100').all();
+      return sendJson(res, 200, { ok: true, snapshots: rows });
+    }
+
+    /* ---------------- Agents Manager (مدير الوكلاء) Consolidated Cross-System Oversight & Funnel ---------------- */
     if (req.method === 'GET' && pathname === '/api/owner/agents-activity') {
       systemsRegistry = loadSystemsRegistry(BASE_DATA_DIR, BASE_KITS_DIR);
-      const agentsActivity = [];
-      const grandTotals = {
-        systemsCount: systemsRegistry.systems.length,
-        distributorsCount: 0,
-        repsCount: 0,
-        techsCount: 0,
-        unifiedCasesCount: 0,
-        repActionsCount: 0,
-        techActionsCount: 0,
-        trialsCount: 0,
-        pendingPaymentsCount: 0,
-        completedDealsCount: 0,
-        grossSales: 0,
-        agentNetRevenue: 0
-      };
-
-      for (const sysMeta of systemsRegistry.systems) {
-        const useActiveDb = sysMeta.id === ACTIVE_SYSTEM.id;
-        const paths = getSystemPaths(BASE_DATA_DIR, BASE_KITS_DIR, sysMeta.id);
-        let row = {
-          systemId: sysMeta.id,
-          systemNameAr: sysMeta.nameAr,
-          licensePrefix: sysMeta.licensePrefix,
-          agentTitleAr: sysMeta.agentInfo?.titleAr || '',
-          agentPhone: sysMeta.agentInfo?.phone || '',
-          isActive: useActiveDb,
-          distributorsCount: 0,
-          repsCount: 0,
-          techsCount: 0,
-          unifiedCasesCount: 0,
-          repActionsCount: 0,
-          techActionsCount: 0,
-          trialsCount: 0,
-          pendingPaymentsCount: 0,
-          completedDealsCount: 0,
-          grossSales: 0,
-          agentNetRevenue: 0,
-          activityScore: 0,
-          recentCases: []
-        };
-        if (useActiveDb || fs.existsSync(paths.dbPath)) {
-          const sdb = useActiveDb ? db : new DatabaseSync(paths.dbPath);
-          try {
-            if (!useActiveDb) initSystemSchema(sdb);
-            row.distributorsCount = sdb.prepare('SELECT COUNT(*) AS c FROM distributors').get().c;
-            row.repsCount = sdb.prepare("SELECT COUNT(*) AS c FROM distributor_field_team WHERE role = 'rep'").get().c;
-            row.techsCount = sdb.prepare("SELECT COUNT(*) AS c FROM distributor_field_team WHERE role = 'tech'").get().c;
-            row.unifiedCasesCount = sdb.prepare('SELECT COUNT(*) AS c FROM unified_workflow_cases').get().c;
-            row.repActionsCount = sdb.prepare("SELECT COUNT(*) AS c FROM unified_workflow_cases WHERE rep_action <> ''").get().c;
-            row.techActionsCount = sdb.prepare("SELECT COUNT(*) AS c FROM unified_workflow_cases WHERE tech_action <> ''").get().c;
-            row.trialsCount = sdb.prepare('SELECT COUNT(*) AS c FROM trial_stage_reports').get().c;
-            row.pendingPaymentsCount = sdb.prepare("SELECT COUNT(*) AS c FROM payment_requests WHERE status = 'pending'").get().c;
-            const dStats = sdb.prepare("SELECT COUNT(*) AS c, COALESCE(SUM(fixed_price), 0) AS g, COALESCE(SUM(agent_net_amount), 0) AS n FROM deals WHERE status = 'completed'").get();
-            row.completedDealsCount = dStats.c;
-            row.grossSales = Number(dStats.g || 0);
-            row.agentNetRevenue = Number(dStats.n || 0);
-            row.activityScore = (row.distributorsCount * 10) + (row.repActionsCount * 5) + (row.techActionsCount * 5) + (row.completedDealsCount * 20);
-            row.recentCases = sdb.prepare(`
-              SELECT uc.case_code, uc.customer_name, uc.rep_name, uc.rep_action, uc.tech_name, uc.tech_action,
-                     uc.stage, uc.outcome, uc.updated_at, d.name AS distributor_name, d.code AS distributor_code
-              FROM unified_workflow_cases uc JOIN distributors d ON d.id = uc.distributor_id
-              ORDER BY uc.updated_at DESC LIMIT 6
-            `).all();
-          } finally {
-            if (!useActiveDb) {
-              try { sdb.close(); } catch (_) {}
-            }
-          }
-        }
-        grandTotals.distributorsCount += row.distributorsCount;
-        grandTotals.repsCount += row.repsCount;
-        grandTotals.techsCount += row.techsCount;
-        grandTotals.unifiedCasesCount += row.unifiedCasesCount;
-        grandTotals.repActionsCount += row.repActionsCount;
-        grandTotals.techActionsCount += row.techActionsCount;
-        grandTotals.trialsCount += row.trialsCount;
-        grandTotals.pendingPaymentsCount += row.pendingPaymentsCount;
-        grandTotals.completedDealsCount += row.completedDealsCount;
-        grandTotals.grossSales += row.grossSales;
-        grandTotals.agentNetRevenue += row.agentNetRevenue;
-        agentsActivity.push(row);
-      }
-
-      const ownerNameRow = db.prepare("SELECT value FROM agent_private_settings WHERE key = 'platform_owner_name'").get();
-      const ownerName = ownerNameRow ? ownerNameRow.value : 'مدير الوكلاء / صاحب المنصة';
+      const fromDate = String(url.searchParams.get('from') || '').trim();
+      const toDate = String(url.searchParams.get('to') || '').trim();
+      const systemIdFilter = String(url.searchParams.get('systemId') || '').trim();
+      const slaParam = url.searchParams.get('slaDays');
+      const analytics = buildManagerExecutiveAnalytics({
+        systemsRegistry,
+        baseDataDir: BASE_DATA_DIR,
+        baseKitsDir: BASE_KITS_DIR,
+        activeSystemId: ACTIVE_SYSTEM.id,
+        activeDb: db,
+        managerHubDb,
+        fromDate,
+        toDate,
+        systemIdFilter,
+        slaMaxDays: slaParam !== null ? Number(slaParam) : undefined
+      });
+      const auth = getManagerAuthStatus(managerHubDb, req);
+      const mgrProfile = getManagerHubProfile();
+      const ownerName = auth.locked ? mgrProfile.managerName : mgrProfile.ownerName;
       const generatedAt = new Date().toISOString();
+      const grandTotals = analytics.grandTotals;
+      const agentsActivity = analytics.agentsActivity;
       const reportPayload = { ownerName, generatedAt, grandTotals, agentsActivity };
       const reportSha256 = crypto.createHash('sha256').update(JSON.stringify(reportPayload)).digest('hex');
 
@@ -2398,12 +2510,43 @@ const server = http.createServer(async (req, res) => {
         `• عدد المنظومات / الوكلاء النشطة: ${grandTotals.systemsCount}`,
         `• إجمالي الموزعين: ${grandTotals.distributorsCount} | المناديب: ${grandTotals.repsCount} | الفنيون: ${grandTotals.techsCount}`,
         `• الحالات الميدانية الموحدة: ${grandTotals.unifiedCasesCount} (مناديب: ${grandTotals.repActionsCount} · فنيون: ${grandTotals.techActionsCount})`,
+        `• معدل التحويل العام: ${analytics.funnel.overallConversionPct}% | تنبيهات SLA: ${analytics.slaSummary.alertsCount}`,
         `• النسخ التجريبية المسجلة: ${grandTotals.trialsCount} | طلبات دفع بالانتظار: ${grandTotals.pendingPaymentsCount}`,
         `• الصفقات المكتملة: ${grandTotals.completedDealsCount} | المبيعات: ${grandTotals.grossSales} ج.م | صافي الوكلاء: ${grandTotals.agentNetRevenue} ج.م`,
         `• بصمة التوثيق SHA-256: ${reportSha256.slice(0, 16)}...`
       ].join('\n');
 
-      return sendJson(res, 200, { ok: true, ...reportPayload, reportSha256, waBrief });
+      return sendJson(res, 200, {
+        ok: true,
+        ...reportPayload,
+        funnel: analytics.funnel,
+        slaSummary: analytics.slaSummary,
+        syncedSnapshotsCount: analytics.syncedSnapshotsCount,
+        filters: analytics.filters,
+        auth,
+        reportSha256,
+        waBrief
+      });
+    }
+
+    if (req.method === 'GET' && pathname === '/api/manager/executive-report') {
+      if (!isManagerAuthorized(managerHubDb, req)) {
+        return sendJson(res, 401, { error: 'يرجى تسجيل دخول مدير الوكلاء لعرض التقرير التنفيذي المجمع', managerPinRequired: true });
+      }
+      systemsRegistry = loadSystemsRegistry(BASE_DATA_DIR, BASE_KITS_DIR);
+      const analytics = buildManagerExecutiveAnalytics({
+        systemsRegistry,
+        baseDataDir: BASE_DATA_DIR,
+        baseKitsDir: BASE_KITS_DIR,
+        activeSystemId: ACTIVE_SYSTEM.id,
+        activeDb: db,
+        managerHubDb,
+        fromDate: String(url.searchParams.get('from') || '').trim(),
+        toDate: String(url.searchParams.get('to') || '').trim(),
+        systemIdFilter: String(url.searchParams.get('systemId') || '').trim()
+      });
+      const html = generateManagerExecutiveReportHtml(analytics, getManagerHubProfile());
+      return sendHtmlWithOptionalDownload(res, html, 'Qalix-Manager-Executive-Report.html', url.searchParams.get('download') === '1');
     }
 
     /* ---------------- Multi-System Isolation & Clean Reseller Edition API ---------------- */
@@ -2489,6 +2632,22 @@ const server = http.createServer(async (req, res) => {
             ? `/api/systems/download-reseller-edition?file=${encodeURIComponent(edition.zipFilename)}`
             : null
         });
+      } catch (err) {
+        return sendJson(res, 500, { error: err.message });
+      }
+    }
+
+    if (req.method === 'POST' && pathname === '/api/systems/build-installer-kit') {
+      const body = await readJsonBody(req);
+      try {
+        const kit = buildWindowsInstallerKit({
+          rootDir: ROOT,
+          baseDataDir: BASE_DATA_DIR,
+          edition: body.edition === 'universal' ? 'universal' : 'qalix11',
+          includeMediaAssets: body.includeMediaAssets === true
+        });
+        logAudit('installer_kit_staged', `تجهيز حزمة ومخطط المُثبِّت المستقل للويندوز (${kit.edition}) في: ${kit.stageDir}`);
+        return sendJson(res, 201, kit);
       } catch (err) {
         return sendJson(res, 500, { error: err.message });
       }
