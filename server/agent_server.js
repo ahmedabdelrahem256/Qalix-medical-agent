@@ -200,9 +200,10 @@ function seedInitialData(targetDb) {
   logAudit('system_init', 'تأسيس قاعدة بيانات مشروع Qalix Medical Agent بنظام السعر الثابت ونسب الموزعين');
 }
 
-/* Seed initial sample distributors if empty */
+/* Seed initial sample distributors if empty (unless clean production mode is enabled) */
+const cleanProdRow = db.prepare("SELECT value FROM agent_private_settings WHERE key = 'clean_production_mode'").get();
 const distCount = db.prepare('SELECT COUNT(*) AS n FROM distributors').get().n;
-if (distCount === 0) {
+if (distCount === 0 && (!cleanProdRow || cleanProdRow.value !== '1')) {
   seedInitialData(db);
 }
 
