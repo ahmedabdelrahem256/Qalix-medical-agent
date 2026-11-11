@@ -402,12 +402,38 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
       a.remove();
     }
 
-    function openPortalDocPreview(opts) {
+    let portalPreviewSeq = 0;
+
+    function injectBaseHrefPortal(html, baseOrigin) {
+      if (!html || !baseOrigin) return html;
+      const low = html.toLowerCase();
+      if (low.indexOf('<base') !== -1) return html;
+      const cleanOrigin = baseOrigin.endsWith('/') ? baseOrigin : (baseOrigin + '/');
+      const tag = '<base href="' + escHtml(cleanOrigin) + '" />';
+      const headIdx = low.indexOf('<head');
+      if (headIdx !== -1) {
+        const gtIdx = html.indexOf('>', headIdx);
+        if (gtIdx !== -1) return html.slice(0, gtIdx + 1) + tag + html.slice(gtIdx + 1);
+      }
+      return tag + html;
+    }
+
+    async function fetchWithOneRetryPortal(url) {
+      try {
+        return await fetch(url, { cache: 'no-store' });
+      } catch (err) {
+        await new Promise(r => setTimeout(r, 350));
+        return await fetch(url, { cache: 'no-store' });
+      }
+    }
+
+    async function openPortalDocPreview(opts) {
       const m = document.getElementById('portalDocModal');
       const frame = document.getElementById('portalDocFrame');
       const loader = document.getElementById('portalDocLoading');
       if (!m || !frame) return;
 
+      const reqSeq = ++portalPreviewSeq;
       currentPortalDocState = opts || {};
       document.getElementById('portalDocTitle').innerText = opts.title || 'معاينة المستند';
       document.getElementById('portalDocSubtitle').innerText = opts.subtitle || 'معاينة مباشرة قبل الطباعة أو التحميل';
@@ -417,31 +443,62 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
         if (loader) loader.style.display = 'none';
         frame.removeAttribute('src');
         frame.srcdoc = htmlStr;
+        m.style.display = 'flex';
         if (opts.autoPrint) {
           setTimeout(() => { try { frame.contentWindow.focus(); frame.contentWindow.print(); } catch (_) {} }, 350);
         }
-      } else if (opts.url) {
+        return;
+      }
+
+      if (opts.url) {
         const resolvedUrl = resolvePortalUrl(opts.url);
         frame.removeAttribute('srcdoc');
+        frame.src = 'about:blank';
         if (loader) {
-          loader.innerText = '⏳ جاري تحميل المعاينة المباشرة...';
+          loader.innerHTML = '<span>⏳ جاري تحميل المعاينة المباشرة...</span>';
           loader.style.display = 'flex';
         }
-        frame.onload = () => {
-          if (loader) loader.style.display = 'none';
-          if (opts.autoPrint) {
-            setTimeout(() => { try { frame.contentWindow.focus(); frame.contentWindow.print(); } catch (_) {} }, 350);
-          }
-        };
-        if (API_BASE) {
-          fetch(resolvedUrl, { method: 'HEAD' }).catch(() => {
-            if (loader) {
-              loader.innerText = '⚠️ تعذر الاتصال بالخادم المحلي (127.0.0.1:4000) لأن هذا الملف يتطلب تشغيل خادم الوكيل أو استخدم الوثائق المدمجة أوفلاين.';
-              loader.style.display = 'flex';
+        m.style.display = 'flex';
+        try {
+          const resp = await fetchWithOneRetryPortal(resolvedUrl);
+          if (reqSeq !== portalPreviewSeq) return;
+          if (!resp.ok) throw new Error('HTTP ' + resp.status);
+          const ct = (resp.headers.get('content-type') || '').toLowerCase();
+          if (ct.includes('text/html')) {
+            const docHtml = await resp.text();
+            if (reqSeq !== portalPreviewSeq) return;
+            const originBase = API_BASE || window.location.origin;
+            frame.removeAttribute('src');
+            frame.srcdoc = injectBaseHrefPortal(docHtml, originBase);
+            if (loader) loader.style.display = 'none';
+            if (opts.autoPrint) {
+              setTimeout(() => { try { frame.contentWindow.focus(); frame.contentWindow.print(); } catch (_) {} }, 350);
             }
-          });
+          } else {
+            frame.onload = () => {
+              if (reqSeq !== portalPreviewSeq) return;
+              if (loader) loader.style.display = 'none';
+              if (opts.autoPrint) {
+                setTimeout(() => { try { frame.contentWindow.focus(); frame.contentWindow.print(); } catch (_) {} }, 350);
+              }
+            };
+            frame.src = resolvedUrl;
+          }
+        } catch (err) {
+          if (reqSeq !== portalPreviewSeq) return;
+          frame.removeAttribute('srcdoc');
+          frame.src = 'about:blank';
+          if (loader) {
+            loader.innerHTML = '<div style="text-align:center; padding:24px; max-width:520px; line-height:1.8;">' +
+              '<div style="font-size:28px; margin-bottom:8px;">⚠️</div>' +
+              '<div style="font-size:15px; font-weight:800; color:#f8fafc; margin-bottom:6px;">تعذر تحميل المعاينة من الخادم المحلي (127.0.0.1:4000)</div>' +
+              '<div style="font-size:12.5px; color:#cbd5e1; margin-bottom:14px;">تأكد من تشغيل خادم الوكيل عبر <code>START_QALIX_MEDICAL_AGENT.bat</code> ثم اضغط إعادة المحاولة، أو استخدم الوثائق المدمجة أوفلاين من القائمة.</div>' +
+              '<button type="button" onclick="openPortalDocPreview(currentPortalDocState)" style="padding:8px 18px; border-radius:8px; background:#0ea5e9; color:#fff; border:none; font-weight:700; cursor:pointer;">🔄 إعادة المحاولة الآن</button>' +
+              '</div>';
+            loader.style.display = 'flex';
+          }
         }
-        frame.src = resolvedUrl;
+        return;
       }
       m.style.display = 'flex';
     }
@@ -487,6 +544,7 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
     }
 
     function closePortalDocDirect() {
+      portalPreviewSeq++;
       const m = document.getElementById('portalDocModal');
       const frame = document.getElementById('portalDocFrame');
       if (m) m.style.display = 'none';

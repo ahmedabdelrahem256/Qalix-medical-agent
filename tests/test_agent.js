@@ -881,7 +881,11 @@ function req(method, urlPath, body) {
       kitPreviewRes.body.includes('QUICK_START_B64 = "') &&
       kitPreviewRes.body.includes('WARRANTY_CERT_B64 = "') &&
       kitPreviewRes.body.includes('openPortalDocPreview') &&
+      kitPreviewRes.body.includes('fetchWithOneRetryPortal') &&
+      kitPreviewRes.body.includes('injectBaseHrefPortal') &&
       dashHtmlRes.body.includes('select option, select optgroup') &&
+      dashHtmlRes.body.includes('fetchPreviewWithRetry') &&
+      dashHtmlRes.body.includes('injectBaseHrefDashboard') &&
       dashHtmlRes.body.includes('resetExamCertState()') &&
       legalHtmlRes.status === 200 &&
       legalPdfDlRes.status === 200 &&

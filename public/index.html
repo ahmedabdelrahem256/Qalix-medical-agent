@@ -2863,7 +2863,7 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
       if (!sel) return;
       const list = window.lastSummaryDistributors || [];
       const opts = list.map(d =>
-        `<option value="${escAttr(d.phone || '')}" data-name="${escAttr(d.name)}" data-code="${escAttr(d.code)}">${d.name} (${d.code}) — ${d.phone}</option>`
+        `<option value="${escAttr(d.phone || '')}" data-name="${escAttr(d.name)}" data-code="${escAttr(d.code)}">${escAttr(d.name)} (${escAttr(d.code)}) — ${escAttr(d.phone)}</option>`
       ).join('');
       sel.innerHTML = opts +
         '<option value="__custom__">📱 رقم موزع آخر (كتابة يدوية)...</option>' +
@@ -2910,7 +2910,29 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
       openWaChat(waPhone, msg);
     }
 
-    function openCardPreviewModal(opts) {
+    let cardPreviewSeq = 0;
+
+    function injectBaseHrefDashboard(html, baseOrigin) {
+      if (!html || /<base\b/i.test(html) || !baseOrigin) return html;
+      const safeBase = escAttr(String(baseOrigin).replace(/\/+$/, '') + '/');
+      const tag = `<base href="${safeBase}" />`;
+      if (/<head\b[^>]*>/i.test(html)) {
+        return html.replace(/<head\b([^>]*)>/i, `<head$1>${tag}`);
+      }
+      return tag + html;
+    }
+
+    async function fetchPreviewWithRetry(url) {
+      try {
+        return await fetch(url, { cache: 'no-store' });
+      } catch (err) {
+        await new Promise(r => setTimeout(r, 350));
+        return await fetch(url, { cache: 'no-store' });
+      }
+    }
+
+    async function openCardPreviewModal(opts) {
+      const reqSeq = ++cardPreviewSeq;
       currentCardPreviewOpts = opts || {};
       const m = document.getElementById('cardPreviewModal');
       const frame = document.getElementById('cardPreviewFrame');
@@ -2924,12 +2946,7 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
       document.getElementById('cardPreviewTitle').innerText = opts.title || 'معاينة البطاقة قبل التحميل';
       document.getElementById('cardPreviewSubtitle').innerText = opts.subtitle || 'عاين المحتوى وتأكد من التفاصيل قبل حفظ الملف أو طباعته';
 
-      if (loader) loader.style.display = 'flex';
-      frame.onload = () => {
-        if (loader) loader.style.display = 'none';
-      };
-      frame.src = opts.previewUrl || opts.downloadUrl || 'about:blank';
-
+      const targetUrl = opts.previewUrl || opts.downloadUrl || '';
       if (dlBtn) {
         const dlUrl = opts.downloadUrl || opts.previewUrl || '#';
         dlBtn.href = dlUrl;
@@ -2940,9 +2957,56 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
         }
       }
       if (openBtn) {
-        openBtn.href = opts.previewUrl || opts.downloadUrl || '#';
+        openBtn.href = targetUrl || '#';
+      }
+
+      frame.removeAttribute('srcdoc');
+      frame.src = 'about:blank';
+      if (loader) {
+        loader.innerHTML = '<span>⏳ جاري تحميل المعاينة المباشرة...</span>';
+        loader.style.display = 'flex';
       }
       m.style.display = 'flex';
+
+      if (!targetUrl || targetUrl === 'about:blank') {
+        if (loader) loader.style.display = 'none';
+        return;
+      }
+
+      try {
+        const resp = await fetchPreviewWithRetry(targetUrl);
+        if (reqSeq !== cardPreviewSeq) return;
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        const ct = (resp.headers.get('content-type') || '').toLowerCase();
+        if (ct.includes('text/html')) {
+          const docHtml = await resp.text();
+          if (reqSeq !== cardPreviewSeq) return;
+          frame.removeAttribute('src');
+          frame.srcdoc = injectBaseHrefDashboard(docHtml, window.location.origin);
+          if (loader) loader.style.display = 'none';
+        } else {
+          frame.onload = () => {
+            if (reqSeq !== cardPreviewSeq) return;
+            if (loader) loader.style.display = 'none';
+          };
+          frame.src = targetUrl;
+        }
+      } catch (err) {
+        if (reqSeq !== cardPreviewSeq) return;
+        frame.removeAttribute('srcdoc');
+        frame.src = 'about:blank';
+        if (loader) {
+          loader.innerHTML = `
+            <div style="text-align:center; padding:24px; max-width:520px; line-height:1.8;">
+              <div style="font-size:30px; margin-bottom:8px;">⚠️</div>
+              <div style="font-size:15px; font-weight:800; color:#f8fafc; margin-bottom:6px;">تعذر تحميل المعاينة حالياً من الخادم المحلي</div>
+              <div style="font-size:12.5px; color:#cbd5e1; margin-bottom:14px;">تأكد من أن نافذة الخادم (<code>START_QALIX_MEDICAL_AGENT.bat</code>) تعمل في الخلفية ثم اضغط إعادة المحاولة.</div>
+              <button type="button" class="btn btn-sm btn-sky" onclick="openCardPreviewModal(currentCardPreviewOpts)">🔄 إعادة المحاولة الآن</button>
+            </div>
+          `;
+          loader.style.display = 'flex';
+        }
+      }
     }
 
     function printCardPreview() {
@@ -2962,10 +3026,14 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
     }
 
     function closeCardPreviewDirect() {
+      cardPreviewSeq++;
       const m = document.getElementById('cardPreviewModal');
       const frame = document.getElementById('cardPreviewFrame');
       if (m) m.style.display = 'none';
-      if (frame) frame.src = 'about:blank';
+      if (frame) {
+        frame.removeAttribute('srcdoc');
+        frame.src = 'about:blank';
+      }
     }
 
     document.addEventListener('keydown', (e) => {
