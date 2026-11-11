@@ -948,6 +948,15 @@ function req(method, urlPath, body) {
 
     // 65. Air-Gapped Backup Integrity: create_backup.js Uses node:sqlite & backup_manager Exports leadLocks
     const createBackupSrc = fs.readFileSync(path.join(__dirname, '..', 'server', 'create_backup.js'), 'utf8');
+    await req('POST', '/api/territory/lock-lead', {
+      distributorId: sampleDistId,
+      distributorName: 'مكتب النخبة للحلول الطبية (قطاع أسيوط)',
+      clinicName: 'عيادة التحقق من النسخ الاحتياطي',
+      doctorName: 'د. سليم النسخ',
+      clinicPhone: '01033445599',
+      governorate: 'أسيوط',
+      city: 'أسيوط'
+    });
     const fullExportRes = await req('GET', '/api/backup/export-data');
     check('65. سلامة محرك النسخ الاحتياطي (اعتماد node:sqlite بدون حزم خارجية وشمول leadLocks بالتصدير)',
       !createBackupSrc.includes('better-sqlite3') &&
@@ -957,11 +966,13 @@ function req(method, urlPath, body) {
       fullExportRes.body &&
       fullExportRes.body.data &&
       Array.isArray(fullExportRes.body.data.leadLocks) &&
-      typeof fullExportRes.body.summary.leadLocksCount === 'number',
+      fullExportRes.body.data.leadLocks.length >= 1 &&
+      fullExportRes.body.summary.leadLocksCount >= 1,
       {
         usesNodeSqlite: createBackupSrc.includes("require('node:sqlite')"),
         hasBetterSqlite: createBackupSrc.includes('better-sqlite3'),
-        exportStatus: fullExportRes.status
+        exportStatus: fullExportRes.status,
+        leadLocksCount: fullExportRes.body.summary.leadLocksCount
       }
     );
 

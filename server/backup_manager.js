@@ -101,7 +101,7 @@ function exportFullSystemJson(db) {
   const proposals = db.prepare('SELECT * FROM excellence_proposals ORDER BY created_at DESC').all();
   let leadLocks = [];
   try {
-    leadLocks = db.prepare('SELECT * FROM lead_locks ORDER BY created_at DESC').all();
+    leadLocks = db.prepare('SELECT * FROM lead_locks ORDER BY locked_at DESC').all();
   } catch (e) {
     leadLocks = [];
   }
