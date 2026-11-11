@@ -275,9 +275,9 @@
             <span class="badge b-sky">100% AIR-GAPPED FORTRESS · أوفلاين بالكامل</span>
             <span class="badge b-amber">مشروع: Qalix Medical Agent (G:\Qalix medical agent)</span>
           </div>
-          <h1 style="margin:0; font-size:24px;">لوحة تحكم: وكيل منظومة كالكس ميديكال الطبية وشبكة الموزعين</h1>
-          <p style="margin:4px 0 0; color:var(--muted); font-size:13px;">
-            واجهة زجاجية عصرية مريحة للعين · إدارة الموزعين المستقلين بنظام النسبة من السعر الثابت · نافذة المنظومات المنافسة · ركن الارتقاء والريادة (#1 طبياً)
+          <h1 id="headerMainTitle" style="margin:0; font-size:24px;">لوحة تحكم: وكيل منظومة كالكس ميديكال الطبية وشبكة الموزعين</h1>
+          <p id="headerMainSubtitle" style="margin:4px 0 0; color:var(--muted); font-size:13px;">
+            واجهة زجاجية عصرية مريحة للعين · إدارة الموزعين المستقلين بنظام النسبة من السعر الثابت · نافذة المنظومات المنافسة · ركن الارتقاء والريادة
           </p>
         </div>
         <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
@@ -291,8 +291,8 @@
             </select>
           </div>
           <div class="sub-card">
-            <div style="font-size:12px; color:var(--muted);">وكيل منظومة كالكس ميديكال الطبية</div>
-            <div style="font-size:15px; font-weight:800; color:var(--emerald);" dir="ltr">01122166076 (+20 112 216 6076)</div>
+            <div id="headerAgentTitle" style="font-size:12px; color:var(--muted);">وكيل منظومة كالكس ميديكال الطبية</div>
+            <div id="headerAgentPhone" style="font-size:15px; font-weight:800; color:var(--emerald);" dir="ltr">01122166076 (+20 112 216 6076)</div>
           </div>
           <div class="sub-card">
             <div style="font-size:12px; color:var(--muted);">نسخة العميل v1.0 (محمية بدون أي لمس)</div>
@@ -302,6 +302,22 @@
             <button type="button" class="btn-emerald" style="font-size:12px; padding:8px 12px;" onclick="openCardPreviewModal({ title: '📘 كتالوج تشغيل الوكيل الحصري (من أ إلى ي)', subtitle: 'دليل مصور خاص بوكيل المنظومة فقط (يعمل أوفلاين + طباعة A4)', previewUrl: '/api/catalogs/agent', downloadUrl: '/api/catalogs/agent?download=1' })">📘 كتالوج الوكيل المصور (A–Z)</button>
             <button type="button" class="btn-sky" style="font-size:12px; padding:8px 12px;" onclick="openCardPreviewModal({ title: '💼 كتالوج عمل الموزع الميداني (من أ إلى ي)', subtitle: 'دليل مصور خاص بعمل الموزع وبوابته المستقلة فقط (جاهز للإرسال للموزع)', previewUrl: '/api/catalogs/distributor', downloadUrl: '/api/catalogs/distributor?download=1' })">💼 كتالوج الموزع المصور (A–Z)</button>
           </div>
+        </div>
+      </div>
+
+      <!-- Isolated Multi-System Bar & Reseller Clean Edition Controls -->
+      <div class="sub-card" style="margin-top:12px; padding:12px 14px; border:1px solid rgba(56,189,248,0.35); background:rgba(15,23,42,0.55); display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px;">
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+          <span class="badge b-sky">🧩 لوحة متعددة المنظومات المعزولة</span>
+          <label for="systemSwitchSelect" style="font-size:12px; color:var(--muted); font-weight:700;">المنظومة النشطة الآن:</label>
+          <select id="systemSwitchSelect" onchange="switchActiveSystem(this.value)" style="min-width:250px; padding:7px 10px; font-size:12.5px; font-weight:700; border-radius:8px;">
+            <option value="qalix_medical">منظومة كالكس ميديكال الطبية (QLX2)</option>
+          </select>
+          <span id="activeSystemDbBadge" class="badge b-emerald" dir="ltr" style="font-family:monospace; font-size:11px;">DB: data/agent.db · Prefix: QLX2</span>
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button type="button" class="btn btn-sm btn-sky" onclick="openMultiSystemModal()">➕ إضافة منظومة مستقلة (معزولة تماماً)</button>
+          <button type="button" class="btn btn-sm btn-amber" onclick="openResellerEditionModal()">📦 تصدير نسخة وكلاء مصفّرة جاهزة للبيع (.zip)</button>
         </div>
       </div>
 
@@ -1861,6 +1877,31 @@
 
     function render(data) {
       window.lastSummaryDistributors = data.distributors || [];
+      if (data.activeSystem) {
+        const h1 = document.getElementById('headerMainTitle');
+        const sub = document.getElementById('headerMainSubtitle');
+        const badge = document.getElementById('activeSystemDbBadge');
+        if (h1) h1.innerText = 'لوحة تحكم: وكيل ' + data.activeSystem.nameAr + ' وشبكة الموزعين';
+        if (sub) sub.innerText = (data.activeSystem.subtitleAr || '') + ' · بيانات معزولة 100% · السعر الرسمي الموحد';
+        if (badge) badge.innerText = `DB: ${data.activeSystem.dbFileRel} · Prefix: ${data.activeSystem.licensePrefix}`;
+      }
+      if (data.agent) {
+        const at = document.getElementById('headerAgentTitle');
+        const ap = document.getElementById('headerAgentPhone');
+        if (at && data.agent.titleAr) at.innerText = data.agent.titleAr;
+        if (ap && data.agent.phone) ap.innerText = `${data.agent.phone} (${data.agent.intlPhone || '+2' + data.agent.phone})`;
+      }
+      if (data.pricing) {
+        const tierSel = document.getElementById('dlTier');
+        if (tierSel) {
+          const prevVal = tierSel.value || 'professional';
+          tierSel.innerHTML = ['basic', 'professional', 'enterprise'].map(k => {
+            const t = data.pricing[k];
+            if (!t) return '';
+            return `<option value="${t.id}" ${t.id === prevVal ? 'selected' : ''}>${t.nameAr} (${Number(t.price).toLocaleString('ar-EG')} ج.م — سعر موحد)</option>`;
+          }).join('');
+        }
+      }
       document.getElementById('kpiDistCount').innerText = data.kpis.activeDistributors + ' موزعين نشطين';
       document.getElementById('kpiGrossSales').innerText = fmt(data.kpis.totalGrossSales);
       document.getElementById('kpiDealsCount').innerText = `${data.kpis.completedDealsCount} مكتملة · ${data.kpis.pendingDealsCount} معلقة`;
@@ -3173,7 +3214,8 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
         loadClinicChecklist(),
         loadBroadcastCampaigns(),
         loadFinancialForecast('balanced'),
-        loadDevStatus()
+        loadDevStatus(),
+        loadSystemsRegistryUi()
       ]);
     }
 
@@ -3444,6 +3486,176 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
 
     load();
     loadOwnerChannelConfig();
+
+    /* ==================== MULTI-SYSTEM & CLEAN RESELLER EDITION JS ==================== */
+    let systemsPresetsCache = [];
+
+    async function loadSystemsRegistryUi() {
+      try {
+        const r = await fetch('/api/systems');
+        const j = await r.json();
+        if (!j || !j.ok) return;
+        systemsPresetsCache = j.presets || [];
+        const sel = document.getElementById('systemSwitchSelect');
+        if (sel && Array.isArray(j.systems)) {
+          sel.innerHTML = j.systems.map(s =>
+            `<option value="${s.id}" ${s.id === j.activeSystemId ? 'selected' : ''}>${s.nameAr} (${s.licensePrefix}) — ${s.distributorsCount} موزع · ${s.dealsCount} صفقة</option>`
+          ).join('');
+        }
+      } catch (_) {}
+    }
+
+    async function switchActiveSystem(systemId) {
+      if (!systemId) return;
+      try {
+        const r = await fetch('/api/systems/select', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ systemId })
+        });
+        const j = await r.json();
+        if (j.ok) {
+          await load();
+          await loadOwnerChannelConfig();
+        } else {
+          alert('❌ تعذر تبديل المنظومة: ' + (j.error || 'خطأ'));
+        }
+      } catch (e) {
+        alert('❌ خطأ في الاتصال: ' + e.message);
+      }
+    }
+
+    function openMultiSystemModal() {
+      const m = document.getElementById('multiSystemModal');
+      if (m) m.style.display = 'flex';
+    }
+
+    function closeMultiSystemModal(e) {
+      if (e && e.target !== document.getElementById('multiSystemModal')) return;
+      document.getElementById('multiSystemModal').style.display = 'none';
+    }
+
+    function applySystemPresetForm(presetId) {
+      if (!presetId) return;
+      const p = systemsPresetsCache.find(x => x.id === presetId);
+      if (!p) return;
+      document.getElementById('msId').value = p.id;
+      document.getElementById('msNameAr').value = p.nameAr;
+      document.getElementById('msSubtitleAr').value = p.subtitleAr || '';
+      document.getElementById('msPrefix').value = p.licensePrefix || 'QLX2';
+      if (p.pricing) {
+        document.getElementById('msPriceBasic').value = p.pricing.basic?.price || 4000;
+        document.getElementById('msPricePro').value = p.pricing.professional?.price || 8500;
+        document.getElementById('msPriceEnt').value = p.pricing.enterprise?.price || 18000;
+      }
+    }
+
+    async function submitCreateIsolatedSystem() {
+      const presetId = (document.getElementById('msPreset')?.value || '').trim();
+      const id = (document.getElementById('msId')?.value || '').trim();
+      const nameAr = (document.getElementById('msNameAr')?.value || '').trim();
+      const subtitleAr = (document.getElementById('msSubtitleAr')?.value || '').trim();
+      const licensePrefix = (document.getElementById('msPrefix')?.value || 'QLX2').trim().toUpperCase();
+      const agentPhone = (document.getElementById('msAgentPhone')?.value || '01122166076').trim();
+      const megaTrialUrl = (document.getElementById('msMegaUrl')?.value || '').trim();
+      const basicPrice = Number(document.getElementById('msPriceBasic')?.value || 4000);
+      const proPrice = Number(document.getElementById('msPricePro')?.value || 8500);
+      const entPrice = Number(document.getElementById('msPriceEnt')?.value || 18000);
+
+      if (!nameAr) return alert('يرجى كتابة اسم المنظومة الجديدة.');
+      try {
+        const r = await fetch('/api/systems', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            presetId: presetId || undefined,
+            id: id || undefined,
+            nameAr,
+            subtitleAr,
+            licensePrefix,
+            agentPhone,
+            megaTrialUrl,
+            activateNow: true,
+            pricing: {
+              basic: { price: basicPrice },
+              professional: { price: proPrice },
+              enterprise: { price: entPrice }
+            }
+          })
+        });
+        const j = await r.json();
+        if (j.ok) {
+          document.getElementById('multiSystemModal').style.display = 'none';
+          await load();
+          await loadOwnerChannelConfig();
+          alert(`✅ تم إنشاء منظومة "${j.system.nameAr}" في قاعدة بيانات ومجلد معزولين تماماً وتفعيلها بنجاح!`);
+        } else {
+          alert('❌ تعذر الإنشاء: ' + (j.error || 'خطأ'));
+        }
+      } catch (e) {
+        alert('❌ خطأ في الاتصال: ' + e.message);
+      }
+    }
+
+    function openResellerEditionModal() {
+      const m = document.getElementById('resellerEditionModal');
+      const resBox = document.getElementById('resellerBuildResult');
+      if (resBox) resBox.style.display = 'none';
+      if (m) m.style.display = 'flex';
+    }
+
+    function closeResellerEditionModal(e) {
+      if (e && e.target !== document.getElementById('resellerEditionModal')) return;
+      document.getElementById('resellerEditionModal').style.display = 'none';
+    }
+
+    async function buildAndExportResellerEdition() {
+      const buyerAgentPhone = (document.getElementById('rsAgentPhone')?.value || '01000000000').trim();
+      const buyerAgentTitleAr = (document.getElementById('rsAgentTitle')?.value || 'وكيل منظومة كالكس المعتمد').trim();
+      const includeMediaAssets = Boolean(document.getElementById('rsIncludeMedia')?.checked);
+      const presets = [];
+      if (document.getElementById('rsAddPharma')?.checked) presets.push('qalix_pharmacy');
+      if (document.getElementById('rsAddPos')?.checked) presets.push('qalix_pos');
+      if (document.getElementById('rsAddErp')?.checked) presets.push('qalix_erp');
+
+      const btn = document.getElementById('rsBuildBtn');
+      const prevTxt = btn.innerText;
+      btn.disabled = true;
+      btn.innerText = '⏳ جاري تجميع وفحص النسخة المصفّرة...';
+      try {
+        const r = await fetch('/api/systems/build-reseller-edition', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            buyerAgentPhone,
+            buyerAgentTitleAr,
+            includeMediaAssets,
+            extraSystemPresets: presets
+          })
+        });
+        const j = await r.json();
+        if (j.ok && j.edition) {
+          const v = j.edition.verification || {};
+          const box = document.getElementById('resellerBuildResult');
+          box.style.display = 'block';
+          box.innerHTML = `
+            <div style="color:var(--emerald); font-weight:800; margin-bottom:6px;">✅ تم بناء النسخة المصفّرة وفحص عزلها التام بنجاح!</div>
+            <div style="font-size:12px; color:var(--text); line-height:1.6;">
+              • اسم النسخة: <code dir="ltr">${j.edition.editionName}</code> (${j.edition.zipSizeMB} MB)<br>
+              • التحقق الجنائي: الموزعون = <strong>${v.distributors}</strong> · الصفقات = <strong>${v.deals}</strong> · الحجز = <strong>${v.lead_locks}</strong> · رقم صاحب المنصة الشخصي = <strong>فارغ/آمن</strong> · وضع الإنتاج النظيف = <strong>${v.clean_production_mode}</strong>
+            </div>
+            ${j.downloadUrl ? `<a href="${j.downloadUrl}" class="btn btn-emerald" style="display:inline-block; margin-top:10px; text-decoration:none; font-weight:800;">⬇️ تحميل ملف ZIP النسخة الجاهزة للبيع الآن</a>` : ''}
+          `;
+        } else {
+          alert('❌ تعذر بناء النسخة: ' + (j.error || 'خطأ'));
+        }
+      } catch (e) {
+        alert('❌ خطأ: ' + e.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = prevTxt;
+      }
+    }
   </script>
 
   <!-- Modal for Lead Lock (Phase 9) -->
@@ -3543,6 +3755,103 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
           </div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Modal: Add Isolated New Qalix System -->
+  <div id="multiSystemModal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(2,6,23,0.88); backdrop-filter:blur(8px); align-items:center; justify-content:center; padding:16px;" onclick="closeMultiSystemModal(event)">
+    <div style="max-width:620px; width:100%; background:#0f172a; border:1px solid var(--sky); border-radius:14px; padding:18px; box-shadow:0 25px 60px rgba(0,0,0,0.85);" onclick="event.stopPropagation()">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid var(--border); padding-bottom:10px;">
+        <h3 style="margin:0; font-size:16px; color:var(--sky);">➕ إضافة منظومة مستقلة (ملف وقاعدة بيانات معزولة 100%)</h3>
+        <button type="button" class="btn btn-sm btn-rose" onclick="document.getElementById('multiSystemModal').style.display='none'">✕ إغلاق</button>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+        <div style="grid-column:1 / -1;">
+          <label style="font-size:12px; color:var(--muted);">اختر قالب منظومة كالكس جاهز (أو خصص من الصفر):</label>
+          <select id="msPreset" onchange="applySystemPresetForm(this.value)" style="padding:7px; font-size:12.5px;">
+            <option value="">— منظومة مخصصة بالكامل —</option>
+            <option value="qalix_pharmacy">💊 منظومة كالكس فارما للصيدليات (QPH2)</option>
+            <option value="qalix_pos">🛒 منظومة كالكس كاشير ونقاط البيع (QPS2)</option>
+            <option value="qalix_erp">🏭 منظومة كالكس ERP للشركات (QER2)</option>
+            <option value="qalix_realestate">🏢 منظومة كالكس برو العقارية (QRE2)</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:12px; color:var(--muted);">المعرف البرمجي (إنجليزي بدون مسافات):</label>
+          <input id="msId" dir="ltr" placeholder="qalix_pharmacy" style="padding:6px; font-size:12px;" />
+        </div>
+        <div>
+          <label style="font-size:12px; color:var(--muted);">بادئة مفاتيح التفعيل (4 حروف):</label>
+          <input id="msPrefix" dir="ltr" placeholder="QPH2" style="padding:6px; font-size:12px;" />
+        </div>
+        <div style="grid-column:1 / -1;">
+          <label style="font-size:12px; color:var(--muted);">الاسم الرسمي للمنظومة:</label>
+          <input id="msNameAr" placeholder="مثال: منظومة كالكس فارما لإدارة الصيدليات" style="padding:6px; font-size:12px;" />
+        </div>
+        <div style="grid-column:1 / -1;">
+          <label style="font-size:12px; color:var(--muted);">الوصف المختصر للوحة التحكم:</label>
+          <input id="msSubtitleAr" placeholder="إدارة الصيدليات والمخزون ونقاط البيع أوفلاين" style="padding:6px; font-size:12px;" />
+        </div>
+        <div>
+          <label style="font-size:12px; color:var(--muted);">سعر الباقة الأساسية (ج.م):</label>
+          <input id="msPriceBasic" type="number" value="3500" dir="ltr" style="padding:6px; font-size:12px;" />
+        </div>
+        <div>
+          <label style="font-size:12px; color:var(--muted);">سعر الباقة التخصصية (ج.م):</label>
+          <input id="msPricePro" type="number" value="6800" dir="ltr" style="padding:6px; font-size:12px;" />
+        </div>
+        <div>
+          <label style="font-size:12px; color:var(--muted);">سعر باقة Enterprise الكبرى (ج.م):</label>
+          <input id="msPriceEnt" type="number" value="15000" dir="ltr" style="padding:6px; font-size:12px;" />
+        </div>
+        <div>
+          <label style="font-size:12px; color:var(--muted);">رقم واتساب الوكيل لهذه المنظومة:</label>
+          <input id="msAgentPhone" dir="ltr" value="01122166076" style="padding:6px; font-size:12px;" />
+        </div>
+        <div style="grid-column:1 / -1;">
+          <label style="font-size:12px; color:var(--muted);">رابط النسخة التجريبية لهذه المنظومة (اختياري):</label>
+          <input id="msMegaUrl" dir="ltr" placeholder="https://mega.nz/..." style="padding:6px; font-size:12px;" />
+        </div>
+      </div>
+      <button type="button" class="btn btn-sky" style="width:100%; font-weight:800;" onclick="submitCreateIsolatedSystem()">
+        ✔ إنشاء قاعدة بيانات ومجلد معزول وتفعيل المنظومة الآن
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal: Export Clean Zero-Data Reseller Edition -->
+  <div id="resellerEditionModal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(2,6,23,0.88); backdrop-filter:blur(8px); align-items:center; justify-content:center; padding:16px;" onclick="closeResellerEditionModal(event)">
+    <div style="max-width:600px; width:100%; background:#0f172a; border:1px solid var(--amber); border-radius:14px; padding:18px; box-shadow:0 25px 60px rgba(0,0,0,0.85);" onclick="event.stopPropagation()">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid var(--border); padding-bottom:10px;">
+        <h3 style="margin:0; font-size:16px; color:var(--amber);">📦 تصدير نسخة وكلاء متعددة المنظومات مصفّرة البيانات (.zip)</h3>
+        <button type="button" class="btn btn-sm btn-rose" onclick="document.getElementById('resellerEditionModal').style.display='none'">✕ إغلاق</button>
+      </div>
+      <p style="font-size:12.5px; color:var(--muted); margin-top:0; line-height:1.5;">
+        تنشئ هذه الأداة نسخة مستقلة كاملة جاهزة للبيع أو التسليم لأي وكيل آخر: <strong style="color:var(--emerald);">صفر موزعين، صفر صفقات، صفر بوابات قديمة، وبدون أي تسريب لرقم صاحب المنصة الخاص</strong>، وتعمل فوراً كلوحة متعددة المنظومات.
+      </p>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
+        <div>
+          <label style="font-size:12px; color:var(--muted);">رقم واتساب الوكيل المشتري (أو اتركه افتراضياً):</label>
+          <input id="rsAgentPhone" dir="ltr" value="01000000000" style="padding:6px; font-size:12px;" />
+        </div>
+        <div>
+          <label style="font-size:12px; color:var(--muted);">الصفة التجارية الظاهرة للوكيل:</label>
+          <input id="rsAgentTitle" value="وكيل منظومة كالكس المعتمد" style="padding:6px; font-size:12px;" />
+        </div>
+      </div>
+      <div class="sub-card" style="padding:10px; margin-bottom:12px; font-size:12px;">
+        <div style="font-weight:700; color:var(--sky); margin-bottom:6px;">قوالب منظومات إضافية تُجهّز مصفرة مع النسخة (اختياري):</div>
+        <label style="display:inline-flex; align-items:center; gap:5px; margin-left:12px; cursor:pointer;"><input type="checkbox" id="rsAddPharma" /> صيدليات (QPH2)</label>
+        <label style="display:inline-flex; align-items:center; gap:5px; margin-left:12px; cursor:pointer;"><input type="checkbox" id="rsAddPos" /> كاشير POS (QPS2)</label>
+        <label style="display:inline-flex; align-items:center; gap:5px; cursor:pointer;"><input type="checkbox" id="rsAddErp" /> شركات ERP (QER2)</label>
+        <div style="margin-top:8px; border-top:1px dashed var(--border); padding-top:6px;">
+          <label style="display:inline-flex; align-items:center; gap:5px; cursor:pointer;"><input type="checkbox" id="rsIncludeMedia" /> تضمين ملفات الفيديو والعروض الكبيرة (~121 MB) داخل ملف ZIP</label>
+        </div>
+      </div>
+      <button id="rsBuildBtn" type="button" class="btn btn-amber" style="width:100%; font-weight:800;" onclick="buildAndExportResellerEdition()">
+        🚀 إنشاء النسخة المصفّرة وفحصها وتجهيز ملف التحميل (.zip)
+      </button>
+      <div id="resellerBuildResult" class="sub-card" style="display:none; margin-top:12px; border:1px solid var(--emerald); background:rgba(16,185,129,0.1); padding:12px;"></div>
     </div>
   </div>
 </body>

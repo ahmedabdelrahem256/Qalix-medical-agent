@@ -21,28 +21,35 @@ if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 if (!fs.existsSync(VIDEOS_DIR)) fs.mkdirSync(VIDEOS_DIR, { recursive: true });
 if (!fs.existsSync(IMAGES_DIR)) fs.mkdirSync(IMAGES_DIR, { recursive: true });
 
-function loadCustomData() {
-  if (!fs.existsSync(CUSTOM_DATA_FILE)) {
+function getCustomDataFile(dataDir) {
+  const dir = dataDir || DATA_DIR;
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  return path.join(dir, 'custom_dev_data.json');
+}
+
+function loadCustomData(dataDir) {
+  const filePath = getCustomDataFile(dataDir);
+  if (!fs.existsSync(filePath)) {
     const initial = {
       customWhatsAppTemplates: [],
       customVideos: [],
       customPricing: null,
       updatedAt: new Date().toISOString()
     };
-    fs.writeFileSync(CUSTOM_DATA_FILE, JSON.stringify(initial, null, 2), 'utf8');
+    fs.writeFileSync(filePath, JSON.stringify(initial, null, 2), 'utf8');
     return initial;
   }
   try {
-    const data = JSON.parse(fs.readFileSync(CUSTOM_DATA_FILE, 'utf8'));
+    const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
     return data;
   } catch (_) {
     return { customWhatsAppTemplates: [], customVideos: [] };
   }
 }
 
-function saveCustomData(data) {
+function saveCustomData(data, dataDir) {
   data.updatedAt = new Date().toISOString();
-  fs.writeFileSync(CUSTOM_DATA_FILE, JSON.stringify(data, null, 2), 'utf8');
+  fs.writeFileSync(getCustomDataFile(dataDir), JSON.stringify(data, null, 2), 'utf8');
 }
 
 // Hydrate MARKETING_MATERIALS with saved custom data on load
@@ -76,9 +83,11 @@ syncCustomMaterials();
 
 /* ---------------- 1. Safe Data Reset Operations ---------------- */
 
-function resetDealsOnly(db) {
+function resetDealsOnly(db, dataDir) {
   // Always create a safety snapshot before resetting
-  const backup = createDatabaseSnapshot(db, DATA_DIR);
+  const targetDir = dataDir || DATA_DIR;
+  if (!fs.existsSync(targetDir)) fs.mkdirSync(targetDir, { recursive: true });
+  const backup = createDatabaseSnapshot(db, targetDir);
 
   db.prepare('DELETE FROM deals').run();
   try { db.prepare("DELETE FROM audit_log WHERE action IN ('create_deal', 'settle_deal')").run(); } catch (_) {}
@@ -91,9 +100,11 @@ function resetDealsOnly(db) {
   };
 }
 
-function resetAllDataFactory(db, seedDistributorsFn) {
+function resetAllDataFactory(db, seedDistributorsFn, dataDir) {
   // Always create a safety snapshot before resetting
-  const backup = createDatabaseSnapshot(db, DATA_DIR);
+  const targetDir = dataDir || DATA_DIR;
+  if (!fs.existsSync(targetDir)) fs.mkdirSync(targetDir, { recursive: true });
+  const backup = createDatabaseSnapshot(db, targetDir);
 
   db.prepare('DELETE FROM deals').run();
   db.prepare('DELETE FROM distributors').run();
@@ -117,8 +128,10 @@ function resetAllDataFactory(db, seedDistributorsFn) {
   };
 }
 
-function clearAuditLogsOnly(db) {
-  const backup = createDatabaseSnapshot(db, DATA_DIR);
+function clearAuditLogsOnly(db, dataDir) {
+  const targetDir = dataDir || DATA_DIR;
+  if (!fs.existsSync(targetDir)) fs.mkdirSync(targetDir, { recursive: true });
+  const backup = createDatabaseSnapshot(db, targetDir);
   try { db.prepare('DELETE FROM audit_log').run(); } catch (_) {}
   try { db.prepare('DELETE FROM audit_logs').run(); } catch (_) {}
   return {
@@ -130,7 +143,7 @@ function clearAuditLogsOnly(db) {
 
 /* ---------------- 2. Custom Marketing & WhatsApp Scripts ---------------- */
 
-function addCustomWhatsAppTemplate(template) {
+function addCustomWhatsAppTemplate(template, dataDir) {
   if (!template.title || !template.text) {
     throw new Error('يرجى إدخال عنوان الرسالة ونصها.');
   }
@@ -144,10 +157,10 @@ function addCustomWhatsAppTemplate(template) {
     text: template.text.trim()
   };
 
-  const custom = loadCustomData();
+  const custom = loadCustomData(dataDir);
   custom.customWhatsAppTemplates = custom.customWhatsAppTemplates || [];
   custom.customWhatsAppTemplates.push(entry);
-  saveCustomData(custom);
+  saveCustomData(custom, dataDir);
 
   MARKETING_MATERIALS.whatsAppTemplates.push(entry);
   return { ok: true, template: entry };

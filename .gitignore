@@ -6,6 +6,11 @@ node_modules/
 .backup_stage/
 data/.test_run/
 data/backups/
+data/systems/
+data/exports/
+data/systems.json
+data/custom_dev_data.json
+exports/
 *.db
 *.db-shm
 *.db-wal

@@ -1063,7 +1063,151 @@ function req(method, urlPath, body) {
       }
     );
 
-    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/69 PASSED ===`);
+    // 70. Physically Isolated Multi-System Architecture (Zero Data Overlap)
+    const medBefore = await req('GET', '/api/bootstrap');
+    const medDistCountBefore = medBefore.body.distributors.length;
+    const medDealCountBefore = medBefore.body.deals.length;
+
+    const sysCreateRes = await req('POST', '/api/systems', {
+      presetId: 'qalix_pharmacy',
+      activateNow: true
+    });
+    const pharmaBootEmpty = await req('GET', '/api/bootstrap');
+    const pharmaOwnerEmpty = await req('GET', '/api/agent/owner-channel');
+    const pharmaDbExists = fs.existsSync(path.join(TEST_DATA_DIR, 'systems', 'qalix_pharmacy', 'agent.db'));
+
+    const phDistRes = await req('POST', '/api/distributors', {
+      name: 'موزع صيدليات الدلتا المعزول',
+      phone: '01088776655',
+      governorate: 'الدقهلية',
+      commission_rate: 25
+    });
+    const phDistId = phDistRes.body.distributor.id;
+    const phDealRes = await req('POST', '/api/deals', {
+      distributorId: phDistId,
+      clinicName: 'صيدلية الأمل الكبرى',
+      doctorName: 'د. صيدلي كريم',
+      clinicPhone: '01011229988',
+      city: 'المنصورة',
+      tier: 'professional',
+      status: 'completed'
+    });
+    const pharmaDeal = phDealRes.body.summary.deals[0];
+
+    // Switch back to primary qalix_medical and prove ZERO leakage
+    const switchMedRes = await req('POST', '/api/systems/select', { systemId: 'qalix_medical' });
+    const medAfter = switchMedRes.body.summary;
+
+    check('70. عزل تام بين المنظومات المتعددة بملفات وقواعد بيانات مستقلة بدون أي تداخل',
+      sysCreateRes.status === 201 &&
+      pharmaDbExists &&
+      pharmaBootEmpty.body.activeSystem.id === 'qalix_pharmacy' &&
+      pharmaBootEmpty.body.activeSystem.licensePrefix === 'QPH2' &&
+      pharmaBootEmpty.body.pricing.professional.price === 6800 &&
+      pharmaBootEmpty.body.distributors.length === 0 &&
+      pharmaBootEmpty.body.deals.length === 0 &&
+      pharmaOwnerEmpty.body.ownerPhone === '' &&
+      pharmaDeal.fixed_price === 6800 &&
+      String(pharmaDeal.license_key_ref || '').startsWith('QPH2-') &&
+      switchMedRes.status === 200 &&
+      medAfter.activeSystem.id === 'qalix_medical' &&
+      medAfter.distributors.length === medDistCountBefore &&
+      medAfter.deals.length === medDealCountBefore &&
+      !medAfter.distributors.some(d => d.id === phDistId) &&
+      !medAfter.deals.some(d => (d.license_key_ref || '').startsWith('QPH2-')),
+      {
+        pharmaDbExists,
+        pharmaPricePro: pharmaBootEmpty.body.pricing?.professional?.price,
+        pharmaLicRef: pharmaDeal?.license_key_ref,
+        medDistsMatched: medAfter?.distributors?.length === medDistCountBefore,
+        zeroCrossLeak: !medAfter?.deals?.some(d => (d.license_key_ref || '').startsWith('QPH2-'))
+      }
+    );
+
+    // 71. Clean Zero-Data Multi-System Reseller Edition Export + Standalone Live Boot
+    const buildEditionRes = await req('POST', '/api/systems/build-reseller-edition', {
+      buyerAgentPhone: '01099887766',
+      buyerAgentTitleAr: 'وكيل تجريبي مصفّر',
+      buyerOwnerName: 'مالك المنصة التجريبي',
+      includeMediaAssets: false,
+      extraSystemPresets: ['qalix_pos']
+    });
+    const ed = buildEditionRes.body.edition;
+    const dlZipRes = await new Promise((resolve, reject) => {
+      http.get({ hostname: '127.0.0.1', port: TEST_PORT, path: buildEditionRes.body.downloadUrl }, res => {
+        const chunks = [];
+        res.on('data', c => chunks.push(c));
+        res.on('end', () => resolve({ status: res.statusCode, bytes: Buffer.concat(chunks).length, headers: res.headers }));
+      }).on('error', reject);
+    });
+
+    // Boot exported clean edition standalone on isolated port TEST_PORT + 1
+    const cleanPort = TEST_PORT + 1;
+    const cleanSrv = spawn(process.execPath, [path.join(ed.folderPath, 'server', 'agent_server.js')], {
+      cwd: ed.folderPath,
+      env: { ...process.env, PORT: String(cleanPort), DATA_DIR: '' },
+      stdio: ['ignore', 'pipe', 'pipe']
+    });
+    delete process.env.DATA_DIR;
+    // Wait for clean reseller server startup
+    let cleanBootRes = null;
+    let cleanSysRes = null;
+    try {
+      await new Promise((resolve, reject) => {
+        const t = setTimeout(() => reject(new Error('Clean Reseller Edition server timeout')), 6000);
+        cleanSrv.stdout.on('data', d => {
+          if (String(d).includes('Qalix Medical Agent Server')) {
+            clearTimeout(t);
+            resolve();
+          }
+        });
+      });
+      cleanBootRes = await new Promise((resolve, reject) => {
+        http.get({ hostname: '127.0.0.1', port: cleanPort, path: '/api/bootstrap' }, res => {
+          let b = '';
+          res.on('data', c => b += c);
+          res.on('end', () => resolve({ status: res.statusCode, body: JSON.parse(b) }));
+        }).on('error', reject);
+      });
+      cleanSysRes = await new Promise((resolve, reject) => {
+        http.get({ hostname: '127.0.0.1', port: cleanPort, path: '/api/systems' }, res => {
+          let b = '';
+          res.on('data', c => b += c);
+          res.on('end', () => resolve({ status: res.statusCode, body: JSON.parse(b) }));
+        }).on('error', reject);
+      });
+    } finally {
+      cleanSrv.kill('SIGINT');
+      await new Promise(r => setTimeout(r, 400));
+    }
+
+    check('71. تصدير نسخة وكلاء متعددة المنظومات مصفّرة البيانات وجاهزة للبيع وتشغيلها الفعلي بدون أي بيانات تجريبية',
+      buildEditionRes.status === 201 &&
+      ed.verification.distributors === 0 &&
+      ed.verification.deals === 0 &&
+      ed.verification.lead_locks === 0 &&
+      ed.verification.clean_production_mode === '1' &&
+      ed.verification.ownerPhoneValue === '' &&
+      ed.verification.kitsHtmlCount === 0 &&
+      dlZipRes.status === 200 &&
+      dlZipRes.bytes > 10000 &&
+      cleanBootRes && cleanBootRes.status === 200 &&
+      cleanBootRes.body.distributors.length === 0 &&
+      cleanBootRes.body.deals.length === 0 &&
+      cleanBootRes.body.agent.phone === '01099887766' &&
+      cleanSysRes && cleanSysRes.body.systems.length === 2 &&
+      cleanSysRes.body.systems.every(s => s.distributorsCount === 0 && s.dealsCount === 0),
+      {
+        verification: ed?.verification,
+        zipBytes: dlZipRes?.bytes,
+        cleanDistCount: cleanBootRes?.body?.distributors?.length,
+        cleanDealsCount: cleanBootRes?.body?.deals?.length,
+        cleanAgentPhone: cleanBootRes?.body?.agent?.phone,
+        cleanSystems: cleanSysRes?.body?.systems?.map(s => `${s.id}:${s.distributorsCount}/${s.dealsCount}`)
+      }
+    );
+
+    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/71 PASSED ===`);
     for (const r of results) console.log(' ✅', r);
   } finally {
     srv.kill('SIGINT');

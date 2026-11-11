@@ -39,6 +39,16 @@ const {
   listAllMedia,
   loadCustomData
 } = require('./dev_console');
+const {
+  SYSTEM_PRESETS,
+  initSystemSchema,
+  getSystemPaths,
+  loadSystemsRegistry,
+  createIsolatedSystem,
+  selectActiveSystemInRegistry,
+  summarizeSystemStats
+} = require('./systems_manager');
+const { buildCleanResellerEdition } = require('./reseller_edition');
 
 const PORT = Number(process.env.PORT) || 4000;
 const HOST = process.env.HOST || '127.0.0.1';
@@ -46,11 +56,11 @@ const ROOT = path.join(__dirname, '..');
 const PUBLIC_DIR = path.join(ROOT, 'public');
 const PRESENTATIONS_DIR = path.join(ROOT, 'ملفات_العروض_التقديمية');
 const LEGAL_DOCS_DIR = path.join(ROOT, 'الوثائق_القانونية_والتسليم');
-const DATA_DIR = process.env.DATA_DIR || path.join(ROOT, 'data');
-const KITS_DIR = process.env.DATA_DIR ? path.join(DATA_DIR, 'kits') : path.join(ROOT, 'distributors_kits');
+const BASE_DATA_DIR = process.env.DATA_DIR || path.join(ROOT, 'data');
+const BASE_KITS_DIR = process.env.DATA_DIR ? path.join(BASE_DATA_DIR, 'kits') : path.join(ROOT, 'distributors_kits');
 
-fs.mkdirSync(DATA_DIR, { recursive: true });
-fs.mkdirSync(KITS_DIR, { recursive: true });
+fs.mkdirSync(BASE_DATA_DIR, { recursive: true });
+fs.mkdirSync(BASE_KITS_DIR, { recursive: true });
 
 function sendHtmlWithOptionalDownload(res, html, downloadFilename, forceDownload) {
   const headers = {
@@ -64,98 +74,50 @@ function sendHtmlWithOptionalDownload(res, html, downloadFilename, forceDownload
   return res.end(html);
 }
 
-/* ---------------- Fixed Official Pricing (EGP) ---------------- */
-const OFFICIAL_PRICING = {
-  basic:        { id: 'basic',        nameAr: 'الباقة الأساسية (عيادة طبيب فردي)',         price: 4500,  maxDoctors: 2,  maxUsers: 4 },
-  professional: { id: 'professional', nameAr: 'الباقة التخصصية (العيادات النشطة)',         price: 8500,  maxDoctors: 5,  maxUsers: 12 },
-  enterprise:   { id: 'enterprise',   nameAr: 'باقة المراكز الكبرى والفروع (Enterprise)', price: 18500, maxDoctors: 99, maxUsers: 99 }
-};
+/* ---------------- Multi-System Runtime Pool & Active Context ---------------- */
+const dbPool = new Map();
 
-const AGENT_INFO = {
-  projectName: 'Qalix Medical Agent',
-  titleAr: 'وكيل منظومة كالكس ميديكال الطبية',
-  phone: '01122166076',
-  intlPhone: '+201122166076',
-  salesHotline: '01122166076',
-  supportHotline: '01122166076',
-  facebookPageUrl: 'https://www.facebook.com/profile.php?id=61596117518854',
-  whatsappUrl: 'https://wa.me/201122166076',
-  whatsappSalesUrl: 'https://wa.me/201122166076',
-  megaTrialUrl: 'https://mega.nz/file/T6hxgRaK#j7_5EtTGN3TJcgxoOHd_eP-JENFmXHgaxXNlrKO6qGI',
-  packageSha256: '0f7ff4448eb11ee1385332edf4233f0b6cc9964f490782800de78efc2b8499f7'
-};
+function openSystemDb(systemId, targetDbPath) {
+  if (dbPool.has(systemId)) {
+    return dbPool.get(systemId);
+  }
+  fs.mkdirSync(path.dirname(targetDbPath), { recursive: true });
+  const conn = new DatabaseSync(targetDbPath);
+  initSystemSchema(conn);
+  dbPool.set(systemId, conn);
+  return conn;
+}
 
-/* ---------------- SQLite WAL Database ---------------- */
-const dbPath = path.join(DATA_DIR, 'agent.db');
-const db = new DatabaseSync(dbPath);
-db.exec('PRAGMA journal_mode = WAL;');
-db.exec('PRAGMA synchronous = NORMAL;');
-db.exec('PRAGMA foreign_keys = ON;');
+let systemsRegistry = loadSystemsRegistry(BASE_DATA_DIR, BASE_KITS_DIR);
+let ACTIVE_SYSTEM = systemsRegistry.systems.find(s => s.id === systemsRegistry.activeSystemId) || systemsRegistry.systems[0];
+let ACTIVE_PATHS = getSystemPaths(BASE_DATA_DIR, BASE_KITS_DIR, ACTIVE_SYSTEM.id);
+let DATA_DIR = ACTIVE_PATHS.dataDir;
+let KITS_DIR = ACTIVE_PATHS.kitsDir;
+let OFFICIAL_PRICING = ACTIVE_SYSTEM.pricing;
+let AGENT_INFO = ACTIVE_SYSTEM.agentInfo;
+let dbPath = ACTIVE_PATHS.dbPath;
+let db = openSystemDb(ACTIVE_SYSTEM.id, dbPath);
 
-db.exec(`
-  CREATE TABLE IF NOT EXISTS distributors (
-    id TEXT PRIMARY KEY,
-    code TEXT UNIQUE NOT NULL,
-    name TEXT NOT NULL,
-    phone TEXT NOT NULL,
-    governorate TEXT NOT NULL,
-    commission_rate REAL NOT NULL DEFAULT 27,
-    status TEXT NOT NULL DEFAULT 'active',
-    access_pin TEXT NOT NULL,
-    notes TEXT DEFAULT '',
-    created_at TEXT NOT NULL
-  );
-
-  CREATE TABLE IF NOT EXISTS deals (
-    id TEXT PRIMARY KEY,
-    deal_no TEXT UNIQUE NOT NULL,
-    distributor_id TEXT NOT NULL,
-    clinic_name TEXT NOT NULL,
-    doctor_name TEXT NOT NULL,
-    clinic_phone TEXT NOT NULL,
-    city TEXT NOT NULL,
-    is_assiut INTEGER NOT NULL DEFAULT 0,
-    tier TEXT NOT NULL,
-    fixed_price REAL NOT NULL,
-    commission_rate REAL NOT NULL,
-    distributor_commission REAL NOT NULL,
-    agent_net_amount REAL NOT NULL,
-    hardware_id TEXT DEFAULT '',
-    status TEXT NOT NULL DEFAULT 'pending',
-    license_key_ref TEXT DEFAULT '',
-    notes TEXT DEFAULT '',
-    created_at TEXT NOT NULL,
-    settled_at TEXT DEFAULT '',
-    FOREIGN KEY (distributor_id) REFERENCES distributors(id)
-  );
-
-  CREATE TABLE IF NOT EXISTS excellence_proposals (
-    id TEXT PRIMARY KEY,
-    pillar TEXT NOT NULL,
-    title TEXT NOT NULL,
-    description TEXT NOT NULL,
-    impact TEXT NOT NULL DEFAULT 'مرتفع جداً',
-    priority TEXT NOT NULL DEFAULT 'أولوية قصوى',
-    status TEXT NOT NULL DEFAULT 'معتمد للتنفيذ',
-    created_at TEXT NOT NULL
-  );
-
-  CREATE TABLE IF NOT EXISTS audit_log (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    at TEXT NOT NULL,
-    action TEXT NOT NULL,
-    details TEXT NOT NULL,
-    prev_hash TEXT NOT NULL,
-    curr_hash TEXT NOT NULL
-  );
-
-  CREATE TABLE IF NOT EXISTS agent_private_settings (
-    key TEXT PRIMARY KEY,
-    value TEXT NOT NULL
-  );
-`);
-
-initializeTerritoryTables(db);
+function activateRuntimeSystem(systemId) {
+  systemsRegistry = loadSystemsRegistry(BASE_DATA_DIR, BASE_KITS_DIR);
+  const found = systemsRegistry.systems.find(s => s.id === systemId) || systemsRegistry.systems[0];
+  ACTIVE_SYSTEM = found;
+  ACTIVE_PATHS = getSystemPaths(BASE_DATA_DIR, BASE_KITS_DIR, found.id);
+  fs.mkdirSync(ACTIVE_PATHS.dataDir, { recursive: true });
+  fs.mkdirSync(ACTIVE_PATHS.kitsDir, { recursive: true });
+  fs.mkdirSync(ACTIVE_PATHS.backupsDir, { recursive: true });
+  DATA_DIR = ACTIVE_PATHS.dataDir;
+  KITS_DIR = ACTIVE_PATHS.kitsDir;
+  OFFICIAL_PRICING = found.pricing;
+  AGENT_INFO = found.agentInfo;
+  dbPath = ACTIVE_PATHS.dbPath;
+  db = openSystemDb(found.id, dbPath);
+  try {
+    const allDists = db.prepare('SELECT * FROM distributors').all();
+    for (const d of allDists) writeDistributorKitFile(d);
+  } catch (_) {}
+  return ACTIVE_SYSTEM;
+}
 
 function logAudit(action, details) {
   const at = new Date().toISOString();
@@ -697,6 +659,15 @@ function getSummaryResponse() {
 
   return {
     agent: AGENT_INFO,
+    activeSystem: {
+      id: ACTIVE_SYSTEM.id,
+      nameAr: ACTIVE_SYSTEM.nameAr,
+      subtitleAr: ACTIVE_SYSTEM.subtitleAr,
+      licensePrefix: ACTIVE_SYSTEM.licensePrefix || 'QLX2',
+      dbFileRel: path.relative(path.dirname(BASE_DATA_DIR), dbPath).replace(/\\/g, '/'),
+      kitsDirRel: path.relative(path.dirname(BASE_DATA_DIR), KITS_DIR).replace(/\\/g, '/')
+    },
+    systemsCount: systemsRegistry.systems.length,
     pricing: OFFICIAL_PRICING,
     competitors: COMPETITORS_CATALOG,
     specialtyPacks: getAllPacks(),
@@ -817,7 +788,8 @@ const server = http.createServer(async (req, res) => {
       const count = db.prepare('SELECT COUNT(*) AS n FROM deals').get().n + 101;
       const dealNo = `DEAL-2026-${count}`;
       const now = new Date().toISOString();
-      const licenseRef = status === 'completed' ? `QLX2-${tier.toUpperCase().slice(0,3)}-${count}` : '';
+      const sysPrefix = ACTIVE_SYSTEM.licensePrefix || 'QLX2';
+      const licenseRef = status === 'completed' ? `${sysPrefix}-${tier.toUpperCase().slice(0,3)}-${count}` : '';
 
       db.prepare(`INSERT INTO deals(
         id, deal_no, distributor_id, clinic_name, doctor_name, clinic_phone, city, is_assiut,
@@ -839,7 +811,8 @@ const server = http.createServer(async (req, res) => {
       if (!deal) return sendJson(res, 404, { error: 'الصفقة غير موجودة' });
 
       const now = new Date().toISOString();
-      const licRef = `QLX2-${deal.tier.toUpperCase().slice(0, 3)}-${deal.deal_no.split('-').pop()}`;
+      const sysPrefix = ACTIVE_SYSTEM.licensePrefix || 'QLX2';
+      const licRef = `${sysPrefix}-${deal.tier.toUpperCase().slice(0, 3)}-${deal.deal_no.split('-').pop()}`;
       db.prepare("UPDATE deals SET status = 'completed', settled_at = ?, license_key_ref = ? WHERE id = ?")
         .run(now, licRef, id);
 
@@ -1370,28 +1343,124 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, 200, { ok: true, ownerName, ownerPhone });
     }
 
+    /* ---------------- Multi-System Isolation & Clean Reseller Edition API ---------------- */
+    if (req.method === 'GET' && pathname === '/api/systems') {
+      systemsRegistry = loadSystemsRegistry(BASE_DATA_DIR, BASE_KITS_DIR);
+      return sendJson(res, 200, {
+        ok: true,
+        activeSystemId: ACTIVE_SYSTEM.id,
+        presets: Object.values(SYSTEM_PRESETS),
+        systems: systemsRegistry.systems.map(s => summarizeSystemStats(BASE_DATA_DIR, BASE_KITS_DIR, s))
+      });
+    }
+
+    if (req.method === 'POST' && pathname === '/api/systems') {
+      const body = await readJsonBody(req);
+      try {
+        const created = createIsolatedSystem(BASE_DATA_DIR, BASE_KITS_DIR, body);
+        systemsRegistry = created.registry;
+        if (body.activateNow !== false) {
+          activateRuntimeSystem(created.system.id);
+        }
+        return sendJson(res, 201, {
+          ok: true,
+          system: created.system,
+          activeSystemId: ACTIVE_SYSTEM.id,
+          systems: systemsRegistry.systems.map(s => summarizeSystemStats(BASE_DATA_DIR, BASE_KITS_DIR, s)),
+          summary: getSummaryResponse()
+        });
+      } catch (err) {
+        return sendJson(res, 400, { error: err.message });
+      }
+    }
+
+    if (req.method === 'POST' && pathname === '/api/systems/select') {
+      const body = await readJsonBody(req);
+      const sysId = String(body.systemId || '').trim();
+      if (!sysId) return sendJson(res, 400, { error: 'يرجى تحديد معرف المنظومة' });
+      try {
+        const selected = selectActiveSystemInRegistry(BASE_DATA_DIR, BASE_KITS_DIR, sysId);
+        systemsRegistry = selected.registry;
+        activateRuntimeSystem(sysId);
+        return sendJson(res, 200, {
+          ok: true,
+          activeSystemId: ACTIVE_SYSTEM.id,
+          activeSystem: ACTIVE_SYSTEM,
+          systems: systemsRegistry.systems.map(s => summarizeSystemStats(BASE_DATA_DIR, BASE_KITS_DIR, s)),
+          summary: getSummaryResponse()
+        });
+      } catch (err) {
+        return sendJson(res, 404, { error: err.message });
+      }
+    }
+
+    if (req.method === 'POST' && pathname === '/api/systems/build-reseller-edition') {
+      const body = await readJsonBody(req);
+      try {
+        const exportsBase = path.join(BASE_DATA_DIR, 'exports');
+        const edition = buildCleanResellerEdition({
+          rootDir: ROOT,
+          outputBaseDir: exportsBase,
+          buyerAgentPhone: body.buyerAgentPhone,
+          buyerAgentTitleAr: body.buyerAgentTitleAr,
+          buyerOwnerName: body.buyerOwnerName,
+          includeMediaAssets: body.includeMediaAssets === true,
+          extraSystemPresets: Array.isArray(body.extraSystemPresets) ? body.extraSystemPresets : []
+        });
+        logAudit('reseller_edition_built', `إنشاء نسخة وكلاء متعددة المنظومات مصفرة البيانات جاهزة للبيع: ${edition.editionName}`);
+        return sendJson(res, 201, {
+          ok: true,
+          edition,
+          downloadUrl: edition.zipFilename
+            ? `/api/systems/download-reseller-edition?file=${encodeURIComponent(edition.zipFilename)}`
+            : null
+        });
+      } catch (err) {
+        return sendJson(res, 500, { error: err.message });
+      }
+    }
+
+    if (req.method === 'GET' && pathname === '/api/systems/download-reseller-edition') {
+      const reqFile = path.basename(String(url.searchParams.get('file') || ''));
+      if (!reqFile || !reqFile.endsWith('.zip')) {
+        return sendJson(res, 400, { error: 'اسم ملف الحزمة غير صالح' });
+      }
+      const exportsBase = path.resolve(BASE_DATA_DIR, 'exports');
+      const targetZip = path.resolve(exportsBase, reqFile);
+      if (!targetZip.startsWith(exportsBase + path.sep) || !fs.existsSync(targetZip)) {
+        return sendJson(res, 404, { error: 'ملف النسخة الجاهزة غير موجود' });
+      }
+      const stat = fs.statSync(targetZip);
+      res.writeHead(200, {
+        'Content-Type': 'application/zip',
+        'Content-Length': stat.size,
+        'Content-Disposition': `attachment; filename="${reqFile}"`
+      });
+      return fs.createReadStream(targetZip).pipe(res);
+    }
+
     /* ---------------- Developer & System Administration API (Dev Console) ---------------- */
     if (req.method === 'POST' && pathname === '/api/dev/reset-deals') {
-      const resData = resetDealsOnly(db);
+      const resData = resetDealsOnly(db, DATA_DIR);
       logAudit('dev_reset_deals', 'تصفير صفقات النظام من لوحة المطور مع أخذ لقطة احتياطية');
       return sendJson(res, 200, resData);
     }
 
     if (req.method === 'POST' && pathname === '/api/dev/factory-reset') {
-      const resData = resetAllDataFactory(db, () => seedInitialData(db));
+      const resData = resetAllDataFactory(db, () => seedInitialData(db), DATA_DIR);
       logAudit('dev_factory_reset', 'استعادة ضبط المصنع وتصفير قاعدة البيانات من لوحة المطور');
       return sendJson(res, 200, resData);
     }
 
     if (req.method === 'POST' && pathname === '/api/dev/clear-audits') {
-      const resData = clearAuditLogsOnly(db);
+      const resData = clearAuditLogsOnly(db, DATA_DIR);
       return sendJson(res, 200, resData);
     }
 
     if (req.method === 'POST' && pathname === '/api/dev/custom-whatsapp') {
       const body = await readJsonBody(req);
       try {
-        const result = addCustomWhatsAppTemplate(body);
+        const result = addCustomWhatsAppTemplate(body, DATA_DIR);
         logAudit('dev_add_whatsapp', `إضافة قالب واتساب بيعي جديد: ${result.template.title}`);
         return sendJson(res, 200, result);
       } catch (err) {
@@ -1555,7 +1624,10 @@ server.listen(PORT, HOST, () => {
 });
 
 function gracefulShutdown() {
-  try { db.close(); } catch (_) {}
+  for (const conn of dbPool.values()) {
+    try { conn.close(); } catch (_) {}
+  }
+  dbPool.clear();
   process.exit(0);
 }
 process.on('SIGINT', gracefulShutdown);
