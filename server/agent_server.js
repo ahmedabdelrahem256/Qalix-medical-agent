@@ -502,7 +502,7 @@ const server = http.createServer(async (req, res) => {
       pathname = url.pathname;
     }
 
-    if (req.method === 'GET' && pathname === '/api/bootstrap') {
+    if (req.method === 'GET' && (pathname === '/api/bootstrap' || pathname === '/api/summary')) {
       return sendJson(res, 200, getSummaryResponse());
     }
 
@@ -759,9 +759,12 @@ const server = http.createServer(async (req, res) => {
       const id = pathname.split('/')[4];
       const dist = db.prepare('SELECT * FROM distributors WHERE id = ?').get(id);
       if (!dist) return sendJson(res, 404, { error: 'الموزع غير موجود' });
-      const html = generateDistributorContractHtml(dist, AGENT_INFO);
-      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-      return res.end(html);
+      return sendHtmlWithOptionalDownload(
+        res,
+        generateDistributorContractHtml(dist, AGENT_INFO),
+        `Qalix-Contract-${dist.code}.html`,
+        url.searchParams.get('download') === '1'
+      );
     }
 
     if (req.method === 'GET' && pathname.startsWith('/api/contracts/deal/')) {
@@ -769,9 +772,12 @@ const server = http.createServer(async (req, res) => {
       const deal = db.prepare('SELECT * FROM deals WHERE id = ?').get(id);
       if (!deal) return sendJson(res, 404, { error: 'الصفقة غير موجودة' });
       const dist = db.prepare('SELECT * FROM distributors WHERE id = ?').get(deal.distributor_id);
-      const html = generateClinicHandoverHtml(deal, dist || { name: 'وكيل المنظومة', code: 'MAIN' }, AGENT_INFO);
-      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-      return res.end(html);
+      return sendHtmlWithOptionalDownload(
+        res,
+        generateClinicHandoverHtml(deal, dist || { name: 'وكيل المنظومة', code: 'MAIN' }, AGENT_INFO),
+        `Qalix-Handover-${deal.deal_no}.html`,
+        url.searchParams.get('download') === '1'
+      );
     }
 
     if (req.method === 'GET' && pathname.startsWith('/api/distributors/') && pathname.endsWith('/statement')) {
@@ -779,18 +785,24 @@ const server = http.createServer(async (req, res) => {
       const dist = db.prepare('SELECT * FROM distributors WHERE id = ?').get(id);
       if (!dist) return sendJson(res, 404, { error: 'الموزع غير موجود' });
       const deals = db.prepare('SELECT * FROM deals WHERE distributor_id = ? ORDER BY created_at DESC').all(id);
-      const html = generateDistributorStatementHtml(dist, deals, AGENT_INFO);
-      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-      return res.end(html);
+      return sendHtmlWithOptionalDownload(
+        res,
+        generateDistributorStatementHtml(dist, deals, AGENT_INFO),
+        `Qalix-Statement-${dist.code}.html`,
+        url.searchParams.get('download') === '1'
+      );
     }
 
     /* ---------------- Official Quotation Generator (Phase 5) ---------------- */
     if (req.method === 'GET' && pathname === '/api/quotations/generate') {
       const qParams = Object.fromEntries(url.searchParams.entries());
       const quoData = generateQuotationData(qParams, OFFICIAL_PRICING);
-      const html = generateQuotationHtml(quoData);
-      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-      return res.end(html);
+      return sendHtmlWithOptionalDownload(
+        res,
+        generateQuotationHtml(quoData),
+        `Qalix-Quotation-${quoData.quotationNo || 'A4'}.html`,
+        url.searchParams.get('download') === '1'
+      );
     }
 
     if (req.method === 'GET' && pathname === '/api/quotations/data') {
@@ -876,9 +888,12 @@ const server = http.createServer(async (req, res) => {
       const distId = pathname.split('/')[4];
       const dist = db.prepare('SELECT * FROM distributors WHERE id = ?').get(distId);
       if (!dist) return sendJson(res, 404, { error: 'الموزع غير موجود' });
-      const html = generateAccreditationCertificateHtml(dist);
-      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-      return res.end(html);
+      return sendHtmlWithOptionalDownload(
+        res,
+        generateAccreditationCertificateHtml(dist),
+        `Qalix-Certificate-${dist.code}.html`,
+        url.searchParams.get('download') === '1'
+      );
     }
 
     /* ---------------- Clinic Audit & Go-Live Checklist API (Phase 6) ---------------- */
@@ -897,9 +912,12 @@ const server = http.createServer(async (req, res) => {
       const qParams = Object.fromEntries(url.searchParams.entries());
       const checkedIds = (qParams.checked || '').split(',').filter(Boolean);
       const evalResult = evaluateClinicChecklist(checkedIds);
-      const html = generateClinicAuditReportHtml(qParams, evalResult);
-      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-      return res.end(html);
+      return sendHtmlWithOptionalDownload(
+        res,
+        generateClinicAuditReportHtml(qParams, evalResult),
+        'Qalix-Clinic-Readiness-Report.html',
+        url.searchParams.get('download') === '1'
+      );
     }
 
     /* ---------------- WhatsApp Broadcast Campaigns API (Phase 6) ---------------- */
@@ -933,9 +951,12 @@ const server = http.createServer(async (req, res) => {
       if (!dist) return sendJson(res, 404, { error: 'الموزع غير موجود' });
       const deals = db.prepare('SELECT * FROM deals').all();
       const profile = getDistributorHierarchyProfile(dist, deals);
-      const html = generateTierPromotionLetterHtml(profile, AGENT_INFO);
-      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-      return res.end(html);
+      return sendHtmlWithOptionalDownload(
+        res,
+        generateTierPromotionLetterHtml(profile, AGENT_INFO),
+        `Qalix-Tier-Letter-${dist.code}.html`,
+        url.searchParams.get('download') === '1'
+      );
     }
 
     /* ---------------- Financial Forecasting & 12-Month Projections (Phase 7) ---------------- */
@@ -1027,9 +1048,12 @@ const server = http.createServer(async (req, res) => {
         sha256: sha
       };
 
-      const html = generateReceiptHtml(receiptData, AGENT_INFO);
-      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-      return res.end(html);
+      return sendHtmlWithOptionalDownload(
+        res,
+        generateReceiptHtml(receiptData, AGENT_INFO),
+        `Qalix-Receipt-${recNo}.html`,
+        url.searchParams.get('download') === '1'
+      );
     }
 
     /* ---------------- Commercial Alerts & Executive Digest API (Phase 9) ---------------- */
@@ -1040,17 +1064,23 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === 'GET' && pathname === '/api/reports/weekly-digest') {
       const sum = getSummaryResponse();
-      const html = generateExecutiveWeeklyDigestHtml(sum, AGENT_INFO);
-      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-      return res.end(html);
+      return sendHtmlWithOptionalDownload(
+        res,
+        generateExecutiveWeeklyDigestHtml(sum, AGENT_INFO),
+        'Qalix-Weekly-Executive-Digest.html',
+        url.searchParams.get('download') === '1'
+      );
     }
 
     /* ---------------- R&D Proposals Blueprint v2.0 Exporter (Phase 9) ---------------- */
     if (req.method === 'GET' && pathname === '/api/proposals/document') {
       const proposals = db.prepare('SELECT * FROM excellence_proposals ORDER BY created_at ASC').all();
-      const html = generateProposalsDocumentHtml(proposals, AGENT_INFO);
-      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-      return res.end(html);
+      return sendHtmlWithOptionalDownload(
+        res,
+        generateProposalsDocumentHtml(proposals, AGENT_INFO),
+        'Qalix-RD-Proposals-v2.0.html',
+        url.searchParams.get('download') === '1'
+      );
     }
 
     /* ---------------- Developer & System Administration API (Dev Console) ---------------- */

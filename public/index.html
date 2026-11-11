@@ -529,7 +529,7 @@
           </div>
           <div style="display:flex; gap:8px;">
             <button class="btn btn-sm btn-sky" onclick="openLeadLockModal()">+ حجز عيادة جديدة لموزع</button>
-            <a href="/api/reports/weekly-digest" target="_blank" class="btn btn-sm btn-emerald" style="text-decoration:none;">📊 التقرير التنفيذي الأسبوعي (A4)</a>
+            <a href="/api/reports/weekly-digest" onclick="return previewDocLink(this);" data-preview-title="📊 التقرير التنفيذي الأسبوعي المعتمد (A4)" data-preview-subtitle="معاينة التقرير الأسبوعي لإجمالي المبيعات والعمولات قبل التحميل أو الطباعة" data-download-fname="Qalix-Weekly-Executive-Digest.html" class="btn btn-sm btn-emerald" style="text-decoration:none;">📊 معاينة وتحميل التقرير الأسبوعي (A4)</a>
           </div>
         </div>
 
@@ -565,7 +565,7 @@
               ملاحظة دستورية: الإصدار الحالي `v1.0` محمي وموقّع رقمياً ولا يُلمس أبداً؛ كافة الأدوات المساعدة والخطط هنا تعمل حول المنظومة أو تُجدول كحزم تحديث موقعة مستقبلاً.
             </p>
           </div>
-          <a href="/api/proposals/document" target="_blank" class="btn btn-sky" style="text-decoration:none;">📄 تصدير وثيقة متطلبات وتطوير الإصدار القادم Qalix Medical v2.0 (A4)</a>
+          <a href="/api/proposals/document" onclick="return previewDocLink(this);" data-preview-title="📄 وثيقة متطلبات وتطوير الإصدار القادم Qalix Medical v2.0 (A4)" data-preview-subtitle="معاينة خارطة التطوير الكاملة قبل التحميل أو الطباعة" data-download-fname="Qalix-RD-Proposals-v2.0.html" class="btn btn-sky" style="text-decoration:none;">📄 معاينة وتصدير وثيقة التطوير v2.0 (A4)</a>
         </div>
 
         <!-- 5 Pillars Filter Chips -->
@@ -1080,7 +1080,7 @@
                 الوثائق الرسمية الست المعتمدة لتسليم المنظومة للعيادات وضمان حقوق الطبيب والوكيل والموزع:
               </p>
             </div>
-            <a href="/legal-docs/دليل_المدير_المصور.pdf" target="_blank" class="btn btn-sm btn-sky" style="text-decoration:none;">📘 فتح دليل المدير المصور (PDF)</a>
+            <a href="/legal-docs/دليل_المدير_المصور.pdf" onclick="return previewDocLink(this);" data-preview-title="📘 دليل المدير المصور لمنظومة كالكس الطبية (PDF)" data-preview-subtitle="معاينة الدليل الكامل قبل التحميل" data-download-fname="دليل_المدير_المصور.pdf" class="btn btn-sm btn-sky" style="text-decoration:none;">📘 معاينة وتحميل دليل المدير المصور (PDF)</a>
           </div>
 
           <div id="legalVaultGrid" class="grid-3"></div>
@@ -1219,7 +1219,7 @@
             <span id="examScoreBadge" style="font-size:12px; font-weight:bold;"></span>
           </div>
           <div id="certLinkContainer" style="margin-top:10px; display:none;">
-            <a id="certLinkBtn" href="#" target="_blank" class="btn btn-amber" style="text-decoration:none; display:block; text-align:center;">🏅 فتح وطباعة شهادة الاعتماد المعتمدة (A4)</a>
+            <a id="certLinkBtn" href="#" onclick="return previewDocLink(this);" data-preview-title="🏅 شهادة اعتماد الموزع الميداني الرسمي (A4)" data-preview-subtitle="معاينة شهادة الاعتماد قبل الطباعة أو التحميل" data-download-fname="Qalix-Distributor-Certificate.html" class="btn btn-amber" style="text-decoration:none; display:block; text-align:center;">🏅 معاينة وتحميل شهادة الاعتماد المعتمدة (A4)</a>
           </div>
         </div>
 
@@ -1302,7 +1302,7 @@
           <div id="distTierCard" class="sub-card" style="padding:10px; margin-bottom:10px;">
             <!-- Rendered dynamically -->
           </div>
-          <a id="tierLetterBtn" href="#" target="_blank" class="btn btn-sky" style="text-decoration:none; display:none; text-align:center;">📜 طباعة خطاب الترقية الرسمي المعتمد (A4)</a>
+          <a id="tierLetterBtn" href="#" onclick="return previewDocLink(this);" data-preview-title="📜 خطاب شريحة التميز التجاري الرسمي (A4)" data-preview-subtitle="معاينة خطاب الترقية المعتمد قبل الطباعة أو التحميل" data-download-fname="Qalix-Tier-Letter.html" class="btn btn-sky" style="text-decoration:none; display:none; text-align:center;">📜 معاينة وتحميل خطاب الترقية المعتمد (A4)</a>
         </div>
 
         <!-- Module B: 12-Month Financial Forecasting Simulator -->
@@ -1724,8 +1724,8 @@
           <td>
             <div style="display:flex; gap:4px; flex-wrap:wrap;">
               <a href="/api/distributors/${d.id}/kit" onclick="event.preventDefault(); previewDistributorKit('${d.id}', '${d.code}')" class="btn btn-sm" style="text-decoration:none;" title="معاينة ثم تنزيل بوابة الموزع المستقلة">⬇ البوابة</a>
-              <a href="/api/contracts/distributor/${d.id}" target="_blank" class="btn btn-sm btn-sky" style="text-decoration:none;" title="طباعة عقد التوزيع الرسمي">📄 العقد</a>
-              <a href="/api/distributors/${d.id}/statement" target="_blank" class="btn btn-sm btn-amber" style="text-decoration:none;" title="عرض وطباعة كشف الحساب المالي">📊 كشف حساب</a>
+              <a href="/api/contracts/distributor/${d.id}" onclick="return previewDocLink(this);" data-preview-title="📄 عقد التوزيع المستقل — ${escAttr(d.name)} (${d.code})" data-preview-subtitle="معاينة العقد الرسمي المعتمد قبل الطباعة أو التحميل" data-download-fname="Qalix-Contract-${d.code}.html" class="btn btn-sm btn-sky" style="text-decoration:none;" title="معاينة وطباعة عقد التوزيع الرسمي">📄 العقد</a>
+              <a href="/api/distributors/${d.id}/statement" onclick="return previewDocLink(this);" data-preview-title="📊 كشف الحساب المالي — ${escAttr(d.name)} (${d.code})" data-preview-subtitle="معاينة كشف الحساب وسلسلة التدقيق قبل الطباعة أو التحميل" data-download-fname="Qalix-Statement-${d.code}.html" class="btn btn-sm btn-amber" style="text-decoration:none;" title="معاينة وطباعة كشف الحساب المالي">📊 كشف حساب</a>
             </div>
           </td>
         </tr>
@@ -1744,29 +1744,38 @@
       // Render Contracts Pane lists
       const cDistList = document.getElementById('contractsDistList');
       if (cDistList) {
-        cDistList.innerHTML = data.distributors.map(d => `
-          <a href="/api/contracts/distributor/${d.id}" target="_blank" class="btn btn-sm btn-sky" style="text-decoration:none; text-align:right; display:block;">
-            📄 عقد: ${d.name} (${d.code})
-          </a>
-        `).join('');
+        cDistList.innerHTML = (data.distributors && data.distributors.length)
+          ? data.distributors.map(d => `
+            <a href="/api/contracts/distributor/${d.id}" onclick="return previewDocLink(this);" data-preview-title="📄 عقد التوزيع المعتمد — ${escAttr(d.name)} (${d.code})" data-preview-subtitle="معاينة بنود العقد الرسمية قبل الطباعة أو التحميل" data-download-fname="Qalix-Contract-${d.code}.html" class="btn btn-sm btn-sky" style="text-decoration:none; text-align:right; display:flex; justify-content:space-between; align-items:center; gap:6px;">
+              <span>📄 عقد: ${d.name} (${d.code})</span>
+              <span style="font-size:10.5px; opacity:0.85;">👁️ معاينة / ⬇ تحميل</span>
+            </a>
+          `).join('')
+          : '<div style="font-size:12px; color:var(--muted);">لا يوجد موزعون مسجلون حالياً.</div>';
       }
 
       const hDealList = document.getElementById('handoverDealsList');
       if (hDealList) {
-        hDealList.innerHTML = data.deals.map(dl => `
-          <a href="/api/contracts/deal/${dl.id}" target="_blank" class="btn btn-sm" style="text-decoration:none; text-align:right; display:block; background:rgba(16,185,129,0.15); border:1px solid var(--emerald); color:var(--emerald);">
-            📋 محضر تسليم: ${dl.clinic_name} (${dl.deal_no})
-          </a>
-        `).join('');
+        hDealList.innerHTML = (data.deals && data.deals.length)
+          ? data.deals.map(dl => `
+            <a href="/api/contracts/deal/${dl.id}" onclick="return previewDocLink(this);" data-preview-title="📋 محضر تسليم وتشغيل — ${escAttr(dl.clinic_name)} (${dl.deal_no})" data-preview-subtitle="معاينة محضر التشغيل المعتمد قبل الطباعة أو التحميل" data-download-fname="Qalix-Handover-${dl.deal_no}.html" class="btn btn-sm" style="text-decoration:none; text-align:right; display:flex; justify-content:space-between; align-items:center; gap:6px; background:rgba(16,185,129,0.15); border:1px solid var(--emerald); color:var(--emerald);">
+              <span>📋 محضر تسليم: ${dl.clinic_name} (${dl.deal_no})</span>
+              <span style="font-size:10.5px; opacity:0.85;">👁️ معاينة / ⬇ تحميل</span>
+            </a>
+          `).join('')
+          : '<div style="font-size:12px; color:var(--muted);">لا توجد صفقات أو محاضر تسليم مسجلة حالياً.</div>';
       }
 
       const sDistList = document.getElementById('statementsDistList');
       if (sDistList) {
-        sDistList.innerHTML = data.distributors.map(d => `
-          <a href="/api/distributors/${d.id}/statement" target="_blank" class="btn btn-sm btn-amber" style="text-decoration:none; text-align:right; display:block;">
-            📊 كشف حساب: ${d.name} (${d.code})
-          </a>
-        `).join('');
+        sDistList.innerHTML = (data.distributors && data.distributors.length)
+          ? data.distributors.map(d => `
+            <a href="/api/distributors/${d.id}/statement" onclick="return previewDocLink(this);" data-preview-title="📊 كشف الحساب المالي — ${escAttr(d.name)} (${d.code})" data-preview-subtitle="معاينة المبيعات والعمولات وسلسلة التدقيق قبل الطباعة أو التحميل" data-download-fname="Qalix-Statement-${d.code}.html" class="btn btn-sm btn-amber" style="text-decoration:none; text-align:right; display:flex; justify-content:space-between; align-items:center; gap:6px;">
+              <span>📊 كشف حساب: ${d.name} (${d.code})</span>
+              <span style="font-size:10.5px; opacity:0.85;">👁️ معاينة / ⬇ تحميل</span>
+            </a>
+          `).join('')
+          : '<div style="font-size:12px; color:var(--muted);">لا توجد كشوف حسابات حالياً.</div>';
       }
 document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
         <tr>
@@ -1783,8 +1792,8 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
               ? `<div style="display:flex; flex-direction:column; gap:4px;">
                   <span class="badge b-emerald">مكتملة · ${dl.license_key_ref}</span>
                   <div style="display:flex; gap:4px;">
-                    <a href="/api/contracts/deal/${dl.id}" target="_blank" class="btn btn-sm btn-sky" style="text-decoration:none; flex:1; text-align:center; padding:3px 4px; font-size:11px;">📋 محضر تسليم</a>
-                    <a href="/api/receipts/generate?dealId=${dl.id}" target="_blank" class="btn btn-sm btn-emerald" style="text-decoration:none; flex:1; text-align:center; padding:3px 4px; font-size:11px;">🧾 سند قبض</a>
+                    <a href="/api/contracts/deal/${dl.id}" onclick="return previewDocLink(this);" data-preview-title="📋 محضر تسليم — ${escAttr(dl.clinic_name)}" data-preview-subtitle="معاينة محضر التشغيل قبل الطباعة أو التحميل" data-download-fname="Qalix-Handover-${dl.deal_no}.html" class="btn btn-sm btn-sky" style="text-decoration:none; flex:1; text-align:center; padding:3px 4px; font-size:11px;">📋 محضر تسليم</a>
+                    <a href="/api/receipts/generate?dealId=${dl.id}" onclick="return previewDocLink(this);" data-preview-title="🧾 سند قبض وتوريد — ${escAttr(dl.clinic_name)}" data-preview-subtitle="معاينة سند القبض الرسمي قبل الطباعة أو التحميل" data-download-fname="Qalix-Receipt-${dl.deal_no}.html" class="btn btn-sm btn-emerald" style="text-decoration:none; flex:1; text-align:center; padding:3px 4px; font-size:11px;">🧾 سند قبض</a>
                   </div>
                 </div>`
               : `<button class="btn btn-sm" onclick="settleDeal('${dl.id}')">✔ اعتماد التحصيل وإصدار التفعيل</button>`}
@@ -2079,7 +2088,13 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
       const gov = encodeURIComponent(document.getElementById('qGovernorate').value.trim() || 'أسيوط');
       const isAssiut = document.getElementById('qAssiutCheck').checked;
       const url = `/api/quotations/generate?doctor_name=${doc}&clinic_name=${cln}&specialty=${spec}&tier=${tier}&governorate=${gov}&assiut=${isAssiut}`;
-      window.open(url, '_blank');
+      openCardPreviewModal({
+        title: '📋 عرض السعر الرسمي المعتمد (A4)',
+        subtitle: 'معاينة عرض السعر قبل التحميل أو الطباعة',
+        previewUrl: url,
+        downloadUrl: withDownloadParam(url),
+        downloadFilename: 'Qalix-Official-Quotation.html'
+      });
     }
 
     async function loadObjectionsPlaybook() {
@@ -2296,7 +2311,14 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
       const doc = encodeURIComponent(document.getElementById('chkDoctor').value.trim() || 'السيد الدكتور المحترم');
       const cln = encodeURIComponent(document.getElementById('chkClinic').value.trim() || 'العيادة التخصصية');
       const checked = getSelectedChecklistIds().join(',');
-      window.open(`/api/checklist/report?doctorName=${doc}&clinicName=${cln}&checked=${checked}`, '_blank');
+      const url = `/api/checklist/report?doctorName=${doc}&clinicName=${cln}&checked=${checked}`;
+      openCardPreviewModal({
+        title: '🧪 تقرير الجاهزية الفنية للعيادة (A4)',
+        subtitle: 'معاينة التقرير الفني قبل الطباعة أو التحميل',
+        previewUrl: url,
+        downloadUrl: withDownloadParam(url),
+        downloadFilename: 'Qalix-Clinic-Readiness-Report.html'
+      });
     }
 
     let allCampaigns = [];
@@ -2529,8 +2551,8 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
               <p style="margin:0; font-size:12px; color:var(--muted); line-height:1.5;">${doc.description}</p>
             </div>
             <div style="border-top:1px solid var(--border); padding-top:8px;">
-              <a href="${doc.url}" target="_blank" class="btn btn-sm btn-sky" style="display:block; text-align:center; text-decoration:none;">
-                ${doc.isPrintable ? '🖨️ معاينة وطباعة الوثيقة A4' : '📖 فتح الوثيقة'}
+              <a href="${doc.url}" onclick="return previewDocLink(this);" data-preview-title="${escAttr(doc.title)}" data-preview-subtitle="${escAttr(doc.format)} · معاينة الوثيقة القانونية المعتمدة قبل الطباعة أو التحميل" data-download-fname="${escAttr(doc.id || 'document')}${doc.url.toLowerCase().endsWith('.pdf') ? '.pdf' : '.html'}" class="btn btn-sm btn-sky" style="display:block; text-align:center; text-decoration:none;">
+                ${doc.isPrintable ? '👁️ معاينة وتحميل / طباعة الوثيقة A4' : '👁️ معاينة وتحميل الوثيقة'}
               </a>
             </div>
           </div>
@@ -2565,6 +2587,26 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
 
     function closeLightboxDirect() {
       document.getElementById('imageLightboxModal').style.display = 'none';
+    }
+
+    function escAttr(s) {
+      return String(s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;');
+    }
+
+    function withDownloadParam(url) {
+      return url + (url.includes('?') ? '&' : '?') + 'download=1';
+    }
+
+    function previewDocLink(el) {
+      if (!el) return false;
+      const url = el.getAttribute('href');
+      if (!url || url === '#') return false;
+      const title = el.getAttribute('data-preview-title') || el.innerText.trim();
+      const subtitle = el.getAttribute('data-preview-subtitle') || 'معاينة المستند قبل التحميل أو الطباعة';
+      const fname = el.getAttribute('data-download-fname') || '';
+      const dlUrl = el.getAttribute('data-download-url') || (url.startsWith('/api/') ? withDownloadParam(url) : url);
+      openCardPreviewModal({ title, subtitle, previewUrl: url, downloadUrl: dlUrl, downloadFilename: fname });
+      return false;
     }
 
     function previewDistributorKit(distId, distCode) {
@@ -2654,7 +2696,7 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
                 <span class="badge b-amber">تنبيهات الإغلاق والمتابعة التجارية (${j.alerts.length})</span>
                 <strong style="color:var(--text); font-size:13.5px;">فرص صفقات بانتظار الاعتماد والمتابعة الميدانية</strong>
               </div>
-              <a href="/api/reports/weekly-digest" target="_blank" class="btn btn-sm btn-sky" style="text-decoration:none;">📊 التقرير التنفيذي الأسبوعي (A4)</a>
+              <a href="/api/reports/weekly-digest" onclick="return previewDocLink(this);" data-preview-title="📊 التقرير التنفيذي الأسبوعي (A4)" data-preview-subtitle="معاينة التقرير الأسبوعي قبل التحميل أو الطباعة" data-download-fname="Qalix-Weekly-Executive-Digest.html" class="btn btn-sm btn-sky" style="text-decoration:none;">📊 معاينة وتحميل التقرير الأسبوعي (A4)</a>
             </div>
             <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:8px;">
               ${j.alerts.map(a => `
@@ -2745,24 +2787,32 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
     }
 
     async function load() {
-      const r = await fetch('/api/summary');
-      const data = await r.json();
-      window.lastSummaryDistributors = data.distributors || [];
-      render(data);
-      loadSpecialtyPacks();
-      loadMarketingMaterials();
-      loadLegalDocuments();
-      loadLeadLocks();
-      loadCommercialAlerts();
-      loadObjectionsPlaybook();
-      loadAfterSalesDeals();
-      loadSnapshotsList();
-      loadVisualAnalyticsCharts();
-      loadTrainingModules();
-      loadClinicChecklist();
-      loadBroadcastCampaigns();
-      loadFinancialForecast('balanced');
-      loadDevStatus();
+      try {
+        const r = await fetch('/api/bootstrap');
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const data = await r.json();
+        window.lastSummaryDistributors = data.distributors || [];
+        render(data);
+        if (typeof calcDistEarnings === 'function') calcDistEarnings();
+      } catch (e) {
+        console.error('Error loading bootstrap summary:', e);
+      }
+      await Promise.allSettled([
+        loadSpecialtyPacks(),
+        loadMarketingMaterials(),
+        loadLegalDocuments(),
+        loadLeadLocks(),
+        loadCommercialAlerts(),
+        loadObjectionsPlaybook(),
+        loadAfterSalesDeals(),
+        loadSnapshotsList(),
+        loadVisualAnalyticsCharts(),
+        loadTrainingModules(),
+        loadClinicChecklist(),
+        loadBroadcastCampaigns(),
+        loadFinancialForecast('balanced'),
+        loadDevStatus()
+      ]);
     }
 
     /* ==================== DEV CONSOLE JAVASCRIPT ==================== */

@@ -696,7 +696,24 @@ function req(method, urlPath, body) {
       dashHtmlRes.body.includes('cardPreviewDownloadBtn')
     );
 
-    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/56 PASSED ===`);
+    // 57. System-wide Bootstrap Summary, Populated Lists, and Document Preview+Download Support
+    const sumRes = await req('GET', '/api/summary');
+    const contractDl = await req('GET', `/api/contracts/distributor/${sampleDistId}?download=1`);
+    const statementDl = await req('GET', `/api/distributors/${sampleDistId}/statement?download=1`);
+    const digestDl = await req('GET', '/api/reports/weekly-digest?download=1');
+    check('57. إصلاح تعبئة قوائم العقود والمحاضر وكشوف الحسابات وتعميم المعاينة قبل التحميل على كل المنظومة',
+      sumRes.status === 200 &&
+      Array.isArray(sumRes.body.distributors) &&
+      sumRes.body.distributors.length >= 1 &&
+      Array.isArray(sumRes.body.deals) &&
+      String(contractDl.headers['content-disposition'] || '').includes('Qalix-Contract-') &&
+      String(statementDl.headers['content-disposition'] || '').includes('Qalix-Statement-') &&
+      String(digestDl.headers['content-disposition'] || '').includes('Qalix-Weekly-Executive-Digest.html') &&
+      dashHtmlRes.body.includes("fetch('/api/bootstrap')") &&
+      dashHtmlRes.body.includes('previewDocLink(this)')
+    );
+
+    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/57 PASSED ===`);
     for (const r of results) console.log(' ✅', r);
   } finally {
     srv.kill('SIGINT');
