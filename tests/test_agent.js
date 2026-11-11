@@ -718,7 +718,28 @@ function req(method, urlPath, body) {
       dashHtmlRes.body.includes('previewDocLink(this)')
     );
 
-    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/57 PASSED ===`);
+    // 58. Distributor-Only Signature Enforcement Across All System Sale & Handover Documents
+    const quoDistRes = await req('GET', `/api/quotations/generate?doctor_name=${encodeURIComponent('د. مصطفى كريم')}&clinic_name=${encodeURIComponent('عيادة السلام')}&distributor_name=${encodeURIComponent('موزع تجريبي')}&distributor_code=TST-1&distributor_phone=01099887766`);
+    const staticHandoverRes = await req('GET', '/legal-docs/' + encodeURIComponent('محضر_التسليم_وإيصال_السداد.html'));
+    check('58. تعميم الاكتفاء بتوقيع الموزع المعتمد وإزالة توقيع الوكيل من كافة وثائق بيع وتسليم المنظومة',
+      handRes.status === 200 &&
+      handRes.body.includes('المسلِّم (الموزع المعتمد)') &&
+      !handRes.body.includes('المسلم (الوكيل') &&
+      receiptRes.status === 200 &&
+      receiptRes.body.includes('توقيع وخاتم الموزع المعتمد') &&
+      !receiptRes.body.includes('توقيع وخاتم وكيل المنظومة') &&
+      quoDistRes.status === 200 &&
+      quoDistRes.body.includes('اعتماد وتوقيع الموزع المعتمد') &&
+      quoDistRes.body.includes('موزع تجريبي (TST-1)') &&
+      !quoDistRes.body.includes('اعتماد وكيل المنظومة الرسمي') &&
+      kitPreviewRes.status === 200 &&
+      kitPreviewRes.body.includes('تأكيد وتوقيع الموزع المنفّذ') &&
+      !kitPreviewRes.body.includes('اعتماد وكيل المنظومة</strong>') &&
+      staticHandoverRes.status === 200 &&
+      staticHandoverRes.body.includes('عن المسلِّم (الموزع المعتمد)')
+    );
+
+    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/58 PASSED ===`);
     for (const r of results) console.log(' ✅', r);
   } finally {
     srv.kill('SIGINT');

@@ -178,9 +178,9 @@ function generateClinicHandoverHtml(deal, dist, agentInfo) {
 
     <div class="signatures">
       <div class="sig-box">
-        <strong>المسلم (الوكيل / الموزع المعتمد):</strong><br>
+        <strong>المسلِّم (الموزع المعتمد):</strong><br>
         الموزع: ${dist.name} (${dist.code})<br>
-        وكيل المنظومة: 01122166076<br>
+        ${dist.phone ? 'الهاتف: ' + dist.phone + '<br>' : ''}
         التوقيع: .......................................
       </div>
       <div class="sig-box">

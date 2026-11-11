@@ -974,7 +974,7 @@ const server = http.createServer(async (req, res) => {
       const dist = db.prepare('SELECT * FROM distributors WHERE id = ?').get(deal.distributor_id);
       return sendHtmlWithOptionalDownload(
         res,
-        generateClinicHandoverHtml(deal, dist || { name: 'وكيل المنظومة', code: 'MAIN' }, AGENT_INFO),
+        generateClinicHandoverHtml(deal, dist || { name: 'الموزع المعتمد', code: 'DIST' }, AGENT_INFO),
         `Qalix-Handover-${deal.deal_no}.html`,
         url.searchParams.get('download') === '1'
       );
@@ -1237,8 +1237,9 @@ const server = http.createServer(async (req, res) => {
         governorate: dist ? dist.governorate : (isAssiut ? 'أسيوط' : 'القاهرة'),
         clinicPhone: deal ? deal.clinic_phone : (qParams.phone || '01011223344'),
         tierNameAr: tier.nameAr,
-        distributorName: dist ? dist.name : 'مكتب الوكيل المعتمد',
-        distributorCode: dist ? dist.code : 'MAIN',
+        distributorName: dist ? dist.name : (qParams.distributorName || 'الموزع المعتمد'),
+        distributorCode: dist ? dist.code : (qParams.distributorCode || 'DIST'),
+        distributorPhone: dist ? dist.phone : (qParams.distributorPhone || ''),
         channelNameAr: channel.nameAr,
         referenceId: refId,
         standardPrice: stdPrice,

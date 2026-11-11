@@ -14,6 +14,9 @@ function generateQuotationData(params, pricingCatalog) {
   const specialtyId = params.specialty || 'dental';
   const tierKey = params.tier || 'professional';
   const governorate = (params.governorate || 'القاهرة').trim();
+  const distributorName = (params.distributor_name || '').trim();
+  const distributorCode = (params.distributor_code || '').trim();
+  const distributorPhone = (params.distributor_phone || '').trim();
   const isAssiut = governorate.includes('أسيوط') || governorate.includes('اسيوط') || params.assiut === 'true' || params.assiut === true;
   
   const tier = pricingCatalog[tierKey] || pricingCatalog.professional;
@@ -43,6 +46,9 @@ function generateQuotationData(params, pricingCatalog) {
     isAssiut,
     originalPrice: tier.price,
     discountAmount: isAssiut ? (tier.price - tier.assiutPrice) : 0,
+    distributorName,
+    distributorCode,
+    distributorPhone,
     features: [
       `ترخيص دائم مدى الحياة (بدون أي اشتراكات شهرية أو سنوية إجبارية نهائياً)`,
       `تثبيت وتشغيل أوفلاين 100% داخل العيادة دون الحاجة للإنترنت مطلقاً`,
@@ -50,7 +56,7 @@ function generateQuotationData(params, pricingCatalog) {
       `ربط أجهزة العيادة وموبايل الطبيب والسكرتيرة عبر شبكة Wi-Fi الداخلية بدون كابلات`,
       `تشفير جنائي عسكري لكافة بيانات وسجلات المرضى (AES-256 GCM)`,
       `جلسة تدريب عملي فورية للسكرتارية والطاقم الطبي حتى إتقان العمل بالكامل`,
-      `ضمان استقرار فني كامل ودعم مباشر من وكيل المنظومة لمدة 12 شهراً`
+      `ضمان استقرار فني كامل ودعم مباشر لمدة 12 شهراً`
     ]
   };
 }
@@ -120,8 +126,9 @@ function generateQuotationHtml(quo) {
         <p class="brand-sub">إدارة العيادات والمراكز الطبية التخصصية · Air-Gapped Fortress 100%</p>
       </div>
       <div class="agent-contact">
-        <strong>وكيل المنظومة الرسمي المعتمد</strong><br>
-        هاتف / واتساب: <strong>01122166076</strong><br>
+        <strong>الموزع المعتمد لمنظومة كالكس</strong><br>
+        ${quo.distributorName ? `<span>${quo.distributorName}${quo.distributorCode ? ' (' + quo.distributorCode + ')' : ''}</span><br>` : ''}
+        الدعم الفني والتفعيل: <strong>01122166076</strong><br>
         البريد / الدعم: +20 112 216 6076
       </div>
     </div>
@@ -187,8 +194,8 @@ function generateQuotationHtml(quo) {
 
     <div class="footer-signatures">
       <div class="sig-col">
-        <strong>اعتماد وكيل المنظومة الرسمي</strong>
-        <p style="margin: 2px 0; font-size: 11px;">01122166076</p>
+        <strong>اعتماد وتوقيع الموزع المعتمد</strong>
+        <p style="margin: 2px 0; font-size: 11px;">${quo.distributorName ? (quo.distributorName + (quo.distributorCode ? ' (' + quo.distributorCode + ')' : '')) : 'الموزع المعتمد'}${quo.distributorPhone ? ' — ' + quo.distributorPhone : ''}</p>
         <div class="line"></div>
       </div>
       <div style="text-align: center;">

@@ -348,7 +348,7 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
         '<div class="box"><strong>العيادة / المنشأة الطبية:</strong><br>' + data.clinic + '</div><div class="box"><strong>الطبيب المُخطِر بالتمام:</strong><br>' + data.doctor + '</div></div>' +
         '<h3 style="margin:10px 0 6px;color:#0f172a;font-size:14.5px;">سجل الإنجاز الفني وإخطار الطبيب:</h3><ul style="list-style:none;padding:0;margin:0;font-size:13px;">' + listHtml + '</ul>' +
         '<div style="margin-top:14px;background:#ecfdf5;border:1px solid #10b981;border-radius:8px;padding:10px 14px;font-size:12.5px;color:#065f46;">يُقر الموزع بإتمام تشغيل كافة الأجهزة بالعيادة، وترك كتالوج الاستخدام للطبيب، وتلقي إخطار الطبيب بتمام النجاح.</div>' +
-        '<div class="signs"><div class="sign"><strong>إخطار وموافقة الطبيب</strong><br><br>' + data.doctor + '</div><div class="sign"><strong>تأكيد الموزع المنفّذ</strong><br><br>${dist.name}</div><div class="sign"><strong>اعتماد وكيل المنظومة</strong><br><br>01122166076</div></div>' +
+        '<div class="signs"><div class="sign"><strong>إخطار وموافقة الطبيب</strong><br><br>' + data.doctor + '</div><div class="sign"><strong>تأكيد وتوقيع الموزع المنفّذ</strong><br><br>${dist.name} (${dist.code})</div></div>' +
         '</div></body></html>';
       const w = openHtmlPopup(cardHtml, autoPrint, 'تعذر فتح بطاقة التأكيد: ');
       if (w) {
@@ -372,7 +372,7 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
       const spec = document.getElementById('quoSpecialty').value;
       const tier = document.getElementById('quoTier').value;
       const gov = isAssiut ? 'أسيوط' : encodeURIComponent('${dist.governorate}');
-      const url = API_BASE + \`/api/quotations/generate?doctor_name=\${doc}&clinic_name=\${cln}&specialty=\${spec}&tier=\${tier}&governorate=\${gov}&assiut=\${isAssiut}\`;
+      const url = API_BASE + \`/api/quotations/generate?doctor_name=\${doc}&clinic_name=\${cln}&specialty=\${spec}&tier=\${tier}&governorate=\${gov}&assiut=\${isAssiut}&distributor_name=\${encodeURIComponent('${dist.name}')}&distributor_code=\${encodeURIComponent('${dist.code}')}&distributor_phone=\${encodeURIComponent('${dist.phone || ''}')}\`;
       window.open(url, '_blank');
     }
 

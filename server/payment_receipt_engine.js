@@ -55,7 +55,7 @@ function generateReceiptHtml(receiptData, agentInfo) {
   <div class="header">
     <div class="logo-title">
       <h1>سند قبض وتوريد مالي رسمي</h1>
-      <p>منظومة كالكس الطبية الشاملة (Qalix Medical Universal OS) — مكتب الوكيل المعتمد</p>
+      <p>منظومة كالكس الطبية الشاملة (Qalix Medical Universal OS) — ${d.distributorName} (${d.distributorCode})</p>
     </div>
     <div class="meta">
       <span class="badge-rec">رقم السند: ${d.receiptNo}</span>
@@ -127,8 +127,8 @@ function generateReceiptHtml(receiptData, agentInfo) {
 
   <div class="signatures">
     <div class="sign-box">
-      <div style="font-weight:bold; margin-bottom:30px;">توقيع وخاتم وكيل المنظومة المعتمد:</div>
-      <div style="font-size:11px; color:#64748b;">مكتب وكيل منظومة كالكس الطبية (01122166076 / 01122166076)</div>
+      <div style="font-weight:bold; margin-bottom:30px;">توقيع وخاتم الموزع المعتمد:</div>
+      <div style="font-size:11px; color:#64748b;">${d.distributorName} (${d.distributorCode})${d.distributorPhone ? ' — ' + d.distributorPhone : ''}</div>
     </div>
     <div class="sign-box">
       <div style="font-weight:bold; margin-bottom:30px;">توقيع مستلم الخدمة / الطبيب المسؤول:</div>
@@ -137,7 +137,7 @@ function generateReceiptHtml(receiptData, agentInfo) {
   </div>
 
   <div class="footer">
-    صدر هذا السند إلكترونياً من منصة كالكس الطبية — خط المبيعات: 01122166076 | خط الوكيل والدعم الفني: 01122166076
+    صدر هذا السند إلكترونياً من منصة كالكس الطبية — للدعم الفني وتفعيل التراخيص: 01122166076
   </div>
 </div>
 </body>
