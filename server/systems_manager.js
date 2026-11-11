@@ -676,6 +676,117 @@ function selectActiveSystemInRegistry(baseDataDir, baseKitsDir, systemId) {
   return { system: found, paths, registry };
 }
 
+/**
+ * يضمن تهيئة منظومات منصة كالكس الـ 11 كاملةً في السجل (باستثناء الأرشفة/الخزنة الرقمية):
+ * تبقى بيانات وكيل كالكس الطبية مدمجة ومفعّلة في qalix_medical، بينما تُنشأ المنظومات الـ 10 الأخرى مصفّرة تماماً.
+ * (لا يضيف منظومات كالكس داخل النسخة العامة المصفّرة universal_agent).
+ */
+function ensureQalix11SuiteInRegistry(baseDataDir, baseKitsDir) {
+  let registry = loadSystemsRegistry(baseDataDir, baseKitsDir);
+  if (registry.systems.length > 0 && registry.systems[0].id === 'universal_agent') {
+    return registry;
+  }
+
+  for (const presetId of QALIX_11_SUITE_IDS) {
+    if (registry.systems.some(s => s.id === presetId)) continue;
+    const preset = SYSTEM_PRESETS[presetId];
+    if (!preset) continue;
+    const created = createIsolatedSystem(baseDataDir, baseKitsDir, {
+      presetId,
+      agentTitleAr: `وكيل ${preset.nameAr}`,
+      agentName: `وكيل ${preset.nameAr}`,
+      agentPhone: presetId === 'qalix_medical' ? DEFAULT_AGENT_INFO.phone : '01000000000',
+      activateNow: false
+    }, { cleanOwnerPhone: true });
+    registry = created.registry;
+  }
+
+  // ضمان حفظ حقل agentName الافتراضي لكل منظومة في السجل
+  let changed = false;
+  for (const sys of registry.systems) {
+    if (!sys.agentInfo) sys.agentInfo = {};
+    if (!sys.agentInfo.agentName) {
+      sys.agentInfo.agentName = sys.agentInfo.titleAr || `وكيل ${sys.nameAr}`;
+      changed = true;
+    }
+  }
+  if (changed) saveSystemsRegistry(baseDataDir, registry);
+  return registry;
+}
+
+/**
+ * تحديث بيانات الوكيل المسؤول عن منظومة محددة من قِبل مدير الوكلاء.
+ */
+function updateSystemAgentProfile(baseDataDir, systemId, patch = {}) {
+  const regPath = getRegistryPath(baseDataDir);
+  if (!fs.existsSync(regPath)) throw new Error('سجل المنظومات غير موجود');
+  const registry = JSON.parse(fs.readFileSync(regPath, 'utf8'));
+  const target = (registry.systems || []).find(s => s.id === systemId);
+  if (!target) throw new Error('المنظومة غير مسجلة');
+
+  if (!target.agentInfo) target.agentInfo = {};
+  if (patch.agentName !== undefined) target.agentInfo.agentName = String(patch.agentName || '').trim().slice(0, 120);
+  if (patch.titleAr !== undefined) target.agentInfo.titleAr = String(patch.titleAr || '').trim().slice(0, 140) || target.agentInfo.titleAr;
+  if (patch.phone !== undefined) {
+    const cleanPhone = String(patch.phone || '').replace(/[^0-9+]/g, '').slice(0, 20);
+    if (cleanPhone) {
+      target.agentInfo.phone = cleanPhone;
+      const intl = cleanPhone.startsWith('+') ? cleanPhone : ('+2' + cleanPhone);
+      const waDigits = intl.replace(/^\+/, '');
+      target.agentInfo.intlPhone = intl;
+      target.agentInfo.salesHotline = cleanPhone;
+      target.agentInfo.supportHotline = cleanPhone;
+      target.agentInfo.whatsappUrl = `https://wa.me/${waDigits}`;
+      target.agentInfo.whatsappSalesUrl = `https://wa.me/${waDigits}`;
+    }
+  }
+  saveSystemsRegistry(baseDataDir, registry);
+  return target;
+}
+
+/**
+ * قاعدة بيانات مركز مدير الوكلاء (صندوق طلبات المفاتيح اليدوية + إعدادات مدير الوكلاء وصاحب المنصة المعزولة تماماً).
+ */
+function openManagerHubDb(baseDataDir) {
+  fs.mkdirSync(baseDataDir, { recursive: true });
+  const hubPath = path.join(baseDataDir, 'manager_hub.db');
+  const mdb = new DatabaseSync(hubPath);
+  mdb.exec('PRAGMA journal_mode = WAL;');
+  mdb.exec(`
+    CREATE TABLE IF NOT EXISTS manager_settings (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS agent_key_requests (
+      id TEXT PRIMARY KEY,
+      req_code TEXT UNIQUE NOT NULL,
+      system_id TEXT NOT NULL,
+      system_name_ar TEXT NOT NULL,
+      agent_name TEXT NOT NULL DEFAULT '',
+      agent_phone TEXT NOT NULL DEFAULT '',
+      distributor_code TEXT NOT NULL DEFAULT '',
+      distributor_name TEXT NOT NULL DEFAULT '',
+      customer_name TEXT NOT NULL,
+      hardware_id TEXT NOT NULL DEFAULT '',
+      tier TEXT NOT NULL DEFAULT 'professional',
+      amount_paid REAL NOT NULL DEFAULT 0,
+      payment_ref TEXT NOT NULL DEFAULT '',
+      notes TEXT NOT NULL DEFAULT '',
+      status TEXT NOT NULL DEFAULT 'pending_owner_fetch',
+      manual_license_key TEXT NOT NULL DEFAULT '',
+      delivered_by TEXT NOT NULL DEFAULT '',
+      created_at TEXT NOT NULL,
+      delivered_at TEXT NOT NULL DEFAULT ''
+    );
+  `);
+  mdb.prepare("INSERT OR IGNORE INTO manager_settings(key, value) VALUES('manager_name', 'مدير الوكلاء العام')").run();
+  mdb.prepare("INSERT OR IGNORE INTO manager_settings(key, value) VALUES('manager_phone', '')").run();
+  mdb.prepare("INSERT OR IGNORE INTO manager_settings(key, value) VALUES('platform_owner_name', 'صاحب المنصة (سري - خاص بمدير الوكلاء فقط)')").run();
+  mdb.prepare("INSERT OR IGNORE INTO manager_settings(key, value) VALUES('platform_owner_phone', '')").run();
+  return mdb;
+}
+
 function summarizeSystemStats(baseDataDir, baseKitsDir, sys) {
   const paths = getSystemPaths(baseDataDir, baseKitsDir, sys.id);
   const result = {
@@ -724,5 +835,8 @@ module.exports = {
   saveSystemsRegistry,
   createIsolatedSystem,
   selectActiveSystemInRegistry,
+  ensureQalix11SuiteInRegistry,
+  updateSystemAgentProfile,
+  openManagerHubDb,
   summarizeSystemStats
 };

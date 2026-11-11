@@ -298,26 +298,38 @@
             <div id="headerPackageTitle" style="font-size:12px; color:var(--muted);">حزمة التشغيل المستقلة (أوفلاين 100%)</div>
             <div id="headerPackageSub" style="font-size:14px; font-weight:800; color:var(--sky);">بنية معزولة لكل منظومة · بدون اشتراك شهري</div>
           </div>
-          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+            <button id="appLicenseBadge" type="button" class="btn-amber" style="font-size:12px; padding:8px 12px; font-weight:800; cursor:pointer;" onclick="openAppLicenseModal(true)">⏳ تجربة مجانية (14 يوماً) · الأسعار والتفعيل</button>
             <button type="button" class="btn-emerald" style="font-size:12px; padding:8px 12px;" onclick="openCardPreviewModal({ title: '📘 كتالوج تشغيل الوكيل الحصري (من أ إلى ي)', subtitle: 'دليل مصور خاص بوكيل المنظومة فقط (يعمل أوفلاين + طباعة A4)', previewUrl: '/api/catalogs/agent', downloadUrl: '/api/catalogs/agent?download=1' })">📘 كتالوج الوكيل المصور (A–Z)</button>
             <button type="button" class="btn-sky" style="font-size:12px; padding:8px 12px;" onclick="openCardPreviewModal({ title: '💼 كتالوج عمل الموزع الميداني (من أ إلى ي)', subtitle: 'دليل مصور خاص بعمل الموزع وبوابته المستقلة فقط (جاهز للإرسال للموزع)', previewUrl: '/api/catalogs/distributor', downloadUrl: '/api/catalogs/distributor?download=1' })">💼 كتالوج الموزع المصور (A–Z)</button>
           </div>
         </div>
       </div>
 
-      <!-- Isolated Multi-System Bar & Reseller Clean Edition Controls -->
-      <div class="sub-card" style="margin-top:12px; padding:12px 14px; border:1px solid rgba(56,189,248,0.35); background:rgba(15,23,42,0.55); display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px;">
-        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-          <span class="badge b-sky">🧩 لوحة متعددة المنظومات المعزولة</span>
-          <label for="systemSwitchSelect" style="font-size:12px; color:var(--muted); font-weight:700;">المنظومة النشطة الآن:</label>
-          <select id="systemSwitchSelect" onchange="switchActiveSystem(this.value)" style="min-width:250px; padding:7px 10px; font-size:12.5px; font-weight:700; border-radius:8px;">
-            <option value="">جاري تحميل المنظومة النشطة...</option>
-          </select>
-          <span id="activeSystemDbBadge" class="badge b-emerald" dir="ltr" style="font-family:monospace; font-size:11px;">DB: data/agent.db · Prefix: QLX2</span>
+      <!-- Main Control Bar: Agents Manager (مدير الوكلاء) Selects System & Agent Across 11 Isolated Systems -->
+      <div class="sub-card" style="margin-top:12px; padding:12px 14px; border:1px solid rgba(56,189,248,0.45); background:rgba(15,23,42,0.68); display:flex; flex-direction:column; gap:10px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <span class="badge b-amber">👑 اللوحة الرئيسية لمدير الوكلاء (المستوى 2)</span>
+            <span class="badge b-sky" style="font-size:10.5px;">سلسلة الإدارة: صاحب المنصة (مخفي) ← مدير الوكلاء (أنت) ← الوكيل ← الموزع ← المندوب ← الفني</span>
+          </div>
+          <span id="topPendingKeyReqBadge" class="badge b-purple" style="cursor:pointer;" onclick="document.getElementById('managerKeyInboxSection')?.scrollIntoView({behavior:'smooth'})">🔑 0 طلبات مفاتيح لمدير الوكلاء</span>
         </div>
-        <div style="display:flex; gap:8px; flex-wrap:wrap;">
-          <button type="button" class="btn btn-sm btn-sky" onclick="openMultiSystemModal()">➕ إضافة منظومة مستقلة (معزولة تماماً)</button>
-          <button type="button" class="btn btn-sm btn-amber" onclick="openResellerEditionModal()">📦 تصدير نسخة وكلاء مصفّرة جاهزة للبيع (.zip)</button>
+        <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px;">
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <label for="systemSwitchSelect" style="font-size:12px; color:var(--muted); font-weight:700;">اختيار المنظومة والوكيل للمتابعة:</label>
+            <select id="systemSwitchSelect" onchange="switchActiveSystem(this.value)" style="min-width:270px; padding:7px 10px; font-size:12.5px; font-weight:700; border-radius:8px;">
+              <option value="">جاري تحميل المنظومة النشطة...</option>
+            </select>
+            <span id="activeSystemDbBadge" class="badge b-emerald" dir="ltr" style="font-family:monospace; font-size:11px;">DB: data/agent.db · Prefix: QLX2</span>
+          </div>
+          <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+            <input id="mgrTopAgentName" placeholder="اسم الوكيل المسؤول..." style="width:155px; padding:6px 8px; font-size:12px;" />
+            <input id="mgrTopAgentPhone" placeholder="هاتف الوكيل (010...)" dir="ltr" style="width:130px; padding:6px 8px; font-size:12px;" />
+            <button type="button" class="btn btn-sm btn-emerald" onclick="assignSystemAgentTop()">✔ تعيين / حفظ الوكيل</button>
+            <button type="button" class="btn btn-sm btn-sky" onclick="openMultiSystemModal()">➕ إضافة منظومة معزولة</button>
+            <button type="button" class="btn btn-sm btn-amber" onclick="openResellerEditionModal()">📦 تصدير نسخة مصفّرة (.zip)</button>
+          </div>
         </div>
       </div>
 
@@ -517,71 +529,118 @@
         </div>
       </div>
 
-      <!-- Agent-Only Confidential Platform Owner Direct Channel -->
+      <!-- Agents Manager Oversight + Confidential Platform Owner Channel (Hidden From Agents/Distributors/Clients) + Manual Key Inbox -->
       <div id="ownerChannelCard" class="glass" style="border:1px solid rgba(244,63,94,0.38); background:rgba(244,63,94,0.04); margin-bottom:18px;">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
           <div>
             <div style="display:flex; gap:8px; align-items:center; margin-bottom:4px; flex-wrap:wrap;">
-              <span class="badge b-rose">🔐 قناة سرية للوكيل فقط (صفر وصول للموزعين أو الأطباء)</span>
-              <span class="badge b-emerald">تواصل مباشر مع صاحب منصة كالكس</span>
+              <span class="badge b-rose">🔐 قناة سرية لمدير الوكلاء فقط (لا يظهر صاحب المنصة للوكلاء أو الموزعين أو العملاء)</span>
+              <span class="badge b-emerald">جلب مفاتيح التفعيل يدوياً من خارج المنظومة</span>
             </div>
-            <h3 style="margin:0; font-size:17px; color:var(--text);">👑 التواصل المباشر بين الوكيل (<span class="dyn-agent-phone" dir="ltr">—</span>) وصاحب منصة كالكس</h3>
+            <h3 style="margin:0; font-size:17px; color:var(--text);">👑 لوحة مدير الوكلاء المركزية والقناة السرية مع صاحب المنصة (الوكيل النشط: <span class="dyn-agent-phone" dir="ltr">—</span>)</h3>
             <p style="margin:4px 0 0; font-size:12px; color:var(--muted);">
-              هذه القناة محصورة تماماً داخل جهاز الوكيل فقط؛ لا يظهر رقم صاحب المنصة أو بياناته لأي موزع أو طبيب أو في أي عقد أو بوابة.
+              الهرم الإداري الصارم: <strong>صاحب المنصة (مخفي إلا لمدير الوكلاء)</strong> ← <strong>مدير الوكلاء (أنت)</strong> ← <strong>الوكلاء (هم فقط من يتواصلون مع مدير الوكلاء)</strong> ← الموزع ← المندوب ← الفني. هذه المنظومة لا تحتوي على أي أداة إنشاء مفاتيح؛ يُحضرها مدير الوكلاء يدوياً من صاحب المنصة ويسلمها للوكيل.
             </p>
           </div>
           <button type="button" class="btn btn-sm btn-sky" onclick="toggleOwnerPhoneVisibility()">👁️ إظهار / إخفاء الرقم المحفوظ</button>
         </div>
         <div class="grid-3" style="margin-bottom:10px;">
           <div>
-            <label style="font-size:11.5px; color:var(--muted);">اسم / صفة صاحب المنصة:</label>
-            <input id="ownerPrivateName" type="text" value="صاحب منصة كالكس الطبية" placeholder="صاحب منصة كالكس" />
+            <label style="font-size:11.5px; color:var(--muted);">اسم / صفة صاحب المنصة (سري لمدير الوكلاء):</label>
+            <input id="ownerPrivateName" type="text" value="صاحب المنصة (خاص بمدير الوكلاء)" placeholder="صاحب المنصة" />
           </div>
           <div>
-            <label style="font-size:11.5px; color:var(--muted);">رقم واتساب صاحب المنصة (محفوظ محلياً فقط):</label>
+            <label style="font-size:11.5px; color:var(--muted);">رقم واتساب صاحب المنصة (سري — لمدير الوكلاء فقط):</label>
             <input id="ownerPrivatePhone" type="password" placeholder="أدخل رقم واتساب صاحب المنصة..." dir="ltr" />
           </div>
           <div style="display:flex; align-items:flex-end;">
-            <button type="button" class="btn btn-sm btn-emerald" style="width:100%;" onclick="saveOwnerChannelConfig()">💾 حفظ الرقم في قاعدة الوكيل المحلية</button>
+            <button type="button" class="btn btn-sm btn-emerald" style="width:100%;" onclick="saveOwnerChannelConfig()">💾 حفظ الرقم السري في قاعدة مدير الوكلاء</button>
           </div>
         </div>
         <div class="grid-3" style="margin-bottom:10px;">
           <div>
-            <label style="font-size:11.5px; color:var(--muted);">نوع المراسلة المباشرة لصاحب المنصة:</label>
+            <label style="font-size:11.5px; color:var(--muted);">نوع طلب مدير الوكلاء من صاحب المنصة:</label>
             <select id="ownerMsgCategory">
-              <option value="key">🔑 طلب إصدار مفتاح تفعيل دائم (QLX2) بالبصمة</option>
-              <option value="settlement">💰 إشعار توريد مالي / تسوية حسابات الوكيل</option>
-              <option value="dev">🚀 رفع مقترحات تطوير المنظومة (v2.0)</option>
-              <option value="support">🛠️ طلب دعم فني أو تحديث برمجي</option>
+              <option value="key">🔑 جلب مفتاح تفعيل دائم (QLX2) يدوياً لوكيل</option>
+              <option value="settlement">💰 إشعار توريد مالي / تسوية لمدير الوكلاء</option>
+              <option value="dev">🚀 رفع مقترحات تطوير المنظومة</option>
+              <option value="support">🛠️ طلب دعم فني</option>
               <option value="direct">💬 رسالة مباشرة لصاحب المنصة</option>
             </select>
           </div>
           <div>
-            <label style="font-size:11.5px; color:var(--muted);">مرجع العيادة / الصفقة (اختياري):</label>
-            <input id="ownerClinicRef" placeholder="مثال: عيادة النور — التخصصية (8,500 ج.م)" />
+            <label style="font-size:11.5px; color:var(--muted);">مرجع المنظومة / العميل / الوكيل (اختياري):</label>
+            <input id="ownerClinicRef" placeholder="مثال: منظومة كالكس الطبية — عيادة النور" />
           </div>
           <div>
             <label style="font-size:11.5px; color:var(--muted);">بصمة الجهاز (HWID) أو المبلغ:</label>
             <input id="ownerHwidRef" placeholder="HWID أو المبلغ المحوّل" dir="ltr" />
           </div>
         </div>
-        <textarea id="ownerMsgBody" rows="2" placeholder="اكتب رسالتك أو تفاصيل الطلب الموجه حصرياً من الوكيل إلى صاحب منصة كالكس..."></textarea>
+        <textarea id="ownerMsgBody" rows="2" placeholder="اكتب تفاصيل طلب مفتاح التفعيل أو الرسالة الموجهة سراً من مدير الوكلاء إلى صاحب المنصة..."></textarea>
         <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;">
-          <button type="button" class="btn btn-sm btn-emerald" onclick="sendToPlatformOwnerWa()">📲 إرسال مباشرة لواتساب صاحب المنصة (للوكيل فقط)</button>
+          <button type="button" class="btn btn-sm btn-emerald" onclick="sendToPlatformOwnerWa()">📲 إرسال لواتساب صاحب المنصة (لمدير الوكلاء فقط)</button>
           <button type="button" class="btn btn-sm btn-amber" onclick="copyPlatformOwnerMsg()">📋 نسخ نص الرسالة</button>
-          <button type="button" class="btn btn-sm btn-sky" onclick="loadAgentsManagerOversight()">🏛️ تحديث نشاط عمل الوكلاء (لمدير الوكلاء)</button>
+          <button type="button" class="btn btn-sm btn-sky" onclick="loadAgentsManagerOversight(); loadManagerHubOverview();">🏛️ تحديث متابعة الوكلاء وطلبات المفاتيح</button>
+        </div>
+
+        <!-- Manager Profile (Shared ONLY With Agents) + Agents Manual Key Request & Delivery Inbox -->
+        <div id="managerKeyInboxSection" class="sub-card" style="margin-top:14px; padding:12px; border:1px solid rgba(56,189,248,0.45); background:rgba(15,23,42,0.78);">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
+            <div>
+              <h4 style="margin:0; color:var(--sky); font-size:15px;">🔑 صندوق طلبات مفاتيح التراخيص (بين الوكلاء ⇄ مدير الوكلاء فقط — جلب ولصق يدوي 100%)</h4>
+              <p style="margin:2px 0 0; font-size:11.5px; color:var(--muted);">الوكيل يرسل طلب المفتاح إلى مدير الوكلاء عند إتمام البيع، ثم يُحضر مدير الوكلاء المفتاح يدوياً من خارج المنظومة ويلصقه هنا لتسليمه للوكيل (لا توجد أي أداة إنشاء مفاتيح داخل البرنامج).</p>
+            </div>
+          </div>
+          <div class="grid-3" style="margin-bottom:10px;">
+            <div>
+              <label style="font-size:11px; color:var(--muted);">اسم مدير الوكلاء (يظهر للوكلاء فقط):</label>
+              <input id="mgrHubNameInput" placeholder="مدير الوكلاء العام" style="padding:6px; font-size:12px;" />
+            </div>
+            <div>
+              <label style="font-size:11px; color:var(--muted);">رقم واتساب مدير الوكلاء (للتواصل معه من الوكلاء فقط):</label>
+              <input id="mgrHubPhoneInput" dir="ltr" placeholder="010..." style="padding:6px; font-size:12px;" />
+            </div>
+            <div style="display:flex; align-items:flex-end;">
+              <button type="button" class="btn btn-sm btn-sky" style="width:100%;" onclick="saveManagerHubContact()">💾 حفظ بيانات تواصل مدير الوكلاء</button>
+            </div>
+          </div>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:8px; padding:10px; border:1px dashed rgba(16,185,129,0.4); border-radius:8px; margin-bottom:10px; background:rgba(16,185,129,0.05);">
+            <div>
+              <label style="font-size:11px; color:var(--muted);">اسم العميل / المنشأة:</label>
+              <input id="akReqCustomer" placeholder="اسم العميل..." style="padding:6px; font-size:12px;" />
+            </div>
+            <div>
+              <label style="font-size:11px; color:var(--muted);">بصمة الجهاز (HWID):</label>
+              <input id="akReqHwid" dir="ltr" placeholder="A1B2C3D4..." style="padding:6px; font-size:12px;" />
+            </div>
+            <div>
+              <label style="font-size:11px; color:var(--muted);">الباقة:</label>
+              <select id="akReqTier" style="padding:6px; font-size:12px;">
+                <option value="basic">الأساسية</option>
+                <option value="professional" selected>التخصصية / المتقدمة</option>
+                <option value="enterprise">المتكاملة Enterprise</option>
+              </select>
+            </div>
+            <div style="display:flex; align-items:flex-end;">
+              <button type="button" class="btn btn-sm btn-amber" style="width:100%; font-weight:800;" onclick="submitManualKeyRequestToManager()">📩 إرسال طلب مفتاح لمدير الوكلاء</button>
+            </div>
+          </div>
+          <div id="managerKeyRequestsList" style="max-height:240px; overflow-y:auto; display:grid; gap:8px;">
+            <div style="font-size:12px; color:var(--muted);">⏳ جاري تحميل طلبات المفاتيح بين الوكلاء ومدير الوكلاء...</div>
+          </div>
         </div>
 
         <!-- Agents Manager Advanced Cross-System Activity Oversight -->
         <div id="agentsManagerOversightSection" class="sub-card" style="margin-top:14px; padding:12px; border:1px solid rgba(251,191,36,0.4); background:rgba(15,23,42,0.7);">
           <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
             <div>
-              <h4 style="margin:0; color:var(--amber); font-size:15px;">🏛️ لوحة مدير الوكلاء المتقدمة: متابعة نشاط عمل جميع الوكلاء والفرق الميدانية</h4>
-              <p style="margin:2px 0 0; font-size:11.5px; color:var(--muted);">يرى مدير الوكلاء هنا أداء كل وكيل ومنظومة، نشاط المناديب والفنيين والموزعين، المبيعات الصافية، وبصمة التوثيق عبر كافة المنظومات المعزولة.</p>
+              <h4 style="margin:0; color:var(--amber); font-size:15px;">🏛️ لوحة مدير الوكلاء المتقدمة: متابعة نشاط عمل جميع الوكلاء والمنظومات الـ 11 والفرق الميدانية</h4>
+              <p style="margin:2px 0 0; font-size:11.5px; color:var(--muted);">يرى مدير الوكلاء هنا أداء كل وكيل ومنظومة (منظومة كالكس الطبية ببياناتها المدمجة + باقي المنظومات المصفّرة)، ويمكنه الانتقال لأي منظومة أو وكيل بضغطة واحدة.</p>
             </div>
             <div style="display:flex; gap:6px; flex-wrap:wrap;">
               <button type="button" class="btn btn-sm btn-emerald" onclick="downloadAgentsManagerReportJson()">📥 تصدير تقرير نشاط الوكلاء (SHA-256)</button>
-              <button type="button" class="btn btn-sm btn-amber" onclick="sendAgentsActivityBriefToOwnerWa()">📲 إرسال الملخص التنفيذي لمدير الوكلاء</button>
+              <button type="button" class="btn btn-sm btn-amber" onclick="sendAgentsActivityBriefToOwnerWa()">📲 إرسال الملخص التنفيذي واتساب</button>
             </div>
           </div>
           <div id="ownerGrandKpis" class="grid" style="grid-template-columns:repeat(auto-fit, minmax(125px, 1fr)); gap:8px; margin-bottom:10px;"></div>
@@ -604,7 +663,7 @@
         </div>
       </div>
 
-      <!-- Payment Confirmation & Receipt Review Workflow (Distributor Receipt -> Agent Activation Key) -->
+      <!-- Payment Confirmation & Receipt Review Workflow (Distributor Receipt -> Agent Delivery of Manual Key) -->
       <div id="paymentRequestsSection" class="glass" style="border:1px solid rgba(56,189,248,0.4); margin-bottom:18px;">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
           <div>
@@ -612,9 +671,9 @@
               <span class="badge b-sky">تأكيد الدفع بالريسيت</span>
               <span id="pendingPaymentBadge" class="badge b-amber">0 طلبات بالانتظار</span>
             </div>
-            <h3 style="margin:0; font-size:17px; color:var(--sky);">💳 حسابات استلام الدفع وصندوق مراجعة ريسيت الموزعين لإصدار مفاتيح التفعيل</h3>
+            <h3 style="margin:0; font-size:17px; color:var(--sky);">💳 حسابات استلام الدفع وصندوق مراجعة ريسيت الموزعين لتسليم مفاتيح التفعيل اليدوية</h3>
             <p style="margin:4px 0 0; font-size:12.5px; color:var(--muted);">
-              يقوم الموزع بالتحويل وإرفاق صورة الريسيت من بوابتة المستقلة، فتظهر هنا فوراً للمراجعة وتأكيد الاستلام وإصدار مفتاح التفعيل التلقائي للموزع.
+              يقوم الموزع بالتحويل وإرفاق صورة الريسيت من بوابته المستقلة، فيطلب الوكيل المفتاح من مدير الوكلاء الذي يُحضره يدوياً من صاحب المنصة ويسلّمه للوكيل دون أي توليد مفاتيح داخل النظام.
             </p>
           </div>
           <div style="display:flex; gap:8px; flex-wrap:wrap;">
@@ -2086,6 +2145,18 @@
         const ap = document.getElementById('headerAgentPhone');
         if (at && data.agent.titleAr) at.innerText = data.agent.titleAr;
         if (ap && data.agent.phone) ap.innerText = `${data.agent.phone} (${data.agent.intlPhone || '+2' + data.agent.phone})`;
+        const mgrNameEl = document.getElementById('mgrTopAgentName');
+        const mgrPhoneEl = document.getElementById('mgrTopAgentPhone');
+        if (mgrNameEl) mgrNameEl.value = data.agent.agentName || data.agent.titleAr || '';
+        if (mgrPhoneEl) mgrPhoneEl.value = data.agent.phone || '';
+      }
+      const keyReqBadge = document.getElementById('topPendingKeyReqBadge');
+      if (keyReqBadge && data.pendingKeyRequestsCount !== undefined) {
+        keyReqBadge.innerText = `🔑 ${data.pendingKeyRequestsCount} طلبات مفاتيح لمدير الوكلاء`;
+        keyReqBadge.className = 'badge ' + (data.pendingKeyRequestsCount > 0 ? 'b-amber' : 'b-purple');
+      }
+      if (data.appLicense && typeof applyAppLicenseState === 'function') {
+        applyAppLicenseState(data.appLicense);
       }
       const msAgentInp = document.getElementById('msAgentPhone');
       if (msAgentInp && (!msAgentInp.dataset.touched)) msAgentInp.value = agentPhone;
@@ -3746,7 +3817,7 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
         populateManualPaymentDistSelect();
         renderPaymentRequestsList();
         renderTrialReportsRadar((trlJson && trlJson.ok && Array.isArray(trlJson.reports)) ? trlJson.reports : []);
-        await Promise.allSettled([loadUnifiedPipelineSection(), loadAgentsManagerOversight()]);
+        await Promise.allSettled([loadUnifiedPipelineSection(), loadAgentsManagerOversight(), loadManagerHubOverview()]);
       } catch (e) {
         console.error('Error loading payment panel:', e);
       }
@@ -3847,6 +3918,187 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
       }).join('');
     }
 
+    async function loadManagerHubOverview() {
+      try {
+        const r = await fetch('/api/manager/overview');
+        const j = await r.json();
+        if (!j || !j.ok) return;
+        const p = j.profile || {};
+        if (document.getElementById('mgrHubNameInput') && !document.getElementById('mgrHubNameInput').value) {
+          document.getElementById('mgrHubNameInput').value = p.managerName || '';
+        }
+        if (document.getElementById('mgrHubPhoneInput') && !document.getElementById('mgrHubPhoneInput').value) {
+          document.getElementById('mgrHubPhoneInput').value = p.managerPhone || '';
+        }
+        const listEl = document.getElementById('managerKeyRequestsList');
+        const reqs = Array.isArray(j.keyRequests) ? j.keyRequests : [];
+        const pendingCnt = reqs.filter(k => k.status === 'pending_owner_fetch').length;
+        const badgeTop = document.getElementById('topPendingKeyReqBadge');
+        if (badgeTop) {
+          badgeTop.innerText = `🔑 ${pendingCnt} طلبات مفاتيح لمدير الوكلاء`;
+          badgeTop.className = 'badge ' + (pendingCnt > 0 ? 'b-amber' : 'b-purple');
+        }
+        if (listEl) {
+          if (!reqs.length) {
+            listEl.innerHTML = '<div style="font-size:12px; color:var(--muted);">لا توجد طلبات مفاتيح موجهة من الوكلاء لمدير الوكلاء حالياً.</div>';
+          } else {
+            listEl.innerHTML = reqs.map(kr => `
+              <div class="sub-card" style="padding:9px 11px; border:1px solid ${kr.status === 'pending_owner_fetch' ? 'rgba(251,191,36,0.5)' : 'rgba(16,185,129,0.4)'}; margin:0;">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+                  <div>
+                    <strong dir="ltr" style="font-family:monospace; color:var(--sky);">${escPayHtml(kr.req_code)}</strong>
+                    <span class="badge ${kr.status === 'pending_owner_fetch' ? 'b-amber' : 'b-emerald'}">${kr.status === 'pending_owner_fetch' ? '⏳ بانتظار جلب مدير الوكلاء يدوياً' : '✅ تم تسليم المفتاح للوكيل'}</span>
+                    <span style="font-size:11px; color:var(--muted);">المنظومة: <strong>${escPayHtml(kr.system_name_ar)}</strong> · الوكيل: <strong>${escPayHtml(kr.agent_name)}</strong></span>
+                  </div>
+                </div>
+                <div style="font-size:12px; margin-top:4px;">
+                  العميل: <strong>${escPayHtml(kr.customer_name)}</strong> · الباقة: <strong>${escPayHtml(kr.tier)}</strong>
+                  ${kr.hardware_id ? ` · بصمة الجهاز: <code dir="ltr" style="color:var(--sky);">${escPayHtml(kr.hardware_id)}</code>` : ''}
+                </div>
+                ${kr.status === 'pending_owner_fetch' ? `
+                  <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:6px;">
+                    <input id="mgrDeliverInp_${escPayHtml(kr.id)}" dir="ltr" placeholder="الصق المفتاح المُحضر يدوياً من صاحب المنصة (QLX2....)" style="flex:1; min-width:190px; padding:5px 8px; font-size:12px;" />
+                    <button type="button" class="btn btn-sm btn-emerald" onclick="deliverManualKeyByManager('${escPayHtml(kr.id)}')">🔑 تسليم المفتاح اليدوي للوكيل</button>
+                  </div>
+                ` : `
+                  <div style="font-size:11.5px; color:var(--emerald); margin-top:4px;">🔑 المفتاح المُسلَّم: <code dir="ltr">${escPayHtml(kr.manual_license_key)}</code> (بواسطة: ${escPayHtml(kr.delivered_by)})</div>
+                `}
+              </div>
+            `).join('');
+          }
+        }
+      } catch (e) {
+        console.error('Error loading manager hub:', e);
+      }
+    }
+
+    async function saveManagerHubContact() {
+      const managerName = (document.getElementById('mgrHubNameInput')?.value || '').trim();
+      const managerPhone = (document.getElementById('mgrHubPhoneInput')?.value || '').trim();
+      try {
+        const r = await fetch('/api/manager/profile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ managerName, managerPhone })
+        });
+        const j = await r.json();
+        if (j.ok) {
+          alert('✅ تم حفظ بيانات مدير الوكلاء (يستعملها الوكلاء فقط للتواصل معك، ومخفية عن الموزعين والعملاء).');
+          await loadManagerHubOverview();
+        }
+      } catch (e) {
+        alert('❌ خطأ: ' + e.message);
+      }
+    }
+
+    async function assignSystemAgentTop() {
+      const agentName = (document.getElementById('mgrTopAgentName')?.value || '').trim();
+      const agentPhone = (document.getElementById('mgrTopAgentPhone')?.value || '').trim();
+      if (!agentName) return alert('اكتب اسم الوكيل المسؤول عن المنظومة المختارة أولاً.');
+      const systemId = (document.getElementById('systemSwitchSelect')?.value || window.ACTIVE_SYSTEM_INFO?.id || '').trim();
+      if (!systemId || systemId.startsWith('__preset__:')) {
+        return alert('اختر منظومة نشطة أولاً قبل تعيين وكيلها.');
+      }
+      try {
+        const r = await fetch('/api/manager/assign-agent', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ systemId, agentName, agentPhone })
+        });
+        const j = await r.json();
+        if (!j.ok) return alert('❌ تعذر تحديث الوكيل: ' + (j.error || 'خطأ'));
+        alert('✅ تم اعتماد الوكيل "' + agentName + '" على المنظومة المختارة.');
+        await load();
+        await loadSystemsRegistryUi();
+        await loadAgentsManagerOversight();
+      } catch (e) {
+        alert('❌ خطأ: ' + e.message);
+      }
+    }
+
+    async function submitManualKeyRequestToManager(customPayload = null) {
+      const customerName = customPayload?.customerName || (document.getElementById('akReqCustomer')?.value || '').trim();
+      const hardwareId = customPayload?.hardwareId || (document.getElementById('akReqHwid')?.value || '').trim();
+      const tier = customPayload?.tier || (document.getElementById('akReqTier')?.value || 'professional');
+      if (!customerName) return alert('يرجى كتابة اسم العميل / المنشأة لطلب المفتاح من مدير الوكلاء.');
+      try {
+        const r = await fetch('/api/manager/key-requests', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            customerName,
+            hardwareId,
+            tier,
+            paymentRef: customPayload?.paymentRef || '',
+            distributorCode: customPayload?.distributorCode || '',
+            distributorName: customPayload?.distributorName || '',
+            amountPaid: customPayload?.amountPaid || 0,
+            notes: customPayload?.notes || ''
+          })
+        });
+        const j = await r.json();
+        if (!j.ok) return alert('❌ تعذر إرسال طلب المفتاح: ' + (j.error || 'خطأ'));
+        if (!customPayload) {
+          if (document.getElementById('akReqCustomer')) document.getElementById('akReqCustomer').value = '';
+          if (document.getElementById('akReqHwid')) document.getElementById('akReqHwid').value = '';
+        }
+        await loadManagerHubOverview();
+        const mgrPhone = (j.agentsManagerContact?.managerPhone || '').replace(/[^0-9]/g, '');
+        if (confirm('✅ تم تسجيل طلب المفتاح [' + j.request.req_code + '] لدى مدير الوكلاء.\nلا تنشئ هذه المنظومة مفاتيح آلياً — هل تريد إرسال الطلب عبر واتساب إلى مدير الوكلاء الآن ليحضره يدوياً؟')) {
+          const waDigits = mgrPhone.startsWith('0') ? ('2' + mgrPhone) : mgrPhone;
+          const url = waDigits
+            ? ('https://wa.me/' + waDigits + '?text=' + encodeURIComponent(j.waToAgentsManager))
+            : ('https://api.whatsapp.com/send?text=' + encodeURIComponent(j.waToAgentsManager));
+          window.open(url, '_blank');
+        }
+      } catch (e) {
+        alert('❌ خطأ: ' + e.message);
+      }
+    }
+
+    async function requestKeyFromManagerForPayment(reqId) {
+      const pr = paymentRequestsCache.find(x => x.id === reqId);
+      if (!pr) return;
+      await submitManualKeyRequestToManager({
+        customerName: pr.customer_name,
+        hardwareId: pr.hardware_or_ref || '',
+        tier: pr.tier,
+        paymentRef: pr.payment_ref || pr.req_code,
+        distributorCode: pr.distributor_code,
+        distributorName: pr.distributor_name,
+        amountPaid: pr.agent_net_amount || pr.fixed_price || 0,
+        notes: 'طلب مفتاح لصفقة موزع مؤكدة بالريسيت: ' + pr.req_code
+      });
+    }
+
+    async function deliverManualKeyByManager(krId) {
+      const inp = document.getElementById('mgrDeliverInp_' + krId);
+      const manualLicenseKey = (inp?.value || '').trim();
+      if (!manualLicenseKey || manualLicenseKey.length < 6) {
+        return alert('يرجى لصق مفتاح التفعيل الذي أحضره مدير الوكلاء يدوياً من صاحب المنصة أولاً (6 أحرف على الأقل).');
+      }
+      try {
+        const r = await fetch('/api/manager/key-requests/' + encodeURIComponent(krId) + '/deliver', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ manualLicenseKey })
+        });
+        const j = await r.json();
+        if (!j.ok) return alert('❌ تعذر التسليم: ' + (j.error || 'خطأ'));
+        await Promise.allSettled([loadManagerHubOverview(), loadUnifiedPipelineSection(), loadAgentsManagerOversight()]);
+        const ap = String(j.request?.agent_phone || '').replace(/[^0-9]/g, '');
+        const waDigits = ap.startsWith('0') ? ('2' + ap) : ap;
+        if (confirm('✅ تم تسجيل تسليم المفتاح اليدوي [' + j.request.req_code + '] وربطه بسلسلة العميل!\nهل تريد فتح واتساب لإرسال المفتاح للوكيل مباشرة؟')) {
+          const url = waDigits
+            ? ('https://wa.me/' + waDigits + '?text=' + encodeURIComponent(j.waToAgent))
+            : ('https://api.whatsapp.com/send?text=' + encodeURIComponent(j.waToAgent));
+          window.open(url, '_blank');
+        }
+      } catch (e) {
+        alert('❌ خطأ: ' + e.message);
+      }
+    }
+
     async function loadAgentsManagerOversight() {
       try {
         const r = await fetch('/api/owner/agents-activity');
@@ -3873,9 +4125,12 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
                 <div>
                   <strong style="color:var(--sky);">${escPayHtml(a.systemNameAr)}</strong>
                   <span class="badge ${a.isActive ? 'b-emerald' : 'b-sky'}" style="font-size:10px;">${escPayHtml(a.licensePrefix)}</span>
-                  <span style="font-size:11px; color:var(--muted);">الوكيل: ${escPayHtml(a.agentTitleAr)} (<span dir="ltr">${escPayHtml(a.agentPhone)}</span>)</span>
+                  <span style="font-size:11px; color:var(--muted);">الوكيل: <strong>${escPayHtml(a.agentTitleAr)}</strong> (<span dir="ltr">${escPayHtml(a.agentPhone || '—')}</span>)</span>
                 </div>
-                <span class="badge b-amber" style="font-size:10.5px;">نقاط النشاط: ${a.activityScore || 0}</span>
+                <div style="display:flex; gap:6px; align-items:center;">
+                  <span class="badge b-amber" style="font-size:10.5px;">نقاط النشاط: ${a.activityScore || 0}</span>
+                  ${!a.isActive ? `<button type="button" class="btn btn-sm btn-sky" style="padding:3px 8px; font-size:10.5px;" onclick="switchActiveSystem('${escPayHtml(a.systemId)}')">👁️ عرض هذه المنظومة</button>` : '<span class="badge b-emerald" style="font-size:10px;">النشطة الآن</span>'}
+                </div>
               </div>
               <div style="font-size:11.5px; color:var(--muted); margin-top:4px;">
                 الموزعون: <strong>${a.distributorsCount}</strong> · المناديب: <strong>${a.repsCount}</strong> (أنشطة: ${a.repActionsCount}) · الفنيون: <strong>${a.techsCount}</strong> (إنجازات: ${a.techActionsCount}) · الصفقات المكتملة: <strong>${a.completedDealsCount}</strong> · الصافي: <strong style="color:var(--emerald);">${fmt(a.agentNetRevenue)}</strong>
@@ -4023,10 +4278,7 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
         cont.innerHTML = '<div style="font-size:12px; color:var(--muted); padding:10px;">لا توجد طلبات تأكيد دفع واردة حالياً في هذه المنظومة.</div>';
         return;
       }
-      const sysPrefix = (window.ACTIVE_SYSTEM_INFO && window.ACTIVE_SYSTEM_INFO.licensePrefix) ? window.ACTIVE_SYSTEM_INFO.licensePrefix : 'AGT2';
-      cont.innerHTML = paymentRequestsCache.map((r, idx) => {
-        const tierShort = String(r.tier || 'PRO').toUpperCase().slice(0, 3);
-        const suggestedKey = sysPrefix + '-' + tierShort + '-' + (101 + idx);
+      cont.innerHTML = paymentRequestsCache.map(r => {
         const statusHtml = r.status === 'approved'
           ? '<span class="badge b-emerald">✅ مؤكد الدفع</span>'
           : (r.status === 'rejected'
@@ -4051,15 +4303,16 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
               <div style="font-size:11.5px; color:var(--muted); margin-top:2px;">
                 الوسيلة: ${escPayHtml(r.payment_channel)}${r.payment_ref ? ' · المرجع: <code dir="ltr">' + escPayHtml(r.payment_ref) + '</code>' : ''}
               </div>
-              ${r.status === 'approved' ? `<div style="margin-top:6px; font-size:12px; color:var(--emerald);">🔑 المفتاح الصادر: <strong style="font-family:monospace;" dir="ltr">${escPayHtml(r.activation_key)}</strong></div>` : ''}
+              ${r.status === 'approved' ? `<div style="margin-top:6px; font-size:12px; color:var(--emerald);">🔑 المفتاح المُسلَّم: <strong style="font-family:monospace;" dir="ltr">${escPayHtml(r.activation_key)}</strong></div>` : ''}
               ${r.status === 'rejected' && r.notes ? `<div style="margin-top:4px; font-size:11.5px; color:var(--rose);">سبب الرفض: ${escPayHtml(r.notes)}</div>` : ''}
             </div>
             <div style="display:flex; align-items:center;">${receiptPreviewHtml}</div>
           </div>
           ${r.status === 'pending' ? `
             <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; padding-top:8px; border-top:1px dashed var(--border);">
-              <input id="prKey_${escPayHtml(r.id)}" value="${escPayHtml(suggestedKey)}" dir="ltr" style="flex:1; min-width:140px; padding:5px 8px; font-size:12px;" placeholder="مفتاح التفعيل..." />
-              <button type="button" class="btn btn-sm btn-emerald" onclick="approvePaymentRequest('${escPayHtml(r.id)}')">✔ تأكيد وإصدار المفتاح</button>
+              <input id="prKey_${escPayHtml(r.id)}" value="" dir="ltr" style="flex:1; min-width:165px; padding:5px 8px; font-size:12px;" placeholder="الصق المفتاح المستلم يدوياً من مدير الوكلاء (QLX2...)..." />
+              <button type="button" class="btn btn-sm btn-sky" onclick="requestKeyFromManagerForPayment('${escPayHtml(r.id)}')">📩 طلب المفتاح من مدير الوكلاء</button>
+              <button type="button" class="btn btn-sm btn-emerald" onclick="approvePaymentRequest('${escPayHtml(r.id)}')">✔ تأكيد وتسليم المفتاح</button>
               <button type="button" class="btn btn-sm btn-rose" onclick="rejectPaymentRequest('${escPayHtml(r.id)}')">✕ رفض</button>
             </div>
           ` : (r.status === 'approved' ? `
@@ -4074,6 +4327,12 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
     async function approvePaymentRequest(id) {
       const keyInput = document.getElementById('prKey_' + id);
       const activationKey = keyInput ? keyInput.value.trim() : '';
+      if (!activationKey) {
+        if (confirm('هذه المنظومة لا تنشئ مفاتيح آلياً.\nهل تريد إرسال طلب المفتاح الآن إلى «مدير الوكلاء» ليحضره يدوياً من صاحب المنصة؟')) {
+          await requestKeyFromManagerForPayment(id);
+        }
+        return;
+      }
       try {
         const r = await fetch('/api/payment-requests/' + encodeURIComponent(id) + '/approve', {
           method: 'POST',
@@ -4083,7 +4342,7 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
         const j = await r.json();
         if (!j.ok) return alert('❌ تعذر التأكيد: ' + (j.error || 'خطأ'));
         await load();
-        if (confirm('✅ تم تأكيد استلام الدفع وإصدار المفتاح (' + j.activationKey + ') وتوثيق الصفقة (' + j.dealNo + ').\nهل تريد فتح واتساب لإرسال المفتاح للموزع الآن؟')) {
+        if (confirm('✅ تم تأكيد استلام الدفع وتسليم المفتاح (' + j.activationKey + ') وتوثيق الصفقة (' + j.dealNo + ').\nهل تريد فتح واتساب لإرسال المفتاح للموزع الآن؟')) {
           openWaForRequest(j.request, j.waText);
         }
       } catch (e) {
@@ -4111,7 +4370,7 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
     function openWaForRequest(reqObj, customText) {
       const digits = String((reqObj && reqObj.distributor_phone) || '').replace(/[^0-9]/g, '');
       const waPhone = digits.startsWith('0') ? '2' + digits : digits;
-      const text = customText || ('✅ تم تأكيد الدفع لطلب ' + reqObj.req_code + ' وإصدار مفتاح التفعيل: ' + reqObj.activation_key + ' للعميل: ' + reqObj.customer_name);
+      const text = customText || ('✅ تم تأكيد الدفع لطلب ' + reqObj.req_code + ' وتسليم مفتاح التفعيل: ' + reqObj.activation_key + ' للعميل: ' + reqObj.customer_name);
       const url = waPhone ? ('https://wa.me/' + waPhone + '?text=' + encodeURIComponent(text)) : ('https://api.whatsapp.com/send?text=' + encodeURIComponent(text));
       window.open(url, '_blank');
     }
@@ -4135,9 +4394,9 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
         if (sel && Array.isArray(j.systems)) {
           const activeIds = new Set(j.systems.map(s => s.id));
           const isUniversalOnly = j.systems.length === 1 && j.systems[0].id === 'universal_agent';
-          let htmlOpts = `<optgroup label="✅ المنظومات المفعلة حالياً (معزولة بقاعدة بيانات مستقلة)">` +
+          let htmlOpts = `<optgroup label="✅ المنظومات والوكلاء المسجلة (منظومة لكل وكيل بقاعدة معزولة)">` +
             j.systems.map(s =>
-              `<option value="${s.id}" ${s.id === j.activeSystemId ? 'selected' : ''}>${s.nameAr} (${s.licensePrefix}) — ${s.distributorsCount} موزع · ${s.dealsCount} صفقة</option>`
+              `<option value="${s.id}" ${s.id === j.activeSystemId ? 'selected' : ''}>${s.nameAr} (${s.licensePrefix}) — الوكيل: ${s.agentInfo?.agentName || s.agentInfo?.titleAr || 'غير محدد'} · ${s.distributorsCount} موزع</option>`
             ).join('') + `</optgroup>`;
 
           if (!isUniversalOnly && Array.isArray(j.qalixSuiteIds)) {
@@ -4344,6 +4603,142 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
       } finally {
         btn.disabled = false;
         btn.innerText = prevTxt;
+      }
+    }
+
+    let currentAppLicense = null;
+    let appLicenseReadOnlyChosen = false;
+
+    function applyAppLicenseState(lic) {
+      if (!lic) return;
+      currentAppLicense = lic;
+      const badge = document.getElementById('appLicenseBadge');
+      if (badge) {
+        if (lic.isLocked) {
+          badge.className = 'btn-rose';
+          badge.innerText = lic.revoked
+            ? '🔒 الترخيص موقوف (قراءة فقط)'
+            : '🔒 انتهت التجربة (14 يوماً) — قراءة فقط · اضغط للتفعيل';
+        } else if (lic.isTrial) {
+          const days = lic.daysRemaining !== null && lic.daysRemaining !== undefined ? lic.daysRemaining : 14;
+          badge.className = 'btn-amber';
+          badge.innerText = `⏳ تجربة مجانية (متبقي ${days} يوم) · الأسعار والتفعيل`;
+        } else {
+          badge.className = 'btn-emerald';
+          badge.innerText = `✅ مرخّص: ${lic.badge || lic.displayNameAr}`;
+        }
+      }
+      if (lic.isLocked && !appLicenseReadOnlyChosen) {
+        openAppLicenseModal(false);
+      }
+    }
+
+    function openAppLicenseModal(optional = true) {
+      const lic = currentAppLicense;
+      const modal = document.getElementById('appLicenseModal');
+      if (!modal || !lic) return;
+
+      const titleEl = document.getElementById('appLicTitle');
+      const descEl = document.getElementById('appLicDesc');
+      const lockBanner = document.getElementById('appLicLockBanner');
+      const hwidEl = document.getElementById('appLicHardwareId');
+      const tiersBox = document.getElementById('appLicPricingTiers');
+      const roBtn = document.getElementById('appLicReadOnlyBtn');
+      const closeBtn = document.getElementById('appLicCloseBtn');
+      const metaBox = document.getElementById('appLicActiveMeta');
+
+      if (hwidEl) hwidEl.innerText = lic.hardwareId || '-';
+
+      if (lic.isLocked) {
+        if (titleEl) {
+          titleEl.style.color = '#f87171';
+          titleEl.innerText = lic.revoked ? '🔒 تم إيقاف ترخيص هذه النسخة' : '🔒 انتهت فترة المعاينة والتجربة المجانية (14 يوماً)';
+        }
+        if (descEl) {
+          descEl.innerText = lic.licenseError || 'كافة بيانات الموزعين والصفقات وسجلات التدقيق محفوظة ومؤمنة محلياً 100% دون أي مساس بها.';
+        }
+        if (lockBanner) lockBanner.style.display = 'block';
+        if (roBtn) roBtn.style.display = 'block';
+        if (closeBtn) closeBtn.style.display = optional ? 'inline-block' : 'none';
+      } else if (lic.isTrial) {
+        const days = lic.daysRemaining !== null && lic.daysRemaining !== undefined ? lic.daysRemaining : 14;
+        if (titleEl) {
+          titleEl.style.color = '#fbbf24';
+          titleEl.innerText = `⏳ الفترة التجريبية المجانية — متبقي ${days} يوم من أصل ${lic.trialDaysTotal || 14} يوماً`;
+        }
+        if (descEl) {
+          descEl.innerText = `بدأت التجربة بتاريخ ${lic.issuedAt || '-'} وتنتهي بتاريخ ${lic.expiresAt || '-'}. تماماً مثل منظومة كالكس ميديكال: يمكنك المعاينة الكاملة ثم تفعيل النسخة بمفتاح QLX2 الدائم أو اختيار إحدى الباقات الرسمية بالأسفل.`;
+        }
+        if (lockBanner) lockBanner.style.display = 'none';
+        if (roBtn) roBtn.style.display = 'none';
+        if (closeBtn) closeBtn.style.display = 'inline-block';
+      } else {
+        if (titleEl) {
+          titleEl.style.color = '#34d399';
+          titleEl.innerText = `✅ المنظومة مفعّلة وموثّقة رقمياً (${lic.displayNameAr})`;
+        }
+        if (descEl) {
+          descEl.innerText = `المرخّص له: ${lic.clientName || '-'} · الصلاحية: ${lic.expiresAt === 'PERPETUAL' ? 'دائمة مدى الحياة' : lic.expiresAt} · معرّف الترخيص: ${lic.licenseId || '-'}`;
+        }
+        if (lockBanner) lockBanner.style.display = 'none';
+        if (roBtn) roBtn.style.display = 'none';
+        if (closeBtn) closeBtn.style.display = 'inline-block';
+      }
+
+      if (metaBox) {
+        metaBox.innerText = `السعر الحالي للباقة المفعّلة: ${lic.price ? (Number(lic.price).toLocaleString('en-US') + ' ج.م') : 'تجربة مجانية (0 ج.م)'} · الحد الأقصى للموزعين: ${lic.maxDistributors >= 9999 ? 'بلا حدود' : lic.maxDistributors} · المنظومات المعزولة: ${lic.maxSystems >= 9999 ? 'بلا حدود' : lic.maxSystems}`;
+      }
+
+      if (tiersBox && Array.isArray(lic.editionsCatalog)) {
+        tiersBox.innerHTML = lic.editionsCatalog.map(t => `
+          <div style="border:1px solid ${lic.edition === t.key && !lic.isTrial ? 'var(--emerald)' : 'var(--border)'}; border-radius:10px; padding:10px; background:rgba(15,23,42,0.75); text-align:right;">
+            <div style="font-size:12px; font-weight:800; color:var(--sky);">${t.nameAr}</div>
+            <div style="font-size:18px; font-weight:900; color:var(--emerald); margin:4px 0;">${Number(t.price).toLocaleString('en-US')} ج.م</div>
+            <div style="font-size:11px; color:var(--muted);">• حتى ${t.maxDistributors >= 9999 ? 'موزعين بلا حدود' : t.maxDistributors + ' موزع'}<br>• حتى ${t.maxSystems >= 9999 ? 'منظومات بلا حدود' : (t.maxSystems === 1 ? 'منظومة واحدة' : t.maxSystems + ' منظومات معزولة')}</div>
+          </div>
+        `).join('');
+      }
+
+      modal.style.display = 'flex';
+    }
+
+    function copyAppHardwareId() {
+      const val = (document.getElementById('appLicHardwareId')?.innerText || '').trim();
+      if (!val || val === '-') return;
+      if (navigator.clipboard) navigator.clipboard.writeText(val).catch(() => {});
+      alert('✔ تم نسخ بصمة الجهاز:\n' + val);
+    }
+
+    function chooseAppReadOnlyMode() {
+      appLicenseReadOnlyChosen = true;
+      const modal = document.getElementById('appLicenseModal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    async function submitAppLicenseActivation() {
+      const inp = document.getElementById('appLicKeyInput');
+      const licenseKey = (inp?.value || '').trim();
+      if (!licenseKey) return alert('يرجى لصق مفتاح التفعيل أولاً (يبدأ بـ QLX2.)');
+      const btn = document.getElementById('appLicActivateBtn');
+      const prev = btn ? btn.innerText : '';
+      if (btn) { btn.disabled = true; btn.innerText = '⏳ جاري التحقق من التوقيع الرقمي...'; }
+      try {
+        const res = await fetch('/api/license', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ licenseKey })
+        });
+        const j = await res.json();
+        if (!res.ok) throw new Error(j.error || 'تعذر تفعيل المفتاح');
+        appLicenseReadOnlyChosen = false;
+        applyAppLicenseState(j.license);
+        document.getElementById('appLicenseModal').style.display = 'none';
+        alert('✅ تم تفعيل منظومة إدارة الوكلاء والموزعين بنجاح!\nالباقة: ' + (j.license?.displayNameAr || ''));
+        if (typeof loadBootstrap === 'function') loadBootstrap();
+      } catch (err) {
+        alert('❌ تعذر التفعيل: ' + err.message);
+      } finally {
+        if (btn) { btn.disabled = false; btn.innerText = prev; }
       }
     }
   </script>
@@ -4566,6 +4961,44 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
         🚀 إنشاء النسخة المصفّرة وفحصها وتجهيز ملف التحميل (.zip)
       </button>
       <div id="resellerBuildResult" class="sub-card" style="display:none; margin-top:12px; border:1px solid var(--emerald); background:rgba(16,185,129,0.1); padding:12px;"></div>
+    </div>
+  </div>
+
+  <!-- Modal: App Trial Period, Official Pricing Tiers & Signed Ed25519 Activation Key -->
+  <div id="appLicenseModal" style="display:none; position:fixed; inset:0; z-index:99999; background:rgba(2,6,23,0.92); backdrop-filter:blur(8px); align-items:center; justify-content:center; padding:16px;" onclick="if(event.target===this && currentAppLicense && !currentAppLicense.isLocked) this.style.display='none'">
+    <div style="max-width:680px; width:100%; max-height:92vh; overflow-y:auto; background:#0f172a; border:2px solid var(--amber); border-radius:16px; padding:22px; box-shadow:0 25px 60px rgba(0,0,0,0.9); direction:rtl; text-align:right;" onclick="event.stopPropagation()">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid var(--border); padding-bottom:10px;">
+        <h3 id="appLicTitle" style="margin:0; font-size:17px; color:#fbbf24; font-weight:900;">⏳ الفترة التجريبية والتفعيل</h3>
+        <button id="appLicCloseBtn" type="button" class="btn btn-sm btn-rose" onclick="document.getElementById('appLicenseModal').style.display='none'">✕ إغلاق</button>
+      </div>
+      <p id="appLicDesc" style="margin:0 0 10px; font-size:13px; color:#cbd5e1; line-height:1.65;"></p>
+      <div id="appLicActiveMeta" style="font-size:12px; color:var(--sky); font-weight:700; margin-bottom:12px; padding:8px 10px; border-radius:8px; background:rgba(56,189,248,0.08); border:1px solid rgba(56,189,248,0.25);"></div>
+
+      <div id="appLicLockBanner" style="display:none; background:rgba(239,68,68,0.12); border:1px dashed #ef4444; border-radius:10px; padding:10px 12px; margin-bottom:12px; font-size:12.5px; color:#fca5a5;">
+        المنظومة الآن <strong>للقراءة فقط</strong>: تستطيع استعراض كافة الموزعين والصفقات وتنزيل نسخة احتياطية كاملة. لتسجيل بيانات جديدة فعّل الترخيص بمفتاح QLX2 الدائم:
+      </div>
+
+      <div style="font-size:12.5px; font-weight:800; color:var(--text); margin-bottom:6px;">💰 الأسعار الرسمية المعتمدة لباقات منظومة إدارة الوكلاء والموزعين (دفع مرة واحدة · أوفلاين 100%):</div>
+      <div id="appLicPricingTiers" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(175px,1fr)); gap:8px; margin-bottom:14px;"></div>
+
+      <div style="margin-bottom:12px;">
+        <label style="font-size:12px; color:var(--muted); display:block; margin-bottom:4px;">🖥️ بصمة هذا الجهاز (أرسلها لمطوّر المنصة لإصدار مفتاح التفعيل المقفل لجهازك):</label>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <div id="appLicHardwareId" dir="ltr" style="flex:1; font-family:monospace; font-size:13px; background:#1e293b; border:1px solid #475569; border-radius:8px; padding:9px 12px; user-select:all; color:#38bdf8; font-weight:800;">-</div>
+          <button type="button" class="btn btn-sm btn-sky" onclick="copyAppHardwareId()">📋 نسخ البصمة</button>
+        </div>
+      </div>
+
+      <div style="margin-bottom:12px;">
+        <label style="font-size:12px; color:var(--muted); display:block; margin-bottom:4px;">🔑 الصق مفتاح التفعيل الموقّع (يبدأ بـ QLX2.):</label>
+        <textarea id="appLicKeyInput" rows="3" dir="ltr" placeholder="QLX2...." style="width:100%; padding:10px; border-radius:8px; background:#1e293b; color:#fff; border:1px solid #475569; font-family:monospace; font-size:12px; margin-bottom:10px;"></textarea>
+        <button id="appLicActivateBtn" type="button" class="btn btn-emerald" style="width:100%; padding:11px; font-size:14px; font-weight:800;" onclick="submitAppLicenseActivation()">
+          ✨ تفعيل ترخيص المنظومة الآن
+        </button>
+        <button id="appLicReadOnlyBtn" type="button" class="btn" style="display:none; width:100%; margin-top:8px; padding:10px; font-size:13px; font-weight:700; border:1px solid #64748b;" onclick="chooseAppReadOnlyMode()">
+          👁 متابعة العرض وتنزيل النسخ الاحتياطية (قراءة فقط)
+        </button>
+      </div>
     </div>
   </div>
 </body>

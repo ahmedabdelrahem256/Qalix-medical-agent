@@ -48,9 +48,13 @@ const {
   loadSystemsRegistry,
   createIsolatedSystem,
   selectActiveSystemInRegistry,
+  ensureQalix11SuiteInRegistry,
+  updateSystemAgentProfile,
+  openManagerHubDb,
   summarizeSystemStats
 } = require('./systems_manager');
 const { buildCleanResellerEdition } = require('./reseller_edition');
+const appLicense = require('./license');
 
 const PORT = Number(process.env.PORT) || 4000;
 let activePort = PORT;
@@ -91,7 +95,8 @@ function openSystemDb(systemId, targetDbPath) {
   return conn;
 }
 
-let systemsRegistry = loadSystemsRegistry(BASE_DATA_DIR, BASE_KITS_DIR);
+let systemsRegistry = ensureQalix11SuiteInRegistry(BASE_DATA_DIR, BASE_KITS_DIR);
+const managerHubDb = openManagerHubDb(BASE_DATA_DIR);
 let ACTIVE_SYSTEM = systemsRegistry.systems.find(s => s.id === systemsRegistry.activeSystemId) || systemsRegistry.systems[0];
 let ACTIVE_PATHS = getSystemPaths(BASE_DATA_DIR, BASE_KITS_DIR, ACTIVE_SYSTEM.id);
 let DATA_DIR = ACTIVE_PATHS.dataDir;
@@ -100,6 +105,53 @@ let OFFICIAL_PRICING = ACTIVE_SYSTEM.pricing;
 let AGENT_INFO = ACTIVE_SYSTEM.agentInfo;
 let dbPath = ACTIVE_PATHS.dbPath;
 let db = openSystemDb(ACTIVE_SYSTEM.id, dbPath);
+
+function getManagerHubProfile() {
+  const rows = managerHubDb.prepare('SELECT key, value FROM manager_settings').all();
+  const map = {};
+  for (const r of rows) map[r.key] = r.value;
+  return {
+    managerName: map.manager_name || 'مدير الوكلاء العام',
+    managerPhone: map.manager_phone || '',
+    ownerName: map.platform_owner_name || 'صاحب المنصة (سري - خاص بمدير الوكلاء فقط)',
+    ownerPhone: map.platform_owner_phone || ''
+  };
+}
+
+function getAgentVisibleManagerContact() {
+  const p = getManagerHubProfile();
+  return {
+    managerName: p.managerName,
+    managerPhone: p.managerPhone
+  };
+}
+
+function getPendingKeyRequestsCount(sysId = null) {
+  try {
+    if (sysId) {
+      return managerHubDb.prepare("SELECT COUNT(*) AS c FROM agent_key_requests WHERE system_id = ? AND status = 'pending_owner_fetch'").get(sysId).c;
+    }
+    return managerHubDb.prepare("SELECT COUNT(*) AS c FROM agent_key_requests WHERE status = 'pending_owner_fetch'").get().c;
+  } catch (_) {
+    return 0;
+  }
+}
+
+function isUniversalCleanMode() {
+  try {
+    const row = db.prepare("SELECT value FROM agent_private_settings WHERE key = 'clean_production_mode'").get();
+    return Boolean(row && row.value === '1' && ACTIVE_SYSTEM.id === 'universal_agent');
+  } catch (_) {
+    return false;
+  }
+}
+
+function getAppLicenseState() {
+  return appLicense.readLicense({
+    dataDir: BASE_DATA_DIR,
+    isUniversalClean: isUniversalCleanMode()
+  });
+}
 
 function activateRuntimeSystem(systemId) {
   systemsRegistry = loadSystemsRegistry(BASE_DATA_DIR, BASE_KITS_DIR);
@@ -696,6 +748,10 @@ function getSummaryResponse() {
 
   return {
     agent: AGENT_INFO,
+    appLicense: getAppLicenseState(),
+    agentsManagerContact: getAgentVisibleManagerContact(),
+    pendingKeyRequestsCount: getPendingKeyRequestsCount(),
+    pendingSystemKeyRequestsCount: getPendingKeyRequestsCount(ACTIVE_SYSTEM.id),
     paymentAccounts: getAgentPaymentAccounts(db, AGENT_INFO),
     pendingPaymentRequestsCount,
     activeSystem: {
@@ -876,6 +932,43 @@ const server = http.createServer(async (req, res) => {
       pathname = url.pathname;
     }
 
+    if (req.method === 'GET' && pathname === '/api/license') {
+      return sendJson(res, 200, { ok: true, license: getAppLicenseState() });
+    }
+
+    if (req.method === 'POST' && pathname === '/api/license') {
+      const body = await readJsonBody(req);
+      const token = String(body.licenseKey || body.token || '').trim();
+      if (!token) return sendJson(res, 400, { error: 'يرجى إدخال مفتاح التفعيل أولاً (يبدأ بـ QLX2.)' });
+      try {
+        const updatedLic = appLicense.activateLicense(token, {
+          dataDir: BASE_DATA_DIR,
+          isUniversalClean: isUniversalCleanMode()
+        });
+        logAudit('app_license_activated', `تفعيل ترخيص المنظومة: ${updatedLic.displayNameAr} (${updatedLic.licenseId || ''})`);
+        return sendJson(res, 200, { ok: true, license: updatedLic, summary: getSummaryResponse() });
+      } catch (err) {
+        return sendJson(res, 400, { error: err.message });
+      }
+    }
+
+    /* قفل وضع القراءة فقط عند انتهاء الـ 14 يوماً التجريبية أو إيقاف الترخيص (البيانات محفوظة بالكامل) */
+    if (req.method !== 'GET' && req.method !== 'HEAD' && req.method !== 'OPTIONS') {
+      const activeAppLic = getAppLicenseState();
+      if (activeAppLic.isLocked) {
+        const allowReadOnlyWrite =
+          pathname === '/api/license' ||
+          pathname.startsWith('/api/backups/') ||
+          pathname === '/api/systems/select';
+        if (!allowReadOnlyWrite) {
+          const lockMsg = activeAppLic.revoked
+            ? (activeAppLic.licenseError || 'تم إيقاف ترخيص هذه النسخة — المنظومة تعمل للقراءة فقط وبياناتك محفوظة كما هي.')
+            : `انتهت فترة المعاينة والتجربة المجانية (${appLicense.TRIAL_DAYS} يوماً)، والمنظومة تعمل الآن للقراءة فقط: يمكنك عرض كافة بياناتك وتنزيل نسخة احتياطية منها. لإضافة أو تعديل بيانات يرجى تفعيل مفتاح التفعيل (QLX2).`;
+          return sendJson(res, 403, { error: lockMsg, licenseLocked: true, license: activeAppLic });
+        }
+      }
+    }
+
     if (req.method === 'GET' && (pathname === '/api/bootstrap' || pathname === '/api/summary')) {
       return sendJson(res, 200, getSummaryResponse());
     }
@@ -885,6 +978,14 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (req.method === 'POST' && pathname === '/api/distributors') {
+      const activeAppLic = getAppLicenseState();
+      const existingCodes = db.prepare('SELECT code FROM distributors').all();
+      if (!activeAppLic.isTrial && activeAppLic.maxDistributors < 9999 && existingCodes.length >= activeAppLic.maxDistributors) {
+        return sendJson(res, 403, {
+          error: `باقة "${activeAppLic.displayNameAr}" تتيح حتى ${activeAppLic.maxDistributors} موزعين كحد أقصى. يرجى الترقية لإضافة موزعين إضافيين.`,
+          licenseUpgradeRequired: true
+        });
+      }
       const body = await readJsonBody(req);
       const name = String(body.name || '').trim();
       const phone = String(body.phone || '').trim();
@@ -893,7 +994,6 @@ const server = http.createServer(async (req, res) => {
       const notes = String(body.notes || '').trim();
       if (!name || !phone) return sendJson(res, 400, { error: 'اسم الموزع ورقم الهاتف مطلوبان' });
 
-      const existingCodes = db.prepare('SELECT code FROM distributors').all();
       let maxSeq = 0;
       for (const row of existingCodes) {
         const m = String(row.code || '').match(/QMA-DIST-(\d+)/i);
@@ -2003,6 +2103,203 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, 200, { ok: true, caseItem: savedCase });
     }
 
+    /* ---------------- Agents Manager (مدير الوكلاء) Main Control, Agent Assignment & Manual Key Inbox ---------------- */
+    if (req.method === 'GET' && pathname === '/api/manager/overview') {
+      systemsRegistry = loadSystemsRegistry(BASE_DATA_DIR, BASE_KITS_DIR);
+      const profile = getManagerHubProfile();
+      const keyRequests = managerHubDb.prepare('SELECT * FROM agent_key_requests ORDER BY created_at DESC LIMIT 200').all();
+      const systems = systemsRegistry.systems.map(s => {
+        const st = summarizeSystemStats(BASE_DATA_DIR, BASE_KITS_DIR, s);
+        return {
+          ...st,
+          agentName: s.agentInfo?.agentName || s.agentInfo?.titleAr || `وكيل ${s.nameAr}`,
+          agentPhone: s.agentInfo?.phone || '',
+          pendingKeyRequestsCount: getPendingKeyRequestsCount(s.id)
+        };
+      });
+      return sendJson(res, 200, {
+        ok: true,
+        activeSystemId: ACTIVE_SYSTEM.id,
+        profile,
+        hierarchy: [
+          { level: 1, role: 'صاحب المنصة (المطور)', visibility: 'مخفي تماماً — لا يعرفه ولا يتواصل معه إلا مدير الوكلاء فقط (مفاتيح التفعيل وأدوات إنشائها خارجه تماماً)' },
+          { level: 2, role: 'مدير الوكلاء (صاحب هذه اللوحة الرئيسية)', visibility: 'يرى جميع الوكلاء والمنظومات الـ 11 ويحضر المفاتيح يدوياً من صاحب المنصة — لا يعرفه إلا الوكلاء فقط' },
+          { level: 3, role: 'الوكيل (وكيل المنظومة المختارة)', visibility: 'يتواصل مع مدير الوكلاء لطلب مفاتيح التفعيل ويدير الموزعين فقط' },
+          { level: 4, role: 'الموزع', visibility: 'يعرف الوكيل فقط ويدير فريق الميدان (مندوب + فني)' },
+          { level: 5, role: 'المندوب', visibility: 'الزيارة الأولى والعرض والتعاقد وتسجيل البيانات' },
+          { level: 6, role: 'الفني', visibility: 'التركيب وتفعيل المفتاح المُسلَّم والتدريب والتسليم النهائي' }
+        ],
+        systems,
+        keyRequests
+      });
+    }
+
+    if (req.method === 'POST' && pathname === '/api/manager/profile') {
+      const body = await readJsonBody(req);
+      const upsertSetting = managerHubDb.prepare('INSERT INTO manager_settings(key, value) VALUES(?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value');
+      if (body.managerName !== undefined) upsertSetting.run('manager_name', String(body.managerName || '').trim().slice(0, 120) || 'مدير الوكلاء العام');
+      if (body.managerPhone !== undefined) upsertSetting.run('manager_phone', String(body.managerPhone || '').replace(/[^0-9+]/g, '').slice(0, 20));
+      if (body.ownerName !== undefined) upsertSetting.run('platform_owner_name', String(body.ownerName || '').trim().slice(0, 120));
+      if (body.ownerPhone !== undefined) upsertSetting.run('platform_owner_phone', String(body.ownerPhone || '').replace(/[^0-9+]/g, '').slice(0, 20));
+      logAudit('manager_profile_updated', 'تحديث بيانات تواصل مدير الوكلاء وقناته السرية مع صاحب المنصة');
+      return sendJson(res, 200, { ok: true, profile: getManagerHubProfile(), agentsManagerContact: getAgentVisibleManagerContact() });
+    }
+
+    if (req.method === 'POST' && pathname === '/api/manager/assign-agent') {
+      const body = await readJsonBody(req);
+      const systemId = String(body.systemId || ACTIVE_SYSTEM.id).trim();
+      try {
+        const updatedSys = updateSystemAgentProfile(BASE_DATA_DIR, systemId, {
+          agentName: body.agentName,
+          titleAr: body.agentTitleAr || (body.agentName ? `وكيل ${body.agentName}` : undefined),
+          phone: body.agentPhone
+        });
+        if (systemId === ACTIVE_SYSTEM.id) {
+          activateRuntimeSystem(systemId);
+        } else {
+          systemsRegistry = loadSystemsRegistry(BASE_DATA_DIR, BASE_KITS_DIR);
+        }
+        logAudit('assign_system_agent', `تعيين/تحديث الوكيل للمنظومة ${updatedSys.nameAr} (${systemId}): ${updatedSys.agentInfo?.agentName || ''} (${updatedSys.agentInfo?.phone || ''})`);
+        return sendJson(res, 200, { ok: true, system: updatedSys, summary: getSummaryResponse() });
+      } catch (err) {
+        return sendJson(res, 404, { error: err.message });
+      }
+    }
+
+    if (req.method === 'GET' && pathname === '/api/manager/key-requests') {
+      const sysFilter = String(url.searchParams.get('systemId') || '').trim();
+      const rows = sysFilter
+        ? managerHubDb.prepare('SELECT * FROM agent_key_requests WHERE system_id = ? ORDER BY created_at DESC LIMIT 200').all(sysFilter)
+        : managerHubDb.prepare('SELECT * FROM agent_key_requests ORDER BY created_at DESC LIMIT 200').all();
+      return sendJson(res, 200, {
+        ok: true,
+        requests: rows,
+        agentsManagerContact: getAgentVisibleManagerContact()
+      });
+    }
+
+    if (req.method === 'POST' && pathname === '/api/manager/key-requests') {
+      const body = await readJsonBody(req);
+      const customerName = String(body.customerName || '').trim().slice(0, 140);
+      const hardwareId = String(body.hardwareId || '').trim().toUpperCase().slice(0, 120);
+      if (!customerName) return sendJson(res, 400, { error: 'اسم العميل / المنشأة مطلوب لطلب مفتاح التفعيل من مدير الوكلاء' });
+
+      const targetSysId = String(body.systemId || ACTIVE_SYSTEM.id).trim();
+      const targetSys = systemsRegistry.systems.find(s => s.id === targetSysId) || ACTIVE_SYSTEM;
+      const tier = String(body.tier || 'professional').trim();
+      const amountPaid = Number(body.amountPaid || targetSys.pricing?.[tier]?.price || 0) || 0;
+      const distributorCode = String(body.distributorCode || '').trim().toUpperCase().slice(0, 32);
+      const distributorName = String(body.distributorName || '').trim().slice(0, 120);
+      const paymentRef = String(body.paymentRef || '').trim().slice(0, 80);
+      const notes = String(body.notes || '').trim().slice(0, 400);
+
+      const cnt = managerHubDb.prepare('SELECT COUNT(*) AS c FROM agent_key_requests').get().c;
+      const id = 'kr_' + crypto.randomBytes(6).toString('hex');
+      const reqCode = `KEYREQ-${String(cnt + 1).padStart(4, '0')}`;
+      const now = new Date().toISOString();
+      const agentName = String(body.agentName || targetSys.agentInfo?.agentName || targetSys.agentInfo?.titleAr || '').trim();
+      const agentPhone = String(body.agentPhone || targetSys.agentInfo?.phone || '').trim();
+
+      // ملاحظة صارمة: لا يُنشأ أو يُولَّد أي مفتاح داخل المنظومة؛ يظل فارغاً حتى يحضره مدير الوكلاء يدوياً من صاحب المنصة.
+      managerHubDb.prepare(`
+        INSERT INTO agent_key_requests(
+          id, req_code, system_id, system_name_ar, agent_name, agent_phone,
+          distributor_code, distributor_name, customer_name, hardware_id, tier,
+          amount_paid, payment_ref, notes, status, manual_license_key, delivered_by, created_at, delivered_at
+        ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending_owner_fetch', '', '', ?, '')
+      `).run(
+        id, reqCode, targetSys.id, targetSys.nameAr, agentName, agentPhone,
+        distributorCode, distributorName, customerName, hardwareId, tier,
+        amountPaid, paymentRef, notes, now
+      );
+
+      logAudit('key_request_to_manager', `طلب الوكيل (${agentName}) مفتاح ترخيص [${reqCode}] للمنظومة ${targetSys.nameAr} — العميل "${customerName}" بانتظار إحضاره يدوياً من مدير الوكلاء`);
+      const mgr = getAgentVisibleManagerContact();
+      const waToAgentsManager = [
+        `📩 *طلب مفتاح تفعيل موجه إلى مدير الوكلاء (${mgr.managerName})*`,
+        `• رقم الطلب: ${reqCode}`,
+        `• المنظومة: ${targetSys.nameAr} (${targetSys.id})`,
+        `• الوكيل الطالب: ${agentName}${agentPhone ? ' (' + agentPhone + ')' : ''}`,
+        `• العميل / المنشأة: ${customerName}`,
+        hardwareId ? `• بصمة الجهاز (HWID): ${hardwareId}` : null,
+        `• الباقة: ${tier} | المبلغ المسدد: ${amountPaid} ج.م`,
+        paymentRef ? `• مرجع الدفع: ${paymentRef}` : null,
+        `يرجى إحضار المفتاح يدوياً من منصة كالكس وإرساله لإتمام التسليم للوكيل.`
+      ].filter(Boolean).join('\n');
+
+      const created = managerHubDb.prepare('SELECT * FROM agent_key_requests WHERE id = ?').get(id);
+      return sendJson(res, 201, { ok: true, request: created, waToAgentsManager, agentsManagerContact: mgr });
+    }
+
+    if (req.method === 'POST' && /^\/api\/manager\/key-requests\/[^/]+\/deliver$/.test(pathname)) {
+      const id = pathname.split('/')[4];
+      const body = await readJsonBody(req);
+      const manualKey = String(body.manualLicenseKey || body.activationKey || '').trim();
+      if (!manualKey || manualKey.length < 6) {
+        return sendJson(res, 400, {
+          error: 'هذه المنظومة لا تنشئ مفاتيح آلياً — يجب على مدير الوكلاء إحضار المفتاح يدوياً من صاحب المنصة ولصقه هنا كاملاً.'
+        });
+      }
+      const existing = managerHubDb.prepare('SELECT * FROM agent_key_requests WHERE id = ?').get(id);
+      if (!existing) return sendJson(res, 404, { error: 'طلب المفتاح غير موجود' });
+
+      const mgr = getManagerHubProfile();
+      const deliveredBy = String(body.deliveredBy || mgr.managerName || 'مدير الوكلاء').trim();
+      const now = new Date().toISOString();
+      managerHubDb.prepare(`
+        UPDATE agent_key_requests SET
+          status = 'delivered_by_manager',
+          manual_license_key = ?,
+          delivered_by = ?,
+          delivered_at = ?
+        WHERE id = ?
+      `).run(manualKey, deliveredBy, now, id);
+
+      // ربط المفتاح اليدوي المُسلَّم بالسلسلة الموحدة في قاعدة بيانات المنظومة المستهدفة (إن وُجدت)
+      try {
+        const sysPaths = getSystemPaths(BASE_DATA_DIR, BASE_KITS_DIR, existing.system_id);
+        if (existing.system_id === ACTIVE_SYSTEM.id || fs.existsSync(sysPaths.dbPath)) {
+          const targetDb = existing.system_id === ACTIVE_SYSTEM.id ? db : new DatabaseSync(sysPaths.dbPath);
+          try {
+            const distRow = existing.distributor_code
+              ? targetDb.prepare('SELECT * FROM distributors WHERE UPPER(code) = ?').get(existing.distributor_code)
+              : targetDb.prepare('SELECT * FROM distributors LIMIT 1').get();
+            if (distRow) {
+              upsertUnifiedCase(targetDb, {
+                distributorId: distRow.id,
+                customerName: existing.customer_name,
+                activationKey: manualKey,
+                stage: 'tech_deploying',
+                outcome: `أحضر مدير الوكلاء المفتاح يدوياً وأرسله للوكيل [${existing.req_code}] — جاهز لتفعيل الفني`,
+                timelineEvent: {
+                  actorRole: 'agent',
+                  actorName: deliveredBy,
+                  stage: 'tech_deploying',
+                  actionText: `تسليم مفتاح التفعيل اليدوي (${existing.req_code}) عبر مدير الوكلاء`
+                }
+              });
+            }
+          } finally {
+            if (existing.system_id !== ACTIVE_SYSTEM.id) {
+              try { targetDb.close(); } catch (_) {}
+            }
+          }
+        }
+      } catch (_) {}
+
+      logAudit('manager_delivered_manual_key', `تسليم المفتاح اليدوي لطلب ${existing.req_code} (المنظومة: ${existing.system_id}) عبر مدير الوكلاء للوكيل ${existing.agent_name}`);
+      const updated = managerHubDb.prepare('SELECT * FROM agent_key_requests WHERE id = ?').get(id);
+      const waToAgent = [
+        `🔑 *تسليم مفتاح تفعيل من مدير الوكلاء (${deliveredBy})*`,
+        `• طلب رقم: ${updated.req_code}`,
+        `• المنظومة: ${updated.system_name_ar}`,
+        `• العميل: ${updated.customer_name}`,
+        `• المفتاح المُحضر يدوياً:`,
+        updated.manual_license_key
+      ].join('\n');
+      return sendJson(res, 200, { ok: true, request: updated, waToAgent });
+    }
+
     /* ---------------- Agents Manager (مدير الوكلاء) Consolidated Cross-System Oversight ---------------- */
     if (req.method === 'GET' && pathname === '/api/owner/agents-activity') {
       systemsRegistry = loadSystemsRegistry(BASE_DATA_DIR, BASE_KITS_DIR);
@@ -2123,6 +2420,14 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === 'POST' && pathname === '/api/systems') {
       const body = await readJsonBody(req);
+      const activeAppLic = getAppLicenseState();
+      systemsRegistry = loadSystemsRegistry(BASE_DATA_DIR, BASE_KITS_DIR);
+      if (!activeAppLic.isTrial && activeAppLic.maxSystems < 9999 && systemsRegistry.systems.length >= activeAppLic.maxSystems) {
+        return sendJson(res, 403, {
+          error: `باقة "${activeAppLic.displayNameAr}" تتيح حتى ${activeAppLic.maxSystems} منظومة معزولة كحد أقصى. يرجى الترقية إلى باقة أعلى لإضافة منظومات أخرى.`,
+          licenseUpgradeRequired: true
+        });
+      }
       try {
         const created = createIsolatedSystem(BASE_DATA_DIR, BASE_KITS_DIR, body);
         systemsRegistry = created.registry;

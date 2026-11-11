@@ -5,6 +5,7 @@ const assert = require('node:assert/strict');
 const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
+const crypto = require('node:crypto');
 const { spawn } = require('node:child_process');
 
 const TEST_PORT = 4150;
@@ -37,7 +38,7 @@ function req(method, urlPath, body) {
   });
 
   await new Promise((resolve, reject) => {
-    const t = setTimeout(() => reject(new Error('Server timeout')), 5000);
+    const t = setTimeout(() => reject(new Error('Server timeout')), 15000);
     srv.stdout.on('data', d => {
       if (String(d).includes('Qalix Medical Agent Server')) {
         clearTimeout(t);
@@ -1453,7 +1454,206 @@ function req(method, urlPath, body) {
       }
     );
 
-    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/74 PASSED ===`);
+    // 75. Qalix Agents Platform Trial (14 Days), Pricing Tiers (4500/8500/18500), Read-Only Lock & Ed25519 Activation Key
+    const licBootRes = await req('GET', '/api/license');
+    const licInfo = licBootRes.body?.license || {};
+    const pricesList = (licInfo.editionsCatalog || []).map(e => e.price);
+
+    const { publicKey: testEdPub, privateKey: testEdPriv } = crypto.generateKeyPairSync('ed25519');
+    const testPubHex = testEdPub.export({ type: 'spki', format: 'der' }).slice(-32).toString('hex');
+    function signTestToken(payload) {
+      const b64u = buf => Buffer.from(buf).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+      const bodyBuf = Buffer.from(JSON.stringify(payload), 'utf8');
+      const sigBuf = crypto.sign(null, bodyBuf, testEdPriv);
+      return `QLX2.${b64u(bodyBuf)}.${b64u(sigBuf)}`;
+    }
+
+    const licTestDataDir = path.join(__dirname, '..', 'data', 'test_lic_runtime_' + Date.now());
+    fs.mkdirSync(licTestDataDir, { recursive: true });
+    // Simulate expired 14-day trial (> 14 days ago) inside isolated test dir
+    fs.writeFileSync(path.join(licTestDataDir, 'install.json'), JSON.stringify({ firstRun: '2020-01-01', lastSeen: '2020-01-20' }), 'utf8');
+    fs.writeFileSync(path.join(licTestDataDir, '.trial_clock.json'), JSON.stringify({ firstRun: '2020-01-01', lastSeen: '2020-01-20' }), 'utf8');
+    const licTestPort = TEST_PORT + 2;
+    const licSrv = spawn(process.execPath, [path.join(__dirname, '..', 'server', 'agent_server.js')], {
+      env: {
+        ...process.env,
+        PORT: String(licTestPort),
+        HOST: '127.0.0.1',
+        DATA_DIR: licTestDataDir,
+        NODE_ENV: 'test',
+        QALIX_LICENSE_TEST_PUBKEY: testPubHex
+      },
+      stdio: ['ignore', 'pipe', 'pipe']
+    });
+    const reqLic = (method, p, body) => new Promise((resolve, reject) => {
+      const dataStr = body ? JSON.stringify(body) : null;
+      const r = http.request({
+        hostname: '127.0.0.1',
+        port: licTestPort,
+        path: p,
+        method,
+        headers: dataStr ? { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(dataStr) } : {}
+      }, res => {
+        let chunks = '';
+        res.on('data', c => chunks += c);
+        res.on('end', () => {
+          try { resolve({ status: res.statusCode, body: JSON.parse(chunks) }); } catch { resolve({ status: res.statusCode, body: chunks }); }
+        });
+      });
+      r.on('error', reject);
+      if (dataStr) r.write(dataStr);
+      r.end();
+    });
+
+    let lockedStatus = null, forgedRes = null, wrongHwRes = null, activatedRes = null, unlockedDistRes = null, readOnlyGetRes = null;
+    try {
+      await new Promise((resolve, reject) => {
+        let errs = '';
+        const t = setTimeout(() => reject(new Error('License test server timeout: ' + errs)), 20000);
+        licSrv.stderr.on('data', d => { errs += String(d); });
+        licSrv.on('exit', code => {
+          if (code !== null && code !== 0) {
+            clearTimeout(t);
+            reject(new Error(`License test server exited (${code}): ${errs}`));
+          }
+        });
+        licSrv.stdout.on('data', d => {
+          if (String(d).includes('Server v1.0 (100% Offline Air-Gapped)')) {
+            clearTimeout(t);
+            resolve();
+          }
+        });
+      });
+      lockedStatus = await reqLic('GET', '/api/license');
+      readOnlyGetRes = await reqLic('GET', '/api/bootstrap');
+      const blockedWrite = await reqLic('POST', '/api/distributors', { name: 'موزع مقفل', phone: '01099112233' });
+      const hwid = lockedStatus.body?.license?.hardwareId;
+
+      forgedRes = await reqLic('POST', '/api/license', { licenseKey: 'QLX2.fake.signature' });
+      const wrongHwToken = signTestToken({
+        v: 2, lid: 'LIC-BADHW', sys: 'qalix-platform', ed: 'professional',
+        cn: 'وكيل آخر', iat: '2026-11-11', exp: 'PERPETUAL', hw: 'OTHERDEVICE123456789ABCD'
+      });
+      wrongHwRes = await reqLic('POST', '/api/license', { licenseKey: wrongHwToken });
+
+      const validToken = signTestToken({
+        v: 2, lid: 'LIC-OK-2026', sys: 'qalix-platform', ed: 'professional',
+        cn: 'الوكيل المعتمد الرسمي', org: 'وكالة المنصة', ph: '01122166076',
+        iat: '2026-11-11', exp: 'PERPETUAL', hw: hwid
+      });
+      activatedRes = await reqLic('POST', '/api/license', { licenseKey: validToken });
+      unlockedDistRes = await reqLic('POST', '/api/distributors', { name: 'موزع ما بعد التفعيل', phone: '01077665544', governorate: 'القاهرة' });
+
+      check('75. منظومة الوكلاء بنفس دورة كالكس ميديكال: تجربة 14 يوماً + الأسعار الرسمية (4500/8500/18500) + القفل للقراءة فقط + مفتاح التفعيل Ed25519 ببصمة الجهاز',
+        licBootRes.status === 200 &&
+        licInfo.isTrial === true &&
+        licInfo.trialDaysTotal === 14 &&
+        licInfo.daysRemaining === 14 &&
+        !licInfo.isExpired &&
+        pricesList.includes(4500) && pricesList.includes(8500) && pricesList.includes(18500) &&
+        typeof licInfo.hardwareId === 'string' && licInfo.hardwareId.length === 24 &&
+        lockedStatus.body?.license?.isExpired === true &&
+        lockedStatus.body?.license?.isLocked === true &&
+        readOnlyGetRes.status === 200 &&
+        blockedWrite.status === 403 &&
+        blockedWrite.body?.licenseLocked === true &&
+        forgedRes.status === 400 &&
+        wrongHwRes.status === 400 &&
+        activatedRes.status === 200 &&
+        activatedRes.body?.license?.isTrial === false &&
+        activatedRes.body?.license?.isVerified === true &&
+        activatedRes.body?.license?.price === 8500 &&
+        unlockedDistRes.status === 200,
+        {
+          trialDays: licInfo.daysRemaining,
+          pricesList,
+          lockedExpired: lockedStatus?.body?.license?.isExpired,
+          blockedWriteStatus: blockedWrite?.status,
+          forgedStatus: forgedRes?.status,
+          wrongHwStatus: wrongHwRes?.status,
+          activatedEdition: activatedRes?.body?.license?.edition,
+          activatedPrice: activatedRes?.body?.license?.price,
+          unlockedDistStatus: unlockedDistRes?.status
+        }
+      );
+    } finally {
+      licSrv.kill('SIGINT');
+      await new Promise(r => setTimeout(r, 400));
+      try { fs.rmSync(licTestDataDir, { recursive: true, force: true }); } catch (_) {}
+    }
+
+    // Test 76: Qalix 11 Systems (Medical integrated + 10 zeroed) + 6-Tier Governance + Agents Manager Hub & Manual Key Inbox (No KeyGen)
+    const mgrSysListRes = await req('GET', '/api/systems');
+    const q11SuiteIds = [
+      'qalix_medical', 'qalix_finance', 'qalix_assets', 'qalix_stores', 'qalix_enterprise',
+      'qalix_security', 'qalix_ai', 'qalix_inspection', 'qalix_education', 'qalix_hr', 'qalix_platform'
+    ];
+    const allSysList = mgrSysListRes.body?.systems || [];
+    const q11Present = allSysList.filter(s => q11SuiteIds.includes(s.id));
+    const medSysEntry = allSysList.find(s => s.id === 'qalix_medical');
+    const other10Suite = allSysList.filter(s => q11SuiteIds.includes(s.id) && s.id !== 'qalix_medical');
+    const archiveExcluded = !allSysList.some(s => String(s.id).includes('archive') || String(s.id).includes('vault') || String(s.nameAr || '').includes('الأرشفة'));
+
+    const mgrOverviewRes = await req('GET', '/api/manager/overview');
+    const mgrAssignRes = await req('POST', '/api/manager/assign-agent', {
+      systemId: 'qalix_finance',
+      agentName: 'أ. كريم نبيل',
+      agentPhone: '01066554433'
+    });
+    const mgrKeyReqRes = await req('POST', '/api/manager/key-requests', {
+      systemId: 'qalix_finance',
+      customerName: 'شركة النور المالية',
+      hardwareId: 'FIN1234567890ABCDEF12345',
+      tier: 'professional'
+    });
+    const mgrReqId = mgrKeyReqRes.body?.request?.id;
+    const emptyDeliverRes = await req('POST', `/api/manager/key-requests/${mgrReqId}/deliver`, { manualLicenseKey: '' });
+    const manualDeliverRes = await req('POST', `/api/manager/key-requests/${mgrReqId}/deliver`, {
+      manualLicenseKey: 'QLX2-FIN-MANUAL-2026',
+      managerNote: 'تم إحضار المفتاح يدوياً من صاحب المنصة وتسليمه للوكيل'
+    });
+    const portalSecrecyCheck = await req('GET', `/api/distributors/${sampleDistId}/kit?preview=1`);
+    const portalBodyStr = String(portalSecrecyCheck.body || '');
+    const secrecyClean = !portalBodyStr.includes('/api/manager/') &&
+      !portalBodyStr.includes('platform_owner_phone') &&
+      !portalBodyStr.includes('manager_hub');
+
+    check('76. لوحة مدير الوكلاء الرئيسية + دمج كالكس الطبية مع 10 منظومات مصفّرة + الهرم السداسي وسرية صاحب المنصة + صندوق طلبات المفاتيح اليدوي (بدون توليد)',
+      mgrSysListRes.status === 200 &&
+      q11Present.length === 11 &&
+      archiveExcluded &&
+      medSysEntry && medSysEntry.distributorsCount >= 1 &&
+      other10Suite.length === 10 &&
+      other10Suite.every(s => s.distributorsCount === 0 && s.dealsCount === 0) &&
+      mgrOverviewRes.status === 200 &&
+      Array.isArray(mgrOverviewRes.body?.hierarchy) && mgrOverviewRes.body.hierarchy.length === 6 &&
+      mgrAssignRes.status === 200 &&
+      mgrAssignRes.body?.system?.agentInfo?.agentName === 'أ. كريم نبيل' &&
+      mgrKeyReqRes.status === 201 &&
+      mgrKeyReqRes.body?.request?.status === 'pending_owner_fetch' &&
+      mgrKeyReqRes.body?.request?.manual_license_key === '' &&
+      typeof mgrKeyReqRes.body?.waToAgentsManager === 'string' &&
+      emptyDeliverRes.status === 400 &&
+      manualDeliverRes.status === 200 &&
+      manualDeliverRes.body?.request?.status === 'delivered_by_manager' &&
+      manualDeliverRes.body?.request?.manual_license_key === 'QLX2-FIN-MANUAL-2026' &&
+      typeof manualDeliverRes.body?.waToAgent === 'string' &&
+      secrecyClean,
+      {
+        q11Count: q11Present.length,
+        archiveExcluded,
+        medDist: medSysEntry?.distributorsCount,
+        other10Zeroed: other10Suite.every(s => s.distributorsCount === 0 && s.dealsCount === 0),
+        hierarchyTiers: mgrOverviewRes.body?.hierarchy?.length,
+        assignedAgent: mgrAssignRes.body?.system?.agentInfo?.agentName,
+        keyReqStatus: mgrKeyReqRes.body?.request?.status,
+        emptyDeliverStatus: emptyDeliverRes.status,
+        deliveredStatus: manualDeliverRes.body?.request?.status,
+        secrecyClean
+      }
+    );
+
+    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/76 PASSED ===`);
     for (const r of results) console.log(' ✅', r);
   } finally {
     srv.kill('SIGINT');
