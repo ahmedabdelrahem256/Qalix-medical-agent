@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Qalix Medical Agent | لوحة تحكم وكيل منظومة كالكس ميديكال الطبية وشبكة الموزعين</title>
+  <title>Qalix Multi-System Agent | لوحة تحكم الوكيل متعددة المنظومات</title>
   <link rel="icon" type="image/svg+xml" href="/public/img/qalix-sovereign-logo.svg" />
   <style>
     :root {
@@ -273,9 +273,9 @@
           <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
             <span class="badge b-emerald">★ QALIX · ABSOLUTE SECURITY · أمان سيادي تام ★</span>
             <span class="badge b-sky">100% AIR-GAPPED FORTRESS · أوفلاين بالكامل</span>
-            <span class="badge b-amber">مشروع: Qalix Medical Agent (G:\Qalix medical agent)</span>
+            <span id="headerProjectBadge" class="badge b-amber">مشروع: منصة كالكس متعددة المنظومات</span>
           </div>
-          <h1 id="headerMainTitle" style="margin:0; font-size:24px;">لوحة تحكم: وكيل منظومة كالكس ميديكال الطبية وشبكة الموزعين</h1>
+          <h1 id="headerMainTitle" style="margin:0; font-size:24px;">لوحة تحكم: وكيل منصة كالكس وشبكة الموزعين</h1>
           <p id="headerMainSubtitle" style="margin:4px 0 0; color:var(--muted); font-size:13px;">
             واجهة زجاجية عصرية مريحة للعين · إدارة الموزعين المستقلين بنظام النسبة من السعر الثابت · نافذة المنظومات المنافسة · ركن الارتقاء والريادة
           </p>
@@ -291,12 +291,12 @@
             </select>
           </div>
           <div class="sub-card">
-            <div id="headerAgentTitle" style="font-size:12px; color:var(--muted);">وكيل منظومة كالكس ميديكال الطبية</div>
-            <div id="headerAgentPhone" style="font-size:15px; font-weight:800; color:var(--emerald);" dir="ltr">01122166076 (+20 112 216 6076)</div>
+            <div id="headerAgentTitle" style="font-size:12px; color:var(--muted);">وكيل منصة كالكس المعتمد</div>
+            <div id="headerAgentPhone" style="font-size:15px; font-weight:800; color:var(--emerald);" dir="ltr">—</div>
           </div>
           <div class="sub-card">
-            <div style="font-size:12px; color:var(--muted);">نسخة العميل v1.0 (محمية بدون أي لمس)</div>
-            <div style="font-size:14px; font-weight:800; color:var(--sky);">مفحوصة 18/18 · بصمة SHA-256 مطابقة</div>
+            <div id="headerPackageTitle" style="font-size:12px; color:var(--muted);">حزمة التشغيل المستقلة (أوفلاين 100%)</div>
+            <div id="headerPackageSub" style="font-size:14px; font-weight:800; color:var(--sky);">بنية معزولة لكل منظومة · بدون اشتراك شهري</div>
           </div>
           <div style="display:flex; gap:8px; flex-wrap:wrap;">
             <button type="button" class="btn-emerald" style="font-size:12px; padding:8px 12px;" onclick="openCardPreviewModal({ title: '📘 كتالوج تشغيل الوكيل الحصري (من أ إلى ي)', subtitle: 'دليل مصور خاص بوكيل المنظومة فقط (يعمل أوفلاين + طباعة A4)', previewUrl: '/api/catalogs/agent', downloadUrl: '/api/catalogs/agent?download=1' })">📘 كتالوج الوكيل المصور (A–Z)</button>
@@ -311,7 +311,7 @@
           <span class="badge b-sky">🧩 لوحة متعددة المنظومات المعزولة</span>
           <label for="systemSwitchSelect" style="font-size:12px; color:var(--muted); font-weight:700;">المنظومة النشطة الآن:</label>
           <select id="systemSwitchSelect" onchange="switchActiveSystem(this.value)" style="min-width:250px; padding:7px 10px; font-size:12.5px; font-weight:700; border-radius:8px;">
-            <option value="qalix_medical">منظومة كالكس ميديكال الطبية (QLX2)</option>
+            <option value="">جاري تحميل المنظومة النشطة...</option>
           </select>
           <span id="activeSystemDbBadge" class="badge b-emerald" dir="ltr" style="font-family:monospace; font-size:11px;">DB: data/agent.db · Prefix: QLX2</span>
         </div>
@@ -339,19 +339,19 @@
           <div style="font-size:12px; color:var(--muted);">نسبة من سعر البيع الرسمي الثابت</div>
         </div>
         <div class="sub-card">
-          <div style="font-size:12px; color:var(--muted);">صافي إيراد الوكيل المحصّل (01122166076)</div>
+          <div style="font-size:12px; color:var(--muted);">صافي إيراد الوكيل المحصّل (<span class="dyn-agent-phone" dir="ltr">—</span>)</div>
           <div id="kpiAgentNet" style="font-size:20px; font-weight:800; color:var(--emerald); margin-top:4px;">0 ج.م</div>
           <div id="kpiPendingNet" style="font-size:12px; color:var(--muted);">+0 ج.م قيد التحصيل</div>
         </div>
         <div class="sub-card">
-          <div style="font-size:12px; color:var(--muted);">ركن مقترحات التطوير والريادة (#1)</div>
-          <div id="kpiPropsCount" style="font-size:20px; font-weight:800; color:var(--purple); margin-top:4px;">12 محور ارتقاء</div>
-          <div style="font-size:12px; color:var(--muted);">5 أركان: المنظومة · العرض · البيع · المتابعة · الإدارة</div>
+          <div id="kpiPropsTitle" style="font-size:12px; color:var(--muted);">ركن مقترحات التطوير والريادة (#1)</div>
+          <div id="kpiPropsCount" style="font-size:20px; font-weight:800; color:var(--purple); margin-top:4px;">—</div>
+          <div id="kpiPropsSub" style="font-size:12px; color:var(--muted);">5 أركان: المنظومة · العرض · البيع · المتابعة · الإدارة</div>
         </div>
         <div class="sub-card">
-          <div style="font-size:12px; color:var(--muted);">حزم التخصصات الجاهزة (Phase 3)</div>
-          <div id="kpiPacksCount" style="font-size:20px; font-weight:800; color:var(--sky); margin-top:4px;">5 حزم طبية</div>
-          <div style="font-size:12px; color:var(--muted);">أسنان · أطفال · قلب · نساء · عيون</div>
+          <div id="kpiPacksTitle" style="font-size:12px; color:var(--muted);">المنظومات والحزم الجاهزة</div>
+          <div id="kpiPacksCount" style="font-size:20px; font-weight:800; color:var(--sky); margin-top:4px;">—</div>
+          <div id="kpiPacksSub" style="font-size:12px; color:var(--muted);">عزل كامل لكل منظومة</div>
         </div>
       </div>
     </header>
@@ -377,7 +377,7 @@
         <span style="font-size:12px; color:var(--muted); white-space:nowrap;">⚡ انتقال سريع للقسم:</span>
         <select id="quickNavSelect" onchange="quickJumpSection(this.value)" style="padding:8px 12px; font-size:12.5px;">
           <option value="pane-agent">القسم 1: إدارة الوكيل والموزعين والصفقات</option>
-          <option value="pane-excellence">القسم 2: ركن التطوير والارتقاء (#1 طبياً)</option>
+          <option value="pane-excellence" id="sec2Option">القسم 2: ركن التطوير والارتقاء (#1)</option>
           <option value="pane-market">القسم 3: نافذة المنظومات المنافسة والمقارنة</option>
           <option value="pane-specialty">القسم 4: حزم التخصصات الجاهزة للاستيراد</option>
           <option value="pane-migrator">القسم 5: أداة هجرة شيتات Excel القديمة</option>
@@ -407,7 +407,7 @@
               <span class="badge b-emerald">يولّد ملف بوابة مستقل للموزع</span>
             </div>
             <p style="font-size:12.5px; color:var(--muted); margin-top:0; min-height:36px; line-height:1.5;">
-              كل موزع يعمل كوحدة مستقلة لبيع النسخ بالسعر الثابت، مع احتساب عمولته تلقائياً، وإصدار مفتاح الترخيص مركزياً من الوكيل (01122166076).
+              كل موزع يعمل كوحدة مستقلة لبيع النسخ بالسعر الثابت، مع احتساب عمولته تلقائياً، وإصدار مفتاح الترخيص مركزياً من الوكيل (<span class="dyn-agent-phone" dir="ltr">—</span>).
             </p>
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:16px;">
               <div>
@@ -525,7 +525,7 @@
               <span class="badge b-rose">🔐 قناة سرية للوكيل فقط (صفر وصول للموزعين أو الأطباء)</span>
               <span class="badge b-emerald">تواصل مباشر مع صاحب منصة كالكس</span>
             </div>
-            <h3 style="margin:0; font-size:17px; color:var(--text);">👑 التواصل المباشر بين الوكيل (<span dir="ltr">01122166076</span>) وصاحب منصة كالكس</h3>
+            <h3 style="margin:0; font-size:17px; color:var(--text);">👑 التواصل المباشر بين الوكيل (<span class="dyn-agent-phone" dir="ltr">—</span>) وصاحب منصة كالكس</h3>
             <p style="margin:4px 0 0; font-size:12px; color:var(--muted);">
               هذه القناة محصورة تماماً داخل جهاز الوكيل فقط؛ لا يظهر رقم صاحب المنصة أو بياناته لأي موزع أو طبيب أو في أي عقد أو بوابة.
             </p>
@@ -595,7 +595,7 @@
             </div>
             <h3 style="margin:0; font-size:17px; color:var(--emerald);">📣 بطاقات تسويق طلب الموزعين واستمارة اعتماد الموزع الجديد</h3>
             <p style="margin:4px 0 0; font-size:12.5px; color:var(--muted);">
-              بطاقة إعلان احترافية لطلب موزعين بالمحافظات + بطاقة استمارة تفاعلية تُرسل للموزع الجديد لعرض نظام العمولات وملء بياناته وإرسالها لواتساب الوكيل (<span dir="ltr">01122166076</span>) للموافقة الفورية.
+              بطاقة إعلان احترافية لطلب موزعين بالمحافظات + بطاقة استمارة تفاعلية تُرسل للموزع الجديد لعرض نظام العمولات وملء بياناته ويرسلها لواتساب الوكيل (<span class="dyn-agent-phone" dir="ltr">—</span>) للموافقة الفورية.
             </p>
           </div>
           <div style="display:flex; gap:8px; flex-wrap:wrap;">
@@ -608,7 +608,7 @@
 
       <!-- Independent Distributors Table -->
       <div class="glass">
-        <h3 style="margin-top:0;">سجل الموزعين المستقلين التابعين للوكيل (01122166076)</h3>
+        <h3 style="margin-top:0;">سجل الموزعين المستقلين التابعين للوكيل (<span class="dyn-agent-phone" dir="ltr">—</span>)</h3>
         <div style="overflow-x:auto;">
           <table>
             <thead>
@@ -643,7 +643,7 @@
                 <th>الباقة</th>
                 <th>السعر الثابت</th>
                 <th>عمولة الموزع</th>
-                <th>صافي الوكيل (01122166076)</th>
+                <th>صافي الوكيل (<span class="dyn-agent-phone" dir="ltr">—</span>)</th>
                 <th>بصمة الجهاز (HWID)</th>
                 <th>الحالة / مرجع الترخيص</th>
               </tr>
@@ -698,13 +698,13 @@
       <div class="glass">
         <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:12px; margin-bottom:16px;">
           <div>
-            <span class="badge b-emerald">خارطة الطريق لجعل Qalix Medical رقم #1 في القطاع الطبي</span>
+            <span id="sec2Badge" class="badge b-emerald">خارطة الطريق لتصدر <span class="dyn-system-name">منظومة كالكس</span> للمركز #1</span>
             <h2 style="margin:6px 0 4px;">ركن اقتراحات التطوير والارتقاء بالمنظومة والعرض والبيع والمتابعة والإدارة</h2>
             <p style="margin:0; font-size:12.5px; color:var(--muted);">
               ملاحظة دستورية: الإصدار الحالي `v1.0` محمي وموقّع رقمياً ولا يُلمس أبداً؛ كافة الأدوات المساعدة والخطط هنا تعمل حول المنظومة أو تُجدول كحزم تحديث موقعة مستقبلاً.
             </p>
           </div>
-          <a href="/api/proposals/document" onclick="return previewDocLink(this);" data-preview-title="📄 وثيقة متطلبات وتطوير الإصدار القادم Qalix Medical v2.0 (A4)" data-preview-subtitle="معاينة خارطة التطوير الكاملة قبل التحميل أو الطباعة" data-download-fname="Qalix-RD-Proposals-v2.0.html" class="btn btn-sky" style="text-decoration:none;">📄 معاينة وتصدير وثيقة التطوير v2.0 (A4)</a>
+          <a id="proposalsDocLink" href="/api/proposals/document" onclick="return previewDocLink(this);" data-preview-title="📄 وثيقة متطلبات وتطوير الإصدار القادم Qalix v2.0 (A4)" data-preview-subtitle="معاينة خارطة التطوير الكاملة قبل التحميل أو الطباعة" data-download-fname="Qalix-RD-Proposals-v2.0.html" class="btn btn-sky" style="text-decoration:none;">📄 معاينة وتصدير وثيقة التطوير v2.0 (A4)</a>
         </div>
 
         <!-- 5 Pillars Filter Chips -->
@@ -732,7 +732,7 @@
             <input id="pImpact" placeholder="الأثر المتوقع (مثال: مضاعفة المبيعات)" value="أثر استراتيجي مرتفع" />
             <button class="btn" onclick="addProposal()">حفظ المقترح في السجل</button>
           </div>
-          <textarea id="pDesc" rows="2" placeholder="تفاصيل التنفيذ وكيف يخدم تصدر كالكس ميديكال للمركز الأول..." style="margin-top:8px;"></textarea>
+          <textarea id="pDesc" rows="2" placeholder="تفاصيل التنفيذ وكيف يخدم تصدر المنظومة للمركز الأول..." style="margin-top:8px;"></textarea>
         </div>
 
         <!-- Proposals Cards Grid -->
@@ -747,7 +747,7 @@
         <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:12px; margin-bottom:14px;">
           <div>
             <span class="badge b-amber">دليل الوكيل والموزع لمواجهة أنظمة السوق والسوشيال ميديا</span>
-            <h2 style="margin:6px 0 4px;">نافذة المنظومات المنافسة: مقارنة موجزة وحاسمة مع كالكس ميديكال</h2>
+            <h2 id="compHeroHeading" style="margin:6px 0 4px;">نافذة المنظومات المنافسة: مقارنة موجزة وحاسمة مع <span class="dyn-system-name">كالكس</span></h2>
             <p style="margin:0; font-size:12.5px; color:var(--muted);">
               مقارنة مركزة لأشهر 15 نظاماً ومنصة على فيسبوك وإنستجرام وتيك توك ومتاجر التطبيقات (السعر، المزايا، الثغرات، والرد الجاهز).
             </p>
@@ -761,14 +761,14 @@
 
         <!-- Interactive Financial Savings Calculator vs Selected Competitor -->
         <div class="sub-card" style="margin-bottom:20px; border-color:rgba(16,185,129,0.4);">
-          <h3 style="margin:0 0 10px; font-size:15px; color:var(--emerald);">💰 حاسبة التوفير المالي للطبيب (كالكس ميديكال مقابل الأنظمة المنافسة خلال 3 سنوات):</h3>
+          <h3 id="compCalcTitle" style="margin:0 0 10px; font-size:15px; color:var(--emerald);">💰 حاسبة التوفير المالي (<span class="dyn-system-name">كالكس</span> مقابل الأنظمة المنافسة خلال 3 سنوات):</h3>
           <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px; align-items:end;">
             <div>
-              <label style="font-size:12px; color:var(--muted);">اختر المنظومة المنافسة التي يسأل عنها الطبيب:</label>
+              <label style="font-size:12px; color:var(--muted);">اختر المنظومة المنافسة التي يسأل عنها العميل:</label>
               <select id="simComp" onchange="runCompSim()"></select>
             </div>
             <div>
-              <label style="font-size:12px; color:var(--muted);">باقة كالكس ميديكال المقترحة للطبيب:</label>
+              <label id="compTierLabel" style="font-size:12px; color:var(--muted);">باقة <span class="dyn-system-name">كالكس</span> المقترحة:</label>
               <select id="simQalix" onchange="runCompSim()">
                 <option value="4500">الباقة الأساسية — 4,500 ج.م (دفعة واحدة مدى الحياة)</option>
                 <option value="8500" selected>الباقة التخصصية — 8,500 ج.م (دفعة واحدة مدى الحياة)</option>
@@ -792,13 +792,13 @@
 
       <!-- Master Head-to-Head Matrix Table -->
       <div class="glass">
-        <h3 style="margin-top:0;">جدول المقارنة الفنية والمالية الشامل (كالكس ميديكال في مواجهة المنافسين)</h3>
+        <h3 id="compTableTitle" style="margin-top:0;">جدول المقارنة الفنية والمالية الشامل (<span class="dyn-system-name">منظومة كالكس</span> في مواجهة المنافسين)</h3>
         <div style="overflow-x:auto;">
           <table>
             <thead>
               <tr>
                 <th>وجه المقارنة</th>
-                <th style="color:var(--emerald);">★ منظومة كالكس الطبية (Qalix Medical v1.0)</th>
+                <th id="compTableBrandCol" style="color:var(--emerald);">★ <span class="dyn-system-name">منظومة كالكس</span></th>
                 <th>طَبَّبَ (Tabbaba)</th>
                 <th>طبيب بلس (Tabeeb+)</th>
                 <th>أوركا (ORCAA) / أميدرا</th>
@@ -991,7 +991,7 @@
           <div>
             <h2 style="margin:0; font-size:18px; color:var(--accent);">💬 كتالوج رسائل واتساب البيعية السريعة (One-Click WhatsApp Scripts)</h2>
             <p style="margin:4px 0 0; font-size:12.5px; color:var(--muted);">
-              نصوص بيعية مدروسة مخصصة للرد على اعتراضات الأطباء، جاهزة للإرسال المباشر أو النسخ برقم الوكيل 01122166076:
+              نصوص بيعية مدروسة جاهزة للإرسال المباشر أو النسخ برقم الوكيل <span class="dyn-agent-phone" dir="ltr">—</span>:
             </p>
           </div>
           <div style="display:flex; gap:8px; align-items:center;">
@@ -1011,7 +1011,7 @@
             <span class="badge b-amber">توسيع شبكة الموزعين</span>
             <h2 style="margin:6px 0 4px; font-size:18px; color:var(--amber);">📣 بطاقة تسويق طلب موزعين &amp; استمارة بيانات الموزع الجديد</h2>
             <p style="margin:0; font-size:12.5px; color:var(--muted);">
-              انشر بطاقة طلب الموزعين (A4) أو أرسل بطاقة التقديم التفاعلية للموزع الجديد ليقرأ شرائح العمولة ويملأ بياناته ويرسلها لواتساب الوكيل (01122166076) للموافقة.
+              انشر بطاقة طلب الموزعين (A4) أو أرسل بطاقة التقديم التفاعلية للموزع الجديد ليقرأ شرائح العمولة ويملأ بياناته ويرسلها لواتساب الوكيل (<span class="dyn-agent-phone" dir="ltr">—</span>) للموافقة.
             </p>
           </div>
           <div style="display:flex; gap:8px; flex-wrap:wrap;">
@@ -1082,7 +1082,7 @@
               <strong id="calcDistTotal" style="color:var(--amber); font-size:15px;">0 ج.م</strong>
             </div>
             <div style="display:flex; justify-content:space-between;">
-              <span>صافي إيراد الوكيل (01122166076):</span>
+              <span>صافي إيراد الوكيل (<span class="dyn-agent-phone" dir="ltr">—</span>):</span>
               <strong id="calcAgentTotal" style="color:var(--emerald); font-size:15px;">0 ج.م</strong>
             </div>
           </div>
@@ -1877,6 +1877,34 @@
 
     function render(data) {
       window.lastSummaryDistributors = data.distributors || [];
+      window.ACTIVE_AGENT_INFO = data.agent || {};
+      window.ACTIVE_SYSTEM_INFO = data.activeSystem || {};
+      const sysObj = data.activeSystem || {};
+      const sysId = sysObj.id || 'qalix_medical';
+      const sysName = sysObj.nameAr || 'منظومة كالكس';
+      const isMedical = sysId === 'qalix_medical';
+      const agentPhone = (data.agent && data.agent.phone) ? data.agent.phone : '01000000000';
+
+      document.title = (sysObj.projectName || data.agent?.projectName || 'Qalix Multi-System Agent') + ' | لوحة تحكم: ' + sysName;
+      document.querySelectorAll('.dyn-agent-phone').forEach(el => { el.innerText = agentPhone; });
+      document.querySelectorAll('.dyn-system-name').forEach(el => { el.innerText = sysName; });
+
+      const projBadge = document.getElementById('headerProjectBadge');
+      if (projBadge) {
+        projBadge.innerText = `منظومة: ${sysObj.projectName || 'Qalix Platform'} (${sysObj.licensePrefix || 'QLX2'})`;
+      }
+      const pkgTitle = document.getElementById('headerPackageTitle');
+      const pkgSub = document.getElementById('headerPackageSub');
+      if (pkgTitle && pkgSub) {
+        if (isMedical && data.agent?.packageSha256) {
+          pkgTitle.innerText = 'نسخة العميل v1.0 (محمية بدون أي لمس)';
+          pkgSub.innerText = 'مفحوصة 18/18 · بصمة SHA-256 مطابقة';
+        } else {
+          pkgTitle.innerText = 'حزمة العمل المستقلة (أوفلاين 100%)';
+          pkgSub.innerText = `قاعدة معزولة (${sysId}) · بدون اشتراك شهري`;
+        }
+      }
+
       if (data.activeSystem) {
         const h1 = document.getElementById('headerMainTitle');
         const sub = document.getElementById('headerMainSubtitle');
@@ -1890,6 +1918,29 @@
         const ap = document.getElementById('headerAgentPhone');
         if (at && data.agent.titleAr) at.innerText = data.agent.titleAr;
         if (ap && data.agent.phone) ap.innerText = `${data.agent.phone} (${data.agent.intlPhone || '+2' + data.agent.phone})`;
+      }
+      const msAgentInp = document.getElementById('msAgentPhone');
+      if (msAgentInp && (!msAgentInp.dataset.touched)) msAgentInp.value = agentPhone;
+
+      const sec2Opt = document.getElementById('sec2Option');
+      if (sec2Opt) sec2Opt.innerText = isMedical ? 'القسم 2: ركن التطوير والارتقاء (#1 طبياً)' : `القسم 2: ركن التطوير والارتقاء (${sysName})`;
+      const kpiPacksTitle = document.getElementById('kpiPacksTitle');
+      const kpiPacksCount = document.getElementById('kpiPacksCount');
+      const kpiPacksSub = document.getElementById('kpiPacksSub');
+      if (kpiPacksTitle && kpiPacksCount && kpiPacksSub) {
+        if (isMedical) {
+          kpiPacksTitle.innerText = 'حزم التخصصات الجاهزة (Phase 3)';
+          kpiPacksCount.innerText = `${data.kpis?.specialtyPacksCount || 5} حزم طبية`;
+          kpiPacksSub.innerText = 'أسنان · أطفال · قلب · نساء · عيون';
+        } else {
+          kpiPacksTitle.innerText = 'المنظومات المعزولة المسجلة';
+          kpiPacksCount.innerText = `${data.systemsCount || 1} منظومة نشطة`;
+          kpiPacksSub.innerText = 'كل منظومة بملف وبيانات مستقلة 100%';
+        }
+      }
+      const propDocLink = document.getElementById('proposalsDocLink');
+      if (propDocLink) {
+        propDocLink.dataset.previewTitle = `📄 وثيقة متطلبات وتطوير ${sysName} v2.0 (A4)`;
       }
       if (data.pricing) {
         const tierSel = document.getElementById('dlTier');
@@ -2213,7 +2264,7 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
         bcSummary.innerHTML = `
           <div style="font-weight:bold; color:var(--sky); margin-bottom:8px;">${mkt.battleCardData.title}</div>
           <table style="width:100%; font-size:11.5px;">
-            <thead><tr><th>الميزة / وجه المقارنة</th><th>منظومة كالكس ميديكال</th><th>الأنظمة المنافسة</th></tr></thead>
+            <thead><tr><th>الميزة / وجه المقارنة</th><th>${window.ACTIVE_SYSTEM_INFO?.nameAr || 'منظومة كالكس'}</th><th>الأنظمة المنافسة</th></tr></thead>
             <tbody>
               ${mkt.battleCardData.comparisonPoints.map(p => `
                 <tr>
@@ -2884,9 +2935,11 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
       const dist = list.find(d => d.id === distId);
       if (!dist) return alert('بيانات الموزع غير محملة بعد');
       const waPhone = normalizeEgWaPhone(dist.phone);
+      const sysLabel = window.ACTIVE_SYSTEM_INFO?.nameAr || 'منظومة كالكس';
+      const agPhone = window.ACTIVE_AGENT_INFO?.phone || '01000000000';
       const msg = [
         `السلام عليكم أ/ ${dist.name} (${dist.code}) 🌟`,
-        `معكم وكيل منظومة كالكس ميديكال الطبية (01122166076).`,
+        `معكم وكيل ${sysLabel} (${agPhone}).`,
         ``,
         `مرفق لحضرتك ملف «بوابة الموزع المستقلة» الخاص بكم (${dist.code}-Standalone-Kit.html) بنسبة عمولة ${dist.commission_rate}% على الأسعار الرسمية الموحدة:`,
         `• الباقة الأساسية: 4,500 ج.م`,
@@ -2938,9 +2991,11 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
       }
       const waPhone = normalizeEgWaPhone(rawPhone);
       const fname = opts.downloadFilename || 'الملف المرفق';
+      const sysLabel = window.ACTIVE_SYSTEM_INFO?.nameAr || 'منظومة كالكس';
+      const agPhone = window.ACTIVE_AGENT_INFO?.phone || '01000000000';
       const msg = [
         distName ? `السلام عليكم أ/ ${distName}${distCode ? ' (' + distCode + ')' : ''} 🌹` : 'السلام عليكم شريكنا العزيز 🌹',
-        `معكم وكيل منظومة كالكس ميديكال الطبية (01122166076).`,
+        `معكم وكيل ${sysLabel} (${agPhone}).`,
         ``,
         `📄 أرسل لحضرتك الآن: *${title}*`,
         `📎 اسم الملف المرفق: ${fname}`,
@@ -3452,8 +3507,9 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
       const clinicRef = (document.getElementById('ownerClinicRef')?.value || '').trim();
       const hwidRef = (document.getElementById('ownerHwidRef')?.value || '').trim();
       const body = (document.getElementById('ownerMsgBody')?.value || '').trim();
+      const agPhone = window.ACTIVE_AGENT_INFO?.phone || '01000000000';
       const lines = [
-        `👑 *رسالة مباشرة من الوكيل (01122166076) إلى ${ownerName}*`,
+        `👑 *رسالة مباشرة من الوكيل (${agPhone}) إلى ${ownerName}*`,
         `━━━━━━━━━━━━━━━━━━━━`,
         `📌 *الموضوع:* ${catText}`
       ];
@@ -3556,7 +3612,7 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
       const nameAr = (document.getElementById('msNameAr')?.value || '').trim();
       const subtitleAr = (document.getElementById('msSubtitleAr')?.value || '').trim();
       const licensePrefix = (document.getElementById('msPrefix')?.value || 'QLX2').trim().toUpperCase();
-      const agentPhone = (document.getElementById('msAgentPhone')?.value || '01122166076').trim();
+      const agentPhone = (document.getElementById('msAgentPhone')?.value || window.ACTIVE_AGENT_INFO?.phone || '01000000000').trim();
       const megaTrialUrl = (document.getElementById('msMegaUrl')?.value || '').trim();
       const basicPrice = Number(document.getElementById('msPriceBasic')?.value || 4000);
       const proPrice = Number(document.getElementById('msPricePro')?.value || 8500);
@@ -3770,6 +3826,7 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
           <label style="font-size:12px; color:var(--muted);">اختر قالب منظومة كالكس جاهز (أو خصص من الصفر):</label>
           <select id="msPreset" onchange="applySystemPresetForm(this.value)" style="padding:7px; font-size:12.5px;">
             <option value="">— منظومة مخصصة بالكامل —</option>
+            <option value="qalix_medical">🏥 منظومة كالكس ميديكال الطبية (QLX2)</option>
             <option value="qalix_pharmacy">💊 منظومة كالكس فارما للصيدليات (QPH2)</option>
             <option value="qalix_pos">🛒 منظومة كالكس كاشير ونقاط البيع (QPS2)</option>
             <option value="qalix_erp">🏭 منظومة كالكس ERP للشركات (QER2)</option>
@@ -3806,7 +3863,7 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
         </div>
         <div>
           <label style="font-size:12px; color:var(--muted);">رقم واتساب الوكيل لهذه المنظومة:</label>
-          <input id="msAgentPhone" dir="ltr" value="01122166076" style="padding:6px; font-size:12px;" />
+          <input id="msAgentPhone" dir="ltr" value="" placeholder="010..." oninput="this.dataset.touched='1'" style="padding:6px; font-size:12px;" />
         </div>
         <div style="grid-column:1 / -1;">
           <label style="font-size:12px; color:var(--muted);">رابط النسخة التجريبية لهذه المنظومة (اختياري):</label>

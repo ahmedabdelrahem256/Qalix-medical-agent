@@ -31,6 +31,18 @@ const DEFAULT_AGENT_INFO = {
 };
 
 const SYSTEM_PRESETS = {
+  qalix_platform: {
+    id: 'qalix_platform',
+    nameAr: 'منصة كالكس الشاملة (متعددة المنظومات)',
+    subtitleAr: 'إدارة الموزعين المستقلين والمبيعات بنظام السعر الموحد والعمل 100% أوفلاين',
+    projectName: 'Qalix Multi-System Platform',
+    licensePrefix: 'QLX2',
+    pricing: {
+      basic:        { id: 'basic',        nameAr: 'الباقة الأساسية (نشاط / فرع فردي)',            price: 4500,  maxDoctors: 2,  maxUsers: 4 },
+      professional: { id: 'professional', nameAr: 'الباقة المتقدمة (الأنشطة والأفرع النشطة)',     price: 8500,  maxDoctors: 5,  maxUsers: 12 },
+      enterprise:   { id: 'enterprise',   nameAr: 'باقة المؤسسات والفروع الكبرى (Enterprise)',     price: 18500, maxDoctors: 99, maxUsers: 99 }
+    }
+  },
   qalix_medical: {
     id: 'qalix_medical',
     nameAr: 'منظومة كالكس ميديكال الطبية',

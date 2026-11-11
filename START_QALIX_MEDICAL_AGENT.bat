@@ -8,6 +8,6 @@ echo   - المسار المعتمد على ويندوز: G:\Qalix medical agent
 echo   - تعمل 100%% أوفلاين بالكامل (Air-Gapped) بدون أي تبعيات خارجية
 echo ============================================================================
 cd /d "%~dp0"
-start "" /b cmd /c "timeout /t 1 /nobreak >nul && start http://127.0.0.1:4000"
+set AUTO_OPEN_BROWSER=1
 node "server\agent_server.js"
 pause

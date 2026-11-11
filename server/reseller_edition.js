@@ -56,9 +56,7 @@ function buildCleanResellerEdition(options = {}) {
   copyDirFiltered(path.join(rootDir, 'server'), path.join(editionDir, 'server'));
 
   const safeRootFiles = [
-    'START_QALIX_MEDICAL_AGENT.bat',
-    'CREATE_BACKUP.bat',
-    'DELIVERY_QALIX_MEDICAL_AGENT.md'
+    'CREATE_BACKUP.bat'
   ];
   for (const fname of safeRootFiles) {
     const srcFile = path.join(rootDir, fname);
@@ -66,6 +64,23 @@ function buildCleanResellerEdition(options = {}) {
       fs.copyFileSync(srcFile, path.join(editionDir, fname));
     }
   }
+
+  // Write clean neutral Windows startup launcher (with auto-port fallback + auto-open browser after listen)
+  const startBat = [
+    '@echo off',
+    'chcp 65001 >nul',
+    'title Qalix Multi-System Agent — لوحة الوكيل متعددة المنظومات',
+    'echo ============================================================================',
+    'echo   Qalix Multi-System Agent — النسخة التجارية المصفّرة',
+    'echo   تعمل 100%% أوفلاين بالكامل (Air-Gapped) بدون أي تبعيات خارجية',
+    'echo ============================================================================',
+    'cd /d "%~dp0"',
+    'set AUTO_OPEN_BROWSER=1',
+    'node "server\\agent_server.js"',
+    'pause',
+    ''
+  ].join('\r\n');
+  fs.writeFileSync(path.join(editionDir, 'START_QALIX_AGENT.bat'), startBat, 'utf8');
 
   // Legal docs (~3MB, helpful for new buyers)
   const legalSrc = path.join(rootDir, 'الوثائق_القانونية_والتسليم');
@@ -96,30 +111,35 @@ function buildCleanResellerEdition(options = {}) {
   const buyerTitleAr = String(options.buyerAgentTitleAr || 'وكيل منظومة كالكس المعتمد').trim() || 'وكيل منظومة كالكس المعتمد';
   const buyerOwnerName = String(options.buyerOwnerName || 'صاحب منصة كالكس').trim() || 'صاحب منصة كالكس';
 
+  const defaultPresetId = (options.defaultSystemId && SYSTEM_PRESETS[options.defaultSystemId])
+    ? options.defaultSystemId
+    : 'qalix_platform';
+  const defaultPreset = SYSTEM_PRESETS[defaultPresetId];
+
   const buyerAgentInfo = buildAgentInfoFromSystem({
-    projectName: 'Qalix Multi-System Agent',
+    projectName: defaultPreset.projectName || 'Qalix Multi-System Agent',
     titleAr: buyerTitleAr,
     phone: buyerPhone,
     facebookPageUrl: String(options.facebookPageUrl || DEFAULT_AGENT_INFO.facebookPageUrl),
-    megaTrialUrl: String(options.megaTrialUrl !== undefined ? options.megaTrialUrl : DEFAULT_AGENT_INFO.megaTrialUrl),
-    packageSha256: DEFAULT_AGENT_INFO.packageSha256
+    megaTrialUrl: String(options.megaTrialUrl !== undefined ? options.megaTrialUrl : ''),
+    packageSha256: ''
   }, buyerTitleAr);
 
   const primaryManifest = {
-    id: 'qalix_medical',
-    nameAr: SYSTEM_PRESETS.qalix_medical.nameAr,
-    subtitleAr: SYSTEM_PRESETS.qalix_medical.subtitleAr,
-    projectName: 'Qalix Multi-System Agent',
-    licensePrefix: 'QLX2',
+    id: defaultPreset.id,
+    nameAr: defaultPreset.nameAr,
+    subtitleAr: defaultPreset.subtitleAr,
+    projectName: defaultPreset.projectName || 'Qalix Multi-System Agent',
+    licensePrefix: defaultPreset.licensePrefix || 'QLX2',
     isPrimaryDefault: true,
     createdAt: new Date().toISOString(),
     agentInfo: buyerAgentInfo,
-    pricing: JSON.parse(JSON.stringify(DEFAULT_MEDICAL_PRICING))
+    pricing: JSON.parse(JSON.stringify(defaultPreset.pricing || DEFAULT_MEDICAL_PRICING))
   };
 
   const systemsRegistry = {
     schemaVersion: '1.0',
-    activeSystemId: 'qalix_medical',
+    activeSystemId: primaryManifest.id,
     updatedAt: new Date().toISOString(),
     systems: [primaryManifest]
   };
@@ -144,7 +164,7 @@ function buildCleanResellerEdition(options = {}) {
   // 4. Optional additional clean system presets (zero data, separate DB folders)
   const extraPresets = Array.isArray(options.extraSystemPresets) ? options.extraSystemPresets : [];
   for (const presetId of extraPresets) {
-    if (presetId && presetId !== 'qalix_medical' && SYSTEM_PRESETS[presetId]) {
+    if (presetId && presetId !== primaryManifest.id && SYSTEM_PRESETS[presetId]) {
       createIsolatedSystem(dataDest, kitsDest, {
         presetId,
         agentPhone: buyerPhone,
@@ -161,7 +181,7 @@ function buildCleanResellerEdition(options = {}) {
     '====================================================================',
     '',
     '1. للتشغيل المباشر على ويندوز:',
-    '   شغّل ملف START_QALIX_MEDICAL_AGENT.bat أو نفّذ: node server/agent_server.js',
+    '   شغّل ملف START_QALIX_AGENT.bat أو نفّذ: node server/agent_server.js',
     '',
     '2. حالة البيانات الابتدائية:',
     '   - هذه النسخة مصفّرة تماماً وجاهزة للبيع والتسليم (0 موزعين، 0 صفقات، 0 حجز نطاق).',
@@ -214,7 +234,7 @@ function buildCleanResellerEdition(options = {}) {
     zipPath: options.skipZip !== true ? zipPath : null,
     zipSizeBytes,
     zipSizeMB: (zipSizeBytes / (1024 * 1024)).toFixed(2),
-    systemsIncluded: [primaryManifest.id, ...extraPresets.filter(p => p !== 'qalix_medical' && SYSTEM_PRESETS[p])],
+    systemsIncluded: [primaryManifest.id, ...extraPresets.filter(p => p !== primaryManifest.id && SYSTEM_PRESETS[p])],
     verification
   };
 }

@@ -1156,7 +1156,7 @@ function req(method, urlPath, body) {
       await new Promise((resolve, reject) => {
         const t = setTimeout(() => reject(new Error('Clean Reseller Edition server timeout')), 6000);
         cleanSrv.stdout.on('data', d => {
-          if (String(d).includes('Qalix Medical Agent Server')) {
+          if (String(d).includes('Server v1.0 (100% Offline Air-Gapped)')) {
             clearTimeout(t);
             resolve();
           }
@@ -1176,12 +1176,29 @@ function req(method, urlPath, body) {
           res.on('end', () => resolve({ status: res.statusCode, body: JSON.parse(b) }));
         }).on('error', reject);
       });
+      var cleanDashHtml = await new Promise((resolve, reject) => {
+        http.get({ hostname: '127.0.0.1', port: cleanPort, path: '/' }, res => {
+          let b = '';
+          res.on('data', c => b += c);
+          res.on('end', () => resolve({ status: res.statusCode, body: b }));
+        }).on('error', reject);
+      });
     } finally {
       cleanSrv.kill('SIGINT');
       await new Promise(r => setTimeout(r, 400));
     }
 
-    check('71. تصدير نسخة وكلاء متعددة المنظومات مصفّرة البيانات وجاهزة للبيع وتشغيلها الفعلي بدون أي بيانات تجريبية',
+    const hasNeutralBat = fs.existsSync(path.join(ed.folderPath, 'START_QALIX_AGENT.bat')) && !fs.existsSync(path.join(ed.folderPath, 'START_QALIX_MEDICAL_AGENT.bat'));
+    const cleanHtmlClean = cleanBootRes &&
+      cleanBootRes.body.activeSystem.id === 'qalix_platform' &&
+      !cleanBootRes.body.activeSystem.nameAr.includes('الطبية') &&
+      !cleanBootRes.body.agent.titleAr.includes('الطبية') &&
+      cleanBootRes.body.proposals.every(p => p.id.startsWith('gen_')) &&
+      cleanDashHtml && cleanDashHtml.status === 200 &&
+      !cleanDashHtml.body.includes('G:\\Qalix medical agent') &&
+      !cleanDashHtml.body.includes('01122166076');
+
+    check('71. تصدير نسخة وكلاء متعددة المنظومات مصفّرة البيانات وجاهزة للبيع وتشغيلها الفعلي بدون أي بيانات تجريبية أو عناوين طبية مقيدة',
       buildEditionRes.status === 201 &&
       ed.verification.distributors === 0 &&
       ed.verification.deals === 0 &&
@@ -1191,6 +1208,8 @@ function req(method, urlPath, body) {
       ed.verification.kitsHtmlCount === 0 &&
       dlZipRes.status === 200 &&
       dlZipRes.bytes > 10000 &&
+      hasNeutralBat &&
+      cleanHtmlClean &&
       cleanBootRes && cleanBootRes.status === 200 &&
       cleanBootRes.body.distributors.length === 0 &&
       cleanBootRes.body.deals.length === 0 &&
@@ -1200,8 +1219,9 @@ function req(method, urlPath, body) {
       {
         verification: ed?.verification,
         zipBytes: dlZipRes?.bytes,
-        cleanDistCount: cleanBootRes?.body?.distributors?.length,
-        cleanDealsCount: cleanBootRes?.body?.deals?.length,
+        hasNeutralBat,
+        cleanActiveSys: cleanBootRes?.body?.activeSystem?.id,
+        cleanSysTitle: cleanBootRes?.body?.activeSystem?.nameAr,
         cleanAgentPhone: cleanBootRes?.body?.agent?.phone,
         cleanSystems: cleanSysRes?.body?.systems?.map(s => `${s.id}:${s.distributorsCount}/${s.dealsCount}`)
       }

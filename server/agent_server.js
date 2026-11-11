@@ -42,6 +42,7 @@ const {
 const {
   SYSTEM_PRESETS,
   initSystemSchema,
+  seedGenericSystemProposals,
   getSystemPaths,
   loadSystemsRegistry,
   createIsolatedSystem,
@@ -162,48 +163,48 @@ function seedInitialData(targetDb) {
   logAudit('system_init', 'تأسيس قاعدة بيانات مشروع Qalix Medical Agent بنظام السعر الثابت ونسب الموزعين');
 }
 
-/* Seed initial sample distributors if empty (unless clean production mode is enabled) */
+/* Seed initial sample distributors only for medical demo mode (when clean production mode is not set) */
 const cleanProdRow = db.prepare("SELECT value FROM agent_private_settings WHERE key = 'clean_production_mode'").get();
 const distCount = db.prepare('SELECT COUNT(*) AS n FROM distributors').get().n;
-if (distCount === 0 && (!cleanProdRow || cleanProdRow.value !== '1')) {
+if (ACTIVE_SYSTEM.id === 'qalix_medical' && distCount === 0 && (!cleanProdRow || cleanProdRow.value !== '1')) {
   seedInitialData(db);
 }
 
-/* Seed initial Excellence & #1 Leadership Proposals if empty */
+/* Seed Excellence Proposals according to active system identity */
 const propCount = db.prepare('SELECT COUNT(*) AS n FROM excellence_proposals').get().n;
-if (propCount === 0) {
-  const now = new Date().toISOString();
-  const seedProps = [
-    // Pillar 1: الارتقاء بالمنظومة والمنتج (بدون المساس بالإصدار الحالي v1.0)
-    { id: 'prop_01', pillar: 'product', title: 'أداة خارجية لتحويل شيتات Excel القديمة للعيادات إلى ملف استيراد جاهز', description: 'بما أن الإصدار الحالي v1.0 ثابت وموقع رقمياً ولا يُلمس، يوفر الوكيل أداة مستقلة تحول ملفات المرضى والأدوية القديمة من Excel إلى صيغة استيراد المنظومة في ثوانٍ لكسر حاجز خوف الطبيب من نقل بياناته.', impact: 'يضاعف سرعة إغلاق الصفقات 3x', priority: 'أولوية قصوى', status: 'جاهز للتنفيذ في حزمة الوكيل' },
-    { id: 'prop_02', pillar: 'product', title: 'مكتبة قوالب تخصصية جاهزة للاستيراد (أسنان، أطفال، نساء، باطنة، عيون)', description: 'ملفات إعدادات وأدوية وخدمات جاهزة لكل تخصص طبي يستوردها الموزع للطبيب عند التثبيت، فيجد الطبيب 200 دواء شائع في تخصصه وقائمة خدماته جاهزة من أول دقيقة بدون إدخال يدوي.', impact: 'إبهار فوري للطبيب', priority: 'أولوية قصوى', status: 'معتمد للتنفيذ' },
-    { id: 'prop_03', pillar: 'product', title: 'حزمة الهاردوير المتكاملة للعيادة (Qalix Turnkey Clinic Box)', description: 'طرح خيار توريد راوتر واي فاي محلي مجهز مسبقاً باسم العيادة + فلاشة نسخ احتياطي مشفرة 64GB + قارئ باركود للصيدلية الداخلية كحزمة إضافية اختيارية يربح منها الوكيل والموزع.', impact: 'رفع متوسط الربح +1,500 ج.م', priority: 'أولوية عالية', status: 'مقترح استراتيجي' },
+if (ACTIVE_SYSTEM.id === 'qalix_medical') {
+  if (propCount === 0) {
+    const now = new Date().toISOString();
+    const seedProps = [
+      // Pillar 1: الارتقاء بالمنظومة والمنتج (بدون المساس بالإصدار الحالي v1.0)
+      { id: 'prop_01', pillar: 'product', title: 'أداة خارجية لتحويل شيتات Excel القديمة للعيادات إلى ملف استيراد جاهز', description: 'بما أن الإصدار الحالي v1.0 ثابت وموقع رقمياً ولا يُلمس، يوفر الوكيل أداة مستقلة تحول ملفات المرضى والأدوية القديمة من Excel إلى صيغة استيراد المنظومة في ثوانٍ لكسر حاجز خوف الطبيب من نقل بياناته.', impact: 'يضاعف سرعة إغلاق الصفقات 3x', priority: 'أولوية قصوى', status: 'جاهز للتنفيذ في حزمة الوكيل' },
+      { id: 'prop_02', pillar: 'product', title: 'مكتبة قوالب تخصصية جاهزة للاستيراد (أسنان، أطفال، نساء، باطنة، عيون)', description: 'ملفات إعدادات وأدوية وخدمات جاهزة لكل تخصص طبي يستوردها الموزع للطبيب عند التثبيت، فيجد الطبيب 200 دواء شائع في تخصصه وقائمة خدماته جاهزة من أول دقيقة بدون إدخال يدوي.', impact: 'إبهار فوري للطبيب', priority: 'أولوية قصوى', status: 'معتمد للتنفيذ' },
+      { id: 'prop_03', pillar: 'product', title: 'حزمة الهاردوير المتكاملة للعيادة (Qalix Turnkey Clinic Box)', description: 'طرح خيار توريد راوتر واي فاي محلي مجهز مسبقاً باسم العيادة + فلاشة نسخ احتياطي مشفرة 64GB + قارئ باركود للصيدلية الداخلية كحزمة إضافية اختيارية يربح منها الوكيل والموزع.', impact: 'رفع متوسط الربح +1,500 ج.م', priority: 'أولوية عالية', status: 'مقترح استراتيجي' },
 
-    // Pillar 2: تحسين العرض التقديمي والإبهار الميداني (Presentation & Live Demo)
-    { id: 'prop_04', pillar: 'presentation', title: 'سيناريو العرض الميداني في 5 دقائق (The 5-Minute WOW Demo)', description: 'تدريب كل موزع على عرض 4 نقاط فقط بالترتيب: (1) مسح QR بالموبايل لسماع نداء «هدى» الصوتي، (2) كتابة وارفارين + أسبرين لرؤية تحذير النزيف اللحظي، (3) إرسال رسالة صوتية مشفرة للاستقبال، (4) فصل الإنترنت لإثبات أن العيادة تعمل 100% بلا توقف.', impact: 'نسبة اقتناع تتجاوز 80%', priority: 'أولوية قصوى', status: 'معتمد ومطبق' },
-    { id: 'prop_05', pillar: 'presentation', title: 'بطاقة المقارنة المالية البصرية أمام الطبيب (ورقة A4 مغلفة مع كل موزع)', description: 'بطاقة مطبوعة يضعها الموزع على مكتب الطبيب تقارن تكلفة 3 سنوات في الأنظمة السحابية (50,000+ ج.م إيجار ينتهي بقفل الحساب) مقابل دفعة واحدة مدى الحياة في كالكس ميديكال تعادل كشفين في الأسبوع.', impact: 'يقضي على اعتراض السعر فوراً', priority: 'أولوية قصوى', status: 'معتمد للتنفيذ' },
+      // Pillar 2: تحسين العرض التقديمي والإبهار الميداني (Presentation & Live Demo)
+      { id: 'prop_04', pillar: 'presentation', title: 'سيناريو العرض الميداني في 5 دقائق (The 5-Minute WOW Demo)', description: 'تدريب كل موزع على عرض 4 نقاط فقط بالترتيب: (1) مسح QR بالموبايل لسماع نداء «هدى» الصوتي، (2) كتابة وارفارين + أسبرين لرؤية تحذير النزيف اللحظي، (3) إرسال رسالة صوتية مشفرة للاستقبال، (4) فصل الإنترنت لإثبات أن العيادة تعمل 100% بلا توقف.', impact: 'نسبة اقتناع تتجاوز 80%', priority: 'أولوية قصوى', status: 'معتمد ومطبق' },
+      { id: 'prop_05', pillar: 'presentation', title: 'بطاقة المقارنة المالية البصرية أمام الطبيب (ورقة A4 مغلفة مع كل موزع)', description: 'بطاقة مطبوعة يضعها الموزع على مكتب الطبيب تقارن تكلفة 3 سنوات في الأنظمة السحابية (50,000+ ج.م إيجار ينتهي بقفل الحساب) مقابل دفعة واحدة مدى الحياة في كالكس ميديكال تعادل كشفين في الأسبوع.', impact: 'يقضي على اعتراض السعر فوراً', priority: 'أولوية قصوى', status: 'معتمد للتنفيذ' },
 
-    // Pillar 3: تحسين طرق البيع وإغلاق الصفقات (Sales & Closing)
-    { id: 'prop_06', pillar: 'sales', title: 'استراتيجية «التجربة الميدانية ببيانات جاهزة» لمدة 14 يوماً', description: 'بدلاً من ترك الطبيب يحمّل البرنامج فارغاً، يقوم الموزع بتثبيت النسخة التجريبية لمكتب الاستقبال وضبط اسم العيادة والطبيب في 5 دقائق، لتبدأ السكرتيرة بالحجز الفعلي من نفس اليوم.', impact: 'يرفع التحويل من تجربة لشراء إلى 70%', priority: 'أولوية قصوى', status: 'معتمد ومطبق' },
-    { id: 'prop_07', pillar: 'sales', title: 'برنامج «ترشيح الزملاء للأطباء» (Doctor-to-Doctor Referral)', description: 'منح الطبيب المتعاقد هدية (سنة دعم إضافية مجاناً أو ترقية للباقة الأعلى بخصم خاص) عند ترشيح طبيبين زميلين في نفس البرج الطبي أو المستشفى.', impact: 'انتشار فيروسي بدون تكلفة إعلانات', priority: 'أولوية عالية', status: 'معتمد للتنفيذ' },
-    { id: 'prop_08', pillar: 'sales', title: 'حملات الأبراج الطبية والمراكز المتجاورة (Medical Tower Blitz)', description: 'توجيه كل موزع للتركيز على برج طبي واحد أسبوعياً؛ بمجرد تركيب شاشة الانتظار والنداء الصوتي في عيادة واحدة بالبرج، تصبح مرجعاً حياً لكل الأطباء في نفس البرج.', impact: 'مبيعات جماعية سريعة', priority: 'أولوية عالية', status: 'معتمد للتنفيذ' },
+      // Pillar 3: تحسين طرق البيع وإغلاق الصفقات (Sales & Closing)
+      { id: 'prop_06', pillar: 'sales', title: 'استراتيجية «التجربة الميدانية ببيانات جاهزة» لمدة 14 يوماً', description: 'بدلاً من ترك الطبيب يحمّل البرنامج فارغاً، يقوم الموزع بتثبيت النسخة التجريبية لمكتب الاستقبال وضبط اسم العيادة والطبيب في 5 دقائق، لتبدأ السكرتيرة بالحجز الفعلي من نفس اليوم.', impact: 'يرفع التحويل من تجربة لشراء إلى 70%', priority: 'أولوية قصوى', status: 'معتمد ومطبق' },
+      { id: 'prop_07', pillar: 'sales', title: 'برنامج «ترشيح الزملاء للأطباء» (Doctor-to-Doctor Referral)', description: 'منح الطبيب المتعاقد هدية (سنة دعم إضافية مجاناً أو ترقية للباقة الأعلى بخصم خاص) عند ترشيح طبيبين زميلين في نفس البرج الطبي أو المستشفى.', impact: 'انتشار فيروسي بدون تكلفة إعلانات', priority: 'أولوية عالية', status: 'معتمد للتنفيذ' },
+      { id: 'prop_08', pillar: 'sales', title: 'حملات الأبراج الطبية والمراكز المتجاورة (Medical Tower Blitz)', description: 'توجيه كل موزع للتركيز على برج طبي واحد أسبوعياً؛ بمجرد تركيب شاشة الانتظار والنداء الصوتي في عيادة واحدة بالبرج، تصبح مرجعاً حياً لكل الأطباء في نفس البرج.', impact: 'مبيعات جماعية سريعة', priority: 'أولوية عالية', status: 'معتمد للتنفيذ' },
 
-    // Pillar 4: تحسين المتابعة وخدمة ما بعد البيع (Follow-up & Retention)
-    { id: 'prop_09', pillar: 'followup', title: 'جدول المتابعة الذهبي لـ 14 يوم تجربة (اليوم 1، 3، 7، 12، 14)', description: 'نظام متابعة منضبط عبر واتساب (01122166076 والموزعين): اليوم 1 (تأكيد التثبيت)، اليوم 3 (تفعيل شاشة الانتظار والنداء)، اليوم 7 (مراجعة تقارير الإيراد)، اليوم 12 (عرض التعاقد المبكر مع نقل البيانات مجاناً)، اليوم 14 (إصدار مفتاح التفعيل الدائم).', impact: 'منع تسرب العملاء المحتملين', priority: 'أولوية قصوى', status: 'معتمد ومطبق' },
-    { id: 'prop_10', pillar: 'followup', title: 'فحص الاطمئنان الدوري بعد البيع (اليوم 30 واليوم 90)', description: 'رسالة واتساب تلقائية من الوكيل بعد شهر من الشراء للتأكد من انتظام النسخ الاحتياطي المشفر على الفلاشة الخارجية، مما يبني ثقة مطلقة وسمعة ذهبية للمنظومة في السوق الطبي.', impact: 'سمعة رقم #1 في السوق الطبي', priority: 'أولوية عالية', status: 'معتمد للتنفيذ' },
+      // Pillar 4: تحسين المتابعة وخدمة ما بعد البيع (Follow-up & Retention)
+      { id: 'prop_09', pillar: 'followup', title: 'جدول المتابعة الذهبي لـ 14 يوم تجربة (اليوم 1، 3، 7، 12، 14)', description: 'نظام متابعة منضبط عبر واتساب (01122166076 والموزعين): اليوم 1 (تأكيد التثبيت)، اليوم 3 (تفعيل شاشة الانتظار والنداء)، اليوم 7 (مراجعة تقارير الإيراد)، اليوم 12 (عرض التعاقد المبكر مع نقل البيانات مجاناً)، اليوم 14 (إصدار مفتاح التفعيل الدائم).', impact: 'منع تسرب العملاء المحتملين', priority: 'أولوية قصوى', status: 'معتمد ومطبق' },
+      { id: 'prop_10', pillar: 'followup', title: 'فحص الاطمئنان الدوري بعد البيع (اليوم 30 واليوم 90)', description: 'رسالة واتساب تلقائية من الوكيل بعد شهر من الشراء للتأكد من انتظام النسخ الاحتياطي المشفر على الفلاشة الخارجية، مما يبني ثقة مطلقة وسمعة ذهبية للمنظومة في السوق الطبي.', impact: 'سمعة رقم #1 في السوق الطبي', priority: 'أولوية عالية', status: 'معتمد للتنفيذ' },
 
-    // Pillar 5: تحسين الإدارة والحوكمة لشبكة الموزعين (Management & Governance)
-    { id: 'prop_11', pillar: 'management', title: 'نظام شرائح حوافز الموزعين التصاعدي (Bronze / Silver / Gold / Platinum)', description: 'الموزع يبدأ بنسبة 27% من السعر الثابت، وترتفع نسبته تلقائياً إلى 29% (فضية) ثم 32% (ذهبية عند 10 مبيعات) وصولاً إلى 35% (بلاتينية عند 20+ صفقة)، مع حماية النطاق الجغرافي لكل موزع نشط.', impact: 'تحفيز الموزعين على مضاعفة المبيعات', priority: 'أولوية قصوى', status: 'معتمد في لوحة الوكيل' },
-    { id: 'prop_12', pillar: 'management', title: 'القاعدة الحديدية: التفعيل مقابل صافي التوريد وبصمة العتاد (HWID)', description: 'حوكمة مالية صارمة 100%: لا يصدر مفتاح التفعيل `QLX2` إلا بعد استلام الوكيل (01122166076) لبصمة جهاز العيادة وصافي المبلغ، وتُسجل كل عملية في سلسلة التدقيق الجنائي المشفرة.', impact: 'صفر مديونيات أو تسريب للتراخيص', priority: 'أولوية قصوى', status: 'مفعل برمجياً' }
-  ];
-  const insProp = db.prepare('INSERT INTO excellence_proposals(id, pillar, title, description, impact, priority, status, created_at) VALUES(?, ?, ?, ?, ?, ?, ?, ?)');
-  for (const p of seedProps) {
-    insProp.run(p.id, p.pillar, p.title, p.description, p.impact, p.priority, p.status, now);
+      // Pillar 5: تحسين الإدارة والحوكمة لشبكة الموزعين (Management & Governance)
+      { id: 'prop_11', pillar: 'management', title: 'نظام شرائح حوافز الموزعين التصاعدي (Bronze / Silver / Gold / Platinum)', description: 'الموزع يبدأ بنسبة 27% من السعر الثابت، وترتفع نسبته تلقائياً إلى 29% (فضية) ثم 32% (ذهبية عند 10 مبيعات) وصولاً إلى 35% (بلاتينية عند 20+ صفقة)، مع حماية النطاق الجغرافي لكل موزع نشط.', impact: 'تحفيز الموزعين على مضاعفة المبيعات', priority: 'أولوية قصوى', status: 'معتمد في لوحة الوكيل' },
+      { id: 'prop_12', pillar: 'management', title: 'القاعدة الحديدية: التفعيل مقابل صافي التوريد وبصمة العتاد (HWID)', description: 'حوكمة مالية صارمة 100%: لا يصدر مفتاح التفعيل `QLX2` إلا بعد استلام الوكيل (01122166076) لبصمة جهاز العيادة وصافي المبلغ، وتُسجل كل عملية في سلسلة التدقيق الجنائي المشفرة.', impact: 'صفر مديونيات أو تسريب للتراخيص', priority: 'أولوية قصوى', status: 'مفعل برمجياً' }
+    ];
+    const insProp = db.prepare('INSERT INTO excellence_proposals(id, pillar, title, description, impact, priority, status, created_at) VALUES(?, ?, ?, ?, ?, ?, ?, ?)');
+    for (const p of seedProps) {
+      insProp.run(p.id, p.pillar, p.title, p.description, p.impact, p.priority, p.status, now);
+    }
   }
-}
 
-// Always ensure post-launch R&D follow-up proposals exist (idempotent across existing & fresh DBs)
-{
+  // Always ensure post-launch R&D follow-up proposals exist for primary medical workspace
   const nowProp = new Date().toISOString();
   const insFollowupProp = db.prepare('INSERT OR IGNORE INTO excellence_proposals(id, pillar, title, description, impact, priority, status, created_at) VALUES(?, ?, ?, ?, ?, ?, ?, ?)');
   insFollowupProp.run(
@@ -226,6 +227,8 @@ if (propCount === 0) {
     'معتمد للتنفيذ',
     nowProp
   );
+} else if (propCount === 0) {
+  seedGenericSystemProposals(db, ACTIVE_SYSTEM);
 }
 
 /* ---------------- Competitors & Market Comparison Catalog (Egypt 2026) ---------------- */
@@ -663,6 +666,7 @@ function getSummaryResponse() {
       id: ACTIVE_SYSTEM.id,
       nameAr: ACTIVE_SYSTEM.nameAr,
       subtitleAr: ACTIVE_SYSTEM.subtitleAr,
+      projectName: ACTIVE_SYSTEM.projectName || AGENT_INFO.projectName || 'Qalix Agent',
       licensePrefix: ACTIVE_SYSTEM.licensePrefix || 'QLX2',
       dbFileRel: path.relative(path.dirname(BASE_DATA_DIR), dbPath).replace(/\\/g, '/'),
       kitsDirRel: path.relative(path.dirname(BASE_DATA_DIR), KITS_DIR).replace(/\\/g, '/')
@@ -1614,13 +1618,37 @@ try {
   console.error('Warning syncing distributor kits on startup:', e.message);
 }
 
-server.listen(PORT, HOST, () => {
+let activePort = PORT;
+const explicitPortLocked = Boolean(process.env.PORT);
+
+server.on('error', err => {
+  if (err && err.code === 'EADDRINUSE' && !explicitPortLocked && activePort < PORT + 20) {
+    const nextPort = activePort + 1;
+    console.warn(`Port ${activePort} is in use; switching automatically to port ${nextPort}...`);
+    activePort = nextPort;
+    setTimeout(() => server.listen(activePort, HOST), 150);
+    return;
+  }
+  console.error(err);
+  process.exit(1);
+});
+
+server.listen(activePort, HOST, () => {
+  const bannerName = ACTIVE_SYSTEM.id === 'qalix_medical'
+    ? 'Qalix Medical Agent Server v1.0 (100% Offline Air-Gapped)'
+    : `${ACTIVE_SYSTEM.projectName || 'Qalix Multi-System Agent'} Server v1.0 (100% Offline Air-Gapped)`;
   console.log(`=============================================================`);
-  console.log(`★ Qalix Medical Agent Server v1.0 (100% Offline Air-Gapped) ★`);
-  console.log(`  - Official Agent Contact: 01122166076 (+201122166076)`);
-  console.log(`  - Agent Command URL:      http://${HOST}:${PORT}`);
+  console.log(`★ ${bannerName} ★`);
+  console.log(`  - Official Agent Contact: ${AGENT_INFO.phone} (${AGENT_INFO.intlPhone})`);
+  console.log(`  - Agent Command URL:      http://${HOST}:${activePort}`);
   console.log(`  - Database (SQLite WAL):  ${dbPath}`);
   console.log(`=============================================================`);
+  if (process.env.AUTO_OPEN_BROWSER === '1' && process.platform === 'win32') {
+    try {
+      const { spawn } = require('node:child_process');
+      spawn('cmd.exe', ['/c', 'start', '', `http://${HOST}:${activePort}`], { detached: true, stdio: 'ignore' }).unref();
+    } catch (_) {}
+  }
 });
 
 function gracefulShutdown() {
