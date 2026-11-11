@@ -991,7 +991,20 @@ function req(method, urlPath, body) {
       }
     );
 
-    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/66 PASSED ===`);
+    // 67. Agent Dashboard In-App WhatsApp Distributor Delivery (Preview Modal + Distributor Table Action)
+    check('67. دعم إرسال البطاقات والوثائق للموزعين عبر واتساب مباشرة من داخل لوحة الوكيل',
+      dashHtmlRes.body.includes('id="cardPreviewWaDist"') &&
+      dashHtmlRes.body.includes('sendCardPreviewToDistributorWa()') &&
+      dashHtmlRes.body.includes('sendDistributorRowWa(') &&
+      dashHtmlRes.body.includes('wa.me/'),
+      {
+        hasWaSelect: dashHtmlRes.body.includes('id="cardPreviewWaDist"'),
+        hasWaSenderFn: dashHtmlRes.body.includes('sendCardPreviewToDistributorWa()'),
+        hasRowWaFn: dashHtmlRes.body.includes('sendDistributorRowWa(')
+      }
+    );
+
+    console.log(`=== QALIX MEDICAL AGENT TESTS: ${results.length}/67 PASSED ===`);
     for (const r of results) console.log(' ✅', r);
   } finally {
     srv.kill('SIGINT');

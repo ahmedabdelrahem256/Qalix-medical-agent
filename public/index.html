@@ -1805,6 +1805,7 @@
     }
 
     function render(data) {
+      window.lastSummaryDistributors = data.distributors || [];
       document.getElementById('kpiDistCount').innerText = data.kpis.activeDistributors + ' موزعين نشطين';
       document.getElementById('kpiGrossSales').innerText = fmt(data.kpis.totalGrossSales);
       document.getElementById('kpiDealsCount').innerText = `${data.kpis.completedDealsCount} مكتملة · ${data.kpis.pendingDealsCount} معلقة`;
@@ -1861,6 +1862,7 @@
           <td>
             <div style="display:flex; gap:4px; flex-wrap:wrap;">
               <a href="/api/distributors/${d.id}/kit" onclick="event.preventDefault(); previewDistributorKit('${d.id}', '${d.code}')" class="btn btn-sm" style="text-decoration:none;" title="معاينة ثم تنزيل بوابة الموزع المستقلة">⬇ البوابة</a>
+              <button type="button" class="btn btn-sm btn-emerald" onclick="sendDistributorRowWa('${d.id}')" title="إرسال رسالة وبوابة الموزع عبر واتساب">📲 واتساب</button>
               <a href="/api/contracts/distributor/${d.id}" onclick="return previewDocLink(this);" data-preview-title="📄 عقد التوزيع المستقل — ${escAttr(d.name)} (${d.code})" data-preview-subtitle="معاينة العقد الرسمي المعتمد قبل الطباعة أو التحميل" data-download-fname="Qalix-Contract-${d.code}.html" class="btn btn-sm btn-sky" style="text-decoration:none;" title="معاينة وطباعة عقد التوزيع الرسمي">📄 العقد</a>
               <a href="/api/distributors/${d.id}/statement" onclick="return previewDocLink(this);" data-preview-title="📊 كشف الحساب المالي — ${escAttr(d.name)} (${d.code})" data-preview-subtitle="معاينة كشف الحساب وسلسلة التدقيق قبل الطباعة أو التحميل" data-download-fname="Qalix-Statement-${d.code}.html" class="btn btn-sm btn-amber" style="text-decoration:none;" title="معاينة وطباعة كشف الحساب المالي">📊 كشف حساب</a>
             </div>
@@ -2764,13 +2766,105 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
       });
     }
 
+    let currentCardPreviewOpts = null;
+
+    function normalizeEgWaPhone(raw) {
+      const digits = String(raw || '').replace(/[^0-9]/g, '');
+      if (!digits) return '';
+      if (digits.startsWith('201') && digits.length >= 12) return digits;
+      if (digits.startsWith('01') && digits.length === 11) return '2' + digits;
+      if (digits.startsWith('0')) return '2' + digits;
+      return digits;
+    }
+
+    function openWaChat(phoneDigits, messageText) {
+      const text = encodeURIComponent(messageText);
+      const url = phoneDigits ? `https://wa.me/${phoneDigits}?text=${text}` : `https://api.whatsapp.com/send?text=${text}`;
+      window.open(url, '_blank');
+    }
+
+    function sendDistributorRowWa(distId) {
+      const list = window.lastSummaryDistributors || [];
+      const dist = list.find(d => d.id === distId);
+      if (!dist) return alert('بيانات الموزع غير محملة بعد');
+      const waPhone = normalizeEgWaPhone(dist.phone);
+      const msg = [
+        `السلام عليكم أ/ ${dist.name} (${dist.code}) 🌟`,
+        `معكم وكيل منظومة كالكس ميديكال الطبية (01122166076).`,
+        ``,
+        `مرفق لحضرتك ملف «بوابة الموزع المستقلة» الخاص بكم (${dist.code}-Standalone-Kit.html) بنسبة عمولة ${dist.commission_rate}% على الأسعار الرسمية الموحدة:`,
+        `• الباقة الأساسية: 4,500 ج.م`,
+        `• الباقة التخصصية: 8,500 ج.م`,
+        `• باقة المراكز الكبرى: 18,500 ج.م`,
+        ``,
+        `افتح الملف من أي متصفح لديك لبدء الزيارات الميدانية فوراً — وبالتوفيق!`
+      ].join('\n');
+      if (navigator.clipboard) navigator.clipboard.writeText(msg).catch(() => {});
+      openWaChat(waPhone, msg);
+    }
+
+    function populateCardPreviewWaTargets() {
+      const sel = document.getElementById('cardPreviewWaDist');
+      if (!sel) return;
+      const list = window.lastSummaryDistributors || [];
+      const opts = list.map(d =>
+        `<option value="${escAttr(d.phone || '')}" data-name="${escAttr(d.name)}" data-code="${escAttr(d.code)}">${d.name} (${d.code}) — ${d.phone}</option>`
+      ).join('');
+      sel.innerHTML = opts +
+        '<option value="__custom__">📱 رقم موزع آخر (كتابة يدوية)...</option>' +
+        '<option value="">🌐 اختيار المحادثة يدوياً في واتساب</option>';
+      toggleCardPreviewCustomPhone();
+    }
+
+    function toggleCardPreviewCustomPhone() {
+      const sel = document.getElementById('cardPreviewWaDist');
+      const customInp = document.getElementById('cardPreviewWaCustomPhone');
+      if (!sel || !customInp) return;
+      customInp.style.display = sel.value === '__custom__' ? 'inline-block' : 'none';
+    }
+
+    function sendCardPreviewToDistributorWa() {
+      const opts = currentCardPreviewOpts || {};
+      const title = opts.title || document.getElementById('cardPreviewTitle')?.innerText || 'بطاقة عمل كالكس ميديكال';
+      if (String(opts.previewUrl || '').includes('/api/catalogs/agent')) {
+        if (!confirm('تنبيه أمني: هذا الملف هو كتالوج الوكيل الحصري الداخلي! هل أنت متأكد أنك تريد المتابعة؟')) return;
+      }
+      const sel = document.getElementById('cardPreviewWaDist');
+      const customInp = document.getElementById('cardPreviewWaCustomPhone');
+      let rawPhone = sel ? sel.value : '';
+      let distName = sel?.options[sel.selectedIndex]?.getAttribute('data-name') || '';
+      let distCode = sel?.options[sel.selectedIndex]?.getAttribute('data-code') || '';
+      if (rawPhone === '__custom__') {
+        rawPhone = customInp ? customInp.value.trim() : '';
+        distName = '';
+        distCode = '';
+        if (!rawPhone) return alert('يرجى إدخال رقم واتساب الموزع أولاً');
+      }
+      const waPhone = normalizeEgWaPhone(rawPhone);
+      const fname = opts.downloadFilename || 'الملف المرفق';
+      const msg = [
+        distName ? `السلام عليكم أ/ ${distName}${distCode ? ' (' + distCode + ')' : ''} 🌹` : 'السلام عليكم شريكنا العزيز 🌹',
+        `معكم وكيل منظومة كالكس ميديكال الطبية (01122166076).`,
+        ``,
+        `📄 أرسل لحضرتك الآن: *${title}*`,
+        `📎 اسم الملف المرفق: ${fname}`,
+        ``,
+        `يمكنك فتح الملف مباشرة من متصفح الهاتف أو الكمبيوتر والعمل به أوفلاين 100%.`
+      ].join('\n');
+      if (navigator.clipboard) navigator.clipboard.writeText(msg).catch(() => {});
+      openWaChat(waPhone, msg);
+    }
+
     function openCardPreviewModal(opts) {
+      currentCardPreviewOpts = opts || {};
       const m = document.getElementById('cardPreviewModal');
       const frame = document.getElementById('cardPreviewFrame');
       const loader = document.getElementById('cardPreviewLoading');
       const dlBtn = document.getElementById('cardPreviewDownloadBtn');
       const openBtn = document.getElementById('cardPreviewOpenNewBtn');
       if (!m || !frame) return;
+
+      populateCardPreviewWaTargets();
 
       document.getElementById('cardPreviewTitle').innerText = opts.title || 'معاينة البطاقة قبل التحميل';
       document.getElementById('cardPreviewSubtitle').innerText = opts.subtitle || 'عاين المحتوى وتأكد من التفاصيل قبل حفظ الملف أو طباعته';
@@ -3233,12 +3327,20 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
         <div id="cardPreviewLoading" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(15,23,42,0.85); color:var(--sky); font-size:14px; font-weight:700;">⏳ جاري تحميل المعاينة المباشرة...</div>
         <iframe id="cardPreviewFrame" src="about:blank" style="width:100%; height:100%; border:none; background:#fff;" title="معاينة البطاقة"></iframe>
       </div>
-      <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 18px; border-top:1px solid var(--border); background:rgba(15,23,42,0.96); gap:10px; flex-wrap:wrap;">
-        <span style="font-size:12px; color:var(--muted);">تأكد من شكل البطاقة ومحتواها أعلاه قبل التحميل أو الطباعة</span>
-        <div style="display:flex; gap:8px; flex-wrap:wrap;">
-          <a id="cardPreviewDownloadBtn" href="#" class="btn btn-sm btn-emerald" style="text-decoration:none; font-weight:800;">⬇️ تأكيد وتحميل الملف الآن</a>
-          <button id="cardPreviewPrintBtn" type="button" class="btn btn-sm btn-sky" onclick="printCardPreview()">🖨️ طباعة / حفظ PDF</button>
-          <a id="cardPreviewOpenNewBtn" href="#" target="_blank" class="btn btn-sm btn-amber" style="text-decoration:none;">↗️ فتح في تبويب مستقل</a>
+      <div style="display:flex; flex-direction:column; gap:8px; padding:12px 18px; border-top:1px solid var(--border); background:rgba(15,23,42,0.96);">
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.28); padding:8px 10px; border-radius:10px;">
+          <span style="font-size:12px; font-weight:700; color:var(--emerald); white-space:nowrap;">📲 إرسال عبر واتساب لموزع:</span>
+          <select id="cardPreviewWaDist" onchange="toggleCardPreviewCustomPhone()" style="flex:1; min-width:210px; padding:6px 10px; font-size:12px; border-radius:8px; border:1px solid var(--border); background:#0f172a; color:var(--text);"></select>
+          <input id="cardPreviewWaCustomPhone" type="text" placeholder="أدخل رقم الموزع (010...)" dir="ltr" style="display:none; width:175px; padding:6px 10px; font-size:12px; border-radius:8px; border:1px solid var(--border); background:#0f172a; color:var(--text);" />
+          <button type="button" class="btn btn-sm btn-emerald" onclick="sendCardPreviewToDistributorWa()" style="font-weight:800; white-space:nowrap;">📲 فتح واتساب وإرسال الرسالة</button>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+          <span style="font-size:11.5px; color:var(--muted);">حمّل الملف من الزر الأخضر ثم اسحبه داخل محادثة واتساب المفتوحة عند رغبتك بإرفاقه للموزع</span>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <a id="cardPreviewDownloadBtn" href="#" class="btn btn-sm btn-emerald" style="text-decoration:none; font-weight:800;">⬇️ تأكيد وتحميل الملف الآن</a>
+            <button id="cardPreviewPrintBtn" type="button" class="btn btn-sm btn-sky" onclick="printCardPreview()">🖨️ طباعة / حفظ PDF</button>
+            <a id="cardPreviewOpenNewBtn" href="#" target="_blank" class="btn btn-sm btn-amber" style="text-decoration:none;">↗️ فتح في تبويب مستقل</a>
+          </div>
         </div>
       </div>
     </div>
