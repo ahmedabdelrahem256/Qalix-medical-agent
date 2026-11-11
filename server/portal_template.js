@@ -3,10 +3,34 @@
  */
 'use strict';
 
+const { escapeHtml } = require('./html_escape');
 const { renderBattleCardA4 } = require('./marketing_kit');
 const { renderTechnicalFieldSectionHtml } = require('./technical_field_guide');
 
+function safeInlineJson(obj) {
+  return JSON.stringify(obj)
+    .replace(/</g, '\\u003c')
+    .replace(/>/g, '\\u003e')
+    .replace(/&/g, '\\u0026')
+    .replace(/\u2028/g, '\\u2028')
+    .replace(/\u2029/g, '\\u2029');
+}
+
 function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
+  const safeName = escapeHtml(dist.name);
+  const safeCode = escapeHtml(dist.code);
+  const safeGov = escapeHtml(dist.governorate);
+  const safeRate = Number(dist.commission_rate) || 27;
+  const safeMegaUrl = escapeHtml(agentInfo.megaTrialUrl);
+  const portalDistJson = safeInlineJson({
+    id: String(dist.id || ''),
+    name: String(dist.name || ''),
+    code: String(dist.code || ''),
+    governorate: String(dist.governorate || ''),
+    phone: String(dist.phone || ''),
+    rate: safeRate,
+    megaTrialUrl: String(agentInfo.megaTrialUrl || '')
+  });
   const battleCardB64 = Buffer.from(renderBattleCardA4(dist), 'utf8').toString('base64');
   const techSec = renderTechnicalFieldSectionHtml(dist, agentInfo);
   return `<!DOCTYPE html>
@@ -14,7 +38,7 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>حقيبة الموزع المستقل: ${dist.name} | Qalix Medical Agent</title>
+  <title>حقيبة الموزع المستقل: ${safeName} | Qalix Medical Agent</title>
   <style>
     :root {
       color-scheme: dark;
@@ -64,18 +88,18 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
   <div class="container">
     <div class="card">
       <span class="badge">بوابة الموزع المستقل المعتمد · Qalix Medical Agent</span>
-      <h1 style="margin: 10px 0 4px; font-size: 22px;">${dist.name} (${dist.code})</h1>
+      <h1 style="margin: 10px 0 4px; font-size: 22px;">${safeName} (${safeCode})</h1>
       <p style="margin: 0; color: var(--muted); font-size: 13px;">
-        النطاق الجغرافي: <strong>${dist.governorate}</strong> · نسبة العمولة الثابتة من كل عملية بيع: <strong style="color:var(--accent)">${dist.commission_rate}%</strong> · بإشراف وكيل منظومة كالكس ميديكال الطبية: <strong dir="ltr">01122166076</strong>
+        النطاق الجغرافي: <strong>${safeGov}</strong> · نسبة العمولة الثابتة من كل عملية بيع: <strong style="color:var(--accent)">${safeRate}%</strong> · بإشراف وكيل منظومة كالكس ميديكال الطبية: <strong dir="ltr">01122166076</strong>
       </p>
     </div>
 
     <div class="grid">
       <div class="card">
-        <h3 style="margin-top:0; color:var(--accent);">1. جدول الأسعار الرسمية الثابتة وعمولتك الفورية (${dist.commission_rate}%)</h3>
+        <h3 style="margin-top:0; color:var(--accent);">1. جدول الأسعار الرسمية الثابتة وعمولتك الفورية (${safeRate}%)</h3>
         <table>
           <thead>
-            <tr><th>الباقة</th><th>السعر الرسمي</th><th>عمولتك (${dist.commission_rate}%)</th><th>صافي التوريد للوكيل</th></tr>
+            <tr><th>الباقة</th><th>السعر الرسمي</th><th>عمولتك (${safeRate}%)</th><th>صافي التوريد للوكيل</th></tr>
           </thead>
           <tbody>
             <tr><td>الباقة الأساسية</td><td>4,500 ج.م</td><td style="color:var(--accent);font-weight:bold;">${Math.round(4500 * dist.commission_rate / 100)} ج.م</td><td>${4500 - Math.round(4500 * dist.commission_rate / 100)} ج.م</td></tr>
@@ -167,7 +191,7 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
     <div class="card">
       <h3 style="margin-top:0; color:var(--amber);">3. رابط النسخة التجريبية للعملاء (14 يوماً بكامل المزايا)</h3>
       <p style="font-size:13px; color:var(--muted); margin-bottom:8px;">أرسل هذا الرابط لأي طبيب لتثبيت النسخة وتجربتها فوراً (حساب المصنع: <code>admin</code> / كلمة المرور: <code>Qalix@11</code>):</p>
-      <input readonly value="${agentInfo.megaTrialUrl}" dir="ltr" onclick="this.select()" />
+      <input readonly value="${safeMegaUrl}" dir="ltr" onclick="this.select()" />
     </div>
 
     <!-- 4. 5-Minute WOW Live Demo Script -->
@@ -205,7 +229,7 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
       <div class="grid">
         <div class="sub-card">
           <strong style="color:var(--sky);">رسالة التعارف والتجربة المجانية 14 يوماً</strong>
-          <p style="font-size:12px; color:var(--muted); margin:4px 0;">جاهزة بنقرة واحدة متضمنة كود الموزع ${dist.code} ورابط التجربة.</p>
+          <p style="font-size:12px; color:var(--muted); margin:4px 0;">جاهزة بنقرة واحدة متضمنة كود الموزع ${safeCode} ورابط التجربة.</p>
           <div style="display:flex; gap:8px; margin-top:8px;">
             <button onclick="openPitchWhatsApp(1)" style="flex:1; background:linear-gradient(135deg,#10b981,#059669); color:white; border:none; padding:8px; border-radius:6px; font-weight:bold; cursor:pointer;">📲 فتح في واتساب</button>
             <button onclick="copyPitch(1)" style="flex:1; background:#f1f5f9; color:#334155; border:1px solid #cbd5e1; padding:8px; border-radius:6px; font-weight:bold; cursor:pointer;">📋 نسخ النص</button>
@@ -235,7 +259,7 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
     <!-- 7. Official Quotation Generator for Distributors (Phase 5) -->
     <div class="card no-print">
       <h3 style="margin-top:0; color:var(--accent);">7. مولد عروض الأسعار الرسمية المعتمدة للعيادات (A4 Official Quotation)</h3>
-      <p style="font-size:12.5px; color:var(--muted); margin-bottom:12px;">أصدر عرض سعر رسمي فورياً باسم الموزع المعتمد (${dist.name} - ${dist.code}) يحمل التسعيرة الرسمية المعتمدة وخاتم التحقق الرقمي:</p>
+      <p style="font-size:12.5px; color:var(--muted); margin-bottom:12px;">أصدر عرض سعر رسمي فورياً باسم الموزع المعتمد (${safeName} - ${safeCode}) يحمل التسعيرة الرسمية المعتمدة وخاتم التحقق الرقمي:</p>
       <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
         <div>
           <label style="font-size:12px; color:var(--muted);">اسم الطبيب:</label>
@@ -321,11 +345,21 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
   </div>
 
   <script>
+    const PORTAL_DIST = ${portalDistJson};
     const API_BASE = (window.location.protocol === 'file:') ? 'http://127.0.0.1:4000' : '';
     const BATTLE_CARD_B64 = "${battleCardB64}";
     const DOC_CATALOG_B64 = "${techSec.catalogFallbackB64}";
     const QUICK_START_B64 = "${techSec.quickStartFallbackB64 || ''}";
     const WARRANTY_CERT_B64 = "${techSec.warrantyFallbackB64 || ''}";
+
+    function escHtml(v) {
+      return String(v == null ? '' : v)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
 
     function decodeB64Utf8(b64) {
       if (!b64) return '';
@@ -531,31 +565,31 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
     const DIST_OFFICIAL_DOCS = {
       contract: {
         title: '📜 عقد التوزيع المستقل المعتمد (A4)',
-        subtitle: 'عقد الموزع المعتمد (${dist.name} - ${dist.code}) والالتزام بالأسعار الثابتة',
-        url: '/api/contracts/distributor/${dist.id}',
-        downloadUrl: '/api/contracts/distributor/${dist.id}?download=1',
-        downloadFilename: 'Qalix-Contract-${dist.code}.html'
+        subtitle: 'عقد الموزع المعتمد (' + PORTAL_DIST.name + ' - ' + PORTAL_DIST.code + ') والالتزام بالأسعار الثابتة',
+        url: '/api/contracts/distributor/' + encodeURIComponent(PORTAL_DIST.id),
+        downloadUrl: '/api/contracts/distributor/' + encodeURIComponent(PORTAL_DIST.id) + '?download=1',
+        downloadFilename: 'Qalix-Contract-' + PORTAL_DIST.code + '.html'
       },
       statement: {
-        title: '💼 كشف الحساب المالي وسلسلة التدقيق (${dist.code})',
+        title: '💼 كشف الحساب المالي وسلسلة التدقيق (' + PORTAL_DIST.code + ')',
         subtitle: 'تفاصيل الصفقات والعمولات وصافي التوريد للوكيل',
-        url: '/api/distributors/${dist.id}/statement',
-        downloadUrl: '/api/distributors/${dist.id}/statement?download=1',
-        downloadFilename: 'Qalix-Statement-${dist.code}.html'
+        url: '/api/distributors/' + encodeURIComponent(PORTAL_DIST.id) + '/statement',
+        downloadUrl: '/api/distributors/' + encodeURIComponent(PORTAL_DIST.id) + '/statement?download=1',
+        downloadFilename: 'Qalix-Statement-' + PORTAL_DIST.code + '.html'
       },
       certificate: {
         title: '🏅 شهادة الاعتماد الميداني الرسمي (A4)',
-        subtitle: 'شهادة اعتماد الموزع الميداني ${dist.name}',
-        url: '/api/training/certificate/${dist.id}',
-        downloadUrl: '/api/training/certificate/${dist.id}?download=1',
-        downloadFilename: 'Qalix-Certificate-${dist.code}.html'
+        subtitle: 'شهادة اعتماد الموزع الميداني ' + PORTAL_DIST.name,
+        url: '/api/training/certificate/' + encodeURIComponent(PORTAL_DIST.id),
+        downloadUrl: '/api/training/certificate/' + encodeURIComponent(PORTAL_DIST.id) + '?download=1',
+        downloadFilename: 'Qalix-Certificate-' + PORTAL_DIST.code + '.html'
       },
       letter: {
         title: '🎖️ خطاب شريحة التميز التجاري (A4)',
-        subtitle: 'خطاب الترقية وشريحة العمولة الحالية للموزع ${dist.code}',
-        url: '/api/hierarchy/distributor/${dist.id}/letter',
-        downloadUrl: '/api/hierarchy/distributor/${dist.id}/letter?download=1',
-        downloadFilename: 'Qalix-Tier-Letter-${dist.code}.html'
+        subtitle: 'خطاب الترقية وشريحة العمولة الحالية للموزع ' + PORTAL_DIST.code,
+        url: '/api/hierarchy/distributor/' + encodeURIComponent(PORTAL_DIST.id) + '/letter',
+        downloadUrl: '/api/hierarchy/distributor/' + encodeURIComponent(PORTAL_DIST.id) + '/letter?download=1',
+        downloadFilename: 'Qalix-Tier-Letter-' + PORTAL_DIST.code + '.html'
       },
       distcatalog: {
         title: '📘 كتالوج عمل الموزع الميداني المصور (من أ إلى ي)',
@@ -608,7 +642,7 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
       const msg = [
         '✅ *بطاقة تأكيد نجاح التركيب والتشغيل للوكيل — Qalix Medical Agent*',
         '━━━━━━━━━━━━━━━━━━━━',
-        '🆔 *كود الموزع:* ${dist.code} — ${dist.name}',
+        '🆔 *كود الموزع:* ' + PORTAL_DIST.code + ' — ' + PORTAL_DIST.name,
         '🏥 *العيادة / المركز:* ' + clinic,
         '👨‍⚕️ *الطبيب المُخطِر:* ' + doctor,
         '📅 *التاريخ والوقت:* ' + nowStr,
@@ -640,7 +674,7 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
     function openTechSuccessCardA4(autoPrint) {
       const data = buildTechSuccessPayload(true);
       if (!data) return;
-      const listHtml = data.items.map(i => '<li style="padding:6px 0; border-bottom:1px dashed #cbd5e1;">' + i + '</li>').join('');
+      const listHtml = data.items.map(i => '<li style="padding:6px 0; border-bottom:1px dashed #cbd5e1;">' + escHtml(i) + '</li>').join('');
       const cardHtml = '<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>بطاقة تأكيد نجاح التشغيل للوكيل</title>' +
         '<style>@page{size:A4 portrait;margin:12mm;}body{font-family:Segoe UI,Tahoma,sans-serif;background:#f1f5f9;color:#0f172a;padding:24px;direction:rtl;margin:0;}' +
         '.doc{max-width:780px;margin:0 auto;background:#fff;border:2px solid #059669;border-radius:14px;padding:28px;}' +
@@ -652,17 +686,17 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
         '@media print{body{background:#fff;padding:0;}.doc{border:1px solid #059669;}.no-print{display:none!important;}}</style></head><body>' +
         '<div class="doc"><div class="no-print" style="margin-bottom:14px;text-align:left;"><button id="btnPrintSuccessCard" style="padding:8px 16px;background:#059669;color:#fff;border:none;border-radius:8px;font-weight:bold;cursor:pointer;">🖨️ طباعة البطاقة للوكيل (A4 / PDF)</button></div>' +
         '<div class="hdr"><div><h1 style="margin:0;font-size:20px;color:#059669;">✅ بطاقة تأكيد إتمام نجاح التركيب والتشغيل للوكيل</h1><div style="font-size:12px;color:#64748b;">منظومة كالكس الطبية الشاملة · Qalix Medical v1.0</div></div><div style="font-size:12px;text-align:left;">الوكيل الرسمي:<br><strong dir="ltr">01122166076</strong></div></div>' +
-        '<div class="row"><div class="box"><strong>الموزع المعتمد المنفّذ:</strong><br>${dist.name} (${dist.code})</div><div class="box"><strong>تاريخ الاعتماد:</strong><br>' + data.nowStr + '</div>' +
-        '<div class="box"><strong>العيادة / المنشأة الطبية:</strong><br>' + data.clinic + '</div><div class="box"><strong>الطبيب المُخطِر بالتمام:</strong><br>' + data.doctor + '</div></div>' +
+        '<div class="row"><div class="box"><strong>الموزع المعتمد المنفّذ:</strong><br>' + escHtml(PORTAL_DIST.name) + ' (' + escHtml(PORTAL_DIST.code) + ')</div><div class="box"><strong>تاريخ الاعتماد:</strong><br>' + escHtml(data.nowStr) + '</div>' +
+        '<div class="box"><strong>العيادة / المنشأة الطبية:</strong><br>' + escHtml(data.clinic) + '</div><div class="box"><strong>الطبيب المُخطِر بالتمام:</strong><br>' + escHtml(data.doctor) + '</div></div>' +
         '<h3 style="margin:10px 0 6px;color:#0f172a;font-size:14.5px;">سجل الإنجاز الفني وإخطار الطبيب:</h3><ul style="list-style:none;padding:0;margin:0;font-size:13px;">' + listHtml + '</ul>' +
         '<div style="margin-top:14px;background:#ecfdf5;border:1px solid #10b981;border-radius:8px;padding:10px 14px;font-size:12.5px;color:#065f46;">يُقر الموزع بإتمام تشغيل كافة الأجهزة بالعيادة، وترك كتالوج الاستخدام للطبيب، وتلقي إخطار الطبيب بتمام النجاح.</div>' +
-        '<div class="signs"><div class="sign"><strong>إخطار وموافقة الطبيب</strong><br><br>' + data.doctor + '</div><div class="sign"><strong>تأكيد وتوقيع الموزع المنفّذ</strong><br><br>${dist.name} (${dist.code})</div></div>' +
+        '<div class="signs"><div class="sign"><strong>إخطار وموافقة الطبيب</strong><br><br>' + escHtml(data.doctor) + '</div><div class="sign"><strong>تأكيد وتوقيع الموزع المنفّذ</strong><br><br>' + escHtml(PORTAL_DIST.name) + ' (' + escHtml(PORTAL_DIST.code) + ')</div></div>' +
         '</div></body></html>';
       openPortalDocPreview({
         title: '✅ بطاقة تأكيد نجاح التركيب والتشغيل للوكيل (A4)',
         subtitle: 'معاينة وطباعة أو تحميل بطاقة إتمام التركيب وتوقيع الطبيب والموزع',
         htmlContent: cardHtml,
-        downloadFilename: 'Qalix-Tech-Completion-Card-${dist.code}.html',
+        downloadFilename: 'Qalix-Tech-Completion-Card-' + PORTAL_DIST.code + '.html',
         autoPrint: Boolean(autoPrint)
       });
     }
@@ -681,19 +715,19 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
       const cln = encodeURIComponent(document.getElementById('quoClinic').value.trim() || 'العيادة التخصصية');
       const spec = document.getElementById('quoSpecialty').value;
       const tier = document.getElementById('quoTier').value;
-      const gov = encodeURIComponent('${dist.governorate}');
-      const qs = \`doctor_name=\${doc}&clinic_name=\${cln}&specialty=\${spec}&tier=\${tier}&governorate=\${gov}&distributor_name=\${encodeURIComponent('${dist.name}')}&distributor_code=\${encodeURIComponent('${dist.code}')}&distributor_phone=\${encodeURIComponent('${dist.phone || ''}')}\`;
+      const gov = encodeURIComponent(PORTAL_DIST.governorate);
+      const qs = \`doctor_name=\${doc}&clinic_name=\${cln}&specialty=\${spec}&tier=\${tier}&governorate=\${gov}&distributor_name=\${encodeURIComponent(PORTAL_DIST.name)}&distributor_code=\${encodeURIComponent(PORTAL_DIST.code)}&distributor_phone=\${encodeURIComponent(PORTAL_DIST.phone || '')}\`;
       const url = \`/api/quotations/generate?\${qs}\`;
       openPortalDocPreview({
         title: '📄 عرض السعر الرسمي المعتمد (A4 Official Quotation)',
         subtitle: 'معاينة عرض السعر باسم الموزع المعتمد قبل الطباعة أو التحميل',
         url,
         downloadUrl: \`\${url}&download=1\`,
-        downloadFilename: 'Qalix-Official-Quotation-${dist.code}.html'
+        downloadFilename: 'Qalix-Official-Quotation-' + PORTAL_DIST.code + '.html'
       });
     }
 
-    const rate = ${Number(dist.commission_rate)};
+    const rate = Number(PORTAL_DIST.rate);
     function buildRequestText() {
       const c = document.getElementById('cName').value.trim() || 'غير محدد';
       const d = document.getElementById('dName').value.trim() || 'غير محدد';
@@ -705,7 +739,7 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
       const comm = Math.round(price * rate / 100);
       const net = price - comm;
       return \`طلب إصدار ترخيص وتأكيد توريد — Qalix Medical Agent
-• كود الموزع: ${dist.code} (${dist.name})
+• كود الموزع: \${PORTAL_DIST.code} (\${PORTAL_DIST.name})
 • المنشأة الطبية: \${c}
 • الطبيب والهاتف: \${d}
 • بصمة الجهاز (HWID): \${hw}
@@ -756,8 +790,8 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
       }
       const lines = [
         \`📩 *\${typeLabel}*\`,
-        \`• الموزع المرسل: ${dist.name} (${dist.code})${dist.phone ? ' · ' + dist.phone : ''}\`,
-        \`• المحافظة: ${dist.governorate}\`
+        \`• الموزع المرسل: \${PORTAL_DIST.name} (\${PORTAL_DIST.code})\${PORTAL_DIST.phone ? ' · ' + PORTAL_DIST.phone : ''}\`,
+        \`• المحافظة: \${PORTAL_DIST.governorate}\`
       ];
       if (subj) lines.push(\`• العنوان / العيادة: \${subj}\`);
       if (type === 'remittance') {
@@ -787,10 +821,11 @@ function generateStandaloneDistributorPortalHtml(dist, agentInfo) {
     }
 
     function getPitchText(id) {
+      const contactLine = PORTAL_DIST.name + (PORTAL_DIST.phone ? ' (' + PORTAL_DIST.phone + ')' : '');
       if (id === 1) {
-        return \`السلام عليكم دكتورنا العزيز 🌹\\nمع حضرتك الموزع المعتمد لمنظومة "كالكس ميديكال" الطبية (${dist.name} - ${dist.code}).\\n\\nحبينا نهدي عيادتكم نسخة تجريبية كاملة مجانية لمدة 14 يوماً من أحدث منظومة طبية في مصر:\\n✅ تعمل 100% بدون نت لحماية خصوصية وسرية أرباحك.\\n✅ شاشة انتظار ونداء صوتي ذكي يفتح على موبايل المريض.\\n✅ فاحص تداخلات دوائية وحماية للمريض.\\n✅ محادثات داخلية صوتية بين العيادة والاستقبال.\\n\\nرابط تثبيت النسخة التجريبية:\\n${agentInfo.megaTrialUrl}\\n(دخول: admin / كلمة سر: Qalix@11)\\n\\nلأي استفسار أو طلب زيارة لتثبيتها لحضرتك مجاناً تواصل مباشرة مع الموزع المعتمد: ${dist.name}${dist.phone ? ' (' + dist.phone + ')' : ''}\`;
+        return \`السلام عليكم دكتورنا العزيز 🌹\\nمع حضرتك الموزع المعتمد لمنظومة "كالكس ميديكال" الطبية (\${PORTAL_DIST.name} - \${PORTAL_DIST.code}).\\n\\nحبينا نهدي عيادتكم نسخة تجريبية كاملة مجانية لمدة 14 يوماً من أحدث منظومة طبية في مصر:\\n✅ تعمل 100% بدون نت لحماية خصوصية وسرية أرباحك.\\n✅ شاشة انتظار ونداء صوتي ذكي يفتح على موبايل المريض.\\n✅ فاحص تداخلات دوائية وحماية للمريض.\\n✅ محادثات داخلية صوتية بين العيادة والاستقبال.\\n\\nرابط تثبيت النسخة التجريبية:\\n\${PORTAL_DIST.megaTrialUrl}\\n(دخول: admin / كلمة سر: Qalix@11)\\n\\nلأي استفسار أو طلب زيارة لتثبيتها لحضرتك مجاناً تواصل مباشرة مع الموزع المعتمد: \${contactLine}\`;
       } else {
-        return \`دكتورنا العزيز، ليه تدفع أكثر من 50,000 جنيه في 3 سنوات لاشتراكات البرامج السحابية، ولو النت فصل العيادة تقف، وإيرادك مكشوف على سيرفرات برة؟\\n\\nفي "كالكس ميديكال" ترخيص دائم مدى الحياة بدفعة واحدة بدون أي اشتراك شهري، وتعمل 100% أوفلاين وقاعدتها مشفرة عسكرياً جوة جهازك.\\nللتجربة المجانية 14 يوماً تواصل مباشرة مع الموزع المعتمد: ${dist.name}${dist.phone ? ' (' + dist.phone + ')' : ''}\`;
+        return \`دكتورنا العزيز، ليه تدفع أكثر من 50,000 جنيه في 3 سنوات لاشتراكات البرامج السحابية، ولو النت فصل العيادة تقف، وإيرادك مكشوف على سيرفرات برة؟\\n\\nفي "كالكس ميديكال" ترخيص دائم مدى الحياة بدفعة واحدة بدون أي اشتراك شهري، وتعمل 100% أوفلاين وقاعدتها مشفرة عسكرياً جوة جهازك.\\nللتجربة المجانية 14 يوماً تواصل مباشرة مع الموزع المعتمد: \${contactLine}\`;
       }
     }
 

@@ -934,15 +934,20 @@ function req(method, urlPath, body) {
     });
     const { generateDistributorContractHtml } = require('../server/contract_generator');
     const { generateDistributorStatementHtml } = require('../server/financial_ledger');
+    const { generateStandaloneDistributorPortalHtml } = require('../server/portal_template');
     const xssDist = { id: 99, name: '<script>xss</script>', code: 'QMA-XSS', phone: '01000000000', governorate: '<img src=x>', commission_rate: 27 };
     const escapedContract = generateDistributorContractHtml(xssDist);
     const escapedStatement = generateDistributorStatementHtml(xssDist, []);
-    check('64. رفض JSON المعطوب بحالة 400 وتنقية مخرجات العقود وكشوف الحسابات من حقن HTML',
+    const escapedPortal = generateStandaloneDistributorPortalHtml(xssDist, { megaTrialUrl: 'https://example.com' });
+    check('64. رفض JSON المعطوب بحالة 400 وتنقية مخرجات العقود وكشوف الحسابات والبوابة من حقن HTML',
       badJsonRes.status === 400 &&
       !escapedContract.includes('<script>xss</script>') &&
       escapedContract.includes('&lt;script&gt;xss&lt;/script&gt;') &&
       !escapedStatement.includes('<script>xss</script>') &&
-      escapedStatement.includes('&lt;script&gt;xss&lt;/script&gt;'),
+      escapedStatement.includes('&lt;script&gt;xss&lt;/script&gt;') &&
+      !escapedPortal.includes('<script>xss</script>') &&
+      !escapedPortal.includes('<img src=x>') &&
+      escapedPortal.includes('&lt;script&gt;xss&lt;/script&gt;'),
       { badJsonStatus: badJsonRes.status }
     );
 
