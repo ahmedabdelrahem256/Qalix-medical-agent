@@ -610,10 +610,11 @@
             <span class="badge b-amber">دليل الوكيل والموزع لمواجهة أنظمة السوق والسوشيال ميديا</span>
             <h2 style="margin:6px 0 4px;">نافذة المنظومات المنافسة: مقارنة موجزة وحاسمة مع كالكس ميديكال</h2>
             <p style="margin:0; font-size:12.5px; color:var(--muted);">
-              مقارنة مركزة لأشهر 10 أنظمة ومنصات في السوق المصري والسوشيال ميديا (السعر، المزايا، الثغرات، والرد الإقناعي الجاهز).
+              مقارنة مركزة لأشهر 15 نظاماً ومنصة على فيسبوك وإنستجرام وتيك توك ومتاجر التطبيقات (السعر، المزايا، الثغرات، والرد الجاهز).
             </p>
           </div>
           <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+            <input id="compQuickSearch" type="search" placeholder="🔍 ابحث باسم النظام (مثل: طبيب هب، كلينت، سمارت...)" oninput="renderCompetitors()" style="padding:6px 10px; font-size:12px; min-width:230px;" />
             <a href="/api/marketing/battle-card" onclick="return previewDocLink(this);" data-preview-title="🖨️ بطاقة المقارنة التنافسية (A4)" data-preview-subtitle="معاينة بطاقة المقارنة الميدانية قبل الطباعة أو التحميل" data-download-fname="Qalix-Competitive-Battle-Card.html" class="btn btn-sm btn-emerald" style="text-decoration:none;">🖨️ معاينة وتحميل بطاقة المقارنة A4</a>
           </div>
         </div>
@@ -1583,9 +1584,17 @@
       }
       const grid = document.getElementById('competitorsGrid');
       if (!grid) return;
-      const list = currentCompFilter === 'all'
+      const q = (document.getElementById('compQuickSearch')?.value || '').trim().toLowerCase();
+      let list = currentCompFilter === 'all'
         ? allCompetitors
         : allCompetitors.filter(c => c.id === currentCompFilter);
+      if (q) {
+        list = list.filter(c =>
+          (c.nameAr || '').toLowerCase().includes(q) ||
+          (c.category || '').toLowerCase().includes(q) ||
+          (c.id || '').toLowerCase().includes(q)
+        );
+      }
 
       grid.innerHTML = list.map(c => `
         <div class="sub-card" style="display:flex; flex-direction:column; justify-content:space-between; gap:8px; padding:12px;">

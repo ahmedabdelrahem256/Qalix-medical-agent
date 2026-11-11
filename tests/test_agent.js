@@ -153,14 +153,17 @@ function req(method, urlPath, body) {
       pRes.status === 200 && pRes.body.summary.proposals.length >= 13
     );
 
-    // 11. Verify Competitors Pros/Cons & Qalix Comparison Window API (10 Egypt + Social Media Systems)
+    // 11. Verify Competitors Pros/Cons & Qalix Comparison Window API (15 Egypt + Social Media Systems)
     const compRes = await req('GET', '/api/competitors');
-    check('11. التحقق من نافذة المنظومات المنافسة (10 أنظمة شاملة منافسي السوشيال ميديا) ومقارنتها مع كالكس',
+    check('11. التحقق من نافذة المنظومات المنافسة (15 نظاماً شاملة تطبيقات ومنصات السوشيال ميديا) ومقارنتها مع كالكس',
       compRes.status === 200 &&
       Array.isArray(compRes.body.competitors) &&
-      compRes.body.competitors.length === 10 &&
+      compRes.body.competitors.length === 15 &&
       compRes.body.competitors.some(c => c.id === 'codeiks') &&
       compRes.body.competitors.some(c => c.id === 'clinido') &&
+      compRes.body.competitors.some(c => c.id === 'tabeebhub') &&
+      compRes.body.competitors.some(c => c.id === 'smart_clinic') &&
+      compRes.body.competitors.some(c => c.id === 'clinit_yolo') &&
       compRes.body.competitors.every(c => c.pros.length > 0 && c.cons.length > 0 && c.qalixWinEdge && c.salesPitchAr)
     );
 
