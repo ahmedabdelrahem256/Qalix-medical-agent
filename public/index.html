@@ -5771,6 +5771,17 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
           ? cOpts.map(([v, t]) => `<option value="${v}">${t}</option>`).join('')
           : '<option value="">لا يملك هذا الدور صلاحية إنشاء حسابات فرعية</option>';
       }
+      syncAccountGeoFields();
+    }
+
+    function syncAccountGeoFields() {
+      const roleKey = document.getElementById('accReqRole')?.value || '';
+      const sysBox = document.getElementById('accReqSystemScopeBox');
+      const govBox = document.getElementById('accReqGovBox');
+      const distBox = document.getElementById('accReqDistrictBox');
+      if (sysBox) sysBox.style.display = roleKey === 'agent' ? 'block' : 'none';
+      if (govBox) govBox.style.display = ['distributor', 'rep', 'technician'].includes(roleKey) ? 'block' : 'none';
+      if (distBox) distBox.style.display = ['rep', 'technician'].includes(roleKey) ? 'block' : 'none';
     }
 
     async function loadAccountRequestsList() {
@@ -5995,21 +6006,30 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
       const roleKey = document.getElementById('accReqRole')?.value || 'distributor';
       const fullName = (document.getElementById('accReqName')?.value || '').trim();
       const phone = (document.getElementById('accReqPhone')?.value || '').trim();
-      const region = (document.getElementById('accReqRegion')?.value || '').trim();
+      const systemScope = (document.getElementById('accReqSystemScope')?.value || '').trim();
+      const governorate = (document.getElementById('accReqGovernorate')?.value || '').trim();
+      const district = (document.getElementById('accReqDistrict')?.value || '').trim();
       const notes = (document.getElementById('accReqNotes')?.value || '').trim();
       if (!roleKey) return alert('الدور الحالي لا يملك صلاحية إنشاء حسابات فرعية');
       if (!fullName) return alert('يرجى إدخال اسم صاحب الحساب المطلوب');
+      if (roleKey === 'agent' && !systemScope) return alert('يرجى تحديد المنظومة المخصصة للوكيل');
+      if (roleKey === 'distributor' && !governorate) return alert('يرجى اختيار المحافظة المخصصة للموزع');
+      if ((roleKey === 'rep' || roleKey === 'technician') && (!governorate || !district)) {
+        return alert('يرجى اختيار المحافظة وإدخال المركز التابع لها للمندوب أو الفني');
+      }
       try {
         const r = await fetch('/api/accounts/requests', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ roleKey, fullName, phone, region, notes, requestedByRole: roleProfilesState.activeRole || 'owner', autoApprove: true })
+          body: JSON.stringify({ roleKey, fullName, phone, systemScope, governorate, district, notes, requestedByRole: roleProfilesState.activeRole || 'owner', autoApprove: true })
         });
         const j = await r.json();
         if (!r.ok || !j.ok) return alert('❌ ' + (j.error || 'تعذر تسجيل الطلب'));
         document.getElementById('accReqName').value = '';
         document.getElementById('accReqPhone').value = '';
-        document.getElementById('accReqRegion').value = '';
+        if (document.getElementById('accReqSystemScope')) document.getElementById('accReqSystemScope').value = '';
+        if (document.getElementById('accReqGovernorate')) document.getElementById('accReqGovernorate').value = '';
+        if (document.getElementById('accReqDistrict')) document.getElementById('accReqDistrict').value = '';
         document.getElementById('accReqNotes').value = '';
         if (j.profiles) { roleProfilesState.profiles = j.profiles; renderRoleHierarchyBar(); }
         await loadAccountRequestsList();
@@ -6889,11 +6909,11 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
           <div>
             <label style="font-size:11.5px; color:var(--muted);">نوع الحساب المطلوب:</label>
-            <select id="accReqRole" onchange="document.getElementById('accReqAgentApproveBox').style.display=this.value==='agent'?'block':'none'" style="padding:6px; font-size:12px;">
-              <option value="agent">🤝 حساب وكيل (يُعتمد من صاحب المنصة)</option>
-              <option value="distributor" selected>🚚 طلب حساب موزع (من صاحب العمل)</option>
-              <option value="rep">🧭 طلب حساب مندوب (من الموزع المعتمد)</option>
-              <option value="technician">🛠️ طلب حساب فني (من الموزع المعتمد)</option>
+            <select id="accReqRole" onchange="syncAccountGeoFields()" style="padding:6px; font-size:12px;">
+              <option value="agent">🤝 حساب وكيل (يُنشأ حسب المنظومة)</option>
+              <option value="distributor" selected>🚚 حساب موزع (يُنشأ حسب المحافظة)</option>
+              <option value="rep">🧭 حساب مندوب (حسب المحافظة والمركز)</option>
+              <option value="technician">🛠️ حساب فني (حسب المحافظة والمركز)</option>
             </select>
           </div>
           <div>
@@ -6904,9 +6924,26 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
             <label style="font-size:11.5px; color:var(--muted);">رقم الهاتف / واتساب:</label>
             <input id="accReqPhone" dir="ltr" placeholder="010..." style="padding:6px; font-size:12px;" />
           </div>
-          <div>
-            <label style="font-size:11.5px; color:var(--muted);">المنطقة / المحافظة:</label>
-            <input id="accReqRegion" placeholder="القاهرة / المحافظات..." style="padding:6px; font-size:12px;" />
+          <div id="accReqSystemScopeBox" style="display:none;">
+            <label style="font-size:11.5px; color:var(--amber); font-weight:700;">📦 المنظومة المخصصة للوكيل:</label>
+            <input id="accReqSystemScope" placeholder="اسم المنظومة (مثال: إدارة العيادات / المبيعات...)" style="padding:6px; font-size:12px;" />
+          </div>
+          <div id="accReqGovBox" style="display:block;">
+            <label style="font-size:11.5px; color:var(--sky); font-weight:700;">🗺️ المحافظة المخصصة:</label>
+            <select id="accReqGovernorate" style="padding:6px; font-size:12px;">
+              <option value="">-- اختر المحافظة --</option>
+              <option>القاهرة</option><option>الجيزة</option><option>الإسكندرية</option><option>الدقهلية</option>
+              <option>الشرقية</option><option>المنوفية</option><option>الغربية</option><option>القليوبية</option>
+              <option>البحيرة</option><option>كفر الشيخ</option><option>دمياط</option><option>بورسعيد</option>
+              <option>الإسماعيلية</option><option>السويس</option><option>الفيوم</option><option>بني سويف</option>
+              <option>المنيا</option><option>أسيوط</option><option>سوهاج</option><option>قنا</option>
+              <option>الأقصر</option><option>أسوان</option><option>البحر الأحمر</option><option>مطروح</option>
+              <option>الوادي الجديد</option><option>شمال سيناء</option><option>جنوب سيناء</option>
+            </select>
+          </div>
+          <div id="accReqDistrictBox" style="display:none;">
+            <label style="font-size:11.5px; color:var(--emerald); font-weight:700;">📍 المركز التابع للمحافظة:</label>
+            <input id="accReqDistrict" placeholder="اسم المركز / المدينة..." style="padding:6px; font-size:12px;" />
           </div>
           <div style="grid-column:1 / -1;">
             <label style="font-size:11.5px; color:var(--muted);">ملاحظات / سبب الطلب:</label>

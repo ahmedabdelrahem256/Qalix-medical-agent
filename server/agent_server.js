@@ -214,6 +214,13 @@ managerHubDb.exec(`
     updated_at TEXT NOT NULL
   );
 `);
+for (const colSql of [
+  "ALTER TABLE account_requests ADD COLUMN system_scope TEXT DEFAULT ''",
+  "ALTER TABLE account_requests ADD COLUMN governorate TEXT DEFAULT ''",
+  "ALTER TABLE account_requests ADD COLUMN district TEXT DEFAULT ''"
+]) {
+  try { managerHubDb.exec(colSql); } catch (_) {}
+}
 
 const USER_ROLE_DEFINITIONS = [
   { key: 'owner', level: 1, icon: '👑', nameAr: 'صاحب العمل', color: '#f59e0b', desc: 'مالك المنظومات بالكامل — يجلب مفاتيح التفعيل من الخارج ويعتمدها' },
@@ -2602,18 +2609,38 @@ const server = http.createServer(async (req, res) => {
         const parentNames = { agents_manager: 'مدير الوكلاء', agent: 'الوكيل', distributor: 'الموزع' };
         return sendJson(res, 403, { error: `التسلسل الإداري: إنشاء هذا الحساب مقتصر على (${parentNames[parentRole] || 'صاحب العمل'}) أو صاحب العمل فقط.` });
       }
+      const systemScope = String(body.systemScope || '').trim().slice(0, 120);
+      const governorate = String(body.governorate || '').trim().slice(0, 80);
+      const district = String(body.district || '').trim().slice(0, 80);
+      if (roleKey === 'agent' && !systemScope) {
+        return sendJson(res, 400, { error: 'يرجى تحديد المنظومة المخصصة للوكيل (تسجيل الوكلاء حسب المنظومة).' });
+      }
+      if (roleKey === 'distributor' && !governorate) {
+        return sendJson(res, 400, { error: 'يرجى تحديد المحافظة المخصصة للموزع (تسجيل الموزعين حسب المحافظة).' });
+      }
+      if ((roleKey === 'rep' || roleKey === 'technician') && (!governorate || !district)) {
+        return sendJson(res, 400, { error: 'يرجى تحديد المحافظة والمركز التابع لها للمندوب/الفني للحفاظ على التوزيع الجغرافي.' });
+      }
+      const resolvedRegion = roleKey === 'agent'
+        ? (systemScope || String(body.region || '').trim())
+        : (roleKey === 'distributor'
+          ? (governorate || String(body.region || '').trim())
+          : `${governorate}${district ? ' — مركز ' + district : ''}`);
       const autoApprove = body.autoApprove !== false && (requestedByRole === 'owner' || requestedByRole === parentRole);
       const status = autoApprove ? 'approved' : 'pending';
       const approvedByRole = autoApprove ? requestedByRole : '';
       managerHubDb.prepare(`
-        INSERT INTO account_requests(id, role_key, full_name, phone, region, parent_role, requested_by_role, status, approved_by_role, notes, created_at, updated_at)
-        VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO account_requests(id, role_key, full_name, phone, region, system_scope, governorate, district, parent_role, requested_by_role, status, approved_by_role, notes, created_at, updated_at)
+        VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
         id,
         roleKey,
         fullName,
         String(body.phone || '').replace(/[^0-9+\-\s]/g, '').trim().slice(0, 24),
-        String(body.region || '').trim().slice(0, 100),
+        resolvedRegion.slice(0, 120),
+        systemScope,
+        governorate,
+        district,
         parentRole,
         requestedByRole,
         status,
@@ -2632,7 +2659,7 @@ const server = http.createServer(async (req, res) => {
             phone = excluded.phone,
             region = excluded.region,
             updated_at = excluded.updated_at
-        `).run(roleKey, fullName, String(body.phone || '').trim().slice(0, 24), def ? def.nameAr : roleKey, String(body.region || '').trim().slice(0, 100), nowIso);
+        `).run(roleKey, fullName, String(body.phone || '').trim().slice(0, 24), def ? def.nameAr : roleKey, resolvedRegion.slice(0, 120), nowIso);
       }
       logAudit('account_request_created', `إنشاء حساب (${roleKey}) بواسطة (${requestedByRole}): ${fullName} [${status}]`);
       const requests = managerHubDb.prepare('SELECT * FROM account_requests ORDER BY created_at DESC LIMIT 200').all();
@@ -2888,76 +2915,104 @@ const server = http.createServer(async (req, res) => {
       if (sha256 !== expected) {
         return sendJson(res, 400, { error: 'تم رفض الملف: البصمة الرقمية غير مطابقة (يوجد تعديل أو تلف في الملف)!' });
       }
+      // Pre-import safety: verify DB integrity & create automatic pre-sync snapshot
+      let preSyncBackupPath = '';
+      try {
+        const chk = managerHubDb.prepare('PRAGMA integrity_check').get();
+        if (chk && chk.integrity_check !== 'ok') {
+          return sendJson(res, 500, { error: 'تعذر الاستيراد: قاعدة البيانات المحلية تحتاج إلى صيانة أو استعادة نسخة أمان أولاً.' });
+        }
+        const preDir = path.join(BASE_DATA_DIR, 'pre_sync_backups');
+        fs.mkdirSync(preDir, { recursive: true });
+        preSyncBackupPath = path.join(preDir, `manager_hub.pre_sync_${Date.now()}.db`);
+        try { managerHubDb.exec('PRAGMA wal_checkpoint(PASSIVE);'); } catch (_) {}
+        const hubDbFile = path.join(BASE_DATA_DIR, 'manager_hub.db');
+        if (fs.existsSync(hubDbFile)) fs.copyFileSync(hubDbFile, preSyncBackupPath);
+        const existingBaks = fs.readdirSync(preDir).filter(f => f.endsWith('.db')).sort();
+        while (existingBaks.length > 10) {
+          fs.rmSync(path.join(preDir, existingBaks.shift()), { force: true });
+        }
+      } catch (_) {}
+
+      const isFromOwner = packet.exportedByRole === 'owner';
       let importedRequests = 0;
-      const upsertReq = managerHubDb.prepare(`
-        INSERT INTO account_requests(id, role_key, full_name, phone, region, parent_role, requested_by_role, status, approved_by_role, notes, created_at, updated_at)
-        VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ON CONFLICT(id) DO UPDATE SET
-          status = CASE WHEN excluded.updated_at > account_requests.updated_at THEN excluded.status ELSE account_requests.status END,
-          approved_by_role = CASE WHEN excluded.updated_at > account_requests.updated_at THEN excluded.approved_by_role ELSE account_requests.approved_by_role END,
-          updated_at = CASE WHEN excluded.updated_at > account_requests.updated_at THEN excluded.updated_at ELSE account_requests.updated_at END
-      `);
-      for (const r of (Array.isArray(packet.accountRequests) ? packet.accountRequests : [])) {
-        if (!r || !r.id || !r.role_key || !r.full_name) continue;
-        upsertReq.run(r.id, r.role_key, r.full_name, r.phone || '', r.region || '', r.parent_role || '', r.requested_by_role || '', r.status || 'pending', r.approved_by_role || '', r.notes || '', r.created_at || new Date().toISOString(), r.updated_at || new Date().toISOString());
-        importedRequests++;
-      }
       let importedProfiles = 0;
-      const upsertProf = managerHubDb.prepare(`
-        INSERT INTO role_profiles(role_key, full_name, phone, title, region, email, bio, updated_at)
-        VALUES(?, ?, ?, ?, ?, ?, ?, ?)
-        ON CONFLICT(role_key) DO UPDATE SET
-          full_name = CASE WHEN excluded.updated_at > role_profiles.updated_at THEN excluded.full_name ELSE role_profiles.full_name END,
-          phone = CASE WHEN excluded.updated_at > role_profiles.updated_at THEN excluded.phone ELSE role_profiles.phone END,
-          title = CASE WHEN excluded.updated_at > role_profiles.updated_at THEN excluded.title ELSE role_profiles.title END,
-          region = CASE WHEN excluded.updated_at > role_profiles.updated_at THEN excluded.region ELSE role_profiles.region END,
-          updated_at = CASE WHEN excluded.updated_at > role_profiles.updated_at THEN excluded.updated_at ELSE role_profiles.updated_at END
-      `);
-      for (const p of (Array.isArray(packet.roleProfiles) ? packet.roleProfiles : [])) {
-        if (!p || !p.role_key) continue;
-        upsertProf.run(p.role_key, p.full_name || '', p.phone || '', p.title || '', p.region || '', p.email || '', p.bio || '', p.updated_at || new Date().toISOString());
-        importedProfiles++;
-      }
-      if (typeof packet.ownerGlobalRules === 'string' && packet.ownerGlobalRules) {
-        managerHubDb.prepare("INSERT INTO manager_settings(key, value) VALUES('owner_global_rules', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value")
-          .run(packet.ownerGlobalRules.slice(0, 2000));
-      }
-      if (Array.isArray(packet.ownerCatalogItems)) {
-        const upsertOwnerItem = managerHubDb.prepare(`
-          INSERT INTO owner_catalog_items(id, name_ar, version, basic_price, pro_price, ent_price, agent_commission_pct, dist_commission_pct, marketing_pitch, presentation_url, updated_at)
-          VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      managerHubDb.exec('BEGIN IMMEDIATE');
+      try {
+        const upsertReq = managerHubDb.prepare(`
+          INSERT INTO account_requests(id, role_key, full_name, phone, region, system_scope, governorate, district, parent_role, requested_by_role, status, approved_by_role, notes, created_at, updated_at)
+          VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           ON CONFLICT(id) DO UPDATE SET
-            name_ar = CASE WHEN excluded.updated_at > owner_catalog_items.updated_at THEN excluded.name_ar ELSE owner_catalog_items.name_ar END,
-            version = CASE WHEN excluded.updated_at > owner_catalog_items.updated_at THEN excluded.version ELSE owner_catalog_items.version END,
-            basic_price = CASE WHEN excluded.updated_at > owner_catalog_items.updated_at THEN excluded.basic_price ELSE owner_catalog_items.basic_price END,
-            pro_price = CASE WHEN excluded.updated_at > owner_catalog_items.updated_at THEN excluded.pro_price ELSE owner_catalog_items.pro_price END,
-            ent_price = CASE WHEN excluded.updated_at > owner_catalog_items.updated_at THEN excluded.ent_price ELSE owner_catalog_items.ent_price END,
-            agent_commission_pct = CASE WHEN excluded.updated_at > owner_catalog_items.updated_at THEN excluded.agent_commission_pct ELSE owner_catalog_items.agent_commission_pct END,
-            dist_commission_pct = CASE WHEN excluded.updated_at > owner_catalog_items.updated_at THEN excluded.dist_commission_pct ELSE owner_catalog_items.dist_commission_pct END,
-            marketing_pitch = CASE WHEN excluded.updated_at > owner_catalog_items.updated_at THEN excluded.marketing_pitch ELSE owner_catalog_items.marketing_pitch END,
-            presentation_url = CASE WHEN excluded.updated_at > owner_catalog_items.updated_at THEN excluded.presentation_url ELSE owner_catalog_items.presentation_url END,
-            updated_at = CASE WHEN excluded.updated_at > owner_catalog_items.updated_at THEN excluded.updated_at ELSE owner_catalog_items.updated_at END
+            status = CASE WHEN excluded.updated_at > account_requests.updated_at THEN excluded.status ELSE account_requests.status END,
+            approved_by_role = CASE WHEN excluded.updated_at > account_requests.updated_at THEN excluded.approved_by_role ELSE account_requests.approved_by_role END,
+            updated_at = CASE WHEN excluded.updated_at > account_requests.updated_at THEN excluded.updated_at ELSE account_requests.updated_at END
         `);
-        for (const it of packet.ownerCatalogItems) {
-          if (!it || !it.id || !it.name_ar) continue;
-          upsertOwnerItem.run(it.id, it.name_ar, it.version || 'v1.0', Number(it.basic_price) || 4500, Number(it.pro_price) || 8500, Number(it.ent_price) || 18500, Number(it.agent_commission_pct) || 15, Number(it.dist_commission_pct) || 27, it.marketing_pitch || '', it.presentation_url || '', it.updated_at || new Date().toISOString());
+        for (const r of (Array.isArray(packet.accountRequests) ? packet.accountRequests : [])) {
+          if (!r || !r.id || !r.role_key || !r.full_name) continue;
+          upsertReq.run(r.id, r.role_key, r.full_name, r.phone || '', r.region || '', r.system_scope || '', r.governorate || '', r.district || '', r.parent_role || '', r.requested_by_role || '', r.status || 'pending', r.approved_by_role || '', r.notes || '', r.created_at || new Date().toISOString(), r.updated_at || new Date().toISOString());
+          importedRequests++;
         }
-      }
-      if (Array.isArray(packet.invitationCards)) {
-        const upsertInv = managerHubDb.prepare(`
-          INSERT INTO invitation_cards(id, inviter_role, inviter_name, target_role, invitee_name, invitee_phone, region, invite_code, rules_snapshot, status, created_at)
-          VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-          ON CONFLICT(id) DO UPDATE SET
-            status = CASE WHEN excluded.status = 'accepted' THEN 'accepted' ELSE invitation_cards.status END
+        const upsertProf = managerHubDb.prepare(`
+          INSERT INTO role_profiles(role_key, full_name, phone, title, region, email, bio, updated_at)
+          VALUES(?, ?, ?, ?, ?, ?, ?, ?)
+          ON CONFLICT(role_key) DO UPDATE SET
+            full_name = CASE WHEN excluded.updated_at > role_profiles.updated_at THEN excluded.full_name ELSE role_profiles.full_name END,
+            phone = CASE WHEN excluded.updated_at > role_profiles.updated_at THEN excluded.phone ELSE role_profiles.phone END,
+            title = CASE WHEN excluded.updated_at > role_profiles.updated_at THEN excluded.title ELSE role_profiles.title END,
+            region = CASE WHEN excluded.updated_at > role_profiles.updated_at THEN excluded.region ELSE role_profiles.region END,
+            updated_at = CASE WHEN excluded.updated_at > role_profiles.updated_at THEN excluded.updated_at ELSE role_profiles.updated_at END
         `);
-        for (const inv of packet.invitationCards) {
-          if (!inv || !inv.id || !inv.invite_code) continue;
-          upsertInv.run(inv.id, inv.inviter_role || 'owner', inv.inviter_name || '', inv.target_role || 'agent', inv.invitee_name || '', inv.invitee_phone || '', inv.region || '', inv.invite_code, inv.rules_snapshot || '', inv.status || 'issued', inv.created_at || new Date().toISOString());
+        for (const p of (Array.isArray(packet.roleProfiles) ? packet.roleProfiles : [])) {
+          if (!p || !p.role_key) continue;
+          if (p.role_key === 'owner' && !isFromOwner) continue;
+          upsertProf.run(p.role_key, p.full_name || '', p.phone || '', p.title || '', p.region || '', p.email || '', p.bio || '', p.updated_at || new Date().toISOString());
+          importedProfiles++;
         }
+        if (isFromOwner && typeof packet.ownerGlobalRules === 'string' && packet.ownerGlobalRules) {
+          managerHubDb.prepare("INSERT INTO manager_settings(key, value) VALUES('owner_global_rules', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value")
+            .run(packet.ownerGlobalRules.slice(0, 2000));
+        }
+        if (isFromOwner && Array.isArray(packet.ownerCatalogItems)) {
+          const upsertOwnerItem = managerHubDb.prepare(`
+            INSERT INTO owner_catalog_items(id, name_ar, version, basic_price, pro_price, ent_price, agent_commission_pct, dist_commission_pct, marketing_pitch, presentation_url, updated_at)
+            VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+              name_ar = CASE WHEN excluded.updated_at > owner_catalog_items.updated_at THEN excluded.name_ar ELSE owner_catalog_items.name_ar END,
+              version = CASE WHEN excluded.updated_at > owner_catalog_items.updated_at THEN excluded.version ELSE owner_catalog_items.version END,
+              basic_price = CASE WHEN excluded.updated_at > owner_catalog_items.updated_at THEN excluded.basic_price ELSE owner_catalog_items.basic_price END,
+              pro_price = CASE WHEN excluded.updated_at > owner_catalog_items.updated_at THEN excluded.pro_price ELSE owner_catalog_items.pro_price END,
+              ent_price = CASE WHEN excluded.updated_at > owner_catalog_items.updated_at THEN excluded.ent_price ELSE owner_catalog_items.ent_price END,
+              agent_commission_pct = CASE WHEN excluded.updated_at > owner_catalog_items.updated_at THEN excluded.agent_commission_pct ELSE owner_catalog_items.agent_commission_pct END,
+              dist_commission_pct = CASE WHEN excluded.updated_at > owner_catalog_items.updated_at THEN excluded.dist_commission_pct ELSE owner_catalog_items.dist_commission_pct END,
+              marketing_pitch = CASE WHEN excluded.updated_at > owner_catalog_items.updated_at THEN excluded.marketing_pitch ELSE owner_catalog_items.marketing_pitch END,
+              presentation_url = CASE WHEN excluded.updated_at > owner_catalog_items.updated_at THEN excluded.presentation_url ELSE owner_catalog_items.presentation_url END,
+              updated_at = CASE WHEN excluded.updated_at > owner_catalog_items.updated_at THEN excluded.updated_at ELSE owner_catalog_items.updated_at END
+          `);
+          for (const it of packet.ownerCatalogItems) {
+            if (!it || !it.id || !it.name_ar) continue;
+            upsertOwnerItem.run(it.id, it.name_ar, it.version || 'v1.0', Number(it.basic_price) || 4500, Number(it.pro_price) || 8500, Number(it.ent_price) || 18500, Number(it.agent_commission_pct) || 15, Number(it.dist_commission_pct) || 27, it.marketing_pitch || '', it.presentation_url || '', it.updated_at || new Date().toISOString());
+          }
+        }
+        if (Array.isArray(packet.invitationCards)) {
+          const upsertInv = managerHubDb.prepare(`
+            INSERT INTO invitation_cards(id, inviter_role, inviter_name, target_role, invitee_name, invitee_phone, region, invite_code, rules_snapshot, status, created_at)
+            VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+              status = CASE WHEN excluded.status = 'accepted' THEN 'accepted' ELSE invitation_cards.status END
+          `);
+          for (const inv of packet.invitationCards) {
+            if (!inv || !inv.id || !inv.invite_code) continue;
+            upsertInv.run(inv.id, inv.inviter_role || 'owner', inv.inviter_name || '', inv.target_role || 'agent', inv.invitee_name || '', inv.invitee_phone || '', inv.region || '', inv.invite_code, inv.rules_snapshot || '', inv.status || 'issued', inv.created_at || new Date().toISOString());
+          }
+        }
+        managerHubDb.exec('COMMIT');
+      } catch (txErr) {
+        try { managerHubDb.exec('ROLLBACK'); } catch (_) {}
+        return sendJson(res, 400, { error: 'تم التراجع عن الاستيراد تلقائياً لحماية قاعدة البيانات: ' + txErr.message });
       }
       logAudit('whatsapp_sync_imported', `استيراد ملف تحديث واتساب موقّع (${packet.exportedByRole || '-'}): ${importedRequests} طلب، ${importedProfiles} حساب`);
       const requests = managerHubDb.prepare('SELECT * FROM account_requests ORDER BY created_at DESC LIMIT 200').all();
-      return sendJson(res, 200, { ok: true, importedRequests, importedProfiles, requests, ...getRoleProfilesState() });
+      return sendJson(res, 200, { ok: true, importedRequests, importedProfiles, preSyncBackupPath, requests, ...getRoleProfilesState() });
     }
 
     if (req.method === 'POST' && pathname === '/api/manager/assign-agent') {
