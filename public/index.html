@@ -274,18 +274,18 @@
           <img src="/public/img/qalix-agents-icon.png" alt="كالكس لإدارة الوكلاء والموزعين — Qalix Agents & Distributors Management" width="58" height="58" style="border-radius:14px; border:1px solid rgba(56,189,248,0.45); box-shadow:0 8px 22px rgba(2,132,199,0.28); flex-shrink:0;" />
           <div>
             <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:6px;">
-              <span class="badge b-emerald">★ كالكس لإدارة الوكلاء والموزعين · Qalix Agents &amp; Distributors Management ★</span>
+              <span id="headerBrandBadge" class="badge b-emerald">★ منصة إدارة الوكلاء والموزعين · Agents &amp; Distributors Platform ★</span>
               <span class="badge b-sky">100% OFFLINE · أوفلاين بالكامل</span>
-              <span id="headerProjectBadge" class="badge b-amber">مشروع: كالكس لإدارة الوكلاء والموزعين</span>
+              <span id="headerProjectBadge" class="badge b-amber">منظومة إدارة الوكلاء والموزعين</span>
             </div>
-            <h1 id="headerMainTitle" style="margin:0; font-size:23px;">كالكس لإدارة الوكلاء والموزعين — لوحة مدير الوكلاء</h1>
+            <h1 id="headerMainTitle" style="margin:0; font-size:23px;">منظومة إدارة الوكلاء والموزعين — لوحة التحكم والعمليات</h1>
             <p id="headerMainSubtitle" style="margin:4px 0 0; color:var(--muted); font-size:12.5px;">
-              Qalix Agents &amp; Distributors Management · واجهة ويندوز عصرية أوفلاين 100% · إدارة 11 منظومة بدون إنترنت
+              إدارة الموزعين والعمليات التجارية · واجهة ويندوز حديثة تعمل أوفلاين 100%
             </p>
             <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:7px; align-items:center;">
-              <span id="desktopStorageBadge" class="badge b-emerald" style="font-size:10.5px;">💾 الحفظ داخل ملفات data/: جاري التحقق...</span>
-              <span class="badge b-purple" style="font-size:10.5px;">🔑 المفاتيح (لهذه المنظومة والمنظومات الـ 11) تصدر داخل المنصة فقط ويجلبها مدير الوكلاء يدوياً</span>
-              <button type="button" class="btn btn-sm btn-sky" style="padding:3px 9px; font-size:11px;" onclick="checkDesktopStorageHealth(true)">🔄 فحص وتثبيت حفظ الملفات الآن</button>
+              <span id="desktopStorageBadge" class="badge b-emerald" style="font-size:10.5px;">💾 الحفظ المحلي: جاري التحقق...</span>
+              <span id="headerKeyPolicyBadge" class="badge b-purple" style="font-size:10.5px;">🔑 مفاتيح التراخيص تصدر رسمياً من المنصة الأم المعتمدة وتُسلَّم عبر مدير الوكلاء</span>
+              <button type="button" class="btn btn-sm btn-sky" style="padding:3px 9px; font-size:11px;" onclick="checkDesktopStorageHealth(true)">🔄 فحص وتثبيت الحفظ</button>
             </div>
           </div>
         </div>
@@ -300,12 +300,12 @@
             </select>
           </div>
           <div class="sub-card">
-            <div id="headerAgentTitle" style="font-size:12px; color:var(--muted);">وكيل منصة كالكس المعتمد</div>
+            <div id="headerAgentTitle" style="font-size:12px; color:var(--muted);">الوكيل المعتمد</div>
             <div id="headerAgentPhone" style="font-size:15px; font-weight:800; color:var(--emerald);" dir="ltr">—</div>
           </div>
           <div class="sub-card">
             <div id="headerPackageTitle" style="font-size:12px; color:var(--muted);">حزمة التشغيل المستقلة (أوفلاين 100%)</div>
-            <div id="headerPackageSub" style="font-size:14px; font-weight:800; color:var(--sky);">بنية معزولة لكل منظومة · بدون اشتراك شهري</div>
+            <div id="headerPackageSub" style="font-size:14px; font-weight:800; color:var(--sky);">قاعدة بيانات مستقلة · ترخيص دائم</div>
           </div>
           <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
             <button id="appLicenseBadge" type="button" class="btn-amber" style="font-size:12px; padding:8px 12px; font-weight:800; cursor:pointer;" onclick="openAppLicenseModal(true)">⏳ تجربة مجانية (14 يوماً) · الأسعار والتفعيل</button>
@@ -319,12 +319,12 @@
       <div class="sub-card" style="margin-top:12px; padding:12px 14px; border:1px solid rgba(56,189,248,0.45); background:rgba(15,23,42,0.68); display:flex; flex-direction:column; gap:10px;">
         <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
           <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-            <span class="badge b-amber">👑 اللوحة الرئيسية لمدير الوكلاء (المستوى 2)</span>
-            <span class="badge b-sky" style="font-size:10.5px;">سلسلة الإدارة: صاحب المنصة (مخفي) ← مدير الوكلاء (أنت) ← الوكيل ← الموزع ← المندوب ← الفني</span>
+            <span class="badge b-amber">👑 لوحة مدير الوكلاء المركزية</span>
+            <span class="badge b-sky" style="font-size:10.5px;">الهيكل الإداري: الإدارة العليا ← مدير الوكلاء ← الوكيل ← الموزع ← المندوب ← الفني</span>
           </div>
           <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
-            <span id="topSlaBadge" class="badge b-amber" style="cursor:pointer;" onclick="document.getElementById('agentsManagerOversightSection')?.scrollIntoView({behavior:'smooth'})">⏱️ SLA: 0 تنبيهات</span>
-            <span id="topPendingKeyReqBadge" class="badge b-purple" style="cursor:pointer;" onclick="document.getElementById('managerKeyInboxSection')?.scrollIntoView({behavior:'smooth'})">🔑 0 طلبات مفاتيح لمدير الوكلاء</span>
+            <span id="topSlaBadge" class="badge b-amber" style="cursor:pointer;" onclick="document.getElementById('agentsManagerOversightSection')?.scrollIntoView({behavior:'smooth'})">⏱️ متابعة التأخير: 0 تنبيهات</span>
+            <span id="topPendingKeyReqBadge" class="badge b-purple" style="cursor:pointer;" onclick="document.getElementById('managerKeyInboxSection')?.scrollIntoView({behavior:'smooth'})">🔑 0 طلبات مفاتيح قيد التسليم</span>
             <button type="button" id="mgrAuthToggleBtn" class="btn btn-sm btn-sky" onclick="handleManagerPinAction()">🔐 حماية PIN / وضع الوكيل</button>
           </div>
         </div>
@@ -334,18 +334,18 @@
             <select id="systemSwitchSelect" onchange="switchActiveSystem(this.value)" style="min-width:270px; padding:7px 10px; font-size:12.5px; font-weight:700; border-radius:8px;">
               <option value="">جاري تحميل المنظومة النشطة...</option>
             </select>
-            <span id="activeSystemDbBadge" class="badge b-emerald" dir="ltr" style="font-family:monospace; font-size:11px;">DB: data/agent.db · Prefix: QLX2</span>
+            <span id="activeSystemDbBadge" class="badge b-emerald" style="font-size:11px;">نظام معزول · رمز الترخيص: QLX2</span>
           </div>
           <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
             <input id="mgrTopAgentName" placeholder="اسم الوكيل المسؤول..." style="width:155px; padding:6px 8px; font-size:12px;" />
             <input id="mgrTopAgentPhone" placeholder="هاتف الوكيل (010...)" dir="ltr" style="width:130px; padding:6px 8px; font-size:12px;" />
             <button type="button" class="btn btn-sm btn-emerald" onclick="assignSystemAgentTop()">✔ تعيين / حفظ الوكيل</button>
             <button type="button" class="btn btn-sm btn-sky" onclick="openMultiSystemModal()">➕ إضافة منظومة معزولة</button>
-            <button type="button" class="btn btn-sm btn-amber" onclick="openResellerEditionModal()">📦 تصدير نسخة مصفّرة (.zip)</button>
-            <button type="button" class="btn btn-sm btn-purple" onclick="exportAgentSyncFile()">📤 مزامنة .qlxsync</button>
+            <button type="button" class="btn btn-sm btn-amber" onclick="openResellerEditionModal()">📦 تصدير نسخة جديدة (.zip)</button>
+            <button type="button" class="btn btn-sm btn-purple" onclick="exportAgentSyncFile()">📤 تصدير حزمة مزامنة</button>
             <input type="file" id="qlxSyncFileInput" accept=".qlxsync,.json" style="display:none;" onchange="handleSyncFileChosen(this)" />
-            <button type="button" class="btn btn-sm btn-sky" onclick="document.getElementById('qlxSyncFileInput')?.click()">📥 استيراد .qlxsync</button>
-            <button type="button" class="btn btn-sm btn-emerald" onclick="buildWindowsInstallerKitUi()">💿 تجهيز مُثبِّت ويندوز 32/64</button>
+            <button type="button" class="btn btn-sm btn-sky" onclick="document.getElementById('qlxSyncFileInput')?.click()">📥 استيراد حزمة مزامنة</button>
+            <button type="button" class="btn btn-sm btn-emerald" onclick="buildWindowsInstallerKitUi()">💿 تجهيز حزمة التثبيت</button>
           </div>
         </div>
       </div>
@@ -389,18 +389,18 @@
     <div class="nav-bar">
       <nav class="tabs">
         <button class="tab-btn active" id="btn-pane-agent" onclick="openTab('pane-agent', this)">1. إدارة الوكيل والموزعين</button>
-        <button class="tab-btn" id="btn-pane-excellence" onclick="openTab('pane-excellence', this)">2. 🏆 ركن الريادة (#1)</button>
+        <button class="tab-btn" id="btn-pane-excellence" onclick="openTab('pane-excellence', this)">2. 🏆 التطوير والارتقاء</button>
         <button class="tab-btn" id="btn-pane-market" onclick="openTab('pane-market', this)">3. ⚔️ المنظومات المنافسة</button>
         <button class="tab-btn" id="btn-pane-specialty" onclick="openTab('pane-specialty', this)">4. 📦 حزم التخصصات الجاهزة</button>
-        <button class="tab-btn" id="btn-pane-migrator" onclick="openTab('pane-migrator', this)">5. 🔄 أداة هجرة Excel</button>
+        <button class="tab-btn" id="btn-pane-migrator" onclick="openTab('pane-migrator', this)">5. 🔄 استيراد بيانات Excel</button>
         <button class="tab-btn" id="btn-pane-fieldkit" onclick="openTab('pane-fieldkit', this)">6. 🖨️ حقيبة العرض والتسويق</button>
         <button class="tab-btn" id="btn-pane-contracts" onclick="openTab('pane-contracts', this)">7. 📄 العقود ومحاضر التسليم</button>
         <button class="tab-btn" id="btn-pane-quotations" onclick="openTab('pane-quotations', this)">8. 📋 عروض الأسعار والدليل الميداني</button>
         <button class="tab-btn" id="btn-pane-retention" onclick="openTab('pane-retention', this)">9. 🤝 ما بعد البيع والنسخ الاحتياطي</button>
         <button class="tab-btn" id="btn-pane-fieldtraining" onclick="openTab('pane-fieldtraining', this)">10. 🎓 التدريب الميداني والجاهزية الفنية</button>
         <button class="tab-btn" id="btn-pane-prescription" onclick="openTab('pane-prescription', this)">11. 🎖️ شرائح التميز والتنبؤ المالي</button>
-        <button class="tab-btn" id="btn-pane-audit" onclick="openTab('pane-audit', this)">12. فحص نسخة MEGA</button>
-        <button class="tab-btn" id="btn-pane-devconsole" onclick="openTab('pane-devconsole', this)" style="border: 1px solid rgba(245,158,11,0.5); color: #f59e0b; background: rgba(245,158,11,0.06);">13. 🛠️ لوحة المطور الفائقة</button>
+        <button class="tab-btn" id="btn-pane-audit" onclick="openTab('pane-audit', this)">12. 🛡️ تقرير الفحص والاعتماد</button>
+        <button class="tab-btn" id="btn-pane-devconsole" onclick="openTab('pane-devconsole', this)" style="border: 1px solid rgba(245,158,11,0.5); color: #f59e0b; background: rgba(245,158,11,0.06);">13. ⚙️ إدارة النظام والتصفير</button>
       </nav>
       <div style="display:flex; align-items:center; gap:8px; min-width:250px;">
         <span style="font-size:12px; color:var(--muted); white-space:nowrap;">⚡ انتقال سريع للقسم:</span>
@@ -416,8 +416,8 @@
           <option value="pane-retention">القسم 9: متابعة ما بعد البيع ورضاء العيادات والنسخ الاحتياطي</option>
           <option value="pane-fieldtraining">القسم 10: التدريب الميداني والجاهزية الفنية وحملات واتساب</option>
           <option value="pane-prescription">القسم 11: شرائح تميز الموزعين والتنبؤ المالي للإيرادات</option>
-          <option value="pane-audit">القسم 12: فحص واستضافة نسخة العميل (MEGA)</option>
-          <option value="pane-devconsole">القسم 13: 🛠️ لوحة المطور وتصفير البيانات ورفع الفيديوهات</option>
+          <option value="pane-audit">القسم 12: تقرير الفحص والاعتماد</option>
+          <option value="pane-devconsole">القسم 13: ⚙️ إدارة النظام والتصفير والوسائط</option>
         </select>
       </div>
     </div>
@@ -551,12 +551,12 @@
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
           <div>
             <div style="display:flex; gap:8px; align-items:center; margin-bottom:4px; flex-wrap:wrap;">
-              <span class="badge b-rose">🔐 قناة سرية لمدير الوكلاء فقط (لا يظهر صاحب المنصة للوكلاء أو الموزعين أو العملاء)</span>
-              <span class="badge b-emerald">جلب مفاتيح التفعيل يدوياً من خارج المنظومة</span>
+              <span class="badge b-rose">🔐 قناة خاصة بمدير الوكلاء للتواصل المباشر مع إدارة المنصة</span>
+              <span class="badge b-emerald">اعتماد وتسليم مفاتيح التفعيل عبر مدير الوكلاء</span>
             </div>
-            <h3 style="margin:0; font-size:17px; color:var(--text);">👑 لوحة مدير الوكلاء المركزية والقناة السرية مع صاحب المنصة (الوكيل النشط: <span class="dyn-agent-phone" dir="ltr">—</span>)</h3>
+            <h3 style="margin:0; font-size:17px; color:var(--text);">👑 لوحة مدير الوكلاء المركزية وقناة التراخيص الرسمية (الوكيل النشط: <span class="dyn-agent-phone" dir="ltr">—</span>)</h3>
             <p style="margin:4px 0 0; font-size:12px; color:var(--muted);">
-              الهرم الإداري الصارم: <strong>صاحب المنصة (مخفي إلا لمدير الوكلاء)</strong> ← <strong>مدير الوكلاء (أنت)</strong> ← <strong>الوكلاء (هم فقط من يتواصلون مع مدير الوكلاء)</strong> ← الموزع ← المندوب ← الفني. هذه المنظومة لا تحتوي على أي أداة إنشاء مفاتيح؛ يُحضرها مدير الوكلاء يدوياً من صاحب المنصة ويسلمها للوكيل.
+              تسلسل الصلاحيات المعتمد: <strong>إدارة المنصة</strong> ← <strong>مدير الوكلاء</strong> ← <strong>الوكيل العام</strong> ← <strong>الموزع</strong> ← <strong>المندوب</strong> ← <strong>الفني</strong>. تصدر مفاتيح التفعيل رسمياً من المنصة الأم المعتمدة ويتم تسليمها للوكيل عبر مدير الوكلاء.
             </p>
           </div>
           <button type="button" class="btn btn-sm btn-sky" onclick="toggleOwnerPhoneVisibility()">👁️ إظهار / إخفاء الرقم المحفوظ</button>
@@ -652,7 +652,7 @@
         <div id="agentsManagerOversightSection" class="sub-card" style="margin-top:14px; padding:12px; border:1px solid rgba(251,191,36,0.4); background:rgba(15,23,42,0.7);">
           <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
             <div>
-              <h4 style="margin:0; color:var(--amber); font-size:15px;">🏛️ لوحة مدير الوكلاء المتقدمة: متابعة نشاط عمل جميع الوكلاء والمنظومات الـ 11 والفرق الميدانية</h4>
+              <h4 style="margin:0; color:var(--amber); font-size:15px;">🏛️ لوحة مدير الوكلاء المتقدمة: متابعة نشاط الوكلاء والمنظومات والفرق الميدانية</h4>
               <p style="margin:2px 0 0; font-size:11.5px; color:var(--muted);">يرى مدير الوكلاء هنا أداء كل وكيل ومنظومة (منظومة كالكس الطبية ببياناتها المدمجة + باقي المنظومات المصفّرة)، ويمكنه الانتقال لأي منظومة أو وكيل بضغطة واحدة.</p>
             </div>
             <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
@@ -1708,9 +1708,9 @@
     <!-- ==================== PANE 12: LIVE HOSTED CLIENT PACKAGE AUDIT ==================== -->
     <section id="pane-audit" class="pane">
       <div class="glass">
-        <h2 style="margin-top:0;">تقرير استضافة واختبار نسخة العميل الحية من رابط MEGA (18 / 18 ناجح)</h2>
+        <h2 style="margin-top:0;">تقرير الفحص الفني والاعتماد التشغيلي (18 / 18 ناجح)</h2>
         <p style="font-size:13px; color:var(--muted);">
-          تم تحميل حزمة `Qalix_Medical_v1.0.zip` (35.63 ميجابايت) من رابط MEGA العام وفحص بصمتها `0f7ff4448eb11ee1385332edf4233f0b6cc9964f490782800de78efc2b8499f7` وتشغيلها في بيئة معزولة تماماً دون لمس أو تعديل أي ملف فيها:
+          تم التحقق من سلامة الحزمة التنفيذية وبصمتها الأمنية وتشغيلها في بيئة معزولة تماماً واجتياز كافة اختبارات الأمان والتشفير والتشغيل:
         </p>
         <div class="grid-3">
           <div class="sub-card">
@@ -1735,12 +1735,12 @@
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:14px;">
           <div>
             <div style="display:flex; align-items:center; gap:8px;">
-              <span class="badge" style="background:#f59e0b; color:#000; font-weight:800;">🛠️ لوحة المطور الفائقة</span>
+              <span class="badge" style="background:#f59e0b; color:#000; font-weight:800;">⚙️ إدارة النظام والتصفير</span>
               <span class="badge b-emerald">وضع الإدارة الكاملة · 100% أوفلاين</span>
             </div>
-            <h2 style="margin:6px 0 2px; font-size:19px; color:#f59e0b;">لوحة المطور والتحكم الفائق (Developer & System Admin Console)</h2>
+            <h2 style="margin:6px 0 2px; font-size:19px; color:#f59e0b;">لوحة إدارة النظام والبيانات المتقدمة</h2>
             <p style="margin:0; font-size:12.5px; color:var(--muted);">
-              إدارة بيانات المنظومة بالكامل: تصفير الصفقات التجريبية، استعادة ضبط المصنع، رفع الفيديوهات والوسائط الجديدة، وإضافة رسائل واتساب تسويقية مخصصة.
+              إدارة بيانات المنظومة بالكامل: تصفير البيانات التجريبية، استعادة ضبط المصنع، إضافة الوسائط والكتالوجات الجديدة، وتحديث قوالب الرسائل التسويقية.
             </p>
           </div>
           <button class="btn btn-sm" style="background:#f59e0b; color:#000; font-weight:bold;" onclick="loadDevStatus()">🔄 تحديث مؤشرات الخادم</button>
@@ -2133,23 +2133,34 @@
       const isMedical = sysId === 'qalix_medical';
       const agentPhone = (data.agent && data.agent.phone) ? data.agent.phone : '01000000000';
 
-      document.title = 'كالكس لإدارة الوكلاء والموزعين | Qalix Agents & Distributors Management — ' + sysName;
+      const isUniversalMode = !!(data.universalOnly || (sysId === 'universal_agent'));
+      document.title = isUniversalMode
+        ? ('منظومة إدارة الوكلاء والموزعين الموحدة — ' + sysName)
+        : ('كالكس لإدارة الوكلاء والموزعين | Qalix Agents & Distributors Management — ' + sysName);
       document.querySelectorAll('.dyn-agent-phone').forEach(el => { el.innerText = agentPhone; });
       document.querySelectorAll('.dyn-system-name').forEach(el => { el.innerText = sysName; });
 
+      const brandBadge = document.getElementById('headerBrandBadge');
+      if (brandBadge) {
+        brandBadge.innerText = isUniversalMode
+          ? '★ منصة إدارة الوكلاء والموزعين · Agents & Distributors Platform ★'
+          : '★ كالكس لإدارة الوكلاء والموزعين · Qalix Agents & Distributors Management ★';
+      }
       const projBadge = document.getElementById('headerProjectBadge');
       if (projBadge) {
-        projBadge.innerText = `منظومة: ${sysObj.projectName || 'Qalix Platform'} (${sysObj.licensePrefix || 'QLX2'})`;
+        projBadge.innerText = isUniversalMode
+          ? `منظومة مستقلة (${sysObj.licensePrefix || 'AGT2'})`
+          : `منظومة: ${sysObj.projectName || 'Qalix Platform'} (${sysObj.licensePrefix || 'QLX2'})`;
       }
       const pkgTitle = document.getElementById('headerPackageTitle');
       const pkgSub = document.getElementById('headerPackageSub');
       if (pkgTitle && pkgSub) {
         if (isMedical && data.agent?.packageSha256) {
-          pkgTitle.innerText = 'نسخة العميل v1.0 (محمية بدون أي لمس)';
-          pkgSub.innerText = 'مفحوصة 18/18 · بصمة SHA-256 مطابقة';
+          pkgTitle.innerText = 'الإصدار المعتمد v1.0';
+          pkgSub.innerText = 'مفحوص 18/18 · بصمة SHA-256 مطابقة';
         } else {
           pkgTitle.innerText = 'حزمة العمل المستقلة (أوفلاين 100%)';
-          pkgSub.innerText = `قاعدة معزولة (${sysId}) · بدون اشتراك شهري`;
+          pkgSub.innerText = 'قاعدة بيانات مستقلة ومعزولة · بدون اشتراك شهري';
         }
       }
 
@@ -2157,9 +2168,9 @@
         const h1 = document.getElementById('headerMainTitle');
         const sub = document.getElementById('headerMainSubtitle');
         const badge = document.getElementById('activeSystemDbBadge');
-        if (h1) h1.innerText = 'لوحة تحكم: وكيل ' + data.activeSystem.nameAr + ' وشبكة الموزعين';
+        if (h1) h1.innerText = 'لوحة تحكم: ' + data.activeSystem.nameAr;
         if (sub) sub.innerText = (data.activeSystem.subtitleAr || '') + ' · بيانات معزولة 100% · السعر الرسمي الموحد';
-        if (badge) badge.innerText = `DB: ${data.activeSystem.dbFileRel} · Prefix: ${data.activeSystem.licensePrefix}`;
+        if (badge) badge.innerText = `نظام معزول · رمز الترخيص: ${data.activeSystem.licensePrefix || 'AGT2'}`;
       }
       if (data.agent) {
         const at = document.getElementById('headerAgentTitle');
@@ -2173,7 +2184,7 @@
       }
       const keyReqBadge = document.getElementById('topPendingKeyReqBadge');
       if (keyReqBadge && data.pendingKeyRequestsCount !== undefined) {
-        keyReqBadge.innerText = `🔑 ${data.pendingKeyRequestsCount} طلبات مفاتيح لمدير الوكلاء`;
+        keyReqBadge.innerText = `🔑 ${data.pendingKeyRequestsCount} طلبات تراخيص معلقة`;
         keyReqBadge.className = 'badge ' + (data.pendingKeyRequestsCount > 0 ? 'b-amber' : 'b-purple');
       }
       if (data.appLicense && typeof applyAppLicenseState === 'function') {
@@ -4602,7 +4613,7 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
               .map(id => systemsPresetsCache.find(p => p.id === id))
               .filter(Boolean);
             if (uninstantiatedQalix.length) {
-              htmlOpts += `<optgroup label="🏢 قائمة منظومات منصة كالكس الـ 11 (تُنشأ معزولة عند الاختيار)">` +
+              htmlOpts += `<optgroup label="🏢 قائمة منظومات منصة كالكس (تُنشأ معزولة عند الاختيار)">` +
                 uninstantiatedQalix.map(p =>
                   `<option value="__preset__:${p.id}">[${p.suiteOrder || '★'}] ${p.nameAr} (${p.licensePrefix})</option>`
                 ).join('') + `</optgroup>`;
@@ -4610,7 +4621,7 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
             if (!activeIds.has('universal_agent')) {
               const uni = systemsPresetsCache.find(p => p.id === 'universal_agent');
               if (uni) {
-                htmlOpts += `<optgroup label="🌐 النسخة العامة المصفرة (المعروضة للبيع لأي نشاط)">` +
+                htmlOpts += `<optgroup label="🌐 المنظومة العامة الموحدة">` +
                   `<option value="__preset__:universal_agent">🌐 ${uni.nameAr} (${uni.licensePrefix})</option></optgroup>`;
               }
             }
@@ -5086,11 +5097,11 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
       </div>
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
         <div style="grid-column:1 / -1;">
-          <label style="font-size:12px; color:var(--muted);">اختر قالب منظومة جاهز (منظومات كالكس الـ 11 أو النسخة العامة المعروضة للبيع):</label>
+          <label style="font-size:12px; color:var(--muted);">اختر قالب منظومة جاهز:</label>
           <select id="msPreset" onchange="applySystemPresetForm(this.value)" style="padding:7px; font-size:12.5px;">
             <option value="">— منظومة مخصصة بالكامل —</option>
-            <option value="universal_agent">🌐 منظومة إدارة الوكلاء والموزعين العامة المعروضة للبيع لأي نشاط (AGT2)</option>
-            <optgroup label="🏢 منظومات منصة كالكس الـ 11 (بدون منظومة الأرشفة والخزنة الرقمية)">
+            <option value="universal_agent">🌐 منظومة إدارة الوكلاء والموزعين الموحدة (AGT2)</option>
+            <optgroup label="🏢 منظومات منصة كالكس المتكاملة">
               <option value="qalix_medical">1. 🏥 منظومة كالكس الطبية الشاملة (QLX2)</option>
               <option value="qalix_finance">2. 🏛️ منظومة كالكس المالية والخزينة العامة (QFN2)</option>
               <option value="qalix_assets">3. ⚙️ منظومة كالكس لإدارة الأصول والمعدات والصيانة الوقائية (QAS2)</option>
@@ -5144,7 +5155,7 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
         </div>
         <div style="grid-column:1 / -1;">
           <label style="font-size:12px; color:var(--muted);">رابط النسخة التجريبية لهذه المنظومة (اختياري):</label>
-          <input id="msMegaUrl" dir="ltr" placeholder="https://mega.nz/..." style="padding:6px; font-size:12px;" />
+          <input id="msMegaUrl" dir="ltr" placeholder="https://example.com/download" style="padding:6px; font-size:12px;" />
         </div>
       </div>
       <button type="button" class="btn btn-sky" style="width:100%; font-weight:800;" onclick="submitCreateIsolatedSystem()">
@@ -5175,8 +5186,8 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
         <div style="grid-column:1 / -1;">
           <label style="font-size:12px; color:var(--muted);">نوع النسخة المصدّرة:</label>
           <select id="rsDefaultSystem" style="padding:6px; font-size:12px;">
-            <option value="universal_agent" selected>🌐 النسخة العامة المصفرة (المعروضة للبيع لأي نشاط — بدون منظومات كالكس)</option>
-            <option value="qalix_suite_11">🏢 نسخة وكلاء منصة كالكس المخصصة (تضم المنظومات الـ 11 معزولة — بدون الأرشفة)</option>
+            <option value="universal_agent" selected>🌐 النسخة العامة الموحدة (مصفرّة وجاهزة لأي نشاط)</option>
+            <option value="qalix_suite_11">🏢 نسخة وكلاء منصة كالكس المتكاملة (11 منظومة معزولة)</option>
             <option value="qalix_platform">🎯 نسخة كالكس لإدارة الوكلاء منفردة (QLXP)</option>
           </select>
         </div>
