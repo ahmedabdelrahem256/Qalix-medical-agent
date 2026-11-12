@@ -3605,6 +3605,10 @@ server.listen(activePort, HOST, () => {
   console.log(`  - Agent Command URL:      http://${HOST}:${activePort}`);
   console.log(`  - Database (SQLite WAL):  ${dbPath}`);
   console.log(`=============================================================`);
+  try {
+    fs.mkdirSync(BASE_DATA_DIR, { recursive: true });
+    fs.writeFileSync(path.join(BASE_DATA_DIR, '.runtime_port'), String(activePort), 'utf8');
+  } catch (_) {}
   if (process.env.AUTO_OPEN_BROWSER === '1' && process.platform === 'win32') {
     const openHost = HOST === '0.0.0.0' ? '127.0.0.1' : HOST;
     openWindowsDesktopApp(`http://${openHost}:${activePort}`, BASE_DATA_DIR);
@@ -3662,6 +3666,7 @@ function runAutoSessionBackup(reason = 'session_end') {
 }
 
 function gracefulShutdown() {
+  try { fs.rmSync(path.join(BASE_DATA_DIR, '.runtime_port'), { force: true }); } catch (_) {}
   try { runAutoSessionBackup('shutdown'); } catch (_) {}
   for (const conn of dbPool.values()) {
     try { conn.exec('PRAGMA wal_checkpoint(TRUNCATE);'); } catch (_) {}

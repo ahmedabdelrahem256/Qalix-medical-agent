@@ -43,8 +43,8 @@
 
 | الملف | الوصف | البصمة الأمنية (`SHA-256`) |
 |---|---|---|
-| `data/exports/Universal_Agents_Setup_v1.0.exe` | مُثبِّت ويندوز التنفيذي الكامل (Inno Setup + Node Runtime) | `55302963f5b1c67e103a394547528ced22d8d8255e0225236d690119a48ba10a` |
-| `data/exports/Universal_Agents_Setup_v1.0.zip` | النسخة المضغوطة من مُثبِّت ويندوز للتوزيع والمشاركة | `9ead7c42ca6756ef0f9e3ea513679b32a6453b478ad3258811b6bc555bcb886f` |
+| `data/exports/Universal_Agents_Setup_v1.0.exe` | مُثبِّت ويندوز التنفيذي الكامل (Inno Setup + Node Runtime) | `a21dffbe24e5e44f0ee99400a3fbb5d88de73422cd8311bd8c894d5e264d5af9` |
+| `data/exports/Universal_Agents_Setup_v1.0.zip` | النسخة المضغوطة من مُثبِّت ويندوز للتوزيع والمشاركة | `7440819e4d04b064d41146e09bd836d7853acd0d9e3a7dcc1f8b673fe319a94f` |
 | `data/exports/SHA256_CHECKSUMS.txt` | ملف التحقق الرسمي لبصمات SHA-256 | — |
 
 ---
