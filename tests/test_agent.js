@@ -993,8 +993,8 @@ function req(method, urlPath, body) {
     const dsStaticCatRes = await req('GET', '/presentations/' + encodeURIComponent('كتالوج_تشغيل_الموزع_الميداني.html'));
     const kitRefreshed = await req('GET', `/api/distributors/${sampleDistId}/kit?preview=1`);
     check('66. كتالوج الوكيل الحصري وكتالوج الموزع الميداني المصوران بالصور الحية مع العزل التام للبيانات',
-      (hasAgCat ? (agCatRes.status === 200 && typeof agCatRes.body === 'string' && agCatRes.body.includes('data:image/png;base64,') && agCatRes.body.includes('مركز التصفير الآمن')) : agCatRes.status === 404) &&
-      (hasDsCat ? (dsCatRes.status === 200 && dsStaticCatRes.status === 200 && dsCatRes.body.includes('data:image/png;base64,') && !dsCatRes.body.includes('لوحة المطور') && !dsCatRes.body.includes('فحص نسخة MEGA')) : (dsCatRes.status === 404 && dsStaticCatRes.status === 404)) &&
+      (hasAgCat ? (agCatRes.status === 200 && typeof agCatRes.body === 'string' && agCatRes.body.includes('data:image/png;base64,') && agCatRes.body.includes('مركز التصفير الآمن')) : (agCatRes.status === 200 && typeof agCatRes.body === 'string' && agCatRes.body.includes('كتالوج تشغيل الوكيل'))) &&
+      (hasDsCat ? (dsCatRes.status === 200 && dsStaticCatRes.status === 200 && dsCatRes.body.includes('data:image/png;base64,') && !dsCatRes.body.includes('لوحة المطور') && !dsCatRes.body.includes('فحص نسخة MEGA')) : (dsCatRes.status === 200 && typeof dsCatRes.body === 'string' && dsCatRes.body.includes('كتالوج عمل الموزع') && dsStaticCatRes.status === 404)) &&
       kitRefreshed.body.includes('/api/catalogs/distributor') &&
       !kitRefreshed.body.includes('/api/catalogs/agent'),
       {

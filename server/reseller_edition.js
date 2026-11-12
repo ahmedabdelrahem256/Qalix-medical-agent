@@ -220,7 +220,9 @@ function buildCleanResellerEdition(options = {}) {
     ''
   ].join('\r\n');
   fs.writeFileSync(path.join(editionDir, 'START_AGENT_PANEL.bat'), startBat, 'utf8');
-  fs.writeFileSync(path.join(editionDir, vbsFileName), generateSilentDesktopVbs('START_AGENT_PANEL.bat'), 'utf8');
+  const vbsContent = generateSilentDesktopVbs('START_AGENT_PANEL.bat');
+  const vbsBuf = Buffer.concat([Buffer.from([0xFF, 0xFE]), Buffer.from(vbsContent, 'utf16le')]);
+  fs.writeFileSync(path.join(editionDir, vbsFileName), vbsBuf);
 
   const installBat = generateWindowsOneClickInstallBat({
     appShortcutName: isQalixSuiteEdition ? 'Qalix Agents & Distributors Management' : 'Universal Agents & Distributors Management',

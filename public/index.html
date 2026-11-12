@@ -300,7 +300,7 @@
             </p>
             <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:7px; align-items:center;">
               <span id="desktopStorageBadge" class="badge b-emerald" style="font-size:10.5px;">💾 الحفظ المحلي: جاري التحقق...</span>
-              <span id="headerKeyPolicyBadge" class="badge b-purple" style="font-size:10.5px;">🔑 مفاتيح التراخيص تصدر رسمياً من المنصة الأم المعتمدة وتُسلَّم عبر مدير الوكلاء</span>
+              <span id="headerKeyPolicyBadge" class="badge b-purple" style="font-size:10.5px;">🔑 مفاتيح التراخيص يجلبها صاحب العمل (مالك المنظومات) من الخارج ويُسلَّمها عبر مدير الوكلاء</span>
               <button type="button" class="btn btn-sm btn-sky" style="padding:3px 9px; font-size:11px;" onclick="checkDesktopStorageHealth(true)">🔄 فحص وتثبيت الحفظ</button>
             </div>
           </div>
@@ -328,6 +328,43 @@
             <button type="button" class="btn-emerald" style="font-size:12px; padding:8px 12px;" onclick="openCardPreviewModal({ title: '📘 كتالوج تشغيل الوكيل الحصري (من أ إلى ي)', subtitle: 'دليل مصور خاص بوكيل المنظومة فقط (يعمل أوفلاين + طباعة A4)', previewUrl: '/api/catalogs/agent', downloadUrl: '/api/catalogs/agent?download=1' })">📘 كتالوج الوكيل المصور (A–Z)</button>
             <button type="button" class="btn-sky" style="font-size:12px; padding:8px 12px;" onclick="openCardPreviewModal({ title: '💼 كتالوج عمل الموزع الميداني (من أ إلى ي)', subtitle: 'دليل مصور خاص بعمل الموزع وبوابته المستقلة فقط (جاهز للإرسال للموزع)', previewUrl: '/api/catalogs/distributor', downloadUrl: '/api/catalogs/distributor?download=1' })">💼 كتالوج الموزع المصور (A–Z)</button>
           </div>
+        </div>
+      </div>
+
+      <!-- Modern Hierarchical Role Switcher & Personal Profile Bar -->
+      <div id="roleHierarchyBar" class="sub-card" style="margin-top:14px; padding:12px 14px; border:1px solid rgba(16,185,129,0.42); background:linear-gradient(135deg, rgba(15,23,42,0.86), rgba(6,78,59,0.22)); display:flex; flex-direction:column; gap:10px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <span style="display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:999px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.14); font-size:11px; font-weight:700; color:#e2e8f0;">
+              <img src="/public/img/qalix-sovereign-logo.svg" alt="منصة كالكس الأم" width="16" height="16" style="border-radius:3px;" />
+              <img src="/public/img/qalix-agents-icon.png" alt="شعار المنظومة" width="16" height="16" style="border-radius:3px;" />
+              <span>الأدوار والحسابات المعتمدة</span>
+            </span>
+            <div id="roleButtonsGroup" style="display:flex; flex-wrap:wrap; gap:6px; align-items:center;"></div>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+            <div id="activeRoleMiniCard" style="display:flex; align-items:center; gap:8px; padding:4px 10px; border-radius:10px; background:rgba(15,23,42,0.75); border:1px solid var(--border);">
+              <img id="activeRoleMiniAvatar" src="" alt="" width="30" height="30" style="display:none; width:30px; height:30px; border-radius:50%; object-fit:cover; border:1.5px solid var(--emerald);" />
+              <span id="activeRoleMiniIcon" style="font-size:18px;">👑</span>
+              <div style="line-height:1.25;">
+                <div id="activeRoleMiniName" style="font-size:12px; font-weight:800; color:var(--text);">صاحب العمل</div>
+                <div id="activeRoleMiniMeta" style="font-size:10.5px; color:var(--muted);">اضغط لتخصيص البيانات والصورة</div>
+              </div>
+            </div>
+            <button type="button" class="btn btn-sm btn-emerald" onclick="openRoleProfileModal()" style="font-weight:800;">👤 بياناتي وصورتي (معاينة)</button>
+          </div>
+        </div>
+        <!-- Guided Step-by-Step Workflow & Live Data Safety Bar per Role -->
+        <div id="roleGuidedWorkflowBox" style="display:flex; flex-direction:column; gap:8px; padding-top:8px; border-top:1px dashed rgba(148,163,184,0.25);">
+          <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+            <span id="roleWorkflowTitle" style="font-size:12px; font-weight:800; color:var(--sky);">🧭 خطوات العمل الموصى بها:</span>
+            <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+              <span id="roleSafetyInlineBadge" class="badge b-emerald" style="font-size:10.5px;">🛡️ سلامة البيانات: جاهز للفحص</span>
+              <button type="button" class="btn btn-sm btn-emerald" style="padding:4px 10px; font-size:11px; font-weight:800;" onclick="verifyDataAndCreateBackupNow()">🛡️ فحص سلامة البيانات وأخذ نسخة أمان الآن</button>
+            </div>
+          </div>
+          <div id="roleWorkflowSteps" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(190px, 1fr)); gap:8px;"></div>
+          <div id="roleSafetyVerifyResult" style="display:none; padding:8px 12px; border-radius:10px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.4); font-size:11.5px; color:#d1fae5;"></div>
         </div>
       </div>
 
@@ -465,11 +502,11 @@
               </div>
               <div>
                 <label style="font-size:12px; color:var(--muted);">المحافظة / النطاق الجغرافي:</label>
-                <input id="dGov" placeholder="مثال: أسيوط والصعيد" />
+                <input id="dGov" placeholder="مثال: القاهرة / الجيزة / المحافظات" />
               </div>
               <div>
                 <label style="font-size:12px; color:var(--muted);">المدينة / المركز التابع له:</label>
-                <input id="dCity" placeholder="مثال: مدينة أسيوط / ديروط / منفلوط" />
+                <input id="dCity" placeholder="مثال: مدينة نصر / وسط البلد / الفرع الرئيسي" />
               </div>
               <div>
                 <label style="font-size:12px; color:var(--muted);">الشريحة التعاقدية الافتتاحية:</label>
@@ -515,16 +552,16 @@
                 </select>
               </div>
               <div>
-                <label style="font-size:12px; color:var(--muted);">اسم العيادة / المركز الطبي:</label>
-                <input id="dlClinic" placeholder="مثال: عيادة الحياة التخصصية" />
+                <label style="font-size:12px; color:var(--muted);">اسم العميل / المنشأة:</label>
+                <input id="dlClinic" placeholder="مثال: شركة النور للتجارة" />
               </div>
               <div>
-                <label style="font-size:12px; color:var(--muted);">اسم الطبيب وهاتفه:</label>
+                <label style="font-size:12px; color:var(--muted);">اسم المسؤول وهاتفه:</label>
                 <input id="dlDoctor" placeholder="د. محمد علي - 010..." />
               </div>
               <div>
-                <label style="font-size:12px; color:var(--muted);">بصمة جهاز العيادة (Hardware ID):</label>
-                <input id="dlHwid" placeholder="تُنسخ من نافذة التفعيل بالعيادة" dir="ltr" />
+                <label style="font-size:12px; color:var(--muted);">بصمة جهاز العميل (Hardware ID):</label>
+                <input id="dlHwid" placeholder="تُنسخ من نافذة التفعيل على جهاز العميل" dir="ltr" />
               </div>
               <div>
                 <label style="font-size:12px; color:var(--muted);">السياسة السعرية المعتمدة:</label>
@@ -546,14 +583,14 @@
           <div>
             <div style="display:flex; gap:8px; margin-bottom:6px;">
               <span class="badge b-emerald">🟢 الشبكة المحلية نشطة وجاهزة للاستخدام</span>
-              <span class="badge b-sky">أوفلاين بالكامل داخل العيادة</span>
+              <span class="badge b-sky">أوفلاين بالكامل داخل المنشأة</span>
             </div>
-            <h3 style="margin:0 0 4px; font-size:17px; color:var(--text);">جاهزية شبكة العيادة وربط الموبايل والتابلت بـ QR فوري</h3>
+            <h3 style="margin:0 0 4px; font-size:17px; color:var(--text);">جاهزية الشبكة المحلية وربط الموبايل والتابلت بـ QR فوري</h3>
             <p style="margin:0; font-size:12.5px; color:var(--muted); max-width:650px; line-height:1.6;">
-              امسح الرمز بكاميرا أي هاتف أو تابلت متصل بنفس راوتر الواي فاي بالعيادة لتجربة شاشة الانتظار والنداء الصوتي والاستدعاء فوراً بدون إنترنت:
+              امسح الرمز بكاميرا أي هاتف أو تابلت متصل بنفس الشبكة المحلية لتجربة الدخول المباشر بدون إنترنت:
             </p>
             <div style="margin-top:10px; font-size:13px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-              <span>رابط العيادة المحلي المباشر:</span>
+              <span>رابط الدخول المحلي المباشر:</span>
               <code id="localNetUrl" style="color:var(--sky); font-weight:bold; font-size:14px; background:rgba(15,23,42,0.8); padding:4px 10px; border-radius:6px;" dir="ltr">جاري الفحص...</code>
               <button class="btn btn-sm btn-sky" onclick="copyNetUrl()">نسخ الرابط</button>
             </div>
@@ -603,7 +640,7 @@
           </div>
           <div>
             <label style="font-size:11.5px; color:var(--muted);">مرجع المنظومة / العميل / الوكيل (اختياري):</label>
-            <input id="ownerClinicRef" placeholder="مثال: منظومة كالكس الطبية — عيادة النور" />
+            <input id="ownerClinicRef" placeholder="مثال: عميل جديد — شركة النور" />
           </div>
           <div>
             <label style="font-size:11.5px; color:var(--muted);">بصمة الجهاز (HWID) أو المبلغ:</label>
@@ -728,7 +765,7 @@
             </div>
             <div>
               <label style="font-size:11px; color:var(--muted);">اسم العميل / المنشأة:</label>
-              <input id="mprCustomerName" placeholder="مثال: شركة النور / عيادة..." style="padding:6px; font-size:12px;" />
+              <input id="mprCustomerName" placeholder="مثال: شركة النور للتجارة" style="padding:6px; font-size:12px;" />
             </div>
             <div>
               <label style="font-size:11px; color:var(--muted);">الباقة:</label>
@@ -903,7 +940,7 @@
               <tr>
                 <th>رقم الصفقة</th>
                 <th>الموزع</th>
-                <th>العيادة والطبيب</th>
+                <th>العميل / المنشأة</th>
                 <th>الباقة</th>
                 <th>السعر الثابت</th>
                 <th>عمولة الموزع</th>
@@ -922,16 +959,16 @@
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
           <div>
             <div style="display:flex; align-items:center; gap:8px;">
-              <span class="badge b-sky">حماية العيادات والنطاقات الجغرافية</span>
+              <span class="badge b-sky">حماية العملاء والنطاقات الجغرافية</span>
               <span class="badge b-emerald">حجز حصري 14 يوماً</span>
             </div>
-            <h3 style="margin:6px 0 0; font-size:16px; color:var(--sky);">🛡️ حجز العيادات للموزعين ومنع تضارب المبيعات (Lead Lock Engine)</h3>
+            <h3 style="margin:6px 0 0; font-size:16px; color:var(--sky);">🛡️ حجز العملاء للموزعين ومنع تضارب المبيعات (Lead Lock Engine)</h3>
             <p style="margin:2px 0 0; font-size:12px; color:var(--muted);">
-              احجز عيادة لموزع معين لمدة 14 يوماً لمنع أي موزع آخر من زيارتها أو تسجيلها، وتأمين النطاقات الجغرافية في أسيوط والصعيد والمحافظات.
+              احجز عميلاً لموزع معين لمدة 14 يوماً لمنع أي موزع آخر من زيارته أو تسجيله، وتأمين النطاقات الجغرافية في جميع المحافظات.
             </p>
           </div>
           <div style="display:flex; gap:8px;">
-            <button class="btn btn-sm btn-sky" onclick="openLeadLockModal()">+ حجز عيادة جديدة لموزع</button>
+            <button class="btn btn-sm btn-sky" onclick="openLeadLockModal()">+ حجز عميل جديد لموزع</button>
             <a href="/api/reports/weekly-digest" onclick="return previewDocLink(this);" data-preview-title="📊 التقرير التنفيذي الأسبوعي المعتمد (A4)" data-preview-subtitle="معاينة التقرير الأسبوعي لإجمالي المبيعات والعمولات قبل التحميل أو الطباعة" data-download-fname="Qalix-Weekly-Executive-Digest.html" class="btn btn-sm btn-emerald" style="text-decoration:none;">📊 معاينة وتحميل التقرير الأسبوعي (A4)</a>
           </div>
         </div>
@@ -942,8 +979,8 @@
               <tr>
                 <th>كود الحجز</th>
                 <th>الموزع المسؤول</th>
-                <th>اسم العيادة والطبيب</th>
-                <th>هاتف العيادة</th>
+                <th>اسم العميل / المنشأة</th>
+                <th>هاتف العميل</th>
                 <th>المحافظة والمركز</th>
                 <th>المدة المتبقية</th>
                 <th>الحالة</th>
@@ -1017,7 +1054,7 @@
             </p>
           </div>
           <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-            <input id="compQuickSearch" type="search" placeholder="🔍 ابحث باسم النظام (مثل: طبيب هب، كلينت، سمارت...)" oninput="renderCompetitors()" style="padding:6px 10px; font-size:12px; min-width:230px;" />
+            <input id="compQuickSearch" type="search" placeholder="🔍 ابحث باسم النظام أو الفئة المنافسة..." oninput="renderCompetitors()" style="padding:6px 10px; font-size:12px; min-width:230px;" />
             <a href="/api/marketing/battle-card" onclick="return previewDocLink(this);" data-preview-title="🖨️ بطاقة المقارنة التنافسية (A4)" data-preview-subtitle="معاينة بطاقة المقارنة الميدانية قبل الطباعة أو التحميل" data-download-fname="Qalix-Competitive-Battle-Card.html" class="btn btn-sm btn-emerald" style="text-decoration:none;">🖨️ معاينة وتحميل بطاقة المقارنة A4</a>
           </div>
         </div>
@@ -1040,11 +1077,11 @@
               </select>
             </div>
             <div class="sub-card" style="background:rgba(244,63,94,0.1); border-color:rgba(244,63,94,0.3);">
-              <div style="font-size:11.5px; color:var(--muted);">يدفع الطبيب في النظام المنافس (3 سنوات):</div>
+              <div style="font-size:11.5px; color:var(--muted);">يدفع العميل في النظام المنافس (3 سنوات):</div>
               <div id="simCompCost" style="font-size:18px; font-weight:800; color:var(--rose);">50,470 ج.م</div>
             </div>
             <div class="sub-card" style="background:rgba(16,185,129,0.12); border-color:rgba(16,185,129,0.4);">
-              <div style="font-size:11.5px; color:var(--muted);">صافي التوفير المالي الفوري للطبيب مع كالكس:</div>
+              <div style="font-size:11.5px; color:var(--muted);">صافي التوفير المالي الفوري للعميل:</div>
               <div id="simSavings" style="font-size:18px; font-weight:800; color:var(--emerald);">يوفر 41,970 ج.م (83%)</div>
             </div>
           </div>
@@ -1063,8 +1100,8 @@
               <tr>
                 <th>وجه المقارنة</th>
                 <th id="compTableBrandCol" style="color:var(--emerald);">★ <span class="dyn-system-name">منظومة كالكس</span></th>
-                <th>طَبَّبَ (Tabbaba)</th>
-                <th>طبيب بلس (Tabeeb+)</th>
+                <th>أنظمة SaaS السحابية</th>
+                <th>أنظمة الاشتراكات السنوية</th>
                 <th>أوركا (ORCAA) / أميدرا</th>
                 <th>البرامج المكتبية القديمة</th>
               </tr>
@@ -1087,7 +1124,7 @@
                 <td>3,000 - 7,000 ج.م + رسوم صيانة وفورمات</td>
               </tr>
               <tr>
-                <td><strong>التكلفة خلال 3 سنوات (عيادة نشطة)</strong></td>
+                <td><strong>التكلفة خلال 3 سنوات (منشأة نشطة)</strong></td>
                 <td style="color:var(--emerald); font-weight:bold;">8,500 ج.م فقط (سعر رسمي موحد)</td>
                 <td style="color:var(--rose); font-weight:bold;">50,470 ج.م</td>
                 <td style="color:var(--amber); font-weight:bold;">36,000 ج.م</td>
@@ -1096,15 +1133,15 @@
               </tr>
               <tr>
                 <td><strong>تشفير البيانات وملكيتها</strong></td>
-                <td style="color:var(--emerald); font-weight:bold;">تشفير عسكري AES-256-GCM على جهاز العيادة حصراً + مفتاح استرجاع بيد الطبيب</td>
+                <td style="color:var(--emerald); font-weight:bold;">تشفير محلي قوي على جهاز العميل حصراً + نسخة احتياطية بيد العميل</td>
                 <td>على خوادم الشركة السحابية</td>
                 <td>على خوادم الشركة السحابية</td>
                 <td>على خوادم الشركة السحابية</td>
                 <td style="color:var(--rose);">ملف غير مشفر يسهل نسخه وسرقته</td>
               </tr>
               <tr>
-                <td><strong>النداء الصوتي العربي وQR للمريض</strong></td>
-                <td style="color:var(--emerald); font-weight:bold;">مدمج مجاناً بصوت «هدى» + مسح QR من موبايل المريض أوفلاين</td>
+                <td><strong>واجهة العمل المحلية السريعة وQR</strong></td>
+                <td style="color:var(--emerald); font-weight:bold;">مدمج مجاناً ويعمل عبر الشبكة المحلية أوفلاين 100%</td>
                 <td>غير متوفر أوفلاين</td>
                 <td>غير متوفر</td>
                 <td>غير متوفر</td>
@@ -1112,7 +1149,7 @@
               </tr>
               <tr>
                 <td><strong>فحص التداخلات الدوائية والحساسية</strong></td>
-                <td style="color:var(--emerald); font-weight:bold;">تنبيه لحظي للتداخلات الخطيرة وحساسية المريض قبل حفظ الروشتة</td>
+                <td style="color:var(--emerald); font-weight:bold;">تنبيهات لحظية ذكية ومراجعة آلية للعمليات قبل الحفظ</td>
                 <td>محدود</td>
                 <td>غير متوفر</td>
                 <td>محدود</td>
@@ -1128,7 +1165,7 @@
               </tr>
               <tr>
                 <td><strong>المحادثات الداخلية (نص + صوت)</strong></td>
-                <td style="color:var(--emerald); font-weight:bold;">شات داخلي مشفر (نصي وصوتي) بين الطبيب والاستقبال بلا إنترنت</td>
+                <td style="color:var(--emerald); font-weight:bold;">تواصل داخلي مشفر بين فريق العمل والإدارة بلا إنترنت</td>
                 <td>غير متوفر</td>
                 <td>غير متوفر</td>
                 <td>غير متوفر</td>
@@ -1163,7 +1200,7 @@
           </div>
           <div class="grid-2">
             <div>
-              <h4 style="margin:0 0 8px; color:var(--emerald); font-size:13px;">💉 عينة الأدوية والبروتوكولات التخصصية:</h4>
+              <h4 style="margin:0 0 8px; color:var(--emerald); font-size:13px;">📦 عينة المنتجات والبنود التشغيلية:</h4>
               <div id="packDrugsList" style="max-height:220px; overflow-y:auto; font-size:12px; border:1px solid var(--border); border-radius:8px; padding:8px;"></div>
             </div>
             <div>
@@ -1180,9 +1217,9 @@
       <div class="glass">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
           <div>
-            <h2 style="margin:0; font-size:18px; color:var(--emerald);">🔄 أداة هجرة بيانات ملفات Excel و CSV القديمة للعيادات</h2>
+            <h2 style="margin:0; font-size:18px; color:var(--emerald);">🔄 أداة هجرة بيانات ملفات Excel و CSV القديمة للعملاء</h2>
             <p style="margin:4px 0 0; font-size:12.5px; color:var(--muted);">
-              كسر أكبر عائق بيعي لدى الأطباء: تحويل آلاف المرضى والأدوية والخدمات القديمة إلى بنية استيراد كالكس الطبية أوفلاين في ثوانٍ.
+              تسهيل انتقال العميل: تحويل قوائم العملاء والمنتجات والخدمات القديمة إلى بنية استيراد جاهزة أوفلاين في ثوانٍ.
             </p>
           </div>
           <span class="badge b-sky">100% Client/Offline Processing</span>
@@ -1196,8 +1233,8 @@
               <div>
                 <label style="font-size:12px; color:var(--muted);">نوع البيانات المراد هجرتها:</label>
                 <select id="migType" onchange="loadSampleMigData(this.value)">
-                  <option value="patients">سجلات المرضى (Patients)</option>
-                  <option value="drugs">قائمة الأدوية والصيدلية (Drugs)</option>
+                  <option value="patients">سجلات العملاء (Clients)</option>
+                  <option value="drugs">قائمة المنتجات والمخزون (Products)</option>
                   <option value="services">لائحة الخدمات والأسعار (Services)</option>
                 </select>
               </div>
@@ -1243,7 +1280,7 @@
             <a href="/api/marketing/wow-demo" onclick="event.preventDefault(); openCardPreviewModal({ title: '📄 سيناريو العرض الميداني الحاسم في 5 دقائق (A4)', subtitle: 'معاينة بطاقة سيناريو العرض قبل التحميل أو الطباعة', previewUrl: '/api/marketing/wow-demo', downloadUrl: '/api/marketing/wow-demo?download=1', downloadFilename: 'Qalix-WOW-5Min-Demo-Guide.html' })" class="btn btn-sm" style="text-decoration:none; background:linear-gradient(135deg, #8b5cf6, #7c3aed); color:#fff; display:inline-flex; align-items:center; gap:6px;">
               📄 معاينة وتحميل سيناريو الـ 5 دقائق (A4)
             </a>
-            <span class="badge b-purple">نسبة اقتناع الأطباء +80%</span>
+            <span class="badge b-purple">نسبة اقتناع العملاء +80%</span>
           </div>
         </div>
         <div id="wowStepsGrid" class="grid-3"></div>
@@ -1379,10 +1416,10 @@
       <div class="glass" style="border:1px solid rgba(14,165,233,0.3); margin-top:20px;">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px;">
           <div>
-            <span class="badge b-purple">صور وشاشات فعلية من داخل عيادات النخبة</span>
+            <span class="badge b-purple">صور وشاشات فعلية من نظام التشغيل</span>
             <h2 style="margin:6px 0 2px; font-size:18px; color:var(--purple);">🖼️ معرض شاشات المنظومة الحية (Live Clinical Screen Showcase)</h2>
             <p style="margin:0; font-size:12.5px; color:var(--muted);">
-              شاشات حية مأخوذة مباشرة من نظام التشغيل: لوحة التحكم، شاشة التلفزيون، بوابة المريض، الروشتة، الخط الزمني، والـ BI:
+              شاشات حية مأخوذة مباشرة من لوحة التحكم، المبيعات، التقارير، والنسخ الاحتياطي:
             </p>
           </div>
           <span style="font-size:12px; color:var(--muted);">انقر على أي شاشة لتكبيرها وفحص تفاصيلها الدقيقة</span>
@@ -1427,7 +1464,7 @@
           <div>
             <h2 style="margin:0; font-size:18px; color:var(--sky);">📄 العقود الرسمية ومحاضر التسليم وكشوف الحسابات المعتمدة</h2>
             <p style="margin:4px 0 0; font-size:12.5px; color:var(--muted);">
-              نماذج تعاقد وتسليم قانونية وفنية لحماية حقوق الوكيل والموزعين المستقلين والعيادات، قابلة للطباعة المباشرة (A4).
+              نماذج تعاقد وتسليم قانونية وفنية لحماية حقوق الوكيل والموزعين المستقلين والعملاء، قابلة للطباعة المباشرة (A4).
             </p>
           </div>
           <span class="badge b-emerald">موثقة ومطابقة للأعراف التجارية والطبية</span>
@@ -1443,9 +1480,9 @@
           </div>
 
           <div class="sub-card">
-            <h3 style="margin-top:0; font-size:14.5px; color:var(--emerald);">2. محاضر تسليم وتشغيل العيادات (Sign-Off)</h3>
+            <h3 style="margin-top:0; font-size:14.5px; color:var(--emerald);">2. محاضر تسليم وتشغيل العملاء (Sign-Off)</h3>
             <p style="font-size:12px; color:var(--muted); line-height:1.5;">
-              محضر تشغيل معتمد يوقعه الطبيب أو مدير المركز يؤكد استلام المنظومة، تدريب الموظفين، وفحص بصمة HWID ومفتاح التفعيل.
+              محضر تشغيل معتمد يوقعه العميل أو مدير المنشأة يؤكد استلام المنظومة، تدريب الموظفين، وفحص بصمة HWID ومفتاح التفعيل.
             </p>
             <div id="handoverDealsList" style="display:flex; flex-direction:column; gap:6px; margin-top:8px;"></div>
           </div>
@@ -1469,10 +1506,10 @@
               </div>
               <h2 style="margin:6px 0 2px; font-size:18px; color:var(--emerald);">🛡️ المكتبة القانونية ومحاضر التسليم السيادية (Sovereign Legal Vault)</h2>
               <p style="margin:0; font-size:12.5px; color:var(--muted);">
-                الوثائق الرسمية الست المعتمدة لتسليم المنظومة للعيادات وضمان حقوق الطبيب والوكيل والموزع:
+                الوثائق الرسمية الست المعتمدة لتسليم المنظومة للعملاء وضمان حقوق العميل والوكيل والموزع:
               </p>
             </div>
-            <a href="/legal-docs/دليل_المدير_المصور.pdf" onclick="return previewDocLink(this);" data-preview-title="📘 دليل المدير المصور لمنظومة كالكس الطبية (PDF)" data-preview-subtitle="معاينة الدليل الكامل قبل التحميل" data-download-fname="دليل_المدير_المصور.pdf" class="btn btn-sm btn-sky" style="text-decoration:none;">📘 معاينة وتحميل دليل المدير المصور (PDF)</a>
+            <a href="/api/catalogs/agent" onclick="return previewDocLink(this);" data-preview-title="📘 دليل تشغيل الوكيل المصور (A4)" data-preview-subtitle="معاينة الدليل الكامل قبل التحميل" data-download-fname="Universal-Agent-Catalog.html" class="btn btn-sm btn-sky" style="text-decoration:none;">📘 معاينة وتحميل دليل التشغيل المصور (A4)</a>
           </div>
 
           <div id="legalVaultGrid" class="grid-3"></div>
@@ -1490,38 +1527,38 @@
             <span class="badge b-emerald">توليد فوري مع رمز QR</span>
           </div>
           <p style="font-size:12.5px; color:var(--muted); margin-top:0;">
-            أصدر عرض سعر رسمي وتوريد معتمد موجهاً مباشرة للطبيب أو إدارة المركز، بالأسعار الرسمية الثابتة وضمان وتوقيع الموزع المعتمد وحزم التخصصات المشمولة.
+            أصدر عرض سعر رسمي وتوريد معتمد موجهاً مباشرة للعميل أو إدارة المنشأة، بالأسعار الرسمية الثابتة وضمان وتوقيع الموزع المعتمد.
           </p>
           <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:12px;">
             <div>
-              <label style="font-size:12px; color:var(--muted);">اسم الطبيب:</label>
-              <input id="qDocName" placeholder="د. محمد مصطفى" value="د. " />
+              <label style="font-size:12px; color:var(--muted);">اسم المسؤول:</label>
+              <input id="qDocName" placeholder="أ/ محمد مصطفى" value="" />
             </div>
             <div>
-              <label style="font-size:12px; color:var(--muted);">اسم المركز / العيادة:</label>
-              <input id="qClinicName" placeholder="عيادة الصفوة التخصصية" />
+              <label style="font-size:12px; color:var(--muted);">اسم العميل / المنشأة:</label>
+              <input id="qClinicName" placeholder="شركة الصفوة التجارية" />
             </div>
             <div>
-              <label style="font-size:12px; color:var(--muted);">التخصص الطبي المعتمد:</label>
+              <label style="font-size:12px; color:var(--muted);">القطاع / النشاط التجاري:</label>
               <select id="qSpecialty">
-                <option value="dental">طب وجراحة الأسنان 🦷</option>
-                <option value="pediatrics">طب الأطفال وحديثي الولادة 👶</option>
-                <option value="internal_cardio" selected>الباطنة وأمراض القلب ❤️</option>
-                <option value="obgyn">النساء والتوليد والحقن المجهري 🤰</option>
-                <option value="ophthalmology">طب وجراحة العيون 👁️</option>
+                <option value="trade_sales" selected>التجارة والمبيعات 💼</option>
+                <option value="services">الشركات والخدمات 🏢</option>
+                <option value="retail_pos">المتاجر ونقاط البيع 🛒</option>
+                <option value="real_estate">العقارات والمقاولات 🏗️</option>
+                <option value="maintenance">الصيانة والدعم الفني 🛠️</option>
               </select>
             </div>
             <div>
               <label style="font-size:12px; color:var(--muted);">الباقة المطلوبة:</label>
               <select id="qTier">
                 <option value="basic">الباقة الأساسية (4,500 ج.م — سعر موحد)</option>
-                <option value="professional" selected>الباقة التخصصية (8,500 ج.م — سعر موحد)</option>
-                <option value="enterprise">باقة المراكز الكبرى (18,500 ج.م — سعر موحد)</option>
+                <option value="professional" selected>الباقة المتقدمة (8,500 ج.م — سعر موحد)</option>
+                <option value="enterprise">الباقة المؤسسية الشاملة (18,500 ج.م — سعر موحد)</option>
               </select>
             </div>
             <div>
               <label style="font-size:12px; color:var(--muted);">المحافظة / النطاق الجغرافي:</label>
-              <input id="qGovernorate" placeholder="أسيوط / القاهرة / الإسكندرية..." value="جمهورية مصر العربية" />
+              <input id="qGovernorate" placeholder="القاهرة / الإسكندرية / جميع المحافظات..." value="جمهورية مصر العربية" />
             </div>
             <div style="display:flex; align-items:center; gap:8px; padding-top:16px;">
               <span style="font-size:12.5px; font-weight:bold; color:var(--emerald);">✓ تسعير رسمي موحد لجميع المحافظات</span>
@@ -1535,11 +1572,11 @@
         <!-- Section B: Doctor Objections & Field Playbook -->
         <div class="glass">
           <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
-            <h2 style="margin:0; font-size:17px; color:var(--amber);">🛡️ دليل التعامل مع اعتراضات الأطباء (Field Playbook)</h2>
+            <h2 style="margin:0; font-size:17px; color:var(--amber);">🛡️ دليل التعامل مع اعتراضات العملاء (Field Playbook)</h2>
             <button type="button" class="badge b-amber" style="cursor:pointer; border:1px solid rgba(245,158,11,0.55); font-family:inherit;" onclick="openCardPreviewModal({ title: '🛡️ دليل التعامل مع 8 اعتراضات ميدانية وحلولها (A4)', subtitle: 'معاينة الدليل الميداني الكامل للرد على اعتراضات الأطباء قبل الطباعة أو التحميل', previewUrl: '/api/playbook/objections/a4', downloadUrl: '/api/playbook/objections/a4?download=1', downloadFilename: 'Qalix-8-Objections-Playbook.html' })">🛡️ 8 اعتراضات ميدانية وحلولها (عرض / طباعة / تحميل)</button>
           </div>
           <p style="font-size:12.5px; color:var(--muted); margin-top:0;">
-            أقوى الردود البيعية المجهزة علمياً وعملياً للتعامل الفوري مع أي اعتراض يبديه الطبيب أثناء المقابلة الميدانية:
+            أقوى الردود البيعية المجهزة عملياً للتعامل الفوري مع أي اعتراض يبديه العميل أثناء المقابلة الميدانية:
           </p>
           <div id="objectionsListContainer" style="display:flex; flex-direction:column; gap:10px; max-height:480px; overflow-y:auto; padding-right:4px;">
             <!-- Rendered dynamically -->
@@ -1554,11 +1591,11 @@
         <!-- Section A: After-Sales Milestones & Customer Success -->
         <div class="glass">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-            <h2 style="margin:0; font-size:17px; color:var(--emerald);">🤝 متابعة ما بعد البيع وسجل رضاء العيادات</h2>
+            <h2 style="margin:0; font-size:17px; color:var(--emerald);">🤝 متابعة ما بعد البيع وسجل رضاء العملاء</h2>
             <span class="badge b-emerald">ضمان 12 شهراً · تنبيهات واتساب</span>
           </div>
           <p style="font-size:12.5px; color:var(--muted); margin-top:0;">
-            جدول المتابعة التلقائي لكل عيادة بعد الاستلام لضمان استقرار التشغيل، جمع تقييمات الرضاء، وتجديد الدعم السنوي:
+            جدول المتابعة التلقائي لكل عميل بعد الاستلام لضمان استقرار التشغيل، جمع تقييمات الرضاء، وتجديد الدعم السنوي:
           </p>
           <div id="afterSalesDealsContainer" style="display:flex; flex-direction:column; gap:12px;">
             <!-- Rendered dynamically -->
@@ -1621,16 +1658,16 @@
             <span id="checklistScoreBadge" class="badge b-sky">10 معايير فنية</span>
           </div>
           <p style="font-size:12px; color:var(--muted); margin-top:0;">
-            فحص توافق عتاد العيادة (Windows، RAM، الراوتر، الطابعة، وفلاشة الباك اب) قبل التشغيل:
+            فحص توافق جهاز العميل (Windows، RAM، الشبكة، الطابعة، وفلاشة الباك اب) قبل التشغيل:
           </p>
           <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:10px;">
             <div>
-              <label style="font-size:11px; color:var(--muted);">اسم الطبيب:</label>
-              <input id="chkDoctor" placeholder="د. أحمد صلاح" value="د. " style="padding:6px 8px; font-size:12px;" />
+              <label style="font-size:11px; color:var(--muted);">اسم المسؤول:</label>
+              <input id="chkDoctor" placeholder="أ/ أحمد صلاح" value="" style="padding:6px 8px; font-size:12px;" />
             </div>
             <div>
-              <label style="font-size:11px; color:var(--muted);">اسم العيادة:</label>
-              <input id="chkClinic" placeholder="مركز الشفاء الطبي" style="padding:6px 8px; font-size:12px;" />
+              <label style="font-size:11px; color:var(--muted);">اسم العميل / المنشأة:</label>
+              <input id="chkClinic" placeholder="شركة النور للتجارة" style="padding:6px 8px; font-size:12px;" />
             </div>
           </div>
           <div id="clinicChecklistContainer" style="display:flex; flex-direction:column; gap:6px; max-height:330px; overflow-y:auto; padding-right:4px;">
@@ -1646,10 +1683,10 @@
         <div class="glass">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
             <h2 style="margin:0; font-size:16.5px; color:var(--purple);">📢 استوديو حملات الواتساب الميدانية</h2>
-            <span class="badge b-purple">رسائل موجهة للأطباء</span>
+            <span class="badge b-purple">رسائل موجهة للعملاء</span>
           </div>
           <p style="font-size:12px; color:var(--muted); margin-top:0;">
-            إرسال حملات ترويجية احترافية ومباشرة للأطباء مع إمكانية التخصيص التلقائي:
+            إرسال حملات ترويجية احترافية ومباشرة للعملاء مع إمكانية التخصيص التلقائي:
           </p>
           <div style="margin-bottom:10px;">
             <label style="font-size:11.5px; color:var(--muted);">اختر الحملة الترويجية:</label>
@@ -1657,11 +1694,11 @@
           </div>
           <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:10px;">
             <div>
-              <label style="font-size:11px; color:var(--muted);">اسم الطبيب المستهدف:</label>
-              <input id="campDoctor" placeholder="د. طارق محمود" value="د. " style="padding:6px 8px; font-size:12px;" />
+              <label style="font-size:11px; color:var(--muted);">اسم العميل المستهدف:</label>
+              <input id="campDoctor" placeholder="أ/ طارق محمود" value="" style="padding:6px 8px; font-size:12px;" />
             </div>
             <div>
-              <label style="font-size:11px; color:var(--muted);">رقم واتساب الطبيب:</label>
+              <label style="font-size:11px; color:var(--muted);">رقم واتساب العميل:</label>
               <input id="campPhone" placeholder="010..." dir="ltr" style="padding:6px 8px; font-size:12px;" />
             </div>
           </div>
@@ -1708,9 +1745,9 @@
           <div style="margin-bottom:8px;">
             <label style="font-size:11.5px; color:var(--muted);">اختر سيناريو التوسع الميداني:</label>
             <select id="scenSelect" onchange="loadFinancialForecast(this.value)" style="padding:6px 10px; font-size:12px;">
-              <option value="conservative">السيناريو المتحفظ (5 عيادات شهرياً)</option>
-              <option value="balanced" selected>السيناريو المتوازن الرسمي (12 عيادة شهرياً)</option>
-              <option value="aggressive">السيناريو التوسعي الشامل (25 عيادة شهرياً)</option>
+              <option value="conservative">السيناريو المتحفظ (5 عملاء شهرياً)</option>
+              <option value="balanced" selected>السيناريو المتوازن الرسمي (12 عميلاً شهرياً)</option>
+              <option value="aggressive">السيناريو التوسعي الشامل (25 عميلاً شهرياً)</option>
             </select>
           </div>
           <div id="forecastSummaryBox" class="sub-card" style="padding:10px; margin-bottom:10px; font-size:12px;">
@@ -1825,7 +1862,7 @@
                     <div class="guide-body">
                       <ul>
                         <li><strong style="color:var(--rose);">ماذا يُحذف؟</strong> جميع الصفوف في جدول الصفقات (<code>deals</code>) وسجلات إنشاء/تسوية الصفقات المرتبطة بها في التدقيق.</li>
-                        <li><strong style="color:var(--emerald);">ماذا يبقى محفوظاً؟</strong> جميع الموزعين المعتمدين وأكوادهم وبواباتهم (<code>distributors_kits</code>)، ونسب العمولة الجديدة، وحجوزات العيادات، ومقترحات التطوير.</li>
+                        <li><strong style="color:var(--emerald);">ماذا يبقى محفوظاً؟</strong> جميع الموزعين المعتمدين وأكوادهم وبواباتهم (<code>distributors_kits</code>)، ونسب العمولة الجديدة، وحجوزات العملاء، ومقترحات التطوير.</li>
                         <li><strong style="color:var(--sky);">متى يُستخدم؟</strong> بعد انتهاء تجارب التشغيل أو الاختبارات وقبل بدء تسجيل الصفقات الحقيقية، وتُحفظ لقطة احتياطية تلقائية قبله مباشرة.</li>
                       </ul>
                     </div>
@@ -1844,7 +1881,7 @@
                     <div class="guide-body">
                       <ul>
                         <li><strong style="color:var(--rose);">ماذا يُحذف؟</strong> جدول سجل التدقيق الجنائي وسلسلة التحقق (<code>audit_log</code>) فقط.</li>
-                        <li><strong style="color:var(--emerald);">ماذا يبقى محفوظاً؟</strong> جميع الموزعين وجميع الصفقات النشطة والمكتملة وإيصالاتها وتراخيصها وحجوزات العيادات بالكامل.</li>
+                        <li><strong style="color:var(--emerald);">ماذا يبقى محفوظاً؟</strong> جميع الموزعين وجميع الصفقات النشطة والمكتملة وإيصالاتها وتراخيصها وحجوزات العملاء بالكامل.</li>
                         <li><strong style="color:var(--sky);">متى يُستخدم؟</strong> لبدء سجل تدقيق نظيف بالبصمة المشفرة بعد انتهاء تهيئة النظام وتجربته مع أرشفة السجل القديم في <code>data/backups/</code>.</li>
                       </ul>
                     </div>
@@ -1854,7 +1891,7 @@
 
                 <div style="background:rgba(244,63,94,0.08); border:1px dashed #f43f5e; border-radius:10px; padding:12px;">
                   <div style="font-size:13px; font-weight:bold; color:var(--rose); margin-bottom:4px;">3. استعادة ضبط المصنع الكامل (Factory Reset)</div>
-                  <div style="font-size:11.5px; color:var(--muted);">يعيد المنظومة لحالة التأسيس النظيفة: يمسح الموزعين المضافين والصفقات وحجوزات العيادات وسجل التدقيق ويغرس التهيئة الأولية.</div>
+                  <div style="font-size:11.5px; color:var(--muted);">يعيد المنظومة لحالة التأسيس النظيفة: يمسح الموزعين المضافين والصفقات وحجوزات العملاء وسجل التدقيق ويغرس التهيئة الأولية.</div>
                   <details class="reset-guide" style="border-color:rgba(244,63,94,0.35);">
                     <summary style="color:var(--amber);">
                       <span>⚠️ إرشادات وشرح مفصل (إجراء شامل) — اضغط للعرض</span>
@@ -1862,7 +1899,7 @@
                     </summary>
                     <div class="guide-body">
                       <ul>
-                        <li><strong style="color:var(--rose);">ماذا يُحذف؟</strong> جميع الموزعين الحاليين، جميع الصفقات، جميع حجوزات العيادات (<code>lead_locks</code>)، وسجل التدقيق الكامل، ثم تُغرس بيانات التأسيس الافتراضية من الصفر بنسب العمولة المعتمدة (<code>27% / 32%</code>).</li>
+                        <li><strong style="color:var(--rose);">ماذا يُحذف؟</strong> جميع الموزعين الحاليين، جميع الصفقات، جميع حجوزات العملاء (<code>lead_locks</code>)، وسجل التدقيق الكامل، ثم تُغرس بيانات التأسيس الافتراضية من الصفر بنسب العمولة المعتمدة (<code>27% / 32%</code>).</li>
                         <li><strong style="color:var(--emerald);">ماذا يبقى محفوظاً؟</strong> الفيديوهات التسويقية والوسائط المرفوعة، مقترحات التطوير الـ 14، وقوالب واتساب المخصصة، إضافة إلى لقطة أمان تلقائية كاملة قبل المسح.</li>
                         <li><strong style="color:var(--amber);">تحذير ومتى يُستخدم؟</strong> يتطلب <strong>تأكيدين متتاليين</strong>، ولا يُنصح به إلا عند الرغبة في إعادة تهيئة المنظومة بالكامل على جهاز جديد أو من نقطة البداية.</li>
                       </ul>
@@ -1896,7 +1933,7 @@
                 </div>
                 <div>
                   <label style="font-size:12px; color:var(--muted);">عنوان العرض (اختياري):</label>
-                  <input id="devUploadTitle" placeholder="مثال: فيديو تجربة العيادات في أسيوط 2026" />
+                  <input id="devUploadTitle" placeholder="مثال: فيديو عرض المنظومة الموحدة 2026" />
                 </div>
                 <div>
                   <label style="font-size:12px; color:var(--muted);">اختر الملف من جهازك:</label>
@@ -1929,12 +1966,12 @@
           <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:10px; margin-bottom:10px;">
             <div>
               <label style="font-size:12px; color:var(--muted);">عنوان الرسالة:</label>
-              <input id="devWaTitle" placeholder="مثال: رسالة استقطاب أطباء العيون" />
+              <input id="devWaTitle" placeholder="مثال: رسالة استقطاب عملاء جدد" />
             </div>
             <div>
               <label style="font-size:12px; color:var(--muted);">التصنيف:</label>
               <select id="devWaCat">
-                <option value="استقطاب عيادات" selected>استقطاب عيادات جديدة</option>
+                <option value="استقطاب عملاء" selected>استقطاب عملاء جدد</option>
                 <option value="إغلاق ومبيعات">إغلاق وحجز مفتاح التفعيل</option>
                 <option value="رد على اعتراضات">رد على اعتراضات الأسعار والنت</option>
                 <option value="متابعة دورية">متابعة ما بعد التثبيت</option>
@@ -1942,7 +1979,7 @@
             </div>
             <div>
               <label style="font-size:12px; color:var(--muted);">الفئة المستهدفة:</label>
-              <input id="devWaTarget" placeholder="مثال: أطباء الجراحة والمناظير" />
+              <input id="devWaTarget" placeholder="مثال: شركات التجارة والخدمات" />
             </div>
           </div>
           <div style="margin-bottom:10px;">
@@ -2022,26 +2059,76 @@
 
     function copyTextMsg(txt) {
       if (navigator.clipboard) navigator.clipboard.writeText(txt);
-      alert('تم نسخ الرد الإقناعي الجاهز لإرساله للطبيب عبر واتساب');
+      alert('تم نسخ الرد الإقناعي الجاهز لإرساله للعميل عبر واتساب');
     }
 
+    const UNIVERSAL_COMPETITORS_CLEAN = [
+      {
+        id: 'cloud_saas_monthly',
+        nameAr: 'الأنظمة السحابية بالاشتراك الشهري (Cloud SaaS)',
+        cost3YearsEgp: 54000,
+        category: 'اشتراك سحابي شهري متكرر',
+        pricingModel: '1,500 ج.م شهرياً (54,000 ج.م في 3 سنوات)',
+        pros: ['فتح الحساب عبر المتصفح عند توفر إنترنت قوي', 'تحديثات سحابية عن بُعد'],
+        cons: ['يتوقف العمل عند انقطاع الإنترنت', 'تكلفة متكررة مدى الحياة مع إغلاق الحساب عند التأخر'],
+        qalixWinEdge: 'دفع مرة واحدة مدى الحياة مع تشغيل أوفلاين 100% وحفظ البيانات محلياً بالكامل.',
+        salesPitchAr: 'لماذا تدفع اشتراكاً شهرياً مدى الحياة بينما يمكنك امتلاك المنظومة كاملة بدفعة واحدة أوفلاين؟'
+      },
+      {
+        id: 'erp_annual_lock',
+        nameAr: 'أنظمة ERP التقليدية بالاشتراكات السنوية',
+        cost3YearsEgp: 42000,
+        category: 'اشتراك سنوي وتراخيص إضافية',
+        pricingModel: '14,000 ج.م سنوياً + رسوم فروع',
+        pros: ['تقارير محاسبية وإدارية قياسية', 'صلاحيات متعددة للموظفين'],
+        cons: ['رسوم تجديد سنوية إلزامية', 'تعقيد في التشغيل وإعدادات مبدئية طويلة'],
+        qalixWinEdge: 'تثبيت فوري في دقائق مع واجهة عربية حديثة وتوفير يتجاوز 75% خلال 3 سنوات.',
+        salesPitchAr: 'تجنب رسوم التجديد السنوية المعقدة وابدأ التشغيل الفوري من أول يوم.'
+      },
+      {
+        id: 'excel_manual_sheets',
+        nameAr: 'ملفات Excel والدفاتر الورقية المتفرقة',
+        cost3YearsEgp: 25000,
+        category: 'عمل يدوي غير مؤمن',
+        pricingModel: 'تكلفة الوقت المهدور والأخطاء وتكرار السجلات',
+        pros: ['سهولة البدء الأولية في الجداول البسيطة', 'عدم الحاجة لخادم خارجي'],
+        cons: ['سهولة التلف أو الحذف بدون نسخ احتياطي تلقائي', 'غياب تتبع الأدوار وسلاسل التدقيق'],
+        qalixWinEdge: 'قاعدة بيانات SQLite محلية مع نسخ احتياطي تلقائي نهاية كل جلسة وسجل تدقيق كامل.',
+        salesPitchAr: 'حوّل ملفاتك المتفرقة إلى نظام منظم يحمي بياناتك من الضياع والتلاعب.'
+      },
+      {
+        id: 'online_only_portals',
+        nameAr: 'منصات الحجز والإدارة المعتمدة على الإنترنت فقط',
+        cost3YearsEgp: 36000,
+        category: 'منصة ويب خارجية',
+        pricingModel: '1,000 ج.م شهرياً + عمولات',
+        pros: ['مشاركة الروابط عبر الويب', 'إشعارات بريدية'],
+        cons: ['بيانات عملائك على خوادم خارجية', 'توقف كامل عند ضعف الشبكة'],
+        qalixWinEdge: 'خصوصية 100% لبياناتك وعملائك على جهازك الشخصي مع مزامنة أوفلاين آمنة.',
+        salesPitchAr: 'بيانات عملائك ملك لك وحدك على جهازك ولا تُرفع لأي طرف ثالث.'
+      }
+    ];
+
     function renderCompetitors() {
+      const isCleanUniversal = !(window.ACTIVE_SYSTEM_INFO && window.ACTIVE_SYSTEM_INFO.id === 'qalix_medical');
+      const sourceCompetitors = isCleanUniversal ? UNIVERSAL_COMPETITORS_CLEAN : allCompetitors;
       const chipsCont = document.getElementById('compFilterChips');
-      if (chipsCont && chipsCont.dataset.count !== String(allCompetitors.length)) {
-        chipsCont.dataset.count = String(allCompetitors.length);
-        chipsCont.innerHTML = `<button class="filter-chip ${currentCompFilter === 'all' ? 'active' : ''}" onclick="filterCompetitors('all', this)">الكل (${allCompetitors.length})</button>` +
-          allCompetitors.map(c => `<button class="filter-chip ${currentCompFilter === c.id ? 'active' : ''}" onclick="filterCompetitors('${c.id}', this)">${c.nameAr}</button>`).join('');
+      if (chipsCont && chipsCont.dataset.count !== String(sourceCompetitors.length) + '_' + (isCleanUniversal ? 'u' : 'm')) {
+        chipsCont.dataset.count = String(sourceCompetitors.length) + '_' + (isCleanUniversal ? 'u' : 'm');
+        chipsCont.innerHTML = `<button class="filter-chip ${currentCompFilter === 'all' ? 'active' : ''}" onclick="filterCompetitors('all', this)">الكل (${sourceCompetitors.length})</button>` +
+          sourceCompetitors.map(c => `<button class="filter-chip ${currentCompFilter === c.id ? 'active' : ''}" onclick="filterCompetitors('${c.id}', this)">${c.nameAr}</button>`).join('');
       }
       const simEl = document.getElementById('simComp');
-      if (simEl && allCompetitors.length && simEl.options.length !== allCompetitors.length) {
-        simEl.innerHTML = allCompetitors.map(c => `<option value="${c.cost3YearsEgp}|${escAttr(c.nameAr)}">${c.nameAr} (${fmt(c.cost3YearsEgp)} / 3 سنوات)</option>`).join('');
+      if (simEl && sourceCompetitors.length && simEl.dataset.mode !== (isCleanUniversal ? 'u' : 'm')) {
+        simEl.dataset.mode = isCleanUniversal ? 'u' : 'm';
+        simEl.innerHTML = sourceCompetitors.map(c => `<option value="${c.cost3YearsEgp}|${escAttr(c.nameAr)}">${c.nameAr} (${fmt(c.cost3YearsEgp)} / 3 سنوات)</option>`).join('');
       }
       const grid = document.getElementById('competitorsGrid');
       if (!grid) return;
       const q = (document.getElementById('compQuickSearch')?.value || '').trim().toLowerCase();
       let list = currentCompFilter === 'all'
-        ? allCompetitors
-        : allCompetitors.filter(c => c.id === currentCompFilter);
+        ? sourceCompetitors
+        : sourceCompetitors.filter(c => c.id === currentCompFilter);
       if (q) {
         list = list.filter(c =>
           (c.nameAr || '').toLowerCase().includes(q) ||
@@ -2397,14 +2484,54 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
     let lastMigratedResult = null;
     let loadedPacksCache = [];
 
+    const UNIVERSAL_SECTOR_PACKS = [
+      { id: 'trade_sales', icon: '💼', nameAr: 'قطاع التجارة والمبيعات', description: 'قالب جاهز لإدارة العملاء، عروض الأسعار، فواتير التوريد، وخطط متابعة المبيعات.', itemsCount: 25, servicesCount: 12 },
+      { id: 'services_corp', icon: '🏢', nameAr: 'قطاع الشركات والخدمات', description: 'قالب منظم لعقود الخدمات، محاضر التسليم، كشوف الحساب، ومتابعة رضا العملاء.', itemsCount: 20, servicesCount: 15 },
+      { id: 'retail_pos', icon: '🛒', nameAr: 'قطاع المتاجر ونقاط البيع', description: 'قالب عملي لتنظيم الفروع، المندوبين، الأصناف، وتقارير التحصيل اليومي.', itemsCount: 30, servicesCount: 10 },
+      { id: 'real_estate', icon: '🏗️', nameAr: 'قطاع العقارات والمقاولات', description: 'قالب لمتابعة الحجوزات، تأمين النطاق الجغرافي، الأقساط، ومراحل التنفيذ.', itemsCount: 18, servicesCount: 14 },
+      { id: 'tech_support', icon: '🛠️', nameAr: 'قطاع الصيانة والدعم الفني', description: 'قالب لإدارة أوامر التشغيل، مهام الفنيين، فحص الجاهزية، والزيارات الدورية.', itemsCount: 22, servicesCount: 16 }
+    ];
+
+    function downloadUniversalPack(id, format) {
+      const p = UNIVERSAL_SECTOR_PACKS.find(x => x.id === id) || UNIVERSAL_SECTOR_PACKS[0];
+      const content = format === 'csv'
+        ? `\uFEFFsector_id,sector_name,items_count,services_count,description\n${p.id},"${p.nameAr}",${p.itemsCount},${p.servicesCount},"${p.description}"\n`
+        : JSON.stringify(p, null, 2);
+      const blob = new Blob([content], { type: format === 'csv' ? 'text/csv;charset=utf-8' : 'application/json;charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `Universal-Pack-${p.id}.${format}`;
+      a.click();
+    }
+
     async function loadSpecialtyPacks() {
+      const isCleanUniversal = !(window.ACTIVE_SYSTEM_INFO && window.ACTIVE_SYSTEM_INFO.id === 'qalix_medical');
+      const container = document.getElementById('specialtyPacksContainer');
+      if (!container) return;
+      if (isCleanUniversal) {
+        container.innerHTML = UNIVERSAL_SECTOR_PACKS.map(p => `
+          <div class="sub-card" style="display:flex; flex-direction:column; justify-content:space-between; gap:10px;">
+            <div>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <span style="font-size:24px;">${p.icon}</span>
+                <span class="badge b-sky">${p.itemsCount} بند · ${p.servicesCount} خدمة</span>
+              </div>
+              <h3 style="margin:0 0 4px; font-size:15px; color:var(--text);">${p.nameAr}</h3>
+              <p style="margin:0; font-size:12px; color:var(--muted); line-height:1.5;">${p.description}</p>
+            </div>
+            <div style="border-top:1px solid var(--border); padding-top:8px; display:flex; gap:6px; flex-wrap:wrap;">
+              <button type="button" class="btn btn-sm" style="flex:1;" onclick="downloadUniversalPack('${p.id}','json')">⬇ JSON</button>
+              <button type="button" class="btn btn-sm btn-amber" style="flex:1;" onclick="downloadUniversalPack('${p.id}','csv')">⬇ CSV</button>
+            </div>
+          </div>
+        `).join('');
+        return;
+      }
       try {
         const r = await fetch('/api/specialty-packs');
         const d = await r.json();
         if (!d.ok) return;
         loadedPacksCache = d.packs;
-        const container = document.getElementById('specialtyPacksContainer');
-        if (!container) return;
         container.innerHTML = d.packs.map(p => `
           <div class="sub-card" style="display:flex; flex-direction:column; justify-content:space-between; gap:10px;">
             <div>
@@ -2482,7 +2609,7 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
       `;
       document.getElementById('migSummaryReport').innerHTML = `
         <strong>الأعمدة المكتشفة تلقائياً:</strong> <code>${(res.detectedHeaders || []).join(' | ')}</code><br>
-        <strong>عدد السجلات الصالحة:</strong> ${res.successfulCount} سجل تم تنقيتها ومطابقتها لبنية كالكس الطبية.
+        <strong>عدد السجلات الصالحة:</strong> ${res.successfulCount} سجل تم تنقيتها ومطابقتها لبنية الاستيراد الموحدة.
       `;
 
       const prev = document.getElementById('migPreviewContainer');
@@ -2536,7 +2663,7 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
             <div style="font-size:12px; color:var(--muted); margin-bottom:6px;"><strong>الإجراء:</strong> ${s.action}</div>
             <div style="font-size:12px; color:var(--emerald);"><strong>ما يحدث:</strong> ${s.whatHappens}</div>
             <div style="font-size:11.5px; color:var(--amber); margin-top:4px; border-top:1px dashed var(--border); padding-top:4px;">
-              <strong>رد فعل الطبيب:</strong> ${s.doctorReaction}
+              <strong>رد فعل العميل:</strong> ${s.doctorReaction}
             </div>
           </div>
         `).join('');
@@ -2603,7 +2730,7 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
         try { document.execCommand('copy'); } catch (_) {}
         ta.remove();
       }
-      alert('تم نسخ الرسالة بنجاح! جاهزة للإرسال عبر واتساب للأطباء.');
+      alert('تم نسخ الرسالة بنجاح! جاهزة للإرسال عبر واتساب للعملاء.');
     }
 
     function calcDistEarnings() {
@@ -2650,7 +2777,7 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
       const doctorName = document.getElementById('dlDoctor').value.trim();
       const hardwareId = document.getElementById('dlHwid').value.trim();
       const isAssiut = false;
-      if (!clinicName || !doctorName) return alert('أدخل اسم العيادة واسم الطبيب');
+      if (!clinicName || !doctorName) return alert('أدخل اسم العميل واسم المسؤول');
       const r = await fetch('/api/deals', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -2673,8 +2800,8 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
 
     /* ---------------- Phase 5 Interactive Handlers ---------------- */
     function openQuotationPreview() {
-      const doc = encodeURIComponent(document.getElementById('qDocName').value.trim() || 'السيد الدكتور المحترم');
-      const cln = encodeURIComponent(document.getElementById('qClinicName').value.trim() || 'العيادة التخصصية');
+      const doc = encodeURIComponent(document.getElementById('qDocName').value.trim() || 'السيد المدير المحترم');
+      const cln = encodeURIComponent(document.getElementById('qClinicName').value.trim() || 'الشركة / المؤسسة');
       const spec = document.getElementById('qSpecialty').value;
       const tier = document.getElementById('qTier').value;
       const gov = encodeURIComponent(document.getElementById('qGovernorate').value.trim() || 'جمهورية مصر العربية');
@@ -2942,12 +3069,12 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
     }
 
     function openClinicAuditReport() {
-      const doc = encodeURIComponent(document.getElementById('chkDoctor').value.trim() || 'السيد الدكتور المحترم');
-      const cln = encodeURIComponent(document.getElementById('chkClinic').value.trim() || 'العيادة التخصصية');
+      const doc = encodeURIComponent(document.getElementById('chkDoctor').value.trim() || 'السيد المدير المحترم');
+      const cln = encodeURIComponent(document.getElementById('chkClinic').value.trim() || 'الشركة / المؤسسة');
       const checked = getSelectedChecklistIds().join(',');
       const url = `/api/checklist/report?doctorName=${doc}&clinicName=${cln}&checked=${checked}`;
       openCardPreviewModal({
-        title: '🧪 تقرير الجاهزية الفنية للعيادة (A4)',
+        title: '🧪 تقرير الجاهزية الفنية للتشغيل (A4)',
         subtitle: 'معاينة التقرير الفني قبل الطباعة أو التحميل',
         previewUrl: url,
         downloadUrl: withDownloadParam(url),
@@ -3032,8 +3159,8 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
         if (sBox) {
           sBox.innerHTML = `
             <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-              <span>العيادات المستهدفة (سنة 1):</span>
-              <strong style="color:var(--text);">${f.totalClinicsYear1} عيادة ومركز</strong>
+              <span>العملاء المستهدفون (سنة 1):</span>
+              <strong style="color:var(--text);">${f.totalClinicsYear1} عميل ومنشأة</strong>
             </div>
             <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
               <span>المبيعات السنوية المتوقعة:</span>
@@ -3436,7 +3563,7 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
             <div style="text-align:center; padding:24px; max-width:520px; line-height:1.8;">
               <div style="font-size:30px; margin-bottom:8px;">⚠️</div>
               <div style="font-size:15px; font-weight:800; color:#f8fafc; margin-bottom:6px;">تعذر تحميل المعاينة حالياً من الخادم المحلي</div>
-              <div style="font-size:12.5px; color:#cbd5e1; margin-bottom:14px;">تأكد من أن نافذة الخادم (<code>START_QALIX_MEDICAL_AGENT.bat</code>) تعمل في الخلفية ثم اضغط إعادة المحاولة.</div>
+              <div style="font-size:12.5px; color:#cbd5e1; margin-bottom:14px;">تأكد من أن الخادم المحلي (<code dir="ltr">START_AGENT_PANEL.bat</code>) يعمل في الخلفية ثم اضغط إعادة المحاولة.</div>
               <button type="button" class="btn btn-sm btn-sky" onclick="openCardPreviewModal(currentCardPreviewOpts)">🔄 إعادة المحاولة الآن</button>
             </div>
           `;
@@ -3566,7 +3693,7 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
       const notes = document.getElementById('lkNotes').value.trim();
 
       if (!clinicName || !doctorName || !clinicPhone) {
-        return alert('يرجى كتابة اسم العيادة والطبيب ورقم الهاتف');
+        return alert('يرجى كتابة اسم العميل والمسؤول ورقم الهاتف');
       }
 
       const r = await fetch('/api/territory/lock-lead', {
@@ -3575,8 +3702,8 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
         body: JSON.stringify({ distributorId: distId, distributorName: distName, clinicName, doctorName, clinicPhone, governorate, district, notes })
       });
       const j = await r.json();
-      if (!j.ok) return alert(j.error || 'فشل حجز العيادة');
-      alert(`تم حجز العيادة بنجاح للموزع "${distName}" لمدة 14 يوماً! كود الحجز: ${j.lockId}`);
+      if (!j.ok) return alert(j.error || 'فشل حجز العميل');
+      alert(`تم حجز العميل بنجاح للموزع "${distName}" لمدة 14 يوماً! كود الحجز: ${j.lockId}`);
       document.getElementById('leadLockModal').style.display = 'none';
       document.getElementById('lkClinicName').value = '';
       document.getElementById('lkDoctorName').value = '';
@@ -3711,7 +3838,7 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
     }
 
     async function devFactoryReset() {
-      const ok1 = confirm('⚠️ تحذير بالغ الخطورة:\nأنت على وشك استعادة ضبط المصنع الكامل للمنظومة بالكامل!\n\nسيتم مسح الصفقات والموزعين وحجوزات العيادات وسجل العمليات، مع زرع التهيئات الافتراضية الصافية.\n(سيتم أخذ لقطة استعادة أمان فورية لكامل البيانات تلقائياً قبل التصفير)\n\nهل تريد المتابعة؟');
+      const ok1 = confirm('⚠️ تحذير بالغ الخطورة:\nأنت على وشك استعادة ضبط المصنع الكامل للمنظومة بالكامل!\n\nسيتم مسح الصفقات والموزعين وحجوزات العملاء وسجل العمليات، مع زرع التهيئات الافتراضية الصافية.\n(سيتم أخذ لقطة استعادة أمان فورية لكامل البيانات تلقائياً قبل التصفير)\n\nهل تريد المتابعة؟');
       if (!ok1) return;
       const ok2 = confirm('تأكيد نهائي: اضغط موافق لتنفيذ استعادة ضبط المصنع الآن.');
       if (!ok2) return;
@@ -3834,7 +3961,7 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
           body: JSON.stringify({ ownerName, ownerPhone })
         });
         const j = await r.json();
-        if (j.ok) alert('🔐 تم حفظ بيانات القناة المباشرة لصاحب منصة كالكس داخل قاعدة الوكيل المحلية بنجاح (لا يراها أي موزع أو طبيب).');
+        if (j.ok) alert('🔐 تم حفظ بيانات القناة المباشرة لصاحب منصة كالكس داخل قاعدة الوكيل المحلية بنجاح (لا يراها أي موزع أو عميل).');
         else alert('❌ تعذر الحفظ: ' + (j.error || 'خطأ'));
       } catch (e) {
         alert('❌ خطأ في الاتصال: ' + e.message);
@@ -3854,7 +3981,7 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
         `━━━━━━━━━━━━━━━━━━━━`,
         `📌 *الموضوع:* ${catText}`
       ];
-      if (clinicRef) lines.push(`🏥 *مرجع العيادة/الصفقة:* ${clinicRef}`);
+      if (clinicRef) lines.push(`🏢 *مرجع العميل/الصفقة:* ${clinicRef}`);
       if (hwidRef) lines.push(`🔐 *البصمة (HWID) / المبلغ:* ${hwidRef}`);
       if (body) lines.push(`📝 *التفاصيل:*\n${body}`);
       lines.push(`━━━━━━━━━━━━━━━━━━━━\n📅 ${new Date().toLocaleString('ar-EG')}`);
@@ -5018,17 +5145,306 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
         }
       }
     }
-    window.addEventListener('DOMContentLoaded', () => checkDesktopStorageHealth(false));
+    window.addEventListener('DOMContentLoaded', () => {
+      checkDesktopStorageHealth(false);
+      loadRoleProfiles();
+    });
     window.addEventListener('beforeunload', () => {
       try { if (navigator.sendBeacon) navigator.sendBeacon('/api/system/session-backup', ''); } catch (_) {}
     });
+
+    let roleProfilesState = { activeRole: 'owner', roles: [], profiles: {} };
+    let editingProfileRoleKey = 'owner';
+    let editingProfileAvatarDataUrl = '';
+
+    async function loadRoleProfiles() {
+      try {
+        const r = await fetch('/api/role-profiles');
+        const j = await r.json();
+        if (j && j.ok) {
+          roleProfilesState = j;
+          renderRoleHierarchyBar();
+        }
+      } catch (_) {}
+    }
+
+    function renderRoleHierarchyBar() {
+      const grp = document.getElementById('roleButtonsGroup');
+      if (!grp || !Array.isArray(roleProfilesState.roles)) return;
+      const activeKey = roleProfilesState.activeRole || 'owner';
+      grp.innerHTML = roleProfilesState.roles.map((role, idx) => {
+        const isActive = role.key === activeKey;
+        const prof = (roleProfilesState.profiles && roleProfilesState.profiles[role.key]) || {};
+        const label = prof.fullName ? `${role.icon} ${role.nameAr}: ${prof.fullName}` : `${role.icon} ${role.nameAr}`;
+        return `${idx > 0 ? '<span style="color:var(--muted); font-size:11px;">←</span>' : ''}<button type="button" onclick="switchUserRole('${role.key}')" style="padding:5px 10px; border-radius:999px; font-size:11.5px; font-weight:${isActive ? '800' : '600'}; cursor:pointer; border:1px solid ${isActive ? role.color : 'rgba(148,163,184,0.25)'}; background:${isActive ? 'rgba(16,185,129,0.18)' : 'rgba(15,23,42,0.65)'}; color:${isActive ? '#f8fafc' : '#cbd5e1'}; transition:all .15s;">${escPayHtml(label)}</button>`;
+      }).join('');
+
+      const activeDef = roleProfilesState.roles.find(d => d.key === activeKey) || roleProfilesState.roles[0] || { icon: '👑', nameAr: 'صاحب العمل' };
+      const activeProf = (roleProfilesState.profiles && roleProfilesState.profiles[activeKey]) || {};
+      const miniAvatar = document.getElementById('activeRoleMiniAvatar');
+      const miniIcon = document.getElementById('activeRoleMiniIcon');
+      const miniName = document.getElementById('activeRoleMiniName');
+      const miniMeta = document.getElementById('activeRoleMiniMeta');
+      if (miniAvatar && miniIcon) {
+        if (activeProf.avatarDataUrl) {
+          miniAvatar.src = activeProf.avatarDataUrl;
+          miniAvatar.style.display = 'inline-block';
+          miniIcon.style.display = 'none';
+        } else {
+          miniAvatar.style.display = 'none';
+          miniIcon.style.display = 'inline';
+          miniIcon.textContent = activeDef.icon;
+        }
+      }
+      if (miniName) miniName.textContent = activeProf.fullName ? `${activeProf.fullName} (${activeDef.nameAr})` : activeDef.nameAr;
+      if (miniMeta) miniMeta.textContent = [activeProf.phone, activeProf.region].filter(Boolean).join(' · ') || activeDef.desc || 'اضغط لتخصيص البيانات والصورة';
+      renderRoleGuidedWorkflow(activeKey, activeDef);
+    }
+
+    const ROLE_WORKFLOW_STEPS = {
+      owner: [
+        { step: '1', title: 'إدارة ومراجعة المنظومات', desc: 'بصفتك مالك المنظومات: راجع أداء الشبكة والمنظومات المعزولة والتراخيص.', actionLabel: '📊 عرض الملخص', action: "window.scrollTo({top:0, behavior:'smooth'})" },
+        { step: '2', title: 'جلب مفاتيح التفعيل من الخارج', desc: 'صاحب العمل هو الوحيد الذي يجلب مفاتيح التفعيل من الخارج ويُسلِّمها لمدير الوكلاء.', actionLabel: '🔑 طلبات المفاتيح', action: "document.getElementById('managerKeyInboxSection')?.scrollIntoView({behavior:'smooth'})" },
+        { step: '3', title: 'بيانات وصورة صاحب العمل', desc: 'تحديث بيانات وصورة مالك المنظومات وتخصيص قناة التواصل.', actionLabel: '👤 بياناتي وصورتي', action: 'openRoleProfileModal("owner")' },
+        { step: '4', title: 'التحقق من النسخ الاحتياطية', desc: 'فحص سلامة قواعد البيانات والنسخ الخارجي الآمن.', actionLabel: '🛡️ فحص وحفظ', action: 'verifyDataAndCreateBackupNow()' }
+      ],
+      agents_manager: [
+        { step: '1', title: 'تأمين الدخول (PIN)', desc: 'تفعيل أو فتح رمز PIN لمدير الوكلاء لحماية الإعدادات الحساسة.', actionLabel: '🔐 حماية PIN', action: 'handleManagerPinAction()' },
+        { step: '2', title: 'اختيار المنظومة وتعيين الوكيل', desc: 'تحديد المنظومة المعزولة وربطها باسم وهاتف الوكيل المسؤول.', actionLabel: '✔ لوحة المدير', action: "document.getElementById('systemSwitchSelect')?.focus()" },
+        { step: '3', title: 'استلام المفاتيح من صاحب العمل', desc: 'استلام مفاتيح التفعيل التي يجلبها صاحب العمل من الخارج وتسليمها للوكيل.', actionLabel: '🔑 طلبات المفاتيح', action: "document.getElementById('managerKeyInboxSection')?.scrollIntoView({behavior:'smooth'})" },
+        { step: '4', title: 'تأكيد سلامة البيانات والنسخ', desc: 'فحص سلامة SQLite وأخذ نسخة أمان فورية قبل الإغلاق.', actionLabel: '🛡️ فحص وحفظ', action: 'verifyDataAndCreateBackupNow()' }
+      ],
+      agent: [
+        { step: '1', title: 'إضافة الموزعين وتوليد البوابات', desc: 'تسجيل الموزعين وتحديد العمولات وإرسال ملف البوابة المستقلة.', actionLabel: '👥 الموزعون', action: "openTab('pane-distributors', document.getElementById('btn-pane-distributors'))" },
+        { step: '2', title: 'متابعة الصفقات وتأكيد الدفع', desc: 'مراجعة إيصالات التوريد من الموزعين واعتماد التحصيل.', actionLabel: '💰 الصفقات', action: "openTab('pane-deals', document.getElementById('btn-pane-deals'))" },
+        { step: '3', title: 'إصدار العقود وكشوف الحساب', desc: 'توليد العقود الرسمية وكشوف الحسابات للطباعة A4.', actionLabel: '📄 الوثائق', action: "openTab('pane-docs', document.getElementById('btn-pane-docs'))" },
+        { step: '4', title: 'حفظ نسخة احتياطية', desc: 'التأكد من حفظ البيانات والنسخ الاحتياطي التلقائي بأمان.', actionLabel: '🛡️ فحص وحفظ', action: 'verifyDataAndCreateBackupNow()' }
+      ],
+      distributor: [
+        { step: '1', title: 'تحديث بياناتك وصورتك', desc: 'تخصيص بطاقة الموزع الميداني باسمك ومنطقتك.', actionLabel: '👤 بياناتي', action: 'openRoleProfileModal("distributor")' },
+        { step: '2', title: 'تصفح كتالوج العمل الميداني', desc: 'مراجعة خطوات العرض والتنفيذ القياسية للعملاء.', actionLabel: '💼 الكتالوج', action: "openCardPreviewModal({ title: '💼 كتالوج عمل الموزع الميداني (من أ إلى ي)', subtitle: 'دليل مصور خاص بعمل الموزع وبوابته المستقلة', previewUrl: '/api/catalogs/distributor', downloadUrl: '/api/catalogs/distributor?download=1' })" },
+        { step: '3', title: 'تسجيل العملاء وإرفاق الإيصال', desc: 'تأمين حجز العميل وإرسال بيانات التوريد للوكيل.', actionLabel: '🚚 الميدان', action: "openTab('pane-deals', document.getElementById('btn-pane-deals'))" },
+        { step: '4', title: 'تأكيد الحفظ المحلي', desc: 'التأكد من حفظ كل المعاملات دون فقدان.', actionLabel: '🛡️ فحص وحفظ', action: 'verifyDataAndCreateBackupNow()' }
+      ],
+      rep: [
+        { step: '1', title: 'إعداد بطاقة المندوب', desc: 'إضافة الاسم والهاتف والمنطقة والصورة الشخصية.', actionLabel: '👤 بطاقتي', action: 'openRoleProfileModal("rep")' },
+        { step: '2', title: 'الزيارة الأولى وتسجيل العميل', desc: 'تدوين بيانات العميل المهتم ونتيجة الزيارة.', actionLabel: '🧭 تسجيل زيارة', action: "openTab('pane-deals', document.getElementById('btn-pane-deals'))" },
+        { step: '3', title: 'تفعيل التجربة الميدانية', desc: 'تسليم العميل نسخة التجربة ومتابعة أول 14 يوماً.', actionLabel: '🎓 التدريب', action: "openTab('pane-fieldtraining', document.getElementById('btn-pane-fieldtraining'))" },
+        { step: '4', title: 'مراجعة الحفظ', desc: 'التحقق من تسجيل كل الزيارات في القاعدة المحلية.', actionLabel: '🛡️ فحص وحفظ', action: 'verifyDataAndCreateBackupNow()' }
+      ],
+      technician: [
+        { step: '1', title: 'تخصيص حساب الفني', desc: 'إدخال بيانات الفني وصورته لتوثيق محاضر التركيب.', actionLabel: '👤 حسابي', action: 'openRoleProfileModal("technician")' },
+        { step: '2', title: 'فحص الجاهزية الفنية', desc: 'مراجعة قائمة الفحص والجاهزية قبل التشغيل النهائي.', actionLabel: '🧪 الجاهزية', action: "openTab('pane-fieldtraining', document.getElementById('btn-pane-fieldtraining'))" },
+        { step: '3', title: 'تفعيل النسخة والتدريب', desc: 'إدخال مفتاح التفعيل المعتمد وتدريب العميل.', actionLabel: '🔑 التفعيل', action: 'openAppLicenseModal(true)' },
+        { step: '4', title: 'تأمين النسخة الاحتياطية الأولى', desc: 'التحقق من سلامة البيانات وتفعيل النسخ الخارجي.', actionLabel: '🛡️ فحص وحفظ', action: 'verifyDataAndCreateBackupNow()' }
+      ]
+    };
+
+    function renderRoleGuidedWorkflow(activeKey, activeDef) {
+      const titleEl = document.getElementById('roleWorkflowTitle');
+      const stepsEl = document.getElementById('roleWorkflowSteps');
+      if (!stepsEl) return;
+      const steps = ROLE_WORKFLOW_STEPS[activeKey] || ROLE_WORKFLOW_STEPS.owner;
+      if (titleEl) {
+        titleEl.textContent = `🧭 خطوات عمل "${activeDef?.nameAr || 'المستخدم'}" بالترتيب الصحيح:`;
+      }
+      stepsEl.innerHTML = steps.map(s => `
+        <div style="padding:9px 11px; border-radius:10px; background:rgba(15,23,42,0.78); border:1px solid rgba(148,163,184,0.22); display:flex; flex-direction:column; justify-content:space-between; gap:6px;">
+          <div>
+            <div style="display:flex; align-items:center; gap:6px; margin-bottom:3px;">
+              <span style="width:20px; height:20px; border-radius:50%; background:rgba(16,185,129,0.2); border:1px solid var(--emerald); color:#34d399; font-size:11px; font-weight:900; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;">${s.step}</span>
+              <strong style="font-size:12px; color:#f8fafc;">${escPayHtml(s.title)}</strong>
+            </div>
+            <div style="font-size:11px; color:var(--muted); line-height:1.5;">${escPayHtml(s.desc)}</div>
+          </div>
+          <button type="button" class="btn btn-sm btn-sky" style="align-self:flex-start; padding:3px 9px; font-size:11px;" onclick="${s.action.replace(/"/g, '&quot;')}">${escPayHtml(s.actionLabel)}</button>
+        </div>
+      `).join('');
+    }
+
+    async function verifyDataAndCreateBackupNow() {
+      const badge = document.getElementById('roleSafetyInlineBadge');
+      const box = document.getElementById('roleSafetyVerifyResult');
+      if (badge) { badge.className = 'badge b-sky'; badge.textContent = '⏳ جاري فحص القاعدة وأخذ نسخة...'; }
+      try {
+        const [healthRes, backupRes] = await Promise.all([
+          fetch('/api/system/storage-health').then(r => r.json()),
+          fetch('/api/system/session-backup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).then(r => r.json())
+        ]);
+        const ok = Boolean(healthRes?.ok && healthRes?.dbIntegrityOk && healthRes?.managerDbIntegrityOk && backupRes?.ok);
+        if (badge) {
+          badge.className = ok ? 'badge b-emerald' : 'badge b-amber';
+          badge.textContent = ok ? '🛡️ البيانات سليمة + تم أخذ نسخة أمان' : '⚠️ تحقق من نتيجة الفحص';
+        }
+        if (box) {
+          box.style.display = 'block';
+          box.innerHTML = `
+            <div style="display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px; align-items:center;">
+              <div>
+                <strong>${ok ? '✅ تم التحقق بنجاح:' : '⚠️ تنبيه الفحص:'}</strong>
+                سلامة قاعدة البيانات: <strong>${healthRes?.dbIntegrityOk ? 'سليمة 100% (OK)' : 'تحتاج مراجعة'}</strong> ·
+                قاعدة المدير: <strong>${healthRes?.managerDbIntegrityOk ? 'سليمة 100%' : 'تحتاج مراجعة'}</strong> ·
+                النسخ التلقائي: <strong>${backupRes?.ok ? 'تم الحفظ بنجاح الآن' : 'تعذر الحفظ'}</strong>
+              </div>
+              <button type="button" class="btn btn-sm btn-sky" style="padding:2px 8px; font-size:10.5px;" onclick="document.getElementById('roleSafetyVerifyResult').style.display='none'">إخفاء</button>
+            </div>
+            <div style="margin-top:4px; font-size:11px; color:#a7f3d0;">
+              • مجلد البيانات: <code dir="ltr">${escPayHtml(healthRes?.dataDir || '-')}</code><br/>
+              • مجلد النسخ الاحتياطي الآمن: <code dir="ltr">${escPayHtml(backupRes?.backupDir || healthRes?.externalBackupDir || '-')}</code>
+            </div>
+          `;
+        }
+      } catch (e) {
+        if (badge) { badge.className = 'badge b-rose'; badge.textContent = '❌ تعذر الفحص'; }
+      }
+    }
+
+    async function switchUserRole(roleKey) {
+      try {
+        const r = await fetch('/api/role-profiles/switch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ roleKey })
+        });
+        const j = await r.json();
+        if (j && j.ok) {
+          roleProfilesState = j;
+          renderRoleHierarchyBar();
+        }
+      } catch (_) {}
+    }
+
+    function openRoleProfileModal(roleKey) {
+      const modal = document.getElementById('roleProfileModal');
+      if (!modal) return;
+      editingProfileRoleKey = roleKey || roleProfilesState.activeRole || 'owner';
+      renderRoleProfileModalTabs();
+      selectProfileRoleTab(editingProfileRoleKey);
+      modal.style.display = 'flex';
+    }
+
+    function renderRoleProfileModalTabs() {
+      const box = document.getElementById('rpRoleTabs');
+      if (!box || !Array.isArray(roleProfilesState.roles)) return;
+      box.innerHTML = roleProfilesState.roles.map(role => {
+        const active = role.key === editingProfileRoleKey;
+        return `<button type="button" onclick="selectProfileRoleTab('${role.key}')" style="padding:6px 11px; border-radius:9px; font-size:12px; font-weight:700; cursor:pointer; border:1px solid ${active ? role.color : 'var(--border)'}; background:${active ? 'rgba(56,189,248,0.16)' : 'rgba(15,23,42,0.65)'}; color:${active ? '#f8fafc' : '#94a3b8'};">${role.icon} ${escPayHtml(role.nameAr)}</button>`;
+      }).join('');
+    }
+
+    function selectProfileRoleTab(roleKey) {
+      editingProfileRoleKey = roleKey;
+      renderRoleProfileModalTabs();
+      const def = (roleProfilesState.roles || []).find(d => d.key === roleKey) || { icon: '👤', nameAr: roleKey, desc: '' };
+      const prof = (roleProfilesState.profiles && roleProfilesState.profiles[roleKey]) || {};
+      editingProfileAvatarDataUrl = prof.avatarDataUrl || '';
+      document.getElementById('rpFullName').value = prof.fullName || '';
+      document.getElementById('rpPhone').value = prof.phone || '';
+      document.getElementById('rpTitle').value = prof.title || def.nameAr || '';
+      document.getElementById('rpRegion').value = prof.region || '';
+      document.getElementById('rpEmail').value = prof.email || '';
+      document.getElementById('rpBio').value = prof.bio || '';
+      const fileInp = document.getElementById('rpAvatarFile');
+      if (fileInp) fileInp.value = '';
+      updateRoleCardPreview();
+    }
+
+    function handleRoleAvatarUpload(input) {
+      const file = input && input.files && input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(ev) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          const maxSide = 240;
+          const scale = Math.min(maxSide / img.width, maxSide / img.height, 1);
+          canvas.width = Math.max(1, Math.round(img.width * scale));
+          canvas.height = Math.max(1, Math.round(img.height * scale));
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          editingProfileAvatarDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+          updateRoleCardPreview();
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function clearRoleAvatar() {
+      editingProfileAvatarDataUrl = '';
+      const fileInp = document.getElementById('rpAvatarFile');
+      if (fileInp) fileInp.value = '';
+      updateRoleCardPreview();
+    }
+
+    function updateRoleCardPreview() {
+      const def = (roleProfilesState.roles || []).find(d => d.key === editingProfileRoleKey) || { icon: '👑', nameAr: 'صاحب العمل', color: '#10b981' };
+      const fullName = (document.getElementById('rpFullName')?.value || '').trim();
+      const phone = (document.getElementById('rpPhone')?.value || '').trim();
+      const title = (document.getElementById('rpTitle')?.value || '').trim() || def.nameAr;
+      const region = (document.getElementById('rpRegion')?.value || '').trim();
+      const email = (document.getElementById('rpEmail')?.value || '').trim();
+      const bio = (document.getElementById('rpBio')?.value || '').trim();
+
+      const imgEl = document.getElementById('rpPreviewAvatar');
+      const iconEl = document.getElementById('rpPreviewIcon');
+      if (imgEl && iconEl) {
+        if (editingProfileAvatarDataUrl) {
+          imgEl.src = editingProfileAvatarDataUrl;
+          imgEl.style.display = 'block';
+          iconEl.style.display = 'none';
+        } else {
+          imgEl.style.display = 'none';
+          iconEl.style.display = 'flex';
+          iconEl.textContent = def.icon;
+        }
+      }
+      const badge = document.getElementById('rpPreviewRoleBadge');
+      if (badge) {
+        badge.textContent = `${def.icon} ${def.nameAr}`;
+        badge.style.borderColor = def.color || '#10b981';
+      }
+      document.getElementById('rpPreviewName').textContent = fullName || `حساب ${def.nameAr}`;
+      document.getElementById('rpPreviewTitle').textContent = title;
+      document.getElementById('rpPreviewContact').textContent = [phone, region, email].filter(Boolean).join(' · ') || 'أدخل رقم الهاتف والمنطقة للمعاينة';
+      document.getElementById('rpPreviewBio').textContent = bio || (def.desc || '');
+    }
+
+    async function saveRoleProfile() {
+      const payload = {
+        roleKey: editingProfileRoleKey,
+        fullName: document.getElementById('rpFullName')?.value || '',
+        phone: document.getElementById('rpPhone')?.value || '',
+        title: document.getElementById('rpTitle')?.value || '',
+        region: document.getElementById('rpRegion')?.value || '',
+        email: document.getElementById('rpEmail')?.value || '',
+        bio: document.getElementById('rpBio')?.value || '',
+        avatarDataUrl: editingProfileAvatarDataUrl,
+        setActiveRole: true
+      };
+      try {
+        const r = await fetch('/api/role-profiles', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const j = await r.json();
+        if (!r.ok || !j.ok) return alert('❌ ' + (j.error || 'تعذر حفظ بيانات الحساب'));
+        roleProfilesState = j;
+        renderRoleHierarchyBar();
+        alert('✅ تم حفظ بيانات وصورة الحساب بنجاح وتثبيته كحساب نشط.');
+      } catch (e) {
+        alert('❌ تعذر الاتصال بالخادم المحلي');
+      }
+    }
   </script>
 
   <!-- Modal for Lead Lock (Phase 9) -->
   <div id="leadLockModal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.85); backdrop-filter:blur(8px); align-items:center; justify-content:center; padding:20px;" onclick="closeLeadLockModal(event)">
     <div style="background:#0f172a; border:1px solid var(--sky); border-radius:12px; padding:20px 24px; max-width:540px; width:100%; box-shadow:0 25px 60px rgba(0,0,0,0.8);" onclick="event.stopPropagation()">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; border-bottom:1px solid var(--border); padding-bottom:10px;">
-        <h3 style="margin:0; font-size:16px; color:var(--sky);">🛡️ حجز عيادة جديدة وتأمين النطاق للموزع (14 يوماً)</h3>
+        <h3 style="margin:0; font-size:16px; color:var(--sky);">🛡️ حجز عميل جديد وتأمين النطاق للموزع (14 يوماً)</h3>
         <button class="btn btn-sm btn-rose" onclick="document.getElementById('leadLockModal').style.display='none'">✕</button>
       </div>
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
@@ -5037,31 +5453,31 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
           <select id="lkDistSelect" style="padding:6px; font-size:12px;"></select>
         </div>
         <div>
-          <label style="font-size:11.5px; color:var(--muted);">اسم العيادة / المركز:</label>
-          <input id="lkClinicName" placeholder="مثال: عيادة النور التخصصية" style="padding:6px; font-size:12px;" />
+          <label style="font-size:11.5px; color:var(--muted);">اسم العميل / المنشأة:</label>
+          <input id="lkClinicName" placeholder="مثال: شركة النور للتجارة" style="padding:6px; font-size:12px;" />
         </div>
         <div>
-          <label style="font-size:11.5px; color:var(--muted);">اسم الطبيب المسؤول:</label>
+          <label style="font-size:11.5px; color:var(--muted);">اسم المسؤول:</label>
           <input id="lkDoctorName" placeholder="مثال: د. حسام عادل" style="padding:6px; font-size:12px;" />
         </div>
         <div>
-          <label style="font-size:11.5px; color:var(--muted);">هاتف العيادة (رقم التحقق):</label>
+          <label style="font-size:11.5px; color:var(--muted);">هاتف العميل (رقم التحقق):</label>
           <input id="lkPhone" placeholder="010..." dir="ltr" style="padding:6px; font-size:12px;" />
         </div>
         <div>
           <label style="font-size:11.5px; color:var(--muted);">المحافظة:</label>
-          <input id="lkGov" value="أسيوط" style="padding:6px; font-size:12px;" />
+          <input id="lkGov" value="القاهرة" style="padding:6px; font-size:12px;" />
         </div>
         <div>
           <label style="font-size:11.5px; color:var(--muted);">المركز / الحي:</label>
-          <input id="lkDistrict" placeholder="ديروط / مدينة أسيوط" style="padding:6px; font-size:12px;" />
+          <input id="lkDistrict" placeholder="الحي / المنطقة" style="padding:6px; font-size:12px;" />
         </div>
       </div>
       <div style="margin-bottom:12px;">
         <label style="font-size:11.5px; color:var(--muted);">ملاحظات التفاوض:</label>
         <input id="lkNotes" placeholder="تمت الزيارة الأولى وتحديد موعد تجربة المنظومة" style="padding:6px; font-size:12px;" />
       </div>
-      <button class="btn btn-sky" style="width:100%;" onclick="submitLeadLock()">✔ تأكيد حجز العيادة للموزع لمدة 14 يوماً</button>
+      <button class="btn btn-sky" style="width:100%;" onclick="submitLeadLock()">✔ تأكيد حجز العميل للموزع لمدة 14 يوماً</button>
     </div>
   </div>
 
@@ -5280,6 +5696,83 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
           👁 متابعة العرض وتنزيل النسخ الاحتياطية (قراءة فقط)
         </button>
       </div>
+    </div>
+  </div>
+
+  <!-- Modal: Hierarchical User Roles & Personal Profile Card Preview -->
+  <div id="roleProfileModal" style="display:none; position:fixed; inset:0; z-index:99999; background:rgba(2,6,23,0.9); backdrop-filter:blur(8px); align-items:center; justify-content:center; padding:16px;" onclick="if(event.target===this) this.style.display='none'">
+    <div style="max-width:780px; width:100%; max-height:92vh; overflow-y:auto; background:#0f172a; border:1.5px solid var(--emerald); border-radius:16px; padding:22px; box-shadow:0 25px 60px rgba(0,0,0,0.9); direction:rtl; text-align:right;" onclick="event.stopPropagation()">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid var(--border); padding-bottom:10px; gap:10px; flex-wrap:wrap;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <img src="/public/img/qalix-sovereign-logo.svg" alt="منصة كالكس الأم" width="24" height="24" style="border-radius:6px;" />
+          <img src="/public/img/qalix-agents-icon.png" alt="شعار المنظومة" width="24" height="24" style="border-radius:6px;" />
+          <h3 style="margin:0; font-size:16px; color:var(--emerald); font-weight:900;">👤 إدارة الأدوار والبيانات الشخصية والصورة</h3>
+        </div>
+        <button type="button" class="btn btn-sm btn-rose" onclick="document.getElementById('roleProfileModal').style.display='none'">✕ إغلاق</button>
+      </div>
+
+      <div id="rpRoleTabs" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px;"></div>
+
+      <!-- Live Identity Card Preview -->
+      <div style="border-radius:14px; padding:16px; margin-bottom:14px; background:linear-gradient(135deg, rgba(16,185,129,0.16), rgba(14,165,233,0.14), rgba(15,23,42,0.95)); border:1px solid rgba(56,189,248,0.45); display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:14px;">
+        <div style="display:flex; align-items:center; gap:14px; min-width:0; flex:1;">
+          <img id="rpPreviewAvatar" src="" alt="" width="74" height="74" style="display:none; width:74px; height:74px; border-radius:50%; object-fit:cover; border:2.5px solid var(--emerald); flex-shrink:0;" />
+          <div id="rpPreviewIcon" style="width:74px; height:74px; border-radius:50%; background:rgba(15,23,42,0.85); border:2px solid var(--sky); display:flex; align-items:center; justify-content:center; font-size:32px; flex-shrink:0;">👑</div>
+          <div style="min-width:0;">
+            <span id="rpPreviewRoleBadge" class="badge b-emerald" style="margin-bottom:5px; display:inline-block;">👑 صاحب العمل</span>
+            <div id="rpPreviewName" style="font-size:17px; font-weight:900; color:#f8fafc;">حساب صاحب العمل</div>
+            <div id="rpPreviewTitle" style="font-size:12.5px; color:var(--sky); font-weight:700;">صاحب العمل</div>
+            <div id="rpPreviewContact" style="font-size:11.5px; color:#cbd5e1; margin-top:3px;">أدخل رقم الهاتف والمنطقة للمعاينة</div>
+            <div id="rpPreviewBio" style="font-size:11px; color:var(--muted); margin-top:3px;"></div>
+          </div>
+        </div>
+        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px; flex-shrink:0;">
+          <div style="display:flex; align-items:center; gap:6px; background:rgba(15,23,42,0.75); padding:5px 10px; border-radius:999px; border:1px solid rgba(255,255,255,0.12);">
+            <img src="/public/img/qalix-sovereign-logo.svg" alt="Qalix" width="18" height="18" style="border-radius:4px;" />
+            <img src="/public/img/qalix-agents-icon.png" alt="Agents" width="18" height="18" style="border-radius:4px;" />
+            <span style="font-size:10.5px; color:#34d399; font-weight:700;">Powered by Qalix Platform</span>
+          </div>
+          <span style="font-size:10.5px; color:var(--muted);">معاينة بطاقة الحساب المباشرة</span>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
+        <div>
+          <label style="font-size:12px; color:var(--muted);">الاسم الكامل:</label>
+          <input id="rpFullName" oninput="updateRoleCardPreview()" placeholder="مثال: م. أحمد..." style="padding:7px; font-size:12.5px;" />
+        </div>
+        <div>
+          <label style="font-size:12px; color:var(--muted);">المسمى الوظيفي / الصفة:</label>
+          <input id="rpTitle" oninput="updateRoleCardPreview()" placeholder="صاحب العمل / مدير الوكلاء..." style="padding:7px; font-size:12.5px;" />
+        </div>
+        <div>
+          <label style="font-size:12px; color:var(--muted);">رقم الهاتف / واتساب:</label>
+          <input id="rpPhone" dir="ltr" oninput="updateRoleCardPreview()" placeholder="010..." style="padding:7px; font-size:12.5px;" />
+        </div>
+        <div>
+          <label style="font-size:12px; color:var(--muted);">المنطقة / الفرع:</label>
+          <input id="rpRegion" oninput="updateRoleCardPreview()" placeholder="القاهرة / الصعيد / الدلتا..." style="padding:7px; font-size:12.5px;" />
+        </div>
+        <div>
+          <label style="font-size:12px; color:var(--muted);">البريد الإلكتروني (اختياري):</label>
+          <input id="rpEmail" dir="ltr" oninput="updateRoleCardPreview()" placeholder="name@example.com" style="padding:7px; font-size:12.5px;" />
+        </div>
+        <div>
+          <label style="font-size:12px; color:var(--muted);">الصورة الشخصية للحساب:</label>
+          <div style="display:flex; gap:6px; align-items:center;">
+            <input id="rpAvatarFile" type="file" accept="image/*" onchange="handleRoleAvatarUpload(this)" style="padding:5px; font-size:11.5px; flex:1;" />
+            <button type="button" class="btn btn-sm btn-rose" onclick="clearRoleAvatar()">حذف</button>
+          </div>
+        </div>
+        <div style="grid-column:1 / -1;">
+          <label style="font-size:12px; color:var(--muted);">نبذة أو ملاحظات الحساب:</label>
+          <input id="rpBio" oninput="updateRoleCardPreview()" placeholder="مهام الحساب أو نطاق المسؤولية..." style="padding:7px; font-size:12.5px;" />
+        </div>
+      </div>
+
+      <button type="button" class="btn btn-emerald" style="width:100%; padding:11px; font-weight:800;" onclick="saveRoleProfile()">
+        💾 حفظ بيانات وصورة الحساب وتفعيله
+      </button>
     </div>
   </div>
 </body>

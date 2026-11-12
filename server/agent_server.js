@@ -9,6 +9,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const { DatabaseSync } = require('node:sqlite');
+const { escapeHtml } = require('./html_escape');
 const { SPECIALTY_PACKS, getAllPacks, getPackById } = require('./specialty_packs');
 const { processMigration } = require('./data_migrator');
 const { MARKETING_MATERIALS, renderWhatsAppCatalogA4, renderWowDemoA4, renderBattleCardA4 } = require('./marketing_kit');
@@ -82,7 +83,57 @@ const BASE_KITS_DIR = process.env.DATA_DIR ? path.join(BASE_DATA_DIR, 'kits') : 
 fs.mkdirSync(BASE_DATA_DIR, { recursive: true });
 fs.mkdirSync(BASE_KITS_DIR, { recursive: true });
 
+function sanitizeTextForUniversalMode(str) {
+  if (typeof str !== 'string') return str;
+  const sysName = (typeof ACTIVE_SYSTEM !== 'undefined' && ACTIVE_SYSTEM?.nameAr) ? ACTIVE_SYSTEM.nameAr : 'منظومة إدارة الوكلاء والموزعين الموحدة';
+  const projName = (typeof ACTIVE_SYSTEM !== 'undefined' && ACTIVE_SYSTEM?.projectName) ? ACTIVE_SYSTEM.projectName : 'Universal Agents & Distributors Platform';
+  const agPhone = (typeof ACTIVE_SYSTEM !== 'undefined' && ACTIVE_SYSTEM?.agentInfo?.phone) ? ACTIVE_SYSTEM.agentInfo.phone : '01000000000';
+  const waPhone = '2' + agPhone.replace(/^0+/, '0').replace(/[^0-9]/g, '');
+  return str
+    .replace(/\+201122166076/g, '+2' + agPhone.replace(/^\+?2?/, ''))
+    .replace(/201122166076/g, waPhone)
+    .replace(/01122166076/g, agPhone)
+    .replace(/Qalix Medical Agent/g, projName)
+    .replace(/منظومة كالكس الطبية/g, sysName)
+    .replace(/كالكس ميديكال/g, sysName)
+    .replace(/كالكس الطبية/g, sysName)
+    .replace(/للعيادات والمراكز الطبية/g, 'للشركات والمؤسسات والعملاء')
+    .replace(/عيادات الصعيد والمحافظات/g, 'العملاء والشركات في جميع المحافظات')
+    .replace(/الباقة الأساسية \(عيادة طبيب فردي\)/g, 'الباقة الأساسية (الفئة الأولى)')
+    .replace(/عيادة طبيب فردي/g, 'الفئة الأولى')
+    .replace(/طبيب فردي/g, 'الفئة الأولى')
+    .replace(/الباقة التخصصية \(العيادات النشطة\)/g, 'الباقة المتقدمة (الفئة المتوسطة)')
+    .replace(/الباقة التخصصية/g, 'الباقة المتقدمة')
+    .replace(/باقة المراكز الكبرى والفروع/g, 'الباقة المؤسسية الشاملة')
+    .replace(/مكتب النور للأنظمة الطبية/g, 'مكتب النور للتوزيع والتجارة')
+    .replace(/مركز الشفاء الطبي/g, 'شركة النور للتجارة')
+    .replace(/طابعة الروشتات/g, 'طابعة الفواتير والتقارير')
+    .replace(/بصمة جهاز العيادة/g, 'بصمة جهاز العميل')
+    .replace(/العيادات والمراكز/g, 'العملاء والمنشآت')
+    .replace(/العيادات/g, 'العملاء')
+    .replace(/العيادة/g, 'المنشأة')
+    .replace(/عيادة/g, 'منشأة')
+    .replace(/الأطباء/g, 'العملاء')
+    .replace(/الطبيب/g, 'العميل')
+    .replace(/المرضى/g, 'العملاء');
+}
+
+function sanitizeValueForUniversalMode(val, depth = 0) {
+  if (depth > 8 || val == null) return val;
+  if (typeof val === 'string') return sanitizeTextForUniversalMode(val);
+  if (Array.isArray(val)) return val.map(v => sanitizeValueForUniversalMode(v, depth + 1));
+  if (typeof val === 'object') {
+    const out = {};
+    for (const [k, v] of Object.entries(val)) out[k] = sanitizeValueForUniversalMode(v, depth + 1);
+    return out;
+  }
+  return val;
+}
+
 function sendHtmlWithOptionalDownload(res, html, downloadFilename, forceDownload) {
+  const safeHtml = (typeof isUniversalCleanMode === 'function' && isUniversalCleanMode())
+    ? sanitizeTextForUniversalMode(html)
+    : html;
   const headers = {
     'Content-Type': 'text/html; charset=utf-8',
     'Access-Control-Allow-Origin': '*'
@@ -91,7 +142,7 @@ function sendHtmlWithOptionalDownload(res, html, downloadFilename, forceDownload
     headers['Content-Disposition'] = `attachment; filename="${downloadFilename}"; filename*=UTF-8''${encodeURIComponent(downloadFilename)}`;
   }
   res.writeHead(200, headers);
-  return res.end(html);
+  return res.end(safeHtml);
 }
 
 /* ---------------- Multi-System Runtime Pool & Active Context ---------------- */
@@ -110,6 +161,52 @@ function openSystemDb(systemId, targetDbPath) {
 
 let systemsRegistry = ensureQalix11SuiteInRegistry(BASE_DATA_DIR, BASE_KITS_DIR);
 const managerHubDb = openManagerHubDb(BASE_DATA_DIR);
+managerHubDb.exec(`
+  CREATE TABLE IF NOT EXISTS role_profiles (
+    role_key TEXT PRIMARY KEY,
+    full_name TEXT DEFAULT '',
+    phone TEXT DEFAULT '',
+    title TEXT DEFAULT '',
+    region TEXT DEFAULT '',
+    email TEXT DEFAULT '',
+    bio TEXT DEFAULT '',
+    avatar_data_url TEXT DEFAULT '',
+    updated_at TEXT DEFAULT ''
+  );
+`);
+
+const USER_ROLE_DEFINITIONS = [
+  { key: 'owner', level: 1, icon: '👑', nameAr: 'صاحب العمل', color: '#f59e0b', desc: 'مالك المنظومات بالكامل — يجلب مفاتيح التفعيل من الخارج ويعتمدها' },
+  { key: 'agents_manager', level: 2, icon: '🏛️', nameAr: 'مدير الوكلاء', color: '#38bdf8', desc: 'يستلم مفاتيح التفعيل من صاحب العمل ويدير الوكلاء والمنظومات' },
+  { key: 'agent', level: 3, icon: '🤝', nameAr: 'الوكيل', color: '#10b981', desc: 'إدارة شبكة الموزعين واعتماد التحصيل والتوريد' },
+  { key: 'distributor', level: 4, icon: '🚚', nameAr: 'الموزع', color: '#a855f7', desc: 'المبيعات الميدانية وحجز النطاق وإدارة المندوب والفني' },
+  { key: 'rep', level: 5, icon: '🧭', nameAr: 'المندوب', color: '#0ea5e9', desc: 'الزيارات الميدانية والعرض والتعاقد وتسجيل العملاء' },
+  { key: 'technician', level: 6, icon: '🛠️', nameAr: 'الفني', color: '#14b8a6', desc: 'التركيب والتشغيل والتدريب الميداني والدعم الفني' }
+];
+
+function getRoleProfilesState() {
+  const rows = managerHubDb.prepare('SELECT * FROM role_profiles').all();
+  const map = {};
+  for (const r of rows) map[r.role_key] = r;
+  const activeRow = managerHubDb.prepare("SELECT value FROM manager_settings WHERE key = 'active_user_role'").get();
+  const activeRole = USER_ROLE_DEFINITIONS.some(d => d.key === activeRow?.value) ? activeRow.value : 'owner';
+  const profiles = {};
+  for (const def of USER_ROLE_DEFINITIONS) {
+    const row = map[def.key] || {};
+    profiles[def.key] = {
+      roleKey: def.key,
+      fullName: row.full_name || '',
+      phone: row.phone || '',
+      title: row.title || def.nameAr,
+      region: row.region || '',
+      email: row.email || '',
+      bio: row.bio || '',
+      avatarDataUrl: row.avatar_data_url || '',
+      updatedAt: row.updated_at || ''
+    };
+  }
+  return { activeRole, roles: USER_ROLE_DEFINITIONS, profiles };
+}
 let ACTIVE_SYSTEM = systemsRegistry.systems.find(s => s.id === systemsRegistry.activeSystemId) || systemsRegistry.systems[0];
 let ACTIVE_PATHS = getSystemPaths(BASE_DATA_DIR, BASE_KITS_DIR, ACTIVE_SYSTEM.id);
 let DATA_DIR = ACTIVE_PATHS.dataDir;
@@ -662,7 +759,10 @@ function writeDistributorKitFile(dist) {
 
 /* ---------------- REST API Handler ---------------- */
 function sendJson(res, status, data) {
-  const body = Buffer.from(JSON.stringify(data));
+  const payload = (typeof isUniversalCleanMode === 'function' && isUniversalCleanMode())
+    ? sanitizeValueForUniversalMode(data)
+    : data;
+  const body = Buffer.from(JSON.stringify(payload));
   res.writeHead(status, {
     'Content-Type': 'application/json; charset=utf-8',
     'Content-Length': body.length,
@@ -1602,6 +1702,16 @@ const server = http.createServer(async (req, res) => {
 
     /* ---------------- Legal & Handover Documents API (Phase 8) ---------------- */
     if (req.method === 'GET' && pathname === '/api/legal/delivery-documents') {
+      if (isUniversalCleanMode()) {
+        return sendJson(res, 200, {
+          ok: true,
+          documents: [
+            { id: 'doc_agent_cat', format: 'A4 HTML', title: '📘 دليل تشغيل الوكيل الحصري (A–Z)', description: 'دليل التشغيل الكامل للوكيل لإدارة الشبكة والموزعين والتسليم الميداني.', url: '/api/catalogs/agent', isPrintable: true },
+            { id: 'doc_dist_cat', format: 'A4 HTML', title: '💼 دليل عمل الموزع الميداني (A–Z)', description: 'المرجع الميداني الكامل للموزع لتنفيذ الصفقات وتوريد الإيصالات.', url: '/api/catalogs/distributor', isPrintable: true },
+            { id: 'doc_weekly_digest', format: 'A4 HTML', title: '📊 التقرير التنفيذي الدوري المعتمد', description: 'ملخص الأداء الأسبوعي والمبيعات والتحصيل وحالة التراخيص للطباعة.', url: '/api/reports/weekly-digest', isPrintable: true }
+          ]
+        });
+      }
       return sendJson(res, 200, {
         ok: true,
         documents: MARKETING_MATERIALS.legalHandoverDocs || []
@@ -1633,20 +1743,76 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, 200, { ok: true, channels: PAYMENT_CHANNELS });
     }
 
+    function renderDynamicUniversalCatalogHtml(role = 'distributor') {
+      const sysName = escapeHtml(ACTIVE_SYSTEM.nameAr || 'منظومة إدارة الوكلاء والموزعين الموحدة');
+      const isAgent = role === 'agent';
+      const title = isAgent
+        ? `كتالوج تشغيل الوكيل الحصري (A-Z) — ${sysName}`
+        : `كتالوج عمل الموزع الميداني (A-Z) — ${sysName}`;
+      const steps = isAgent
+        ? [
+            ['1. تهيئة المنظومة والبيانات', 'ضبط اسم النشاط والهاتف الرسمي، وتأمين دخول مدير الوكلاء برمز PIN، ومراجعة حالة الترخيص والتفعيل.'],
+            ['2. إضافة الموزعين وتوليد البوابات', 'إنشاء كود فريد لكل موزع وتحديد نسبة العمولة، ثم تسليمه ملف البوابة المستقلة (.html) للعمل أوفلاين.'],
+            ['3. حوكمة المدفوعات والتوريد', 'استلام إشعارات الدفع وإيصالات التوريد من الموزعين، ومطابقة صافي التوريد قبل اعتماد التفعيل.'],
+            ['4. النسخ الاحتياطي والمزامنة', 'النسخ التلقائي نهاية كل جلسة إلى مجلد Documents\\UniversalAgentsBackups مع دعم حزم المزامنة الموقعة أوفلاين.'],
+            ['5. العقود وكشوف الحسابات والتقارير', 'إصدار عقود الموزعين، محاضر التسليم، كشوف الحساب التفصيلية، والتقارير التنفيذية للطباعة A4 أو PDF.']
+          ]
+        : [
+            ['1. استلام البوابة المستقلة (.html)', 'يعمل الموزع من خلال ملف البوابة المستقلة المرسَل له من الوكيل مباشرة بدون الحاجة لاتصال دائم بالخادم.'],
+            ['2. تسجيل العملاء والصفقات الميدانية', 'إدخال بيانات العميل والباقة المطلوبة، وتحديد المندوب ثم الفني المسؤول عن التركيب والتشغيل.'],
+            ['3. حجز النطاق ومتابعة التنفيذ', 'تسجيل قفل الحجز الميداني لمنع تضارب الموزعين، ومتابعة مراحل التنفيذ خطوة بخطوة حتى التسليم.'],
+            ['4. إرسال إيصال التوريد وتأكيد الدفع', 'إرفاق بيانات التحويل أو الإيصال وإرساله للوكيل لمراجعته وإصدار إذن التفعيل الرسمي.'],
+            ['5. تسليم العميل ومتابعة ما بعد البيع', 'توقيع محضر التسليم الميداني، ومتابعة العميل في محطات الرضاء الدورية لضمان الاستمرارية والترقية.']
+          ];
+      return `<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<title>${title}</title>
+<style>
+  body { font-family: Tahoma, Arial, sans-serif; background:#f8fafc; color:#0f172a; margin:0; padding:24px; direction:rtl; }
+  .sheet { max-width:820px; margin:0 auto; background:#fff; border:1px solid #cbd5e1; border-radius:12px; padding:28px; box-shadow:0 8px 24px rgba(15,23,42,0.08); }
+  .head { border-bottom:2px solid #0284c7; padding-bottom:14px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; gap:12px; }
+  h1 { margin:0; font-size:20px; color:#0f172a; }
+  .badge { background:#e0f2fe; color:#0369a1; padding:4px 10px; border-radius:999px; font-size:12px; font-weight:700; }
+  .step { border:1px solid #e2e8f0; border-radius:10px; padding:14px 16px; margin-bottom:12px; background:#f8fafc; }
+  .step h3 { margin:0 0 6px; font-size:15px; color:#0369a1; }
+  .step p { margin:0; font-size:13.5px; line-height:1.75; color:#334155; }
+  .foot { margin-top:20px; padding-top:12px; border-top:1px dashed #cbd5e1; font-size:12px; color:#64748b; display:flex; justify-content:space-between; }
+  @media print { body { background:#fff; padding:0; } .sheet { box-shadow:none; border:none; } }
+</style>
+</head>
+<body>
+  <div class="sheet">
+    <div class="head">
+      <div>
+        <h1>${title}</h1>
+        <div style="font-size:12.5px; color:#475569; margin-top:4px;">دليل التشغيل القياسي المعتمد · Powered by Qalix Platform</div>
+      </div>
+      <span class="badge">${isAgent ? 'خاص بالوكيل' : 'دليل الموزع الميداني'}</span>
+    </div>
+    ${steps.map(([h, p]) => `<div class="step"><h3>${escapeHtml(h)}</h3><p>${escapeHtml(p)}</p></div>`).join('')}
+    <div class="foot">
+      <span>${sysName}</span>
+      <span>نسخة قياسية جاهزة للطباعة A4</span>
+    </div>
+  </div>
+</body>
+</html>`;
+    }
+
     if (req.method === 'GET' && pathname === '/api/catalogs/agent') {
       const catPath = path.join(ROOT, 'كتالوج_تشغيل_الوكيل_الحصري.html');
-      if (!fs.existsSync(catPath)) return sendJson(res, 404, { error: 'كتالوج الوكيل غير متاح' });
-      const html = fs.readFileSync(catPath, 'utf8');
+      const html = fs.existsSync(catPath) ? fs.readFileSync(catPath, 'utf8') : renderDynamicUniversalCatalogHtml('agent');
       const dl = url.searchParams.get('download') === '1';
-      return sendHtmlWithOptionalDownload(res, html, 'Qalix-Agent-Operations-Catalog-A-Z.html', dl);
+      return sendHtmlWithOptionalDownload(res, html, 'Universal-Agent-Operations-Catalog-A-Z.html', dl);
     }
 
     if (req.method === 'GET' && pathname === '/api/catalogs/distributor') {
       const catPath = path.join(PRESENTATIONS_DIR, 'كتالوج_تشغيل_الموزع_الميداني.html');
-      if (!fs.existsSync(catPath)) return sendJson(res, 404, { error: 'كتالوج الموزع غير متاح' });
-      const html = fs.readFileSync(catPath, 'utf8');
+      const html = fs.existsSync(catPath) ? fs.readFileSync(catPath, 'utf8') : renderDynamicUniversalCatalogHtml('distributor');
       const dl = url.searchParams.get('download') === '1';
-      return sendHtmlWithOptionalDownload(res, html, 'Qalix-Distributor-Field-Catalog-A-Z.html', dl);
+      return sendHtmlWithOptionalDownload(res, html, 'Universal-Distributor-Field-Catalog-A-Z.html', dl);
     }
 
     if (req.method === 'GET' && pathname === '/api/receipts/generate') {
@@ -2308,6 +2474,64 @@ const server = http.createServer(async (req, res) => {
       if (body.ownerPhone !== undefined) upsertSetting.run('platform_owner_phone', String(body.ownerPhone || '').replace(/[^0-9+]/g, '').slice(0, 20));
       logAudit('manager_profile_updated', 'تحديث بيانات تواصل مدير الوكلاء وقناته السرية مع صاحب المنصة');
       return sendJson(res, 200, { ok: true, profile: getManagerHubProfile(), agentsManagerContact: getAgentVisibleManagerContact() });
+    }
+
+    if (req.method === 'GET' && pathname === '/api/role-profiles') {
+      return sendJson(res, 200, { ok: true, ...getRoleProfilesState() });
+    }
+
+    if (req.method === 'POST' && pathname === '/api/role-profiles/switch') {
+      const body = await readJsonBody(req);
+      const roleKey = String(body.roleKey || '').trim();
+      if (!USER_ROLE_DEFINITIONS.some(d => d.key === roleKey)) {
+        return sendJson(res, 400, { error: 'دور غير صالح' });
+      }
+      managerHubDb.prepare("INSERT INTO manager_settings(key, value) VALUES('active_user_role', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").run(roleKey);
+      return sendJson(res, 200, { ok: true, ...getRoleProfilesState() });
+    }
+
+    if (req.method === 'POST' && pathname === '/api/role-profiles') {
+      const body = await readJsonBody(req);
+      const roleKey = String(body.roleKey || '').trim();
+      if (!USER_ROLE_DEFINITIONS.some(d => d.key === roleKey)) {
+        return sendJson(res, 400, { error: 'دور غير صالح' });
+      }
+      const avatar = String(body.avatarDataUrl || '').trim();
+      if (avatar && !/^data:image\/(png|jpeg|jpg|webp|gif);base64,[A-Za-z0-9+/=]+$/i.test(avatar)) {
+        return sendJson(res, 400, { error: 'صيغة الصورة غير مدعومة (يُسمح بـ PNG/JPG/WEBP فقط)' });
+      }
+      if (avatar.length > 1600000) {
+        return sendJson(res, 400, { error: 'حجم الصورة كبير جداً (الحد الأقصى 1.5 ميجابايت)' });
+      }
+      const nowIso = new Date().toISOString();
+      managerHubDb.prepare(`
+        INSERT INTO role_profiles(role_key, full_name, phone, title, region, email, bio, avatar_data_url, updated_at)
+        VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(role_key) DO UPDATE SET
+          full_name = excluded.full_name,
+          phone = excluded.phone,
+          title = excluded.title,
+          region = excluded.region,
+          email = excluded.email,
+          bio = excluded.bio,
+          avatar_data_url = excluded.avatar_data_url,
+          updated_at = excluded.updated_at
+      `).run(
+        roleKey,
+        String(body.fullName || '').trim().slice(0, 120),
+        String(body.phone || '').replace(/[^0-9+\-\s]/g, '').trim().slice(0, 24),
+        String(body.title || '').trim().slice(0, 100),
+        String(body.region || '').trim().slice(0, 100),
+        String(body.email || '').trim().slice(0, 120),
+        String(body.bio || '').trim().slice(0, 400),
+        avatar,
+        nowIso
+      );
+      if (body.setActiveRole === true) {
+        managerHubDb.prepare("INSERT INTO manager_settings(key, value) VALUES('active_user_role', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").run(roleKey);
+      }
+      logAudit('role_profile_updated', `تحديث بيانات وصورة الحساب للدور: ${roleKey}`);
+      return sendJson(res, 200, { ok: true, ...getRoleProfilesState() });
     }
 
     if (req.method === 'POST' && pathname === '/api/manager/assign-agent') {
