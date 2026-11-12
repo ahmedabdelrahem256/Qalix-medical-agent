@@ -352,6 +352,7 @@
               </div>
             </div>
             <button type="button" class="btn btn-sm btn-emerald" onclick="openRoleProfileModal()" style="font-weight:800;">👤 بياناتي وصورتي (معاينة)</button>
+            <button type="button" class="btn btn-sm btn-sky" onclick="openAccountOnboardingModal()" style="font-weight:800;">📨 طلب حساب ومزامنة واتساب</button>
           </div>
         </div>
         <!-- Guided Step-by-Step Workflow & Live Data Safety Bar per Role -->
@@ -5438,6 +5439,137 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
         alert('❌ تعذر الاتصال بالخادم المحلي');
       }
     }
+
+    async function openAccountOnboardingModal() {
+      const m = document.getElementById('accountOnboardingModal');
+      if (!m) return;
+      m.style.display = 'flex';
+      await loadAccountRequestsList();
+    }
+
+    async function loadAccountRequestsList() {
+      const box = document.getElementById('accRequestsListBox');
+      if (!box) return;
+      try {
+        const r = await fetch('/api/accounts/requests');
+        const j = await r.json();
+        if (!j.ok) return;
+        const list = j.requests || [];
+        if (!list.length) {
+          box.innerHTML = '<div style="font-size:12px; color:var(--muted); padding:8px;">لا توجد طلبات إنشاء حسابات مسجلة حالياً.</div>';
+          return;
+        }
+        const roleLabels = { agent: '🤝 وكيل', distributor: '🚚 موزع', rep: '🧭 مندوب', technician: '🛠️ فني' };
+        const statusLabels = { pending: '⏳ بانتظار الموافقة', approved: '✅ معتمد ومفعّل', rejected: '❌ مرفوض' };
+        const statusCls = { pending: 'b-amber', approved: 'b-emerald', rejected: 'b-rose' };
+        box.innerHTML = list.map(req => `
+          <div class="sub-card" style="padding:10px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+            <div>
+              <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+                <span class="badge b-sky">${roleLabels[req.role_key] || escPayHtml(req.role_key)}</span>
+                <strong style="font-size:13px; color:#f8fafc;">${escPayHtml(req.full_name)}</strong>
+                <span class="badge ${statusCls[req.status] || 'b-amber'}">${statusLabels[req.status] || escPayHtml(req.status)}</span>
+              </div>
+              <div style="font-size:11.5px; color:var(--muted); margin-top:4px;">
+                هاتف: <span dir="ltr">${escPayHtml(req.phone || '-')}</span> · المنطقة: ${escPayHtml(req.region || '-')}
+                ${req.notes ? ' · ' + escPayHtml(req.notes) : ''}
+              </div>
+            </div>
+            ${req.status === 'pending' ? `
+              <div style="display:flex; gap:6px;">
+                <button type="button" class="btn btn-sm btn-emerald" onclick="decideAccountRequest('${escPayHtml(req.id)}','approved')">✅ موافقة واعتماد</button>
+                <button type="button" class="btn btn-sm btn-rose" onclick="decideAccountRequest('${escPayHtml(req.id)}','rejected')">✕ رفض</button>
+              </div>
+            ` : ''}
+          </div>
+        `).join('');
+      } catch (_) {}
+    }
+
+    async function submitNewAccountRequest() {
+      const roleKey = document.getElementById('accReqRole')?.value || 'distributor';
+      const fullName = (document.getElementById('accReqName')?.value || '').trim();
+      const phone = (document.getElementById('accReqPhone')?.value || '').trim();
+      const region = (document.getElementById('accReqRegion')?.value || '').trim();
+      const notes = (document.getElementById('accReqNotes')?.value || '').trim();
+      const autoApprove = roleKey === 'agent' && document.getElementById('accReqAutoApprove')?.checked;
+      if (!fullName) return alert('يرجى إدخال اسم صاحب الحساب المطلوب');
+      try {
+        const r = await fetch('/api/accounts/requests', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ roleKey, fullName, phone, region, notes, requestedByRole: roleProfilesState.activeRole || 'owner', autoApprove })
+        });
+        const j = await r.json();
+        if (!r.ok || !j.ok) return alert('❌ ' + (j.error || 'تعذر تسجيل الطلب'));
+        document.getElementById('accReqName').value = '';
+        document.getElementById('accReqPhone').value = '';
+        document.getElementById('accReqRegion').value = '';
+        document.getElementById('accReqNotes').value = '';
+        if (j.profiles) { roleProfilesState.profiles = j.profiles; renderRoleHierarchyBar(); }
+        await loadAccountRequestsList();
+        alert(j.status === 'approved' ? '✅ تم إنشاء واعتماد حساب الوكيل مباشرة.' : '✅ تم تسجيل طلب إنشاء الحساب بنجاح. يمكنك الآن تصدير ملف التحديث وإرساله عبر واتساب.');
+      } catch (_) {
+        alert('❌ تعذر الاتصال بالخادم المحلي');
+      }
+    }
+
+    async function decideAccountRequest(id, decision) {
+      try {
+        const r = await fetch('/api/accounts/requests/approve', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, decision, approvedByRole: roleProfilesState.activeRole || 'owner' })
+        });
+        const j = await r.json();
+        if (!r.ok || !j.ok) return alert('❌ ' + (j.error || 'تعذر تنفيذ القرار'));
+        if (j.profiles) { roleProfilesState.profiles = j.profiles; renderRoleHierarchyBar(); }
+        await loadAccountRequestsList();
+      } catch (_) {}
+    }
+
+    async function exportWhatsappAccountSyncPacket() {
+      try {
+        const r = await fetch('/api/accounts/whatsapp-packet/export', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ exportedByRole: roleProfilesState.activeRole || 'owner' })
+        });
+        const j = await r.json();
+        if (!r.ok || !j.ok) return alert('❌ تعذر تصدير ملف التحديث');
+        const blob = new Blob([j.packetJson], { type: 'application/json;charset=utf-8' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = j.filename || 'wa-update.qlxsync';
+        a.click();
+        alert(`✅ تم تنزيل ملف التحديث الموقّع (${j.filename}).\nأرسله الآن عبر واتساب للطرف الآخر ليقوم باستيراده داخل نفس البرنامج أوفلاين.`);
+      } catch (_) {}
+    }
+
+    function importWhatsappAccountSyncPacket(input) {
+      const file = input && input.files && input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async function(ev) {
+        try {
+          const r = await fetch('/api/accounts/whatsapp-packet/import', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ packet: ev.target.result })
+          });
+          const j = await r.json();
+          if (!r.ok || !j.ok) return alert('❌ ' + (j.error || 'ملف التحديث مرفوض'));
+          if (j.profiles) { roleProfilesState.profiles = j.profiles; renderRoleHierarchyBar(); }
+          await loadAccountRequestsList();
+          alert(`✅ تم استيراد ملف تحديث الواتساب بنجاح!\n• طلبات محدثة: ${j.importedRequests}\n• حسابات محدثة: ${j.importedProfiles}`);
+        } catch (_) {
+          alert('❌ تعذر قراءة ملف التحديث');
+        } finally {
+          input.value = '';
+        }
+      };
+      reader.readAsText(file, 'utf-8');
+    }
   </script>
 
   <!-- Modal for Lead Lock (Phase 9) -->
@@ -5773,6 +5905,70 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
       <button type="button" class="btn btn-emerald" style="width:100%; padding:11px; font-weight:800;" onclick="saveRoleProfile()">
         💾 حفظ بيانات وصورة الحساب وتفعيله
       </button>
+    </div>
+  </div>
+
+  <!-- Modal: Account Onboarding Chain & Offline WhatsApp File Sync (.qlxsync) -->
+  <div id="accountOnboardingModal" style="display:none; position:fixed; inset:0; z-index:99999; background:rgba(2,6,23,0.9); backdrop-filter:blur(8px); align-items:center; justify-content:center; padding:16px;" onclick="if(event.target===this) this.style.display='none'">
+    <div style="max-width:820px; width:100%; max-height:92vh; overflow-y:auto; background:#0f172a; border:1.5px solid var(--sky); border-radius:16px; padding:22px; box-shadow:0 25px 60px rgba(0,0,0,0.9); direction:rtl; text-align:right;" onclick="event.stopPropagation()">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid var(--border); padding-bottom:10px; gap:10px; flex-wrap:wrap;">
+        <div>
+          <h3 style="margin:0; font-size:16.5px; color:var(--sky); font-weight:900;">📨 اعتماد الحسابات والمزامنة عبر ملف واتساب (أوفلاين 100%)</h3>
+          <p style="margin:3px 0 0; font-size:11.5px; color:var(--muted);">صاحب المنصة يعتمد الوكيل ← الموزع يطلب حساب موزع من صاحب العمل ← الموزع يطلب حساب المندوب والفني بعد الموافقة</p>
+        </div>
+        <button type="button" class="btn btn-sm btn-rose" onclick="document.getElementById('accountOnboardingModal').style.display='none'">✕ إغلاق</button>
+      </div>
+
+      <div class="sub-card" style="padding:12px; margin-bottom:12px; border:1px solid rgba(16,185,129,0.35); background:rgba(16,185,129,0.08); display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:space-between;">
+        <div style="font-size:12px; color:#d1fae5; font-weight:700;">🔄 تحديث البيانات بين جميع المستخدمين بملف واتساب موقّع (.qlxsync):</div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button type="button" class="btn btn-sm btn-emerald" onclick="exportWhatsappAccountSyncPacket()">📤 تصدير ملف تحديث للواتساب</button>
+          <label class="btn btn-sm btn-amber" style="cursor:pointer; margin:0;">
+            📥 استيراد ملف من الواتساب
+            <input type="file" accept=".qlxsync,.json" style="display:none;" onchange="importWhatsappAccountSyncPacket(this)" />
+          </label>
+        </div>
+      </div>
+
+      <div class="sub-card" style="padding:12px; margin-bottom:12px;">
+        <div style="font-size:13px; font-weight:800; color:var(--amber); margin-bottom:8px;">➕ إنشاء أو طلب حساب جديد:</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
+          <div>
+            <label style="font-size:11.5px; color:var(--muted);">نوع الحساب المطلوب:</label>
+            <select id="accReqRole" onchange="document.getElementById('accReqAgentApproveBox').style.display=this.value==='agent'?'block':'none'" style="padding:6px; font-size:12px;">
+              <option value="agent">🤝 حساب وكيل (يُعتمد من صاحب المنصة)</option>
+              <option value="distributor" selected>🚚 طلب حساب موزع (من صاحب العمل)</option>
+              <option value="rep">🧭 طلب حساب مندوب (من الموزع المعتمد)</option>
+              <option value="technician">🛠️ طلب حساب فني (من الموزع المعتمد)</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:11.5px; color:var(--muted);">الاسم الكامل:</label>
+            <input id="accReqName" placeholder="الاسم الكامل..." style="padding:6px; font-size:12px;" />
+          </div>
+          <div>
+            <label style="font-size:11.5px; color:var(--muted);">رقم الهاتف / واتساب:</label>
+            <input id="accReqPhone" dir="ltr" placeholder="010..." style="padding:6px; font-size:12px;" />
+          </div>
+          <div>
+            <label style="font-size:11.5px; color:var(--muted);">المنطقة / المحافظة:</label>
+            <input id="accReqRegion" placeholder="القاهرة / المحافظات..." style="padding:6px; font-size:12px;" />
+          </div>
+          <div style="grid-column:1 / -1;">
+            <label style="font-size:11.5px; color:var(--muted);">ملاحظات / سبب الطلب:</label>
+            <input id="accReqNotes" placeholder="تفاصيل الاعتماد..." style="padding:6px; font-size:12px;" />
+          </div>
+        </div>
+        <div id="accReqAgentApproveBox" style="display:none; margin-bottom:8px; font-size:12px;">
+          <label style="cursor:pointer;"><input type="checkbox" id="accReqAutoApprove" checked /> اعتماد وإنشاء حساب الوكيل فوراً (صلاحية صاحب المنصة)</label>
+        </div>
+        <button type="button" class="btn btn-sm btn-sky" style="width:100%; font-weight:800;" onclick="submitNewAccountRequest()">📩 تسجيل الطلب / إنشاء الحساب</button>
+      </div>
+
+      <div>
+        <div style="font-size:13px; font-weight:800; color:var(--sky); margin-bottom:8px;">📋 سجل طلبات الحسابات والموافقات:</div>
+        <div id="accRequestsListBox" style="max-height:240px; overflow-y:auto;"></div>
+      </div>
     </div>
   </div>
 </body>

@@ -173,6 +173,20 @@ managerHubDb.exec(`
     avatar_data_url TEXT DEFAULT '',
     updated_at TEXT DEFAULT ''
   );
+  CREATE TABLE IF NOT EXISTS account_requests (
+    id TEXT PRIMARY KEY,
+    role_key TEXT NOT NULL,
+    full_name TEXT NOT NULL,
+    phone TEXT DEFAULT '',
+    region TEXT DEFAULT '',
+    parent_role TEXT DEFAULT '',
+    requested_by_role TEXT DEFAULT '',
+    status TEXT DEFAULT 'pending',
+    approved_by_role TEXT DEFAULT '',
+    notes TEXT DEFAULT '',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
 `);
 
 const USER_ROLE_DEFINITIONS = [
@@ -2532,6 +2546,155 @@ const server = http.createServer(async (req, res) => {
       }
       logAudit('role_profile_updated', `تحديث بيانات وصورة الحساب للدور: ${roleKey}`);
       return sendJson(res, 200, { ok: true, ...getRoleProfilesState() });
+    }
+
+    if (req.method === 'GET' && pathname === '/api/accounts/requests') {
+      const requests = managerHubDb.prepare('SELECT * FROM account_requests ORDER BY created_at DESC LIMIT 200').all();
+      return sendJson(res, 200, { ok: true, requests, ...getRoleProfilesState() });
+    }
+
+    if (req.method === 'POST' && pathname === '/api/accounts/requests') {
+      const body = await readJsonBody(req);
+      const roleKey = String(body.roleKey || '').trim();
+      const fullName = String(body.fullName || '').trim().slice(0, 120);
+      if (!['agent', 'distributor', 'rep', 'technician'].includes(roleKey)) {
+        return sendJson(res, 400, { error: 'الدور المطلوب يجب أن يكون: وكيل أو موزع أو مندوب أو فني' });
+      }
+      if (!fullName) return sendJson(res, 400, { error: 'يرجى إدخال الاسم الكامل للحساب المطلوب' });
+      const nowIso = new Date().toISOString();
+      const id = 'ACC_' + Date.now() + '_' + crypto.randomBytes(2).toString('hex').toUpperCase();
+      const parentRole = roleKey === 'agent' ? 'owner' : (roleKey === 'distributor' ? 'owner' : 'distributor');
+      const requestedByRole = String(body.requestedByRole || parentRole).trim();
+      const autoApprove = body.autoApprove === true && roleKey === 'agent';
+      const status = autoApprove ? 'approved' : 'pending';
+      const approvedByRole = autoApprove ? 'owner' : '';
+      managerHubDb.prepare(`
+        INSERT INTO account_requests(id, role_key, full_name, phone, region, parent_role, requested_by_role, status, approved_by_role, notes, created_at, updated_at)
+        VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        id,
+        roleKey,
+        fullName,
+        String(body.phone || '').replace(/[^0-9+\-\s]/g, '').trim().slice(0, 24),
+        String(body.region || '').trim().slice(0, 100),
+        parentRole,
+        requestedByRole,
+        status,
+        approvedByRole,
+        String(body.notes || '').trim().slice(0, 300),
+        nowIso,
+        nowIso
+      );
+      if (autoApprove) {
+        managerHubDb.prepare(`
+          INSERT INTO role_profiles(role_key, full_name, phone, title, region, updated_at)
+          VALUES(?, ?, ?, ?, ?, ?)
+          ON CONFLICT(role_key) DO UPDATE SET
+            full_name = excluded.full_name,
+            phone = excluded.phone,
+            region = excluded.region,
+            updated_at = excluded.updated_at
+        `).run(roleKey, fullName, String(body.phone || '').trim().slice(0, 24), 'الوكيل المعتمد', String(body.region || '').trim().slice(0, 100), nowIso);
+      }
+      logAudit('account_request_created', `طلب إنشاء حساب (${roleKey}): ${fullName} [${status}]`);
+      const requests = managerHubDb.prepare('SELECT * FROM account_requests ORDER BY created_at DESC LIMIT 200').all();
+      return sendJson(res, 201, { ok: true, id, status, requests, ...getRoleProfilesState() });
+    }
+
+    if (req.method === 'POST' && pathname === '/api/accounts/requests/approve') {
+      const body = await readJsonBody(req);
+      const id = String(body.id || '').trim();
+      const decision = body.decision === 'rejected' ? 'rejected' : 'approved';
+      const approvedByRole = String(body.approvedByRole || 'owner').trim();
+      const existing = managerHubDb.prepare('SELECT * FROM account_requests WHERE id = ?').get(id);
+      if (!existing) return sendJson(res, 404, { error: 'طلب الحساب غير موجود' });
+      const nowIso = new Date().toISOString();
+      managerHubDb.prepare('UPDATE account_requests SET status = ?, approved_by_role = ?, updated_at = ? WHERE id = ?')
+        .run(decision, approvedByRole, nowIso, id);
+      if (decision === 'approved') {
+        const def = USER_ROLE_DEFINITIONS.find(d => d.key === existing.role_key);
+        managerHubDb.prepare(`
+          INSERT INTO role_profiles(role_key, full_name, phone, title, region, updated_at)
+          VALUES(?, ?, ?, ?, ?, ?)
+          ON CONFLICT(role_key) DO UPDATE SET
+            full_name = excluded.full_name,
+            phone = excluded.phone,
+            region = excluded.region,
+            updated_at = excluded.updated_at
+        `).run(existing.role_key, existing.full_name, existing.phone || '', def ? def.nameAr : existing.role_key, existing.region || '', nowIso);
+      }
+      logAudit('account_request_decided', `${decision === 'approved' ? 'اعتماد' : 'رفض'} حساب (${existing.role_key}): ${existing.full_name}`);
+      const requests = managerHubDb.prepare('SELECT * FROM account_requests ORDER BY created_at DESC LIMIT 200').all();
+      return sendJson(res, 200, { ok: true, decision, requests, ...getRoleProfilesState() });
+    }
+
+    if (req.method === 'POST' && pathname === '/api/accounts/whatsapp-packet/export') {
+      const body = await readJsonBody(req);
+      const exportedByRole = String(body.exportedByRole || 'owner').trim();
+      const requests = managerHubDb.prepare('SELECT * FROM account_requests ORDER BY created_at DESC LIMIT 200').all();
+      const profiles = managerHubDb.prepare('SELECT role_key, full_name, phone, title, region, email, bio, updated_at FROM role_profiles').all();
+      const corePayload = {
+        format: 'QALIX_OFFLINE_WHATSAPP_SYNC_V1',
+        exportedAt: new Date().toISOString(),
+        exportedByRole,
+        systemId: ACTIVE_SYSTEM.id,
+        systemNameAr: ACTIVE_SYSTEM.nameAr,
+        accountRequests: requests,
+        roleProfiles: profiles
+      };
+      const sha256 = crypto.createHash('sha256').update(JSON.stringify(corePayload)).digest('hex');
+      const packet = { ...corePayload, sha256 };
+      const filename = `wa-sync-${exportedByRole}-${new Date().toISOString().slice(0, 10)}.qlxsync`;
+      return sendJson(res, 200, { ok: true, filename, packetJson: JSON.stringify(packet, null, 2), sha256, count: requests.length });
+    }
+
+    if (req.method === 'POST' && pathname === '/api/accounts/whatsapp-packet/import') {
+      const body = await readJsonBody(req);
+      let packet = body.packet;
+      if (typeof packet === 'string') {
+        try { packet = JSON.parse(packet); } catch (_) { return sendJson(res, 400, { error: 'ملف التحديث غير صالح (JSON تالف)' }); }
+      }
+      if (!packet || packet.format !== 'QALIX_OFFLINE_WHATSAPP_SYNC_V1' || !packet.sha256) {
+        return sendJson(res, 400, { error: 'صيغة ملف تحديث الواتساب غير معتمدة' });
+      }
+      const { sha256, ...corePayload } = packet;
+      const expected = crypto.createHash('sha256').update(JSON.stringify(corePayload)).digest('hex');
+      if (sha256 !== expected) {
+        return sendJson(res, 400, { error: 'تم رفض الملف: البصمة الرقمية غير مطابقة (يوجد تعديل أو تلف في الملف)!' });
+      }
+      let importedRequests = 0;
+      const upsertReq = managerHubDb.prepare(`
+        INSERT INTO account_requests(id, role_key, full_name, phone, region, parent_role, requested_by_role, status, approved_by_role, notes, created_at, updated_at)
+        VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(id) DO UPDATE SET
+          status = CASE WHEN excluded.updated_at > account_requests.updated_at THEN excluded.status ELSE account_requests.status END,
+          approved_by_role = CASE WHEN excluded.updated_at > account_requests.updated_at THEN excluded.approved_by_role ELSE account_requests.approved_by_role END,
+          updated_at = CASE WHEN excluded.updated_at > account_requests.updated_at THEN excluded.updated_at ELSE account_requests.updated_at END
+      `);
+      for (const r of (Array.isArray(packet.accountRequests) ? packet.accountRequests : [])) {
+        if (!r || !r.id || !r.role_key || !r.full_name) continue;
+        upsertReq.run(r.id, r.role_key, r.full_name, r.phone || '', r.region || '', r.parent_role || '', r.requested_by_role || '', r.status || 'pending', r.approved_by_role || '', r.notes || '', r.created_at || new Date().toISOString(), r.updated_at || new Date().toISOString());
+        importedRequests++;
+      }
+      let importedProfiles = 0;
+      const upsertProf = managerHubDb.prepare(`
+        INSERT INTO role_profiles(role_key, full_name, phone, title, region, email, bio, updated_at)
+        VALUES(?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(role_key) DO UPDATE SET
+          full_name = CASE WHEN excluded.updated_at > role_profiles.updated_at THEN excluded.full_name ELSE role_profiles.full_name END,
+          phone = CASE WHEN excluded.updated_at > role_profiles.updated_at THEN excluded.phone ELSE role_profiles.phone END,
+          title = CASE WHEN excluded.updated_at > role_profiles.updated_at THEN excluded.title ELSE role_profiles.title END,
+          region = CASE WHEN excluded.updated_at > role_profiles.updated_at THEN excluded.region ELSE role_profiles.region END,
+          updated_at = CASE WHEN excluded.updated_at > role_profiles.updated_at THEN excluded.updated_at ELSE role_profiles.updated_at END
+      `);
+      for (const p of (Array.isArray(packet.roleProfiles) ? packet.roleProfiles : [])) {
+        if (!p || !p.role_key) continue;
+        upsertProf.run(p.role_key, p.full_name || '', p.phone || '', p.title || '', p.region || '', p.email || '', p.bio || '', p.updated_at || new Date().toISOString());
+        importedProfiles++;
+      }
+      logAudit('whatsapp_sync_imported', `استيراد ملف تحديث واتساب موقّع (${packet.exportedByRole || '-'}): ${importedRequests} طلب، ${importedProfiles} حساب`);
+      const requests = managerHubDb.prepare('SELECT * FROM account_requests ORDER BY created_at DESC LIMIT 200').all();
+      return sendJson(res, 200, { ok: true, importedRequests, importedProfiles, requests, ...getRoleProfilesState() });
     }
 
     if (req.method === 'POST' && pathname === '/api/manager/assign-agent') {
