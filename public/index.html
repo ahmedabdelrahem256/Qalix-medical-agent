@@ -270,6 +270,45 @@
     @media (max-width: 960px) {
       .glass table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
     }
+    .qalix-wf-acc {
+      margin-top: 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(56, 189, 248, 0.28);
+      background: rgba(15, 23, 42, 0.62);
+      overflow: hidden;
+    }
+    .qalix-wf-acc > summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 10px 14px;
+      font-size: 13px;
+      font-weight: 800;
+      color: #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      user-select: none;
+      background: rgba(30, 41, 59, 0.55);
+      transition: background 0.15s ease;
+    }
+    .qalix-wf-acc > summary:hover { background: rgba(56, 189, 248, 0.12); }
+    .qalix-wf-acc > summary::-webkit-details-marker { display: none; }
+    .qalix-wf-acc > summary::after {
+      content: '▾ فتح القائمة';
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--sky);
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(56, 189, 248, 0.12);
+    }
+    .qalix-wf-acc[open] > summary::after {
+      content: '▴ طي القائمة';
+      color: var(--emerald);
+      background: rgba(16, 185, 129, 0.14);
+    }
+    .qalix-wf-acc-body { padding: 12px 14px; }
     @media (max-width: 768px) {
       body { padding: 12px; }
       .glass { padding: 14px; border-radius: 16px; }
@@ -305,7 +344,9 @@
             </div>
           </div>
         </div>
-        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+        <details class="qalix-wf-acc" id="accHeaderTools" style="width:100%;">
+          <summary>⚙️ إعدادات المظهر والترخيص والكتالوجات المصورة</summary>
+          <div class="qalix-wf-acc-body" style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
           <!-- Comfort Theme Selector Dropdown -->
           <div class="sub-card" style="padding:10px 14px;">
             <label style="font-size:11px; color:var(--muted); display:block; margin-bottom:4px;">🎨 نمط الإضاءة والألوان المريحة:</label>
@@ -328,7 +369,8 @@
             <button type="button" class="btn-emerald" style="font-size:12px; padding:8px 12px;" onclick="openCardPreviewModal({ title: '📘 كتالوج تشغيل الوكيل الحصري (من أ إلى ي)', subtitle: 'دليل مصور خاص بوكيل المنظومة فقط (يعمل أوفلاين + طباعة A4)', previewUrl: '/api/catalogs/agent', downloadUrl: '/api/catalogs/agent?download=1' })">📘 كتالوج الوكيل المصور (A–Z)</button>
             <button type="button" class="btn-sky" style="font-size:12px; padding:8px 12px;" onclick="openCardPreviewModal({ title: '💼 كتالوج عمل الموزع الميداني (من أ إلى ي)', subtitle: 'دليل مصور خاص بعمل الموزع وبوابته المستقلة فقط (جاهز للإرسال للموزع)', previewUrl: '/api/catalogs/distributor', downloadUrl: '/api/catalogs/distributor?download=1' })">💼 كتالوج الموزع المصور (A–Z)</button>
           </div>
-        </div>
+          </div>
+        </details>
       </div>
 
       <!-- Modern Hierarchical Role Switcher & Personal Profile Bar -->
@@ -354,11 +396,16 @@
             <button type="button" class="btn btn-sm btn-emerald" onclick="openRoleProfileModal()" style="font-weight:800;">👤 بياناتي وصورتي (معاينة)</button>
             <button type="button" class="btn btn-sm btn-sky" onclick="openAccountOnboardingModal()" style="font-weight:800;">📨 طلب حساب ومزامنة واتساب</button>
             <button type="button" class="btn btn-sm btn-amber" onclick="openOwnerCatalogPolicyModal()" style="font-weight:800;">👑 منظومات وقواعد صاحب العمل</button>
-            <button type="button" class="btn btn-sm btn-purple" onclick="openOwnerExecutiveDashboard()" style="font-weight:800;">📊 لوحة سير العمل والتحسين</button>
+            <button type="button" class="btn btn-sm btn-purple" onclick="openOwnerExecutiveDashboard()" style="font-weight:800;">📊 مركز قيادة صاحب العمل</button>
+            <button type="button" id="globalBackBtn" class="btn btn-sm btn-sky" onclick="goBackStep()" style="font-weight:800;">⬅️ رجوع للخلف</button>
+            <button type="button" id="toggleAllAccBtn" class="btn btn-sm btn-sky" onclick="toggleAllWorkflowAccordions()" style="font-weight:800;">📂 فتح / طي جميع القوائم</button>
+            <button type="button" class="btn btn-sm btn-rose" onclick="logoutToLoginScreen()" style="font-weight:800;">🚪 تسجيل الخروج / تبديل الحساب</button>
           </div>
         </div>
         <!-- Guided Step-by-Step Workflow & Live Data Safety Bar per Role -->
-        <div id="roleGuidedWorkflowBox" style="display:flex; flex-direction:column; gap:8px; padding-top:8px; border-top:1px dashed rgba(148,163,184,0.25);">
+        <details class="qalix-wf-acc" id="accGuidedSteps" open>
+          <summary>🧭 الخطوة 1: خطوات العمل الموصى بها لحسابك وفحص سلامة البيانات</summary>
+          <div id="roleGuidedWorkflowBox" class="qalix-wf-acc-body" style="display:flex; flex-direction:column; gap:8px;">
           <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
             <span id="roleWorkflowTitle" style="font-size:12px; font-weight:800; color:var(--sky);">🧭 خطوات العمل الموصى بها:</span>
             <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
@@ -368,11 +415,14 @@
           </div>
           <div id="roleWorkflowSteps" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(190px, 1fr)); gap:8px;"></div>
           <div id="roleSafetyVerifyResult" style="display:none; padding:8px 12px; border-radius:10px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.4); font-size:11.5px; color:#d1fae5;"></div>
-        </div>
+          </div>
+        </details>
       </div>
 
       <!-- Main Control Bar: Agents Manager (مدير الوكلاء) Selects System & Agent Across 11 Isolated Systems -->
-      <div class="sub-card" style="margin-top:12px; padding:12px 14px; border:1px solid rgba(56,189,248,0.45); background:rgba(15,23,42,0.68); display:flex; flex-direction:column; gap:10px;">
+      <details class="qalix-wf-acc" id="accManagerControls">
+        <summary>🏛️ الخطوة 2: إدارة المنظومات المعزولة والوكلاء والمزامنة وحماية PIN</summary>
+        <div class="qalix-wf-acc-body" style="display:flex; flex-direction:column; gap:10px;">
         <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
           <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
             <span class="badge b-amber">👑 لوحة مدير الوكلاء المركزية</span>
@@ -404,9 +454,13 @@
             <button type="button" class="btn btn-sm btn-emerald" onclick="buildWindowsInstallerKitUi()">💿 تجهيز حزمة التثبيت</button>
           </div>
         </div>
-      </div>
+        </div>
+      </details>
 
       <!-- Live KPIs from SQLite WAL -->
+      <details class="qalix-wf-acc" id="accKpisSummary">
+        <summary>📊 الخطوة 3: ملخص المؤشرات والأرقام الحية (الموزعون · المبيعات · العمولات · الإيراد)</summary>
+        <div class="qalix-wf-acc-body">
       <div class="kpi-grid">
         <div class="sub-card">
           <div style="font-size:12px; color:var(--muted);">الموزعون المستقلون المعتمدون</div>
@@ -439,10 +493,15 @@
           <div id="kpiPacksSub" style="font-size:12px; color:var(--muted);">عزل كامل لكل منظومة</div>
         </div>
       </div>
+        </div>
+      </details>
     </header>
 
     <!-- Navigation Bar with Tabs & Quick Section Dropdown -->
     <div class="nav-bar">
+      <details class="qalix-wf-acc" id="accAllTabsBar" style="width:100%;">
+        <summary>🗂️ الخطوة 4: قائمة جميع الأقسام التفصيلية (13 قسماً — أو استخدم الانتقال السريع بجانبها)</summary>
+        <div class="qalix-wf-acc-body">
       <nav class="tabs">
         <button class="tab-btn active" id="btn-pane-agent" onclick="openTab('pane-agent', this)">1. إدارة الوكيل والموزعين</button>
         <button class="tab-btn" id="btn-pane-excellence" onclick="openTab('pane-excellence', this)">2. 🏆 التطوير والارتقاء</button>
@@ -458,6 +517,8 @@
         <button class="tab-btn" id="btn-pane-audit" onclick="openTab('pane-audit', this)">12. 🛡️ تقرير الفحص والاعتماد</button>
         <button class="tab-btn" id="btn-pane-devconsole" onclick="openTab('pane-devconsole', this)" style="border: 1px solid rgba(245,158,11,0.5); color: #f59e0b; background: rgba(245,158,11,0.06);">13. ⚙️ إدارة النظام والتصفير</button>
       </nav>
+        </div>
+      </details>
       <div style="display:flex; align-items:center; gap:8px; min-width:250px;">
         <span style="font-size:12px; color:var(--muted); white-space:nowrap;">⚡ انتقال سريع للقسم:</span>
         <select id="quickNavSelect" onchange="quickJumpSection(this.value)" style="padding:8px 12px; font-size:12.5px;">
@@ -2013,13 +2074,76 @@
 
     function fmt(n) { return Math.round(Number(n) || 0).toLocaleString('ar-EG') + ' ج.م'; }
 
+    let navHistoryStack = ['pane-agent'];
+    let isGoingBackStep = false;
     function openTab(id, btn) {
+      if (!isGoingBackStep && navHistoryStack[navHistoryStack.length - 1] !== id) {
+        navHistoryStack.push(id);
+        if (navHistoryStack.length > 30) navHistoryStack.shift();
+      }
       document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       document.getElementById(id).classList.add('active');
       if (btn) btn.classList.add('active');
       const qSel = document.getElementById('quickNavSelect');
       if (qSel) qSel.value = id;
+    }
+
+    function goBackStep() {
+      const openModalIds = [
+        'ownerExecutiveDashboardModal',
+        'ownerCatalogPolicyModal',
+        'accountOnboardingModal',
+        'roleProfileModal',
+        'leadLockModal',
+        'cardPreviewModal',
+        'appLicenseModal',
+        'multiSystemModal',
+        'resellerEditionModal'
+      ];
+      for (const mid of openModalIds) {
+        const el = document.getElementById(mid);
+        if (el && el.style.display && el.style.display !== 'none') {
+          el.style.display = 'none';
+          return;
+        }
+      }
+      if (navHistoryStack.length > 1) {
+        navHistoryStack.pop();
+        const prevId = navHistoryStack[navHistoryStack.length - 1] || 'pane-agent';
+        isGoingBackStep = true;
+        try {
+          openTab(prevId, document.getElementById('btn-' + prevId));
+        } finally {
+          isGoingBackStep = false;
+        }
+        return;
+      }
+      const guided = document.getElementById('accGuidedSteps');
+      if (guided) {
+        guided.open = true;
+        guided.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    function toggleAllWorkflowAccordions() {
+      const accs = Array.from(document.querySelectorAll('.qalix-wf-acc'));
+      if (!accs.length) return;
+      const allOpen = accs.every(a => a.open);
+      accs.forEach(a => { a.open = !allOpen; });
+    }
+
+    function applyWorkflowAccordionForRole(roleKey) {
+      const guided = document.getElementById('accGuidedSteps');
+      const mgr = document.getElementById('accManagerControls');
+      const kpis = document.getElementById('accKpisSummary');
+      const tabs = document.getElementById('accAllTabsBar');
+      const hdr = document.getElementById('accHeaderTools');
+      if (guided) guided.open = true;
+      if (mgr) mgr.open = (roleKey === 'agents_manager');
+      if (kpis) kpis.open = false;
+      if (tabs) tabs.open = false;
+      if (hdr) hdr.open = false;
     }
 
     function quickJumpSection(id) {
@@ -5167,8 +5291,145 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
         if (j && j.ok) {
           roleProfilesState = j;
           renderRoleHierarchyBar();
+          await initLoginScreen();
         }
       } catch (_) {}
+    }
+
+    let selectedLoginRoleKey = 'owner';
+    let loginAuthStatus = { pinEnabled: false, authenticated: true };
+
+    async function initLoginScreen() {
+      const ov = document.getElementById('qalixLoginOverlay');
+      if (!ov) return;
+      if (sessionStorage.getItem('qalix_session_signed_in') === '1') {
+        ov.style.display = 'none';
+        return;
+      }
+      try {
+        const ar = await fetch('/api/manager/auth/status');
+        const aj = await ar.json();
+        if (aj && aj.ok && aj.auth) loginAuthStatus = aj.auth;
+      } catch (_) {}
+      selectedLoginRoleKey = roleProfilesState.activeRole || 'owner';
+      renderLoginRoleCards();
+      updateLoginAuthArea();
+      ov.style.display = 'flex';
+    }
+
+    function renderLoginRoleCards() {
+      const box = document.getElementById('loginRoleCardsGrid');
+      if (!box || !Array.isArray(roleProfilesState.roles)) return;
+      box.innerHTML = roleProfilesState.roles.map(role => {
+        const active = role.key === selectedLoginRoleKey;
+        const prof = (roleProfilesState.profiles && roleProfilesState.profiles[role.key]) || {};
+        const subName = prof.fullName ? escPayHtml(prof.fullName) : 'حساب جاهز';
+        return `
+          <button type="button" onclick="selectLoginRole('${role.key}')" style="text-align:right; padding:10px 12px; border-radius:12px; cursor:pointer; border:1.5px solid ${active ? role.color : 'rgba(148,163,184,0.25)'}; background:${active ? 'rgba(16,185,129,0.16)' : 'rgba(15,23,42,0.85)'}; color:#f8fafc; display:flex; align-items:center; gap:10px; transition:all .15s;">
+            <span style="font-size:22px;">${role.icon}</span>
+            <div style="min-width:0;">
+              <div style="font-size:13px; font-weight:800; color:${active ? role.color : '#f8fafc'};">${escPayHtml(role.nameAr)}</div>
+              <div style="font-size:11px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${subName}</div>
+            </div>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function selectLoginRole(roleKey) {
+      selectedLoginRoleKey = roleKey;
+      renderLoginRoleCards();
+      updateLoginAuthArea();
+    }
+
+    function updateLoginAuthArea() {
+      const pinBox = document.getElementById('loginPinBox');
+      const pinLabel = document.getElementById('loginPinLabel');
+      const pinInput = document.getElementById('loginPinInput');
+      const inviteBox = document.getElementById('loginInviteBox');
+      const errEl = document.getElementById('loginScreenError');
+      if (errEl) errEl.style.display = 'none';
+      const isTopRole = selectedLoginRoleKey === 'owner' || selectedLoginRoleKey === 'agents_manager';
+      if (pinBox) {
+        if (isTopRole && loginAuthStatus.pinEnabled) {
+          pinBox.style.display = 'block';
+          if (pinLabel) pinLabel.textContent = '🔐 أدخل رمز الحماية (PIN) للدخول بصلاحية الإدارة:';
+          if (pinInput) pinInput.placeholder = 'أدخل رمز PIN...';
+        } else if (selectedLoginRoleKey === 'owner' && !loginAuthStatus.pinEnabled) {
+          pinBox.style.display = 'block';
+          if (pinLabel) pinLabel.textContent = '🛡️ تعيين رمز حماية PIN اختياري لصاحب العمل (أو اتركه فارغاً للدخول المباشر):';
+          if (pinInput) pinInput.placeholder = 'اختياري: 4-8 أرقام لحماية الحساب...';
+        } else {
+          pinBox.style.display = 'none';
+        }
+      }
+      if (inviteBox) {
+        inviteBox.style.display = isTopRole ? 'none' : 'block';
+      }
+    }
+
+    async function submitLoginScreen() {
+      const errEl = document.getElementById('loginScreenError');
+      const showErr = (msg) => {
+        if (errEl) { errEl.textContent = '❌ ' + msg; errEl.style.display = 'block'; }
+      };
+      if (errEl) errEl.style.display = 'none';
+      const isTopRole = selectedLoginRoleKey === 'owner' || selectedLoginRoleKey === 'agents_manager';
+      const pinVal = (document.getElementById('loginPinInput')?.value || '').trim();
+
+      try {
+        if (isTopRole && loginAuthStatus.pinEnabled) {
+          if (!pinVal) return showErr('يرجى إدخال رمز الحماية PIN');
+          const lr = await fetch('/api/manager/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ pin: pinVal })
+          });
+          const lj = await lr.json();
+          if (!lr.ok || !lj.ok) return showErr(lj.error || 'رمز PIN غير صحيح');
+          if (lj.session && lj.session.token) {
+            localStorage.setItem('qalix_manager_token', lj.session.token);
+            if (typeof managerSessionToken !== 'undefined') managerSessionToken = lj.session.token;
+          }
+        } else if (selectedLoginRoleKey === 'owner' && !loginAuthStatus.pinEnabled && pinVal) {
+          const sr = await fetch('/api/manager/auth/set-pin', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ newPin: pinVal })
+          });
+          const sj = await sr.json();
+          if (!sr.ok || !sj.ok) return showErr(sj.error || 'تعذر حفظ رمز PIN');
+          if (sj.session && sj.session.token) {
+            localStorage.setItem('qalix_manager_token', sj.session.token);
+            if (typeof managerSessionToken !== 'undefined') managerSessionToken = sj.session.token;
+          }
+        }
+
+        const r = await fetch('/api/role-profiles/select', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ roleKey: selectedLoginRoleKey })
+        });
+        const j = await r.json();
+        if (j && j.ok) {
+          roleProfilesState = j;
+          renderRoleHierarchyBar();
+          applyWorkflowAccordionForRole(selectedLoginRoleKey);
+        }
+        sessionStorage.setItem('qalix_session_signed_in', '1');
+        const ov = document.getElementById('qalixLoginOverlay');
+        if (ov) ov.style.display = 'none';
+        if (typeof fetchManagerOverview === 'function') fetchManagerOverview().catch(() => {});
+      } catch (_) {
+        showErr('تعذر الاتصال بالخادم المحلي');
+      }
+    }
+
+    function logoutToLoginScreen() {
+      sessionStorage.removeItem('qalix_session_signed_in');
+      const pinInput = document.getElementById('loginPinInput');
+      if (pinInput) pinInput.value = '';
+      initLoginScreen();
     }
 
     function renderRoleHierarchyBar() {
@@ -5313,6 +5574,7 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
         if (j && j.ok) {
           roleProfilesState = j;
           renderRoleHierarchyBar();
+          applyWorkflowAccordionForRole(roleKey);
         }
       } catch (_) {}
     }
@@ -5484,6 +5746,31 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
       } else {
         sel.innerHTML = opts.map(([v, t]) => `<option value="${v}">${t}</option>`).join('');
       }
+      const reqSel = document.getElementById('accReqRole');
+      if (reqSel) {
+        const createMap = {
+          owner: [
+            ['agent', '🤝 إنشاء حساب وكيل'],
+            ['distributor', '🚚 إنشاء حساب موزع'],
+            ['rep', '🧭 إنشاء حساب مندوب'],
+            ['technician', '🛠️ إنشاء حساب فني']
+          ],
+          agents_manager: [
+            ['agent', '🤝 إنشاء حساب وكيل (صلاحية مدير الوكلاء)']
+          ],
+          agent: [
+            ['distributor', '🚚 إنشاء حساب موزع (صلاحية الوكيل)']
+          ],
+          distributor: [
+            ['rep', '🧭 إنشاء حساب مندوب (صلاحية الموزع)'],
+            ['technician', '🛠️ إنشاء حساب فني (صلاحية الموزع)']
+          ]
+        };
+        const cOpts = createMap[activeRole] || [];
+        reqSel.innerHTML = cOpts.length
+          ? cOpts.map(([v, t]) => `<option value="${v}">${t}</option>`).join('')
+          : '<option value="">لا يملك هذا الدور صلاحية إنشاء حسابات فرعية</option>';
+      }
     }
 
     async function loadAccountRequestsList() {
@@ -5618,6 +5905,7 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
                 ${inv.rules_snapshot ? `<div style="font-size:11px; color:#fde68a; margin-top:5px; background:rgba(245,158,11,0.08); padding:5px 8px; border-radius:6px; border-right:2px solid var(--amber);">📜 ميثاق صاحب العمل المرفق: ${escPayHtml(inv.rules_snapshot)}</div>` : ''}
               </div>
               <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                <button type="button" class="btn btn-sm btn-amber" onclick="previewInvitationCard('${escPayHtml(inv.id)}')">👁️ معاينة قبل الإرسال/الطباعة</button>
                 <button type="button" class="btn btn-sm btn-sky" onclick="copyWhatsappInvitationText('${escPayHtml(inv.id)}')">📲 نسخ الدعوة للواتساب</button>
                 ${inv.status !== 'accepted' ? `<button type="button" class="btn btn-sm btn-emerald" onclick="acceptInvitationCard('${escPayHtml(inv.id)}')">✅ قبول وتفعيل</button>` : ''}
                 ${isOwner ? `<button type="button" class="btn btn-sm btn-rose" onclick="deleteInvitationCardByOwner('${escPayHtml(inv.id)}')">🗑️ حذف</button>` : ''}
@@ -5709,13 +5997,13 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
       const phone = (document.getElementById('accReqPhone')?.value || '').trim();
       const region = (document.getElementById('accReqRegion')?.value || '').trim();
       const notes = (document.getElementById('accReqNotes')?.value || '').trim();
-      const autoApprove = roleKey === 'agent' && document.getElementById('accReqAutoApprove')?.checked;
+      if (!roleKey) return alert('الدور الحالي لا يملك صلاحية إنشاء حسابات فرعية');
       if (!fullName) return alert('يرجى إدخال اسم صاحب الحساب المطلوب');
       try {
         const r = await fetch('/api/accounts/requests', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ roleKey, fullName, phone, region, notes, requestedByRole: roleProfilesState.activeRole || 'owner', autoApprove })
+          body: JSON.stringify({ roleKey, fullName, phone, region, notes, requestedByRole: roleProfilesState.activeRole || 'owner', autoApprove: true })
         });
         const j = await r.json();
         if (!r.ok || !j.ok) return alert('❌ ' + (j.error || 'تعذر تسجيل الطلب'));
@@ -5745,21 +6033,171 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
       } catch (_) {}
     }
 
+    let currentUapConfirmHandler = null;
+    let currentUapCopyText = '';
+
+    function openUniversalAuditPreviewModal({ title, subtitle, alerts = [], htmlContent = '', copyText = '', confirmLabel = '', onConfirm = null }) {
+      const m = document.getElementById('universalAuditPreviewModal');
+      if (!m) return;
+      document.getElementById('uapTitle').textContent = title || '👁️ معاينة وتدقيق قبل التنفيذ';
+      document.getElementById('uapSubtitle').textContent = subtitle || 'تأكد من صحة البيانات والرسائل الإرشادية قبل الإرسال أو الطباعة أو التصدير';
+      const alertsEl = document.getElementById('uapAlertsBox');
+      if (alertsEl) {
+        if (!alerts.length) {
+          alertsEl.innerHTML = '<div style="padding:8px 12px; border-radius:8px; background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.4); color:#d1fae5; font-size:12px;">✅ فحص التدقيق سليم 100%: لا توجد أخطاء أو نواقص تمنع التنفيذ.</div>';
+        } else {
+          alertsEl.innerHTML = alerts.map(a => {
+            const col = a.type === 'error' ? 'var(--rose)' : (a.type === 'warn' ? 'var(--amber)' : 'var(--sky)');
+            const bg = a.type === 'error' ? 'rgba(244,63,94,0.12)' : (a.type === 'warn' ? 'rgba(245,158,11,0.12)' : 'rgba(56,189,248,0.12)');
+            const icon = a.type === 'error' ? '⛔' : (a.type === 'warn' ? '⚠️' : '💡');
+            return `<div style="padding:8px 12px; margin-bottom:6px; border-radius:8px; background:${bg}; border:1px solid ${col}; color:#f8fafc; font-size:12px;">${icon} ${escPayHtml(a.text)}</div>`;
+          }).join('');
+        }
+      }
+      const bodyEl = document.getElementById('uapPreviewBody');
+      if (bodyEl) bodyEl.innerHTML = htmlContent;
+      currentUapCopyText = copyText || '';
+      const copyBtn = document.getElementById('uapCopyBtn');
+      if (copyBtn) copyBtn.style.display = currentUapCopyText ? 'inline-flex' : 'none';
+      currentUapConfirmHandler = typeof onConfirm === 'function' ? onConfirm : null;
+      const confBtn = document.getElementById('uapConfirmBtn');
+      if (confBtn) {
+        if (currentUapConfirmHandler) {
+          confBtn.style.display = 'inline-flex';
+          confBtn.textContent = confirmLabel || '✅ تأكيد وتنفيذ';
+        } else {
+          confBtn.style.display = 'none';
+        }
+      }
+      m.style.display = 'flex';
+    }
+
+    function confirmUniversalAuditAction() {
+      const fn = currentUapConfirmHandler;
+      document.getElementById('universalAuditPreviewModal').style.display = 'none';
+      if (typeof fn === 'function') fn();
+    }
+
+    function printUniversalAuditPreview() {
+      const bodyEl = document.getElementById('uapPreviewBody');
+      const title = document.getElementById('uapTitle')?.textContent || 'معاينة وطباعة';
+      if (!bodyEl) return;
+      const w = window.open('', '_blank', 'width=900,height=700');
+      if (!w) return alert('يرجى السماح بالنوافذ المنبثقة للطباعة');
+      w.document.write(`<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>${escPayHtml(title)}</title><style>body{font-family:Segoe UI,Tahoma,Arial,sans-serif;direction:rtl;padding:24px;color:#0f172a;} .card{border:1px solid #cbd5e1;border-radius:10px;padding:14px;margin-bottom:12px;} h2{margin:0 0 8px;}</style></head><body><h2>${escPayHtml(title)}</h2>${bodyEl.innerHTML}<script>window.print();<\/script></body></html>`);
+      w.document.close();
+    }
+
+    function copyUniversalAuditText() {
+      if (!currentUapCopyText) return;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(currentUapCopyText).then(() => alert('✅ تم نسخ النص جاهزاً للإرسال!')).catch(() => alert(currentUapCopyText));
+      } else {
+        alert(currentUapCopyText);
+      }
+    }
+
+    function previewInvitationCard(id) {
+      const inv = lastIssuedInvitations.find(x => x.id === id);
+      if (!inv) return;
+      const roleLabels = { owner: 'صاحب العمل', agents_manager: 'مدير الوكلاء', agent: 'الوكيل', distributor: 'الموزع', rep: 'المندوب', technician: 'الفني' };
+      const msg = [
+        `🎴 *بطاقة دعوة رسمية للانضمام إلى منظومة كالكس*`,
+        `• من: *${roleLabels[inv.inviter_role] || inv.inviter_role}* (${inv.inviter_name || '-'})`,
+        `• إلى: *${inv.invitee_name}* (الدور: *${roleLabels[inv.target_role] || inv.target_role}*)`,
+        `• المنطقة: ${inv.region || '-'}`,
+        `• كود الدعوة الرسمي: \`${inv.invite_code}\``,
+        inv.rules_snapshot ? `\n📜 *القوانين والقواعد السارية من صاحب العمل:*\n${inv.rules_snapshot}` : '',
+        `\n📲 يُرجى استيراد ملف المزامنة (.qlxsync) المرفق لتفعيل الحساب والعمل أوفلاين.`
+      ].filter(Boolean).join('\n');
+      const alerts = [];
+      if (!inv.invitee_phone) alerts.push({ type: 'warn', text: 'تنبيه إرشادي: رقم هاتف المدعو غير مسجل في البطاقة — تأكد من مطابقة اسم الشخص قبل الإرسال عبر واتساب.' });
+      if (!inv.rules_snapshot) alerts.push({ type: 'info', text: 'ملاحظة: لم تُسجل قوانين إضافية وقت إصدار هذه البطاقة؛ ستسري اللوائح الافتراضية للمنظومة.' });
+      const htmlContent = `
+        <div class="card" style="padding:16px; border:1px solid rgba(192,132,252,0.5); border-radius:12px; background:rgba(15,23,42,0.75);">
+          <div style="font-size:15px; font-weight:900; color:#c084fc; margin-bottom:8px;">🎴 بطاقة دعوة رسمية — ${escPayHtml(inv.invitee_name)}</div>
+          <div><strong>من:</strong> ${escPayHtml(roleLabels[inv.inviter_role] || inv.inviter_role)} (${escPayHtml(inv.inviter_name || '-')})</div>
+          <div><strong>إلى الدور:</strong> ${escPayHtml(roleLabels[inv.target_role] || inv.target_role)} · <strong>المنطقة:</strong> ${escPayHtml(inv.region || '-')}</div>
+          <div><strong>كود الدعوة:</strong> <code dir="ltr">${escPayHtml(inv.invite_code)}</code></div>
+          ${inv.rules_snapshot ? `<div style="margin-top:10px; padding:8px; border-radius:8px; background:rgba(245,158,11,0.1); border-right:3px solid var(--amber);"><strong>📜 قوانين صاحب العمل المرفقة:</strong><br/>${escPayHtml(inv.rules_snapshot)}</div>` : ''}
+        </div>`;
+      openUniversalAuditPreviewModal({
+        title: '👁️ معاينة بطاقة الدعوة قبل الإرسال أو الطباعة',
+        subtitle: 'راجع بيانات المدعو وكود الدعوة والقوانين المرفقة قبل النسخ أو الطباعة',
+        alerts,
+        htmlContent,
+        copyText: msg,
+        confirmLabel: '📲 نسخ نص الدعوة للواتساب',
+        onConfirm: () => copyWhatsappInvitationText(id)
+      });
+    }
+
+    function previewOwnerExecutiveReport() {
+      const kpisHtml = document.getElementById('ownExecKpis')?.innerHTML || '';
+      const flowHtml = document.getElementById('ownExecWorkflow')?.innerHTML || '';
+      const rulesTxt = document.getElementById('ownExecRulesBanner')?.textContent || '';
+      openUniversalAuditPreviewModal({
+        title: '🖨️ معاينة التقرير التنفيذي لصاحب العمل قبل الطباعة',
+        subtitle: 'ملخص شامل لسير العمل والمؤشرات والقوانين السارية — جاهز للطباعة A4',
+        alerts: [{ type: 'info', text: 'إرشاد: يمكنك طباعة هذا التقرير مباشرة أو حفظه كملف PDF للمراجعة الدورية.' }],
+        htmlContent: `<div class="card" style="padding:12px; margin-bottom:10px;"><strong>📜 القوانين العامة السارية:</strong><div>${escPayHtml(rulesTxt)}</div></div><div style="display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-bottom:10px;">${kpisHtml}</div><div>${flowHtml}</div>`
+      });
+    }
+
     async function exportWhatsappAccountSyncPacket() {
       try {
-        const r = await fetch('/api/accounts/whatsapp-packet/export', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ exportedByRole: roleProfilesState.activeRole || 'owner' })
+        const [healthRes, accRes, catRes, invRes] = await Promise.all([
+          fetch('/api/system/storage-health').then(r => r.json()).catch(() => ({})),
+          fetch('/api/accounts/requests').then(r => r.json()).catch(() => ({})),
+          fetch('/api/owner/catalog-policy').then(r => r.json()).catch(() => ({})),
+          fetch('/api/accounts/invitations').then(r => r.json()).catch(() => ({}))
+        ]);
+        const reqs = Array.isArray(accRes.requests) ? accRes.requests : [];
+        const pendingReqs = reqs.filter(x => x.status === 'pending').length;
+        const catItems = Array.isArray(catRes.items) ? catRes.items : [];
+        const invs = Array.isArray(invRes.invitations) ? invRes.invitations : [];
+        const alerts = [];
+        if (healthRes && healthRes.integrityCheck && healthRes.integrityCheck !== 'ok') {
+          alerts.push({ type: 'error', text: 'تحذير حرج: فحص سلامة قاعدة البيانات لم يعد OK! يُنصح بأخذ نسخة أمان وفحص القاعدة أولاً.' });
+        }
+        if (pendingReqs > 0) {
+          alerts.push({ type: 'warn', text: `تنبيه إرشادي: يوجد ${pendingReqs} طلب حساب معلق لم يتم اعتماده بعد — يمكنك تصديره للمراجعة أو اعتماده قبل التصدير.` });
+        }
+        if (!catItems.length) {
+          alerts.push({ type: 'warn', text: 'إرشاد: كتالوج منظومات صاحب العمل فارغ حالياً — يُفضّل إضافة المنظومات والأسعار ليحصل الموزعون عليها.' });
+        }
+        if (!catRes.globalRules || !catRes.globalRules.trim()) {
+          alerts.push({ type: 'info', text: 'توجيه: لم تُكتب قوانين مخصصة في سياسة صاحب العمل بعد.' });
+        }
+        const htmlContent = `
+          <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:8px; font-size:12.5px;">
+            <div class="sub-card" style="padding:10px;">📋 طلبات الحسابات: <strong>${reqs.length}</strong> (معلق: ${pendingReqs})</div>
+            <div class="sub-card" style="padding:10px;">🎴 بطاقات الدعوة: <strong>${invs.length}</strong></div>
+            <div class="sub-card" style="padding:10px;">📦 منظومات الكتالوج: <strong>${catItems.length}</strong></div>
+            <div class="sub-card" style="padding:10px;">🛡️ توقيع الحزمة: <strong>SHA-256 (أوفلاين)</strong></div>
+          </div>`;
+        openUniversalAuditPreviewModal({
+          title: '🔍 أداة التدقيق والمعاينة قبل التصدير (.qlxsync)',
+          subtitle: 'فحص سلامة البيانات وتنبيه المستخدم قبل إنشاء ملف مزامنة الواتساب',
+          alerts,
+          htmlContent,
+          confirmLabel: '📤 تأكيد وتنزيل ملف المزامنة الآن',
+          onConfirm: async () => {
+            const r = await fetch('/api/accounts/whatsapp-packet/export', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ exportedByRole: roleProfilesState.activeRole || 'owner' })
+            });
+            const j = await r.json();
+            if (!r.ok || !j.ok) return alert('❌ تعذر تصدير ملف التحديث');
+            const blob = new Blob([j.packetJson], { type: 'application/json;charset=utf-8' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = j.filename || 'wa-update.qlxsync';
+            a.click();
+            alert(`✅ تم تنزيل ملف التحديث الموقّع (${j.filename}).\nأرسله الآن عبر واتساب للطرف الآخر ليقوم باستيراده داخل نفس البرنامج أوفلاين.`);
+          }
         });
-        const j = await r.json();
-        if (!r.ok || !j.ok) return alert('❌ تعذر تصدير ملف التحديث');
-        const blob = new Blob([j.packetJson], { type: 'application/json;charset=utf-8' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = j.filename || 'wa-update.qlxsync';
-        a.click();
-        alert(`✅ تم تنزيل ملف التحديث الموقّع (${j.filename}).\nأرسله الآن عبر واتساب للطرف الآخر ليقوم باستيراده داخل نفس البرنامج أوفلاين.`);
       } catch (_) {}
     }
 
@@ -5768,22 +6206,64 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
       if (!file) return;
       const reader = new FileReader();
       reader.onload = async function(ev) {
+        const rawText = ev.target.result;
+        input.value = '';
+        let parsed = null;
         try {
-          const r = await fetch('/api/accounts/whatsapp-packet/import', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ packet: ev.target.result })
-          });
-          const j = await r.json();
-          if (!r.ok || !j.ok) return alert('❌ ' + (j.error || 'ملف التحديث مرفوض'));
-          if (j.profiles) { roleProfilesState.profiles = j.profiles; renderRoleHierarchyBar(); }
-          await loadAccountRequestsList();
-          alert(`✅ تم استيراد ملف تحديث الواتساب بنجاح!\n• طلبات محدثة: ${j.importedRequests}\n• حسابات محدثة: ${j.importedProfiles}`);
+          parsed = JSON.parse(rawText);
         } catch (_) {
-          alert('❌ تعذر قراءة ملف التحديث');
-        } finally {
-          input.value = '';
+          openUniversalAuditPreviewModal({
+            title: '⛔ فشل التدقيق قبل الاستيراد',
+            subtitle: `الملف المحدد (${file.name}) لا يمكن قراءته`,
+            alerts: [
+              { type: 'error', text: 'الملف تالف أو ليس بصيغة (.qlxsync / JSON) صالحة!' },
+              { type: 'info', text: 'إرشاد: تأكد من تنزيل الملف كاملاً من واتساب وعدم فتحه أو تعديله يدوياً قبل الاستيراد.' }
+            ],
+            htmlContent: '<div style="font-size:12.5px; color:var(--muted);">تم إيقاف الاستيراد تلقائياً لحماية قاعدة البيانات من التلف.</div>'
+          });
+          return;
         }
+        const alerts = [];
+        if (!parsed || parsed.format !== 'QALIX_OFFLINE_WHATSAPP_SYNC_V1' || !parsed.sha256) {
+          alerts.push({ type: 'error', text: 'تحذير أمان: صيغة الملف غير معتمدة أو يفتقد إلى البصمة الرقمية SHA-256 — قد يكون ملفاً غير تابع للمنظومة.' });
+        }
+        const reqCount = Array.isArray(parsed.accountRequests) ? parsed.accountRequests.length : 0;
+        const profCount = Array.isArray(parsed.roleProfiles) ? parsed.roleProfiles.length : 0;
+        const catCount = Array.isArray(parsed.ownerCatalogItems) ? parsed.ownerCatalogItems.length : 0;
+        const invCount = Array.isArray(parsed.invitationCards) ? parsed.invitationCards.length : 0;
+        if (parsed.exportedByRole && parsed.exportedByRole !== 'owner') {
+          alerts.push({ type: 'info', text: `ملاحظة: هذا الملف مُصدَّر من الدور (${parsed.exportedByRole}) بتاريخ ${String(parsed.exportedAt || '').slice(0, 16).replace('T', ' ')}.` });
+        }
+        const htmlContent = `
+          <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:8px; font-size:12.5px;">
+            <div class="sub-card" style="padding:10px;">👤 المُصدِّر: <strong>${escPayHtml(parsed.exportedByRole || '-')}</strong></div>
+            <div class="sub-card" style="padding:10px;">📋 طلبات الحسابات: <strong>${reqCount}</strong></div>
+            <div class="sub-card" style="padding:10px;">🪪 ملفات الأدوار: <strong>${profCount}</strong> · دعوات: <strong>${invCount}</strong></div>
+            <div class="sub-card" style="padding:10px;">📦 منظومات الكتالوج: <strong>${catCount}</strong></div>
+          </div>`;
+        openUniversalAuditPreviewModal({
+          title: '🔍 أداة التدقيق والمعاينة قبل الاستيراد (.qlxsync)',
+          subtitle: `مراجعة محتويات الملف (${file.name}) والتحقق من سلامته قبل الدمج`,
+          alerts,
+          htmlContent,
+          confirmLabel: alerts.some(a => a.type === 'error') ? '' : '📥 تأكيد ودمج البيانات بأمان',
+          onConfirm: alerts.some(a => a.type === 'error') ? null : async () => {
+            try {
+              const r = await fetch('/api/accounts/whatsapp-packet/import', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ packet: rawText })
+              });
+              const j = await r.json();
+              if (!r.ok || !j.ok) return alert('❌ ' + (j.error || 'ملف التحديث مرفوض'));
+              if (j.profiles) { roleProfilesState.profiles = j.profiles; renderRoleHierarchyBar(); }
+              await Promise.all([loadAccountRequestsList(), loadInvitationCardsList()]);
+              alert(`✅ تم استيراد ملف تحديث الواتساب بنجاح!\n• طلبات محدثة: ${j.importedRequests}\n• حسابات محدثة: ${j.importedProfiles}`);
+            } catch (_) {
+              alert('❌ تعذر الاتصال بالخادم المحلي');
+            }
+          }
+        });
       };
       reader.readAsText(file, 'utf-8');
     }
@@ -5965,7 +6445,7 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
                   <span class="badge b-sky">${roleLabels[req.role_key] || escPayHtml(req.role_key)}</span>
                   <strong style="font-size:12.5px; color:#f8fafc; margin-inline:6px;">${escPayHtml(req.full_name)}</strong>
                   <span class="badge ${req.status === 'approved' ? 'b-emerald' : (req.status === 'rejected' ? 'b-rose' : 'b-amber')}">${req.status === 'approved' ? '✅ معتمد' : (req.status === 'rejected' ? '❌ مرفوض' : '⏳ معلق')}</span>
-                  <span style="font-size:11px; color:var(--muted); margin-right:6px;">${escPayHtml(req.region || '-')} · <span dir="ltr">${escPayHtml(req.phone || '-')}</span></span>
+                  <span style="font-size:11px; color:var(--muted); margin-right:6px;">${escPayHtml(req.region || '-')} · <span dir="ltr">${escPayHtml(req.phone || '-')}</span> · أنشأه: ${escPayHtml(roleLabels[req.requested_by_role] || req.requested_by_role || '-')}</span>
                 </div>
                 ${isOwner ? `
                   <div style="display:flex; gap:5px; flex-wrap:wrap;">
@@ -6540,8 +7020,9 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
       <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(175px, 1fr)); gap:8px; margin-bottom:14px;">
         <button type="button" class="btn btn-sm btn-amber" style="padding:10px; font-weight:800;" onclick="document.getElementById('ownerExecutiveDashboardModal').style.display='none'; openOwnerCatalogPolicyModal();">📦 المنظومات والأسعار والقوانين</button>
         <button type="button" class="btn btn-sm btn-sky" style="padding:10px; font-weight:800;" onclick="document.getElementById('ownerExecutiveDashboardModal').style.display='none'; openAccountOnboardingModal();">🎴 بطاقات الدعوة والحسابات</button>
-        <button type="button" class="btn btn-sm btn-emerald" style="padding:10px; font-weight:800;" onclick="exportWhatsappAccountSyncPacket();">📤 تصدير ملف للواتساب فوراً</button>
-        <button type="button" class="btn btn-sm btn-purple" style="padding:10px; font-weight:800;" onclick="document.getElementById('ownerExecutiveDashboardModal').style.display='none'; verifyDataAndCreateBackupNow();">🛡️ فحص وأخذ نسخة أمان</button>
+        <button type="button" class="btn btn-sm btn-emerald" style="padding:10px; font-weight:800;" onclick="exportWhatsappAccountSyncPacket();">📤 تدقيق وتصدير للواتساب</button>
+        <button type="button" class="btn btn-sm btn-purple" style="padding:10px; font-weight:800;" onclick="previewOwnerExecutiveReport();">🖨️ معاينة وطباعة التقرير</button>
+        <button type="button" class="btn btn-sm btn-rose" style="padding:10px; font-weight:800;" onclick="document.getElementById('ownerExecutiveDashboardModal').style.display='none'; verifyDataAndCreateBackupNow();">🛡️ فحص وأخذ نسخة أمان</button>
       </div>
 
       <div class="sub-card" style="padding:10px 12px; margin-bottom:14px; border:1px solid rgba(245,158,11,0.4); background:rgba(245,158,11,0.07);">
@@ -6569,6 +7050,65 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
       <div>
         <div style="font-size:13px; font-weight:800; color:#c084fc; margin-bottom:8px;">🚀 مقترحات تكامل المنظومة لصاحب العمل:</div>
         <div id="ownExecProposals" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:8px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Startup Login & Role Selection Overlay -->
+  <div id="qalixLoginOverlay" style="display:none; position:fixed; inset:0; z-index:999999; background:radial-gradient(circle at top right, rgba(16,185,129,0.18), rgba(2,6,23,0.97) 55%); backdrop-filter:blur(12px); align-items:center; justify-content:center; padding:18px;">
+    <div style="max-width:680px; width:100%; max-height:94vh; overflow-y:auto; background:#0f172a; border:1.5px solid rgba(16,185,129,0.55); border-radius:20px; padding:24px; box-shadow:0 30px 80px rgba(0,0,0,0.95); direction:rtl; text-align:right;">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; border-bottom:1px solid var(--border); padding-bottom:14px; margin-bottom:16px; flex-wrap:wrap;">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <img src="/public/img/qalix-sovereign-logo.svg" alt="Qalix" width="38" height="38" style="border-radius:10px; border:1px solid rgba(56,189,248,0.4);" />
+          <img src="/public/img/qalix-agents-icon.png" alt="Agents" width="38" height="38" style="border-radius:10px; border:1px solid rgba(16,185,129,0.4);" />
+          <div>
+            <h2 style="margin:0; font-size:18px; color:#f8fafc; font-weight:900;">🔐 تسجيل الدخول — منظومة إدارة الوكلاء والموزعين</h2>
+            <p style="margin:3px 0 0; font-size:12px; color:var(--muted);">اختر حسابك ودورك الوظيفي للدخول الآمن (يعمل محلياً أوفلاين 100%)</p>
+          </div>
+        </div>
+        <span class="badge b-emerald">Offline Air-Gapped</span>
+      </div>
+
+      <div style="font-size:12.5px; font-weight:800; color:var(--sky); margin-bottom:8px;">1️⃣ اختر الدور / الحساب:</div>
+      <div id="loginRoleCardsGrid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(185px, 1fr)); gap:8px; margin-bottom:14px;"></div>
+
+      <div id="loginPinBox" style="display:none; margin-bottom:14px;">
+        <label id="loginPinLabel" style="display:block; font-size:12px; color:var(--amber); font-weight:700; margin-bottom:6px;">🔐 رمز الحماية (PIN):</label>
+        <input id="loginPinInput" type="password" dir="ltr" placeholder="أدخل رمز PIN..." onkeydown="if(event.key==='Enter') submitLoginScreen()" style="width:100%; padding:10px 12px; font-size:14px; border-radius:10px; background:#1e293b; color:#fff; border:1px solid var(--border);" />
+      </div>
+
+      <div id="loginInviteBox" style="display:none; margin-bottom:14px; padding:10px 12px; border-radius:10px; background:rgba(56,189,248,0.08); border:1px solid rgba(56,189,248,0.3);">
+        <div style="font-size:12px; color:#bae6fd; margin-bottom:6px;">📲 إذا وصلك ملف مزامنة أو تحديث حساب عبر واتساب (<code dir="ltr">.qlxsync</code>) يمكنك استيراده قبل الدخول:</div>
+        <label class="btn btn-sm btn-amber" style="cursor:pointer; margin:0; display:inline-block;">
+          📥 استيراد ملف مزامنة واتساب (.qlxsync)
+          <input type="file" accept=".qlxsync,.json" style="display:none;" onchange="importWhatsappAccountSyncPacket(this)" />
+        </label>
+      </div>
+
+      <div id="loginScreenError" style="display:none; margin-bottom:12px; padding:9px 12px; border-radius:10px; background:rgba(244,63,94,0.14); border:1px solid var(--rose); color:#fecdd3; font-size:12.5px; font-weight:700;"></div>
+
+      <button type="button" class="btn btn-emerald" style="width:100%; padding:12px; font-size:14.5px; font-weight:900; border-radius:12px;" onclick="submitLoginScreen()">
+        🚀 تسجيل الدخول وفتح المنظومة
+      </button>
+    </div>
+  </div>
+
+  <!-- Universal Pre-Send / Pre-Print / Pre-Export / Pre-Import Audit & Preview Modal -->
+  <div id="universalAuditPreviewModal" style="display:none; position:fixed; inset:0; z-index:1000000; background:rgba(2,6,23,0.92); backdrop-filter:blur(10px); align-items:center; justify-content:center; padding:16px;" onclick="if(event.target===this) this.style.display='none'">
+    <div style="max-width:760px; width:100%; max-height:92vh; overflow-y:auto; background:#0f172a; border:1.5px solid var(--sky); border-radius:16px; padding:20px; box-shadow:0 25px 70px rgba(0,0,0,0.95); direction:rtl; text-align:right;" onclick="event.stopPropagation()">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); padding-bottom:10px; margin-bottom:12px; gap:10px; flex-wrap:wrap;">
+        <div>
+          <h3 id="uapTitle" style="margin:0; font-size:16px; color:var(--sky); font-weight:900;">👁️ معاينة وتدقيق قبل التنفيذ</h3>
+          <p id="uapSubtitle" style="margin:3px 0 0; font-size:11.5px; color:var(--muted);"></p>
+        </div>
+        <button type="button" class="btn btn-sm btn-rose" onclick="document.getElementById('universalAuditPreviewModal').style.display='none'">✕ إغلاق</button>
+      </div>
+      <div id="uapAlertsBox" style="margin-bottom:12px;"></div>
+      <div id="uapPreviewBody" style="margin-bottom:14px; max-height:46vh; overflow-y:auto;"></div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; border-top:1px solid var(--border); padding-top:12px;">
+        <button type="button" class="btn btn-sm btn-purple" onclick="printUniversalAuditPreview()">🖨️ طباعة المعاينة</button>
+        <button type="button" id="uapCopyBtn" class="btn btn-sm btn-sky" style="display:none;" onclick="copyUniversalAuditText()">📋 نسخ النص</button>
+        <button type="button" id="uapConfirmBtn" class="btn btn-sm btn-emerald" style="display:none; font-weight:800;" onclick="confirmUniversalAuditAction()">✅ تأكيد وتنفيذ</button>
       </div>
     </div>
   </div>

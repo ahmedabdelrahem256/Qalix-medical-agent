@@ -2589,11 +2589,22 @@ const server = http.createServer(async (req, res) => {
       if (!fullName) return sendJson(res, 400, { error: 'يرجى إدخال الاسم الكامل للحساب المطلوب' });
       const nowIso = new Date().toISOString();
       const id = 'ACC_' + Date.now() + '_' + crypto.randomBytes(2).toString('hex').toUpperCase();
-      const parentRole = roleKey === 'agent' ? 'owner' : (roleKey === 'distributor' ? 'owner' : 'distributor');
+      const parentMap = { agent: 'agents_manager', distributor: 'agent', rep: 'distributor', technician: 'distributor' };
+      const parentRole = parentMap[roleKey] || 'owner';
       const requestedByRole = String(body.requestedByRole || parentRole).trim();
-      const autoApprove = body.autoApprove === true && roleKey === 'agent';
+      const allowedCreators = {
+        agent: ['owner', 'agents_manager'],
+        distributor: ['owner', 'agent'],
+        rep: ['owner', 'distributor'],
+        technician: ['owner', 'distributor']
+      };
+      if (!(allowedCreators[roleKey] || []).includes(requestedByRole)) {
+        const parentNames = { agents_manager: 'مدير الوكلاء', agent: 'الوكيل', distributor: 'الموزع' };
+        return sendJson(res, 403, { error: `التسلسل الإداري: إنشاء هذا الحساب مقتصر على (${parentNames[parentRole] || 'صاحب العمل'}) أو صاحب العمل فقط.` });
+      }
+      const autoApprove = body.autoApprove !== false && (requestedByRole === 'owner' || requestedByRole === parentRole);
       const status = autoApprove ? 'approved' : 'pending';
-      const approvedByRole = autoApprove ? 'owner' : '';
+      const approvedByRole = autoApprove ? requestedByRole : '';
       managerHubDb.prepare(`
         INSERT INTO account_requests(id, role_key, full_name, phone, region, parent_role, requested_by_role, status, approved_by_role, notes, created_at, updated_at)
         VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -2612,6 +2623,7 @@ const server = http.createServer(async (req, res) => {
         nowIso
       );
       if (autoApprove) {
+        const def = USER_ROLE_DEFINITIONS.find(d => d.key === roleKey);
         managerHubDb.prepare(`
           INSERT INTO role_profiles(role_key, full_name, phone, title, region, updated_at)
           VALUES(?, ?, ?, ?, ?, ?)
@@ -2620,9 +2632,9 @@ const server = http.createServer(async (req, res) => {
             phone = excluded.phone,
             region = excluded.region,
             updated_at = excluded.updated_at
-        `).run(roleKey, fullName, String(body.phone || '').trim().slice(0, 24), 'الوكيل المعتمد', String(body.region || '').trim().slice(0, 100), nowIso);
+        `).run(roleKey, fullName, String(body.phone || '').trim().slice(0, 24), def ? def.nameAr : roleKey, String(body.region || '').trim().slice(0, 100), nowIso);
       }
-      logAudit('account_request_created', `طلب إنشاء حساب (${roleKey}): ${fullName} [${status}]`);
+      logAudit('account_request_created', `إنشاء حساب (${roleKey}) بواسطة (${requestedByRole}): ${fullName} [${status}]`);
       const requests = managerHubDb.prepare('SELECT * FROM account_requests ORDER BY created_at DESC LIMIT 200').all();
       return sendJson(res, 201, { ok: true, id, status, requests, ...getRoleProfilesState() });
     }
