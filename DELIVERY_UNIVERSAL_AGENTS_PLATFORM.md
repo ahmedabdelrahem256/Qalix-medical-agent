@@ -43,22 +43,50 @@
 
 | الملف | الوصف | البصمة الأمنية (`SHA-256`) |
 |---|---|---|
-| `data/exports/Universal_Agents_Setup_v1.0.exe` | مُثبِّت ويندوز التنفيذي الكامل (Inno Setup + Node Runtime) | `4802b6da49bb0026119aa4454cd7c606a28b10b122ae676cdb8fd707573dd6cd` |
-| `data/exports/Universal_Agents_Setup_v1.0.zip` | النسخة المضغوطة من مُثبِّت ويندوز للتوزيع والمشاركة | `4cff39d19df3d718c6d490c16dee69c62f46bfdbf6b1836ef81e619f19f32b53` |
+| `data/exports/Universal_Agents_Setup_v1.0.exe` | مُثبِّت ويندوز التنفيذي الكامل (Inno Setup + Node Runtime) | `55302963f5b1c67e103a394547528ced22d8d8255e0225236d690119a48ba10a` |
+| `data/exports/Universal_Agents_Setup_v1.0.zip` | النسخة المضغوطة من مُثبِّت ويندوز للتوزيع والمشاركة | `9ead7c42ca6756ef0f9e3ea513679b32a6453b478ad3258811b6bc555bcb886f` |
 | `data/exports/SHA256_CHECKSUMS.txt` | ملف التحقق الرسمي لبصمات SHA-256 | — |
 
 ---
 
 ## 5. دورة الأدوار والحسابات والمزامنة عبر واتساب (Offline 100%)
 - **التسلسل الهرمي المعتمد:** `صاحب العمل (مالك المنظومات)` ← `مدير الوكلاء` ← `الوكيل` ← `الموزع` ← `المندوب` ← `الفني`.
-- **اعتماد الحسابات:** ينشئ صاحب المنصة/العمل حساب الوكيل بعد اعتماده، ويطلب الموزع إنشاء حساب موزع من صاحب العمل، ثم يطلب الموزع المعتمد إنشاء حساب المندوب والفني بعد الموافقة.
-- **الملفات الشخصية والصور:** يستطيع كل حساب إضافة بياناته وصورته الشخصية ومعاينة بطاقة الحساب مع شعار منصة كالكس الأم وشعار المنظومة، مع خطوات عمل موجهة وفحص فوري لسلامة قاعدة البيانات والنسخ الاحتياطي التلقائي (`Documents\UniversalAgentsBackups`).
-- **المزامنة عبر واتساب بدون إنترنت (`.qlxsync`):** تصدير واستيراد ملفات تحديث موقعة ببصمة `SHA-256` (`/api/accounts/whatsapp-packet/export` و `/api/accounts/whatsapp-packet/import`) لمشاركة الحسابات والموافقات بين جميع المستخدمين على نفس المنظومة.
+- **اعتماد الحسابات وبطاقات الدعوة الهرمية:** يوجّه صاحب العمل/مدير الوكلاء بطاقات دعوة للوكلاء، ويوجه الوكيل بطاقات دعوة للموزعين، ويوجه الموزع المعتمد بطاقات دعوة للمندوب والفني (`/api/accounts/invitations`) مع إرفاق قوانين صاحب العمل السارية تلقائياً في كل بطاقة دعوة ونص واتساب جاهز للنسخ.
+- **تحكم كامل ورؤية شاملة لصاحب العمل:**
+  - **مركز قيادة صاحب العمل الموحد:** لوحة عرض عصرية بسير العمل (`#ownerExecutiveDashboardModal`) تضم أوامر سريعة بضغطة واحدة، ومؤشرات الأداء، وتحليل صافي هامش صاحب العمل بعد خصم عمولات الوكيل والموزع، ومقترحات تكامل المنظومة.
+  - **إدارة الكتالوج والعمولات والقوانين:** يضع صاحب العمل المنظومات المعروضة للبيع وإصداراتها وأسعارها والعروض التسويقية ونسب عمولة الوكيل والموزع والقوانين العامة السارية على الجميع (`/api/owner/catalog-policy`) مع حماية التعديل على الخادم لصاحب العمل فقط (`403` لغيره).
+  - **حذف أي حساب مستخدم:** يمتلك صاحب العمل صلاحية حصرية لحذف أي حساب مستخدم أو طلب حساب (`/api/accounts/delete`) مع حماية حساب صاحب العمل الرئيسي وسجل تدقيق فوري.
+- **الأمان التام للبيانات وصاحب العمل:** قاعدة بيانات SQLite بوضع `WAL` وفحص السلامة `PRAGMA integrity_check` وسلسلة تدقيق مشفرة `SHA-256 Hash Chain` مع نسخ احتياطي تلقائي في `Documents\UniversalAgentsBackups` ونقطة أمان قبل أي استعادة.
+- **المزامنة عبر واتساب بدون إنترنت (`.qlxsync`):** تصدير واستيراد ملفات تحديث موقعة ببصمة `SHA-256` (`/api/accounts/whatsapp-packet/export` و `/api/accounts/whatsapp-packet/import`) لمشاركة الحسابات وبطاقات الدعوة والكتالوج والقواعد بين جميع المستخدمين على نفس المنظومة.
 - **منع تكرار التشغيل:** عند تشغيل الأيقونة والبرنامج يعمل، تُفتح نافذة البرنامج الحالية مباشرة دون تشغيل خادم مكرر.
 
 ---
 
-## 6. أوامر التشغيل والاختبار للمطور
+## 6. دليل المطور للتكامل مع منظومات منصة كالكس (`Qalix Platform`)
+لإكمال المشروع أو ربط منظومات جديدة من منصة كالكس بسهولة:
+
+### أ. جداول قاعدة البيانات المركزية (`data/manager_hub.db`)
+- `role_profiles`: بيانات وصور الأدوار الستة (`owner`, `agents_manager`, `agent`, `distributor`, `rep`, `technician`).
+- `account_requests`: سجل طلبات إنشاء الحسابات وحالاتها (`pending`, `approved`, `rejected`) وسلسلة الاعتماد.
+- `invitation_cards`: بطاقات الدعوة الهرمية (`inviter_role`, `target_role`, `invite_code`, `rules_snapshot`, `status`).
+- `owner_catalog_items`: كتالوج منظومات صاحب العمل (`name_ar`, `version`, `basic_price`, `pro_price`, `ent_price`, `agent_commission_pct`, `dist_commission_pct`, `marketing_pitch`, `presentation_url`).
+- `manager_settings`: الإعدادات المركزية بما فيها القواعد العامة السارية على الجميع (`key = 'owner_global_rules'`).
+
+### ب. واجهات الـ API الجديدة وصلاحياتها
+- `GET/POST /api/accounts/requests` و `POST /api/accounts/requests/approve`: إدارة طلبات الحسابات واعتمادها.
+- `POST /api/accounts/delete`: حذف أي حساب/طلب مستخدم (محمي على الخادم بصلاحية `deletedByRole === 'owner'` فقط، ويرفض حذف `owner`).
+- `GET/POST /api/accounts/invitations` و `/api/accounts/invitations/accept` و `/api/accounts/invitations/delete`: إصدار بطاقات الدعوة الهرمية مع إرفاق نسخة القوانين العامة.
+- `GET/POST /api/owner/catalog-policy` و `/api/owner/catalog-policy/remove`: إدارة الكتالوج والأسعار والعمولات والقواعد (محمي بصلاحية `updatedByRole === 'owner'`).
+- `POST /api/accounts/whatsapp-packet/export` و `/api/accounts/whatsapp-packet/import`: حزمة مزامنة `QALIX_OFFLINE_WHATSAPP_SYNC_V1` الموقّعة ببصمة `SHA-256`.
+
+### ج. إضافة منظومة جديدة إلى منصة كالكس
+1. سجل المنظومة الجديدة عبر `server/systems_manager.js` (`registerSystem` أو `data/systems.json`) برمز ترخيص خاص (`4` أحرف مثل `AGT2`).
+2. عرّف المنظومة وإصداراتها وأسعارها ونسب العمولات من واجهة صاحب العمل (`/api/owner/catalog-policy`) أو اربطها مباشرة بـ `owner_catalog_items`.
+3. حافظ على ثوابت الهوية في الواجهة (`public/img/qalix-sovereign-logo.svg` و `public/img/qalix-agents-icon.png`) وحزمة الاختبارات (`tests/test_agent.js`).
+
+---
+
+## 7. أوامر التشغيل والاختبار للمطور
 ```bash
 # تشغيل الخادم محلياً
 npm start

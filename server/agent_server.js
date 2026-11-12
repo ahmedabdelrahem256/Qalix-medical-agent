@@ -187,6 +187,32 @@ managerHubDb.exec(`
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
   );
+  CREATE TABLE IF NOT EXISTS invitation_cards (
+    id TEXT PRIMARY KEY,
+    inviter_role TEXT NOT NULL,
+    inviter_name TEXT DEFAULT '',
+    target_role TEXT NOT NULL,
+    invitee_name TEXT NOT NULL,
+    invitee_phone TEXT DEFAULT '',
+    region TEXT DEFAULT '',
+    invite_code TEXT NOT NULL,
+    rules_snapshot TEXT DEFAULT '',
+    status TEXT DEFAULT 'issued',
+    created_at TEXT NOT NULL
+  );
+  CREATE TABLE IF NOT EXISTS owner_catalog_items (
+    id TEXT PRIMARY KEY,
+    name_ar TEXT NOT NULL,
+    version TEXT DEFAULT 'v1.0',
+    basic_price INTEGER DEFAULT 4500,
+    pro_price INTEGER DEFAULT 8500,
+    ent_price INTEGER DEFAULT 18500,
+    agent_commission_pct REAL DEFAULT 15,
+    dist_commission_pct REAL DEFAULT 27,
+    marketing_pitch TEXT DEFAULT '',
+    presentation_url TEXT DEFAULT '',
+    updated_at TEXT NOT NULL
+  );
 `);
 
 const USER_ROLE_DEFINITIONS = [
@@ -2628,11 +2654,196 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, 200, { ok: true, decision, requests, ...getRoleProfilesState() });
     }
 
+    if (req.method === 'POST' && pathname === '/api/accounts/delete') {
+      const body = await readJsonBody(req);
+      const deletedByRole = String(body.deletedByRole || '').trim();
+      if (deletedByRole !== 'owner') {
+        return sendJson(res, 403, { error: 'صلاحية حذف الحسابات مقتصرة على صاحب العمل فقط' });
+      }
+      const id = String(body.id || '').trim();
+      const roleKey = String(body.roleKey || '').trim();
+      if (!id && !roleKey) {
+        return sendJson(res, 400, { error: 'يرجى تحديد معرف الطلب أو الدور المطلوب حذفه' });
+      }
+      if (roleKey === 'owner' && !id) {
+        return sendJson(res, 400, { error: 'لا يمكن حذف حساب صاحب العمل الرئيسي' });
+      }
+      let targetDesc = roleKey;
+      if (id) {
+        const existing = managerHubDb.prepare('SELECT * FROM account_requests WHERE id = ?').get(id);
+        if (!existing) return sendJson(res, 404, { error: 'الحساب أو الطلب غير موجود' });
+        targetDesc = `${existing.role_key}: ${existing.full_name}`;
+        managerHubDb.prepare('DELETE FROM account_requests WHERE id = ?').run(id);
+        if (body.resetRoleProfile !== false && existing.role_key && existing.role_key !== 'owner') {
+          const remainingApproved = managerHubDb.prepare("SELECT * FROM account_requests WHERE role_key = ? AND status = 'approved' ORDER BY updated_at DESC LIMIT 1").get(existing.role_key);
+          if (!remainingApproved) {
+            managerHubDb.prepare('DELETE FROM role_profiles WHERE role_key = ?').run(existing.role_key);
+          }
+        }
+      } else if (roleKey && roleKey !== 'owner') {
+        managerHubDb.prepare('DELETE FROM role_profiles WHERE role_key = ?').run(roleKey);
+        if (body.deleteRequestsForRole) {
+          managerHubDb.prepare('DELETE FROM account_requests WHERE role_key = ?').run(roleKey);
+        }
+      }
+      logAudit('account_deleted', `حذف صاحب العمل حساب (${targetDesc})`);
+      const requests = managerHubDb.prepare('SELECT * FROM account_requests ORDER BY created_at DESC LIMIT 200').all();
+      return sendJson(res, 200, { ok: true, requests, ...getRoleProfilesState() });
+    }
+
+    if (req.method === 'GET' && pathname === '/api/accounts/invitations') {
+      const invitations = managerHubDb.prepare('SELECT * FROM invitation_cards ORDER BY created_at DESC LIMIT 200').all();
+      const ruleRow = managerHubDb.prepare("SELECT value FROM manager_settings WHERE key = 'owner_global_rules'").get();
+      return sendJson(res, 200, { ok: true, invitations, globalRules: ruleRow ? ruleRow.value : '' });
+    }
+
+    if (req.method === 'POST' && pathname === '/api/accounts/invitations') {
+      const body = await readJsonBody(req);
+      const inviterRole = String(body.inviterRole || 'owner').trim();
+      const targetRole = String(body.targetRole || '').trim();
+      const inviteeName = String(body.inviteeName || '').trim().slice(0, 120);
+      const inviteePhone = String(body.inviteePhone || '').trim().slice(0, 40);
+      const region = String(body.region || '').trim().slice(0, 80);
+      if (!inviteeName || !targetRole) {
+        return sendJson(res, 400, { error: 'يرجى إدخال اسم المدعو والدور المستهدف' });
+      }
+      const allowedTargets = {
+        owner: ['agents_manager', 'agent', 'distributor', 'rep', 'technician'],
+        agents_manager: ['agent', 'distributor'],
+        agent: ['distributor'],
+        distributor: ['rep', 'technician']
+      };
+      if (!(allowedTargets[inviterRole] || []).includes(targetRole)) {
+        return sendJson(res, 403, { error: 'التسلسل الهرمي: لا يمكن لهذا الدور توجيه بطاقة دعوة للدور المحدد' });
+      }
+      const inviterProf = managerHubDb.prepare('SELECT full_name FROM role_profiles WHERE role_key = ?').get(inviterRole);
+      const inviterName = String(body.inviterName || (inviterProf && inviterProf.full_name) || inviterRole).trim().slice(0, 120);
+      const ruleRow = managerHubDb.prepare("SELECT value FROM manager_settings WHERE key = 'owner_global_rules'").get();
+      const rulesSnapshot = ruleRow ? ruleRow.value : '';
+      const id = 'INV_' + Date.now() + '_' + crypto.randomBytes(2).toString('hex').toUpperCase();
+      const inviteCode = `QLX-${targetRole.slice(0, 3).toUpperCase()}-${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
+      const nowIso = new Date().toISOString();
+      managerHubDb.prepare(`
+        INSERT INTO invitation_cards(id, inviter_role, inviter_name, target_role, invitee_name, invitee_phone, region, invite_code, rules_snapshot, status, created_at)
+        VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, 'issued', ?)
+      `).run(id, inviterRole, inviterName, targetRole, inviteeName, inviteePhone, region, inviteCode, rulesSnapshot, nowIso);
+      logAudit('invitation_issued', `إصدار بطاقة دعوة من (${inviterRole}) إلى (${targetRole}): ${inviteeName} [${inviteCode}]`);
+      const invitations = managerHubDb.prepare('SELECT * FROM invitation_cards ORDER BY created_at DESC LIMIT 200').all();
+      return sendJson(res, 200, { ok: true, id, inviteCode, invitations, globalRules: rulesSnapshot });
+    }
+
+    if (req.method === 'POST' && pathname === '/api/accounts/invitations/accept') {
+      const body = await readJsonBody(req);
+      const id = String(body.id || '').trim();
+      const inv = managerHubDb.prepare('SELECT * FROM invitation_cards WHERE id = ?').get(id);
+      if (!inv) return sendJson(res, 404, { error: 'بطاقة الدعوة غير موجودة' });
+      const nowIso = new Date().toISOString();
+      managerHubDb.prepare("UPDATE invitation_cards SET status = 'accepted' WHERE id = ?").run(id);
+      const reqId = 'ACC_' + Date.now() + '_' + crypto.randomBytes(2).toString('hex').toUpperCase();
+      managerHubDb.prepare(`
+        INSERT INTO account_requests(id, role_key, full_name, phone, region, parent_role, requested_by_role, status, approved_by_role, notes, created_at, updated_at)
+        VALUES(?, ?, ?, ?, ?, ?, ?, 'approved', ?, ?, ?, ?)
+      `).run(reqId, inv.target_role, inv.invitee_name, inv.invitee_phone || '', inv.region || '', inv.inviter_role, inv.inviter_role, inv.inviter_role, `قبول بطاقة دعوة ${inv.invite_code}`, nowIso, nowIso);
+      const def = USER_ROLE_DEFINITIONS.find(d => d.key === inv.target_role);
+      managerHubDb.prepare(`
+        INSERT INTO role_profiles(role_key, full_name, phone, title, region, updated_at)
+        VALUES(?, ?, ?, ?, ?, ?)
+        ON CONFLICT(role_key) DO UPDATE SET
+          full_name = excluded.full_name,
+          phone = excluded.phone,
+          region = excluded.region,
+          updated_at = excluded.updated_at
+      `).run(inv.target_role, inv.invitee_name, inv.invitee_phone || '', def ? def.nameAr : inv.target_role, inv.region || '', nowIso);
+      logAudit('invitation_accepted', `تفعيل بطاقة دعوة (${inv.invite_code}) للدور (${inv.target_role}): ${inv.invitee_name}`);
+      const invitations = managerHubDb.prepare('SELECT * FROM invitation_cards ORDER BY created_at DESC LIMIT 200').all();
+      const requests = managerHubDb.prepare('SELECT * FROM account_requests ORDER BY created_at DESC LIMIT 200').all();
+      return sendJson(res, 200, { ok: true, invitations, requests, ...getRoleProfilesState() });
+    }
+
+    if (req.method === 'POST' && pathname === '/api/accounts/invitations/delete') {
+      const body = await readJsonBody(req);
+      const id = String(body.id || '').trim();
+      const deletedByRole = String(body.deletedByRole || '').trim();
+      if (deletedByRole !== 'owner') {
+        return sendJson(res, 403, { error: 'صلاحية حذف بطاقات الدعوة مقتصرة على صاحب العمل فقط' });
+      }
+      if (id) managerHubDb.prepare('DELETE FROM invitation_cards WHERE id = ?').run(id);
+      const invitations = managerHubDb.prepare('SELECT * FROM invitation_cards ORDER BY created_at DESC LIMIT 200').all();
+      return sendJson(res, 200, { ok: true, invitations });
+    }
+
+    if (req.method === 'GET' && pathname === '/api/owner/catalog-policy') {
+      const items = managerHubDb.prepare('SELECT * FROM owner_catalog_items ORDER BY updated_at DESC').all();
+      const ruleRow = managerHubDb.prepare("SELECT value FROM manager_settings WHERE key = 'owner_global_rules'").get();
+      return sendJson(res, 200, { ok: true, items, globalRules: ruleRow ? ruleRow.value : '' });
+    }
+
+    if (req.method === 'POST' && pathname === '/api/owner/catalog-policy') {
+      const body = await readJsonBody(req);
+      if (body.updatedByRole && body.updatedByRole !== 'owner') {
+        return sendJson(res, 403, { error: 'صلاحية تعديل الكتالوج والأسعار والقواعد مقتصرة على صاحب العمل فقط' });
+      }
+      const nowIso = new Date().toISOString();
+      if (body.globalRules !== undefined) {
+        managerHubDb.prepare("INSERT INTO manager_settings(key, value) VALUES('owner_global_rules', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value")
+          .run(String(body.globalRules || '').trim().slice(0, 2000));
+      }
+      if (body.nameAr) {
+        const id = String(body.id || ('OWN_SYS_' + Date.now())).trim().slice(0, 60);
+        managerHubDb.prepare(`
+          INSERT INTO owner_catalog_items(id, name_ar, version, basic_price, pro_price, ent_price, agent_commission_pct, dist_commission_pct, marketing_pitch, presentation_url, updated_at)
+          VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          ON CONFLICT(id) DO UPDATE SET
+            name_ar = excluded.name_ar,
+            version = excluded.version,
+            basic_price = excluded.basic_price,
+            pro_price = excluded.pro_price,
+            ent_price = excluded.ent_price,
+            agent_commission_pct = excluded.agent_commission_pct,
+            dist_commission_pct = excluded.dist_commission_pct,
+            marketing_pitch = excluded.marketing_pitch,
+            presentation_url = excluded.presentation_url,
+            updated_at = excluded.updated_at
+        `).run(
+          id,
+          String(body.nameAr || '').trim().slice(0, 140),
+          String(body.version || 'v1.0').trim().slice(0, 40),
+          Math.max(0, Number(body.basicPrice) || 4500),
+          Math.max(0, Number(body.proPrice) || 8500),
+          Math.max(0, Number(body.entPrice) || 18500),
+          Math.min(100, Math.max(0, Number(body.agentCommissionPct) || 15)),
+          Math.min(100, Math.max(0, Number(body.distCommissionPct) || 27)),
+          String(body.marketingPitch || '').trim().slice(0, 600),
+          String(body.presentationUrl || '').trim().slice(0, 300),
+          nowIso
+        );
+      }
+      logAudit('owner_catalog_updated', 'تحديث كتالوج المنظومات والأسعار والعمولات والقواعد العامة من صاحب العمل');
+      const items = managerHubDb.prepare('SELECT * FROM owner_catalog_items ORDER BY updated_at DESC').all();
+      const ruleRow = managerHubDb.prepare("SELECT value FROM manager_settings WHERE key = 'owner_global_rules'").get();
+      return sendJson(res, 200, { ok: true, items, globalRules: ruleRow ? ruleRow.value : '' });
+    }
+
+    if (req.method === 'POST' && pathname === '/api/owner/catalog-policy/remove') {
+      const body = await readJsonBody(req);
+      if (body.updatedByRole && body.updatedByRole !== 'owner') {
+        return sendJson(res, 403, { error: 'صلاحية حذف منظومات الكتالوج مقتصرة على صاحب العمل فقط' });
+      }
+      const id = String(body.id || '').trim();
+      if (id) managerHubDb.prepare('DELETE FROM owner_catalog_items WHERE id = ?').run(id);
+      const items = managerHubDb.prepare('SELECT * FROM owner_catalog_items ORDER BY updated_at DESC').all();
+      const ruleRow = managerHubDb.prepare("SELECT value FROM manager_settings WHERE key = 'owner_global_rules'").get();
+      return sendJson(res, 200, { ok: true, items, globalRules: ruleRow ? ruleRow.value : '' });
+    }
+
     if (req.method === 'POST' && pathname === '/api/accounts/whatsapp-packet/export') {
       const body = await readJsonBody(req);
       const exportedByRole = String(body.exportedByRole || 'owner').trim();
       const requests = managerHubDb.prepare('SELECT * FROM account_requests ORDER BY created_at DESC LIMIT 200').all();
       const profiles = managerHubDb.prepare('SELECT role_key, full_name, phone, title, region, email, bio, updated_at FROM role_profiles').all();
+      const ownerCatalogItems = managerHubDb.prepare('SELECT * FROM owner_catalog_items ORDER BY updated_at DESC').all();
+      const invitationCards = managerHubDb.prepare('SELECT * FROM invitation_cards ORDER BY created_at DESC LIMIT 200').all();
+      const ruleRow = managerHubDb.prepare("SELECT value FROM manager_settings WHERE key = 'owner_global_rules'").get();
       const corePayload = {
         format: 'QALIX_OFFLINE_WHATSAPP_SYNC_V1',
         exportedAt: new Date().toISOString(),
@@ -2640,7 +2851,10 @@ const server = http.createServer(async (req, res) => {
         systemId: ACTIVE_SYSTEM.id,
         systemNameAr: ACTIVE_SYSTEM.nameAr,
         accountRequests: requests,
-        roleProfiles: profiles
+        roleProfiles: profiles,
+        ownerCatalogItems,
+        invitationCards,
+        ownerGlobalRules: ruleRow ? ruleRow.value : ''
       };
       const sha256 = crypto.createHash('sha256').update(JSON.stringify(corePayload)).digest('hex');
       const packet = { ...corePayload, sha256 };
@@ -2691,6 +2905,43 @@ const server = http.createServer(async (req, res) => {
         if (!p || !p.role_key) continue;
         upsertProf.run(p.role_key, p.full_name || '', p.phone || '', p.title || '', p.region || '', p.email || '', p.bio || '', p.updated_at || new Date().toISOString());
         importedProfiles++;
+      }
+      if (typeof packet.ownerGlobalRules === 'string' && packet.ownerGlobalRules) {
+        managerHubDb.prepare("INSERT INTO manager_settings(key, value) VALUES('owner_global_rules', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value")
+          .run(packet.ownerGlobalRules.slice(0, 2000));
+      }
+      if (Array.isArray(packet.ownerCatalogItems)) {
+        const upsertOwnerItem = managerHubDb.prepare(`
+          INSERT INTO owner_catalog_items(id, name_ar, version, basic_price, pro_price, ent_price, agent_commission_pct, dist_commission_pct, marketing_pitch, presentation_url, updated_at)
+          VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          ON CONFLICT(id) DO UPDATE SET
+            name_ar = CASE WHEN excluded.updated_at > owner_catalog_items.updated_at THEN excluded.name_ar ELSE owner_catalog_items.name_ar END,
+            version = CASE WHEN excluded.updated_at > owner_catalog_items.updated_at THEN excluded.version ELSE owner_catalog_items.version END,
+            basic_price = CASE WHEN excluded.updated_at > owner_catalog_items.updated_at THEN excluded.basic_price ELSE owner_catalog_items.basic_price END,
+            pro_price = CASE WHEN excluded.updated_at > owner_catalog_items.updated_at THEN excluded.pro_price ELSE owner_catalog_items.pro_price END,
+            ent_price = CASE WHEN excluded.updated_at > owner_catalog_items.updated_at THEN excluded.ent_price ELSE owner_catalog_items.ent_price END,
+            agent_commission_pct = CASE WHEN excluded.updated_at > owner_catalog_items.updated_at THEN excluded.agent_commission_pct ELSE owner_catalog_items.agent_commission_pct END,
+            dist_commission_pct = CASE WHEN excluded.updated_at > owner_catalog_items.updated_at THEN excluded.dist_commission_pct ELSE owner_catalog_items.dist_commission_pct END,
+            marketing_pitch = CASE WHEN excluded.updated_at > owner_catalog_items.updated_at THEN excluded.marketing_pitch ELSE owner_catalog_items.marketing_pitch END,
+            presentation_url = CASE WHEN excluded.updated_at > owner_catalog_items.updated_at THEN excluded.presentation_url ELSE owner_catalog_items.presentation_url END,
+            updated_at = CASE WHEN excluded.updated_at > owner_catalog_items.updated_at THEN excluded.updated_at ELSE owner_catalog_items.updated_at END
+        `);
+        for (const it of packet.ownerCatalogItems) {
+          if (!it || !it.id || !it.name_ar) continue;
+          upsertOwnerItem.run(it.id, it.name_ar, it.version || 'v1.0', Number(it.basic_price) || 4500, Number(it.pro_price) || 8500, Number(it.ent_price) || 18500, Number(it.agent_commission_pct) || 15, Number(it.dist_commission_pct) || 27, it.marketing_pitch || '', it.presentation_url || '', it.updated_at || new Date().toISOString());
+        }
+      }
+      if (Array.isArray(packet.invitationCards)) {
+        const upsertInv = managerHubDb.prepare(`
+          INSERT INTO invitation_cards(id, inviter_role, inviter_name, target_role, invitee_name, invitee_phone, region, invite_code, rules_snapshot, status, created_at)
+          VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          ON CONFLICT(id) DO UPDATE SET
+            status = CASE WHEN excluded.status = 'accepted' THEN 'accepted' ELSE invitation_cards.status END
+        `);
+        for (const inv of packet.invitationCards) {
+          if (!inv || !inv.id || !inv.invite_code) continue;
+          upsertInv.run(inv.id, inv.inviter_role || 'owner', inv.inviter_name || '', inv.target_role || 'agent', inv.invitee_name || '', inv.invitee_phone || '', inv.region || '', inv.invite_code, inv.rules_snapshot || '', inv.status || 'issued', inv.created_at || new Date().toISOString());
+        }
       }
       logAudit('whatsapp_sync_imported', `استيراد ملف تحديث واتساب موقّع (${packet.exportedByRole || '-'}): ${importedRequests} طلب، ${importedProfiles} حساب`);
       const requests = managerHubDb.prepare('SELECT * FROM account_requests ORDER BY created_at DESC LIMIT 200').all();

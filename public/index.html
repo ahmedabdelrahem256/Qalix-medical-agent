@@ -353,6 +353,8 @@
             </div>
             <button type="button" class="btn btn-sm btn-emerald" onclick="openRoleProfileModal()" style="font-weight:800;">👤 بياناتي وصورتي (معاينة)</button>
             <button type="button" class="btn btn-sm btn-sky" onclick="openAccountOnboardingModal()" style="font-weight:800;">📨 طلب حساب ومزامنة واتساب</button>
+            <button type="button" class="btn btn-sm btn-amber" onclick="openOwnerCatalogPolicyModal()" style="font-weight:800;">👑 منظومات وقواعد صاحب العمل</button>
+            <button type="button" class="btn btn-sm btn-purple" onclick="openOwnerExecutiveDashboard()" style="font-weight:800;">📊 لوحة سير العمل والتحسين</button>
           </div>
         </div>
         <!-- Guided Step-by-Step Workflow & Live Data Safety Bar per Role -->
@@ -5347,6 +5349,10 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
       document.getElementById('rpBio').value = prof.bio || '';
       const fileInp = document.getElementById('rpAvatarFile');
       if (fileInp) fileInp.value = '';
+      const delBtn = document.getElementById('rpDeleteRoleBtn');
+      if (delBtn) {
+        delBtn.style.display = ((roleProfilesState.activeRole || 'owner') === 'owner' && roleKey !== 'owner') ? 'block' : 'none';
+      }
       updateRoleCardPreview();
     }
 
@@ -5444,7 +5450,40 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
       const m = document.getElementById('accountOnboardingModal');
       if (!m) return;
       m.style.display = 'flex';
-      await loadAccountRequestsList();
+      syncInvitationTargetOptions();
+      await Promise.all([loadAccountRequestsList(), loadInvitationCardsList()]);
+    }
+
+    function syncInvitationTargetOptions() {
+      const activeRole = roleProfilesState.activeRole || 'owner';
+      const sel = document.getElementById('invTargetRole');
+      if (!sel) return;
+      const map = {
+        owner: [
+          ['agent', '🤝 توجيه بطاقة دعوة للوكالة (وكيل)'],
+          ['agents_manager', '🏛️ توجيه بطاقة دعوة لمدير الوكلاء'],
+          ['distributor', '🚚 توجيه بطاقة دعوة للتوزيع (موزع)'],
+          ['rep', '🧭 توجيه بطاقة دعوة لمندوب'],
+          ['technician', '🛠️ توجيه بطاقة دعوة لفني']
+        ],
+        agents_manager: [
+          ['agent', '🤝 توجيه بطاقة دعوة للوكالة (وكيل)'],
+          ['distributor', '🚚 توجيه بطاقة دعوة للتوزيع (موزع)']
+        ],
+        agent: [
+          ['distributor', '🚚 توجيه بطاقة دعوة للتوزيع (موزع)']
+        ],
+        distributor: [
+          ['rep', '🧭 توجيه بطاقة دعوة لمندوب'],
+          ['technician', '🛠️ توجيه بطاقة دعوة لفني']
+        ]
+      };
+      const opts = map[activeRole] || [];
+      if (!opts.length) {
+        sel.innerHTML = '<option value="">هذا الدور لا يملك صلاحية توجيه دعوات</option>';
+      } else {
+        sel.innerHTML = opts.map(([v, t]) => `<option value="${v}">${t}</option>`).join('');
+      }
     }
 
     async function loadAccountRequestsList() {
@@ -5455,11 +5494,12 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
         const j = await r.json();
         if (!j.ok) return;
         const list = j.requests || [];
+        const isOwner = (roleProfilesState.activeRole || 'owner') === 'owner';
         if (!list.length) {
           box.innerHTML = '<div style="font-size:12px; color:var(--muted); padding:8px;">لا توجد طلبات إنشاء حسابات مسجلة حالياً.</div>';
           return;
         }
-        const roleLabels = { agent: '🤝 وكيل', distributor: '🚚 موزع', rep: '🧭 مندوب', technician: '🛠️ فني' };
+        const roleLabels = { agents_manager: '🏛️ مدير وكلاء', agent: '🤝 وكيل', distributor: '🚚 موزع', rep: '🧭 مندوب', technician: '🛠️ فني' };
         const statusLabels = { pending: '⏳ بانتظار الموافقة', approved: '✅ معتمد ومفعّل', rejected: '❌ مرفوض' };
         const statusCls = { pending: 'b-amber', approved: 'b-emerald', rejected: 'b-rose' };
         box.innerHTML = list.map(req => `
@@ -5475,14 +5515,191 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
                 ${req.notes ? ' · ' + escPayHtml(req.notes) : ''}
               </div>
             </div>
-            ${req.status === 'pending' ? `
-              <div style="display:flex; gap:6px;">
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+              ${req.status === 'pending' ? `
                 <button type="button" class="btn btn-sm btn-emerald" onclick="decideAccountRequest('${escPayHtml(req.id)}','approved')">✅ موافقة واعتماد</button>
                 <button type="button" class="btn btn-sm btn-rose" onclick="decideAccountRequest('${escPayHtml(req.id)}','rejected')">✕ رفض</button>
-              </div>
-            ` : ''}
+              ` : ''}
+              ${isOwner ? `
+                <button type="button" class="btn btn-sm btn-rose" onclick="deleteUserAccountByOwner('${escPayHtml(req.id)}','${escPayHtml(req.role_key)}','${escPayHtml(req.full_name)}')">🗑️ حذف الحساب</button>
+              ` : ''}
+            </div>
           </div>
         `).join('');
+      } catch (_) {}
+    }
+
+    async function deleteUserAccountByOwner(id, roleKey, displayName) {
+      if ((roleProfilesState.activeRole || 'owner') !== 'owner') {
+        return alert('صلاحية حذف الحسابات مقتصرة على صاحب العمل فقط');
+      }
+      if (!confirm(`هل أنت متأكد من حذف حساب "${displayName || roleKey}" نهائياً؟`)) return;
+      try {
+        const r = await fetch('/api/accounts/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, roleKey, deletedByRole: 'owner' })
+        });
+        const j = await r.json();
+        if (!r.ok || !j.ok) return alert('❌ ' + (j.error || 'تعذر حذف الحساب'));
+        if (j.profiles) { roleProfilesState.profiles = j.profiles; renderRoleHierarchyBar(); }
+        await loadAccountRequestsList();
+        if (document.getElementById('ownerExecutiveDashboardModal')?.style.display === 'flex') {
+          await openOwnerExecutiveDashboard();
+        }
+      } catch (_) {
+        alert('❌ تعذر الاتصال بالخادم المحلي');
+      }
+    }
+
+    async function deleteRoleProfileByOwner() {
+      if ((roleProfilesState.activeRole || 'owner') !== 'owner') {
+        return alert('صلاحية حذف الحسابات مقتصرة على صاحب العمل فقط');
+      }
+      if (!editingProfileRoleKey || editingProfileRoleKey === 'owner') {
+        return alert('لا يمكن حذف حساب صاحب العمل الرئيسي');
+      }
+      const def = (roleProfilesState.roles || []).find(d => d.key === editingProfileRoleKey);
+      const label = def ? def.nameAr : editingProfileRoleKey;
+      if (!confirm(`هل تريد حذف وتصفير بيانات حساب (${label})؟`)) return;
+      try {
+        const r = await fetch('/api/accounts/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ roleKey: editingProfileRoleKey, deletedByRole: 'owner', deleteRequestsForRole: true })
+        });
+        const j = await r.json();
+        if (!r.ok || !j.ok) return alert('❌ ' + (j.error || 'تعذر حذف الحساب'));
+        if (j.profiles) {
+          roleProfilesState.profiles = j.profiles;
+          renderRoleHierarchyBar();
+          selectProfileRoleTab(editingProfileRoleKey);
+        }
+        alert(`✅ تم حذف حساب (${label}) بنجاح.`);
+      } catch (_) {
+        alert('❌ تعذر الاتصال بالخادم المحلي');
+      }
+    }
+
+    let lastIssuedInvitations = [];
+    async function loadInvitationCardsList() {
+      const box = document.getElementById('invCardsListBox');
+      const rulesBanner = document.getElementById('invOwnerRulesBanner');
+      try {
+        const r = await fetch('/api/accounts/invitations');
+        const j = await r.json();
+        if (!j.ok) return;
+        lastIssuedInvitations = j.invitations || [];
+        if (rulesBanner) {
+          rulesBanner.textContent = j.globalRules && j.globalRules.trim()
+            ? j.globalRules
+            : 'القوانين واللوائح العامة التي يضعها صاحب العمل تسري تلقائياً على جميع بطاقات الدعوة والأدوار في المنظومة.';
+        }
+        if (!box) return;
+        if (!lastIssuedInvitations.length) {
+          box.innerHTML = '<div style="font-size:12px; color:var(--muted); padding:8px;">لم يتم إصدار بطاقات دعوة هرمية بعد.</div>';
+          return;
+        }
+        const roleLabels = { owner: '👑 صاحب العمل', agents_manager: '🏛️ مدير الوكلاء', agent: '🤝 وكيل', distributor: '🚚 موزع', rep: '🧭 مندوب', technician: '🛠️ فني' };
+        const isOwner = (roleProfilesState.activeRole || 'owner') === 'owner';
+        box.innerHTML = lastIssuedInvitations.map(inv => `
+          <div class="sub-card" style="padding:12px; margin-bottom:8px; border:1px solid ${inv.status === 'accepted' ? 'rgba(16,185,129,0.45)' : 'rgba(192,132,252,0.4)'}; background:linear-gradient(135deg, rgba(15,23,42,0.95), rgba(30,41,59,0.75));">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:8px;">
+              <div>
+                <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+                  <span class="badge b-purple">${roleLabels[inv.inviter_role] || escPayHtml(inv.inviter_role)} ⬅️ ${roleLabels[inv.target_role] || escPayHtml(inv.target_role)}</span>
+                  <strong style="font-size:13.5px; color:#f8fafc;">${escPayHtml(inv.invitee_name)}</strong>
+                  <span class="badge ${inv.status === 'accepted' ? 'b-emerald' : 'b-amber'}">${inv.status === 'accepted' ? '✅ تم القبول والتفعيل' : '🎫 دعوة سارية'}</span>
+                </div>
+                <div style="font-size:11.5px; color:#cbd5e1; margin-top:4px;">
+                  كود الدعوة: <code dir="ltr" style="color:var(--emerald); font-weight:800;">${escPayHtml(inv.invite_code)}</code>
+                  · هاتف: <span dir="ltr">${escPayHtml(inv.invitee_phone || '-')}</span> · المنطقة: ${escPayHtml(inv.region || '-')}
+                </div>
+                ${inv.rules_snapshot ? `<div style="font-size:11px; color:#fde68a; margin-top:5px; background:rgba(245,158,11,0.08); padding:5px 8px; border-radius:6px; border-right:2px solid var(--amber);">📜 ميثاق صاحب العمل المرفق: ${escPayHtml(inv.rules_snapshot)}</div>` : ''}
+              </div>
+              <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                <button type="button" class="btn btn-sm btn-sky" onclick="copyWhatsappInvitationText('${escPayHtml(inv.id)}')">📲 نسخ الدعوة للواتساب</button>
+                ${inv.status !== 'accepted' ? `<button type="button" class="btn btn-sm btn-emerald" onclick="acceptInvitationCard('${escPayHtml(inv.id)}')">✅ قبول وتفعيل</button>` : ''}
+                ${isOwner ? `<button type="button" class="btn btn-sm btn-rose" onclick="deleteInvitationCardByOwner('${escPayHtml(inv.id)}')">🗑️ حذف</button>` : ''}
+              </div>
+            </div>
+          </div>
+        `).join('');
+      } catch (_) {}
+    }
+
+    async function issueInvitationCard() {
+      const inviterRole = roleProfilesState.activeRole || 'owner';
+      const targetRole = document.getElementById('invTargetRole')?.value || '';
+      const inviteeName = (document.getElementById('invInviteeName')?.value || '').trim();
+      const inviteePhone = (document.getElementById('invInviteePhone')?.value || '').trim();
+      const region = (document.getElementById('invInviteeRegion')?.value || '').trim();
+      if (!targetRole) return alert('الدور الحالي لا يملك صلاحية توجيه بطاقات دعوة');
+      if (!inviteeName) return alert('يرجى إدخال اسم الشخص أو الجهة المدعوة');
+      try {
+        const r = await fetch('/api/accounts/invitations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ inviterRole, targetRole, inviteeName, inviteePhone, region })
+        });
+        const j = await r.json();
+        if (!r.ok || !j.ok) return alert('❌ ' + (j.error || 'تعذر إصدار بطاقة الدعوة'));
+        document.getElementById('invInviteeName').value = '';
+        document.getElementById('invInviteePhone').value = '';
+        document.getElementById('invInviteeRegion').value = '';
+        await loadInvitationCardsList();
+        alert(`🎴 تم إصدار بطاقة الدعوة الرسمية بنجاح!\nكود الدعوة: ${j.inviteCode}\nتم إرفاق قوانين صاحب العمل السارية تلقائياً.`);
+      } catch (_) {
+        alert('❌ تعذر الاتصال بالخادم المحلي');
+      }
+    }
+
+    function copyWhatsappInvitationText(id) {
+      const inv = lastIssuedInvitations.find(x => x.id === id);
+      if (!inv) return;
+      const roleLabels = { owner: 'صاحب العمل', agents_manager: 'مدير الوكلاء', agent: 'الوكيل', distributor: 'الموزع', rep: 'المندوب', technician: 'الفني' };
+      const msg = [
+        `🎴 *بطاقة دعوة رسمية للانضمام إلى منظومة كالكس*`,
+        `• من: *${roleLabels[inv.inviter_role] || inv.inviter_role}* (${inv.inviter_name || '-'})`,
+        `• إلى: *${inv.invitee_name}* (الدور: *${roleLabels[inv.target_role] || inv.target_role}*)`,
+        `• المنطقة: ${inv.region || '-'}`,
+        `• كود الدعوة الرسمي: \`${inv.invite_code}\``,
+        inv.rules_snapshot ? `\n📜 *القوانين والقواعد السارية من صاحب العمل:*\n${inv.rules_snapshot}` : '',
+        `\n📲 يُرجى استيراد ملف المزامنة (.qlxsync) المرفق لتفعيل الحساب والعمل أوفلاين.`
+      ].filter(Boolean).join('\n');
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(msg).then(() => alert('✅ تم نسخ نص بطاقة الدعوة جاهزاً للإرسال على واتساب!')).catch(() => alert(msg));
+      } else {
+        alert(msg);
+      }
+    }
+
+    async function acceptInvitationCard(id) {
+      try {
+        const r = await fetch('/api/accounts/invitations/accept', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id })
+        });
+        const j = await r.json();
+        if (!r.ok || !j.ok) return alert('❌ ' + (j.error || 'تعذر تفعيل الدعوة'));
+        if (j.profiles) { roleProfilesState.profiles = j.profiles; renderRoleHierarchyBar(); }
+        await Promise.all([loadInvitationCardsList(), loadAccountRequestsList()]);
+        alert('✅ تم قبول بطاقة الدعوة واعتماد وتفعيل الحساب بنجاح.');
+      } catch (_) {}
+    }
+
+    async function deleteInvitationCardByOwner(id) {
+      if ((roleProfilesState.activeRole || 'owner') !== 'owner') return alert('صلاحية الحذف لصاحب العمل فقط');
+      try {
+        const r = await fetch('/api/accounts/invitations/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, deletedByRole: 'owner' })
+        });
+        const j = await r.json();
+        if (!r.ok || !j.ok) return alert('❌ ' + (j.error || 'تعذر الحذف'));
+        await loadInvitationCardsList();
       } catch (_) {}
     }
 
@@ -5569,6 +5786,229 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
         }
       };
       reader.readAsText(file, 'utf-8');
+    }
+
+    async function openOwnerCatalogPolicyModal() {
+      const m = document.getElementById('ownerCatalogPolicyModal');
+      if (!m) return;
+      const isOwner = (roleProfilesState.activeRole || 'owner') === 'owner';
+      const editorBox = document.getElementById('ownCatEditorBox');
+      const readOnlyBanner = document.getElementById('ownCatReadOnlyBanner');
+      if (editorBox) editorBox.style.display = isOwner ? 'block' : 'none';
+      if (readOnlyBanner) readOnlyBanner.style.display = isOwner ? 'none' : 'block';
+      m.style.display = 'flex';
+      await loadOwnerCatalogPolicy();
+    }
+
+    async function loadOwnerCatalogPolicy() {
+      try {
+        const r = await fetch('/api/owner/catalog-policy');
+        const j = await r.json();
+        if (!j.ok) return;
+        const rulesInp = document.getElementById('ownGlobalRulesInput');
+        if (rulesInp) rulesInp.value = j.globalRules || '';
+        const rulesView = document.getElementById('ownGlobalRulesView');
+        if (rulesView) rulesView.textContent = j.globalRules || 'لم يحدد صاحب العمل قواعد إضافية بعد — تسري السياسات الرسمية المعتمدة على الجميع.';
+        const listEl = document.getElementById('ownCatItemsList');
+        const isOwner = (roleProfilesState.activeRole || 'owner') === 'owner';
+        if (listEl) {
+          const items = j.items || [];
+          if (!items.length) {
+            listEl.innerHTML = '<div style="font-size:12px; color:var(--muted); padding:8px;">لا توجد منظومات مضافة في كتالوج صاحب العمل بعد.</div>';
+          } else {
+            listEl.innerHTML = items.map(it => `
+              <div class="sub-card" style="padding:10px; margin-bottom:8px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                  <div>
+                    <strong style="font-size:13.5px; color:var(--sky);">${escPayHtml(it.name_ar)}</strong>
+                    <span class="badge b-amber">${escPayHtml(it.version || 'v1.0')}</span>
+                  </div>
+                  ${isOwner ? `<button type="button" class="btn btn-sm btn-rose" onclick="removeOwnerCatalogItem('${escPayHtml(it.id)}')">🗑 حذف</button>` : ''}
+                </div>
+                <div style="font-size:11.5px; color:#cbd5e1; margin-top:5px;">
+                  الأسعار: أساسية <strong>${Number(it.basic_price).toLocaleString('en-US')}</strong> · متقدمة <strong>${Number(it.pro_price).toLocaleString('en-US')}</strong> · مؤسسية <strong>${Number(it.ent_price).toLocaleString('en-US')} ج.م</strong>
+                </div>
+                <div style="font-size:11.5px; color:var(--emerald); margin-top:3px;">
+                  عمولة الوكيل: <strong>${it.agent_commission_pct}%</strong> · عمولة الموزع: <strong>${it.dist_commission_pct}%</strong>
+                </div>
+                ${it.marketing_pitch ? `<div style="font-size:11.5px; color:var(--muted); margin-top:4px;">📢 ${escPayHtml(it.marketing_pitch)}</div>` : ''}
+                ${it.presentation_url ? `<div style="font-size:11px; color:var(--sky); margin-top:3px;" dir="ltr">🎬 ${escPayHtml(it.presentation_url)}</div>` : ''}
+              </div>
+            `).join('');
+          }
+        }
+      } catch (_) {}
+    }
+
+    async function saveOwnerCatalogPolicy() {
+      const payload = {
+        nameAr: (document.getElementById('ownItemName')?.value || '').trim(),
+        version: (document.getElementById('ownItemVersion')?.value || 'v1.0').trim(),
+        basicPrice: Number(document.getElementById('ownItemBasic')?.value || 4500),
+        proPrice: Number(document.getElementById('ownItemPro')?.value || 8500),
+        entPrice: Number(document.getElementById('ownItemEnt')?.value || 18500),
+        agentCommissionPct: Number(document.getElementById('ownItemAgentPct')?.value || 15),
+        distCommissionPct: Number(document.getElementById('ownItemDistPct')?.value || 27),
+        marketingPitch: (document.getElementById('ownItemPitch')?.value || '').trim(),
+        presentationUrl: (document.getElementById('ownItemPresUrl')?.value || '').trim(),
+        globalRules: document.getElementById('ownGlobalRulesInput')?.value || '',
+        updatedByRole: roleProfilesState.activeRole || 'owner'
+      };
+      try {
+        const r = await fetch('/api/owner/catalog-policy', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const j = await r.json();
+        if (!r.ok || !j.ok) return alert('❌ تعذر الحفظ');
+        if (document.getElementById('ownItemName')) document.getElementById('ownItemName').value = '';
+        await loadOwnerCatalogPolicy();
+        alert('✅ تم حفظ منظومات وأسعار وعمولات وقواعد صاحب العمل وتضمينها في ملف مزامنة الواتساب.');
+      } catch (_) {}
+    }
+
+    async function removeOwnerCatalogItem(id) {
+      await fetch('/api/owner/catalog-policy/remove', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, updatedByRole: roleProfilesState.activeRole || 'owner' })
+      });
+      await loadOwnerCatalogPolicy();
+    }
+
+    async function openOwnerExecutiveDashboard() {
+      const m = document.getElementById('ownerExecutiveDashboardModal');
+      if (!m) return;
+      m.style.display = 'flex';
+      const kpisEl = document.getElementById('ownExecKpis');
+      const flowEl = document.getElementById('ownExecWorkflow');
+      const tipsEl = document.getElementById('ownExecInsights');
+      const rulesEl = document.getElementById('ownExecRulesBanner');
+      const accEl = document.getElementById('ownExecAccounts');
+      const propEl = document.getElementById('ownExecProposals');
+      if (kpisEl) kpisEl.innerHTML = '<div style="font-size:12px; color:var(--muted);">⏳ جاري تجميع مؤشرات سير العمل...</div>';
+      try {
+        const [sumRes, accRes, catRes, keyRes, invRes] = await Promise.all([
+          fetch('/api/summary').then(r => r.json()).catch(() => ({})),
+          fetch('/api/accounts/requests').then(r => r.json()).catch(() => ({})),
+          fetch('/api/owner/catalog-policy').then(r => r.json()).catch(() => ({})),
+          fetch('/api/agent/key-requests').then(r => r.json()).catch(() => ({})),
+          fetch('/api/accounts/invitations').then(r => r.json()).catch(() => ({}))
+        ]);
+        const dists = Array.isArray(sumRes.distributors) ? sumRes.distributors.length : 0;
+        const deals = Array.isArray(sumRes.deals) ? sumRes.deals : [];
+        const completedDeals = deals.filter(d => d.status === 'activated' || d.status === 'completed').length;
+        const totalRevenue = deals.reduce((s, d) => s + (Number(d.official_price) || 0), 0);
+        const reqs = Array.isArray(accRes.requests) ? accRes.requests : [];
+        const pendingReqs = reqs.filter(r => r.status === 'pending').length;
+        const approvedReqs = reqs.filter(r => r.status === 'approved').length;
+        const catItems = Array.isArray(catRes.items) ? catRes.items : [];
+        const keyReqs = Array.isArray(keyRes.requests) ? keyRes.requests : [];
+        const pendingKeys = keyReqs.filter(k => k.status === 'pending_owner_fetch').length;
+        const invs = Array.isArray(invRes.invitations) ? invRes.invitations : [];
+        const convRate = deals.length ? Math.round((completedDeals / deals.length) * 100) : 0;
+        const isOwner = (roleProfilesState.activeRole || 'owner') === 'owner';
+
+        if (rulesEl) {
+          rulesEl.textContent = catRes.globalRules && catRes.globalRules.trim()
+            ? catRes.globalRules
+            : 'لم تُسجّل قواعد مخصصة بعد — يمكنك وضع القواعد العامة من "كتالوج وقواعد صاحب العمل" لتسري على جميع الأدوار وبطاقات الدعوة.';
+        }
+
+        const avgAgentPct = catItems.length ? Math.round(catItems.reduce((s, i) => s + (Number(i.agent_commission_pct) || 0), 0) / catItems.length) : 15;
+        const avgDistPct = catItems.length ? Math.round(catItems.reduce((s, i) => s + (Number(i.dist_commission_pct) || 0), 0) / catItems.length) : 27;
+        const netOwnerMarginPct = Math.max(0, 100 - avgAgentPct - avgDistPct);
+
+        if (kpisEl) {
+          kpisEl.innerHTML = [
+            ['📦 المنظومات المعروضة', catItems.length, `صافي هامش صاحب العمل: ${netOwnerMarginPct}%`, 'var(--amber)'],
+            ['👥 الموزعون والحسابات', `${dists} / ${approvedReqs}`, `دعوات صادرة: ${invs.length}`, 'var(--sky)'],
+            ['💰 إجمالي المبيعات', `${totalRevenue.toLocaleString('en-US')} ج.م`, `معدل الإغلاق: ${convRate}%`, 'var(--emerald)'],
+            ['⏳ بانتظار الاعتماد', pendingReqs + pendingKeys, `${pendingReqs} حساب · ${pendingKeys} مفتاح`, 'var(--purple)']
+          ].map(([t, v, sub, col]) => `
+            <div class="sub-card" style="padding:12px; border-top:2px solid ${col};">
+              <div style="font-size:11.5px; color:var(--muted);">${t}</div>
+              <div style="font-size:20px; font-weight:900; color:${col}; margin:4px 0;">${v}</div>
+              <div style="font-size:11px; color:#cbd5e1;">${sub}</div>
+            </div>
+          `).join('');
+        }
+
+        if (flowEl) {
+          const stages = [
+            { icon: '👑', title: '1. صاحب العمل', metric: `${catItems.length} منظومات`, sub: 'تحكم كامل: الأسعار، العمولات، القواعد، وحذف أي حساب' },
+            { icon: '🏛️', title: '2. مدير الوكلاء', metric: `${pendingKeys} طلب مفتاح`, sub: 'يستلم المفاتيح ويدير الوكلاء والمنظومات' },
+            { icon: '🤝', title: '3. الوكيل', metric: `${dists} موزعين`, sub: 'يوجّه بطاقات الدعوة للتوزيع ويدير الموزعين' },
+            { icon: '🚚', title: '4. الموزع', metric: `${deals.length} صفقات`, sub: 'يوجّه دعوات المندوب والفني ويسجل الصفقات' },
+            { icon: '🧭', title: '5. المندوب', metric: `${reqs.filter(r => r.role_key === 'rep').length} حساب`, sub: 'الزيارات الميدانية والعرض والتعاقد' },
+            { icon: '🛠️', title: '6. الفني', metric: `${reqs.filter(r => r.role_key === 'technician').length} حساب`, sub: 'التركيب والتفعيل والتدريب الميداني' }
+          ];
+          flowEl.innerHTML = stages.map(st => `
+            <div class="sub-card" style="padding:10px; border:1px solid rgba(56,189,248,0.28); text-align:center;">
+              <div style="font-size:20px;">${st.icon}</div>
+              <div style="font-size:12px; font-weight:800; color:#f8fafc; margin-top:3px;">${st.title}</div>
+              <div style="font-size:13px; font-weight:900; color:var(--emerald); margin:3px 0;">${st.metric}</div>
+              <div style="font-size:10.5px; color:var(--muted); line-height:1.4;">${st.sub}</div>
+            </div>
+          `).join('');
+        }
+
+        if (accEl) {
+          const roleLabels = { agents_manager: '🏛️ مدير وكلاء', agent: '🤝 وكيل', distributor: '🚚 موزع', rep: '🧭 مندوب', technician: '🛠️ فني' };
+          if (!reqs.length) {
+            accEl.innerHTML = '<div style="font-size:12px; color:var(--muted); padding:8px;">لا توجد حسابات مسجلة في سجل الطلبات بعد — يمكنك إصدار بطاقة دعوة أو إنشاء حساب من زر "طلب حساب ومزامنة واتساب".</div>';
+          } else {
+            accEl.innerHTML = reqs.map(req => `
+              <div class="sub-card" style="padding:9px 12px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                <div>
+                  <span class="badge b-sky">${roleLabels[req.role_key] || escPayHtml(req.role_key)}</span>
+                  <strong style="font-size:12.5px; color:#f8fafc; margin-inline:6px;">${escPayHtml(req.full_name)}</strong>
+                  <span class="badge ${req.status === 'approved' ? 'b-emerald' : (req.status === 'rejected' ? 'b-rose' : 'b-amber')}">${req.status === 'approved' ? '✅ معتمد' : (req.status === 'rejected' ? '❌ مرفوض' : '⏳ معلق')}</span>
+                  <span style="font-size:11px; color:var(--muted); margin-right:6px;">${escPayHtml(req.region || '-')} · <span dir="ltr">${escPayHtml(req.phone || '-')}</span></span>
+                </div>
+                ${isOwner ? `
+                  <div style="display:flex; gap:5px; flex-wrap:wrap;">
+                    ${req.status === 'pending' ? `<button type="button" class="btn btn-sm btn-emerald" onclick="decideAccountRequest('${escPayHtml(req.id)}','approved').then(openOwnerExecutiveDashboard)">✅ اعتماد</button>` : ''}
+                    <button type="button" class="btn btn-sm btn-rose" onclick="deleteUserAccountByOwner('${escPayHtml(req.id)}','${escPayHtml(req.role_key)}','${escPayHtml(req.full_name)}')">🗑️ حذف الحساب</button>
+                  </div>
+                ` : ''}
+              </div>
+            `).join('');
+          }
+        }
+
+        if (tipsEl) {
+          const insights = [];
+          if (!catItems.length) insights.push({ level: 'amber', text: 'لم يتم إضافة منظومات للبيع بعد في كتالوج صاحب العمل — أضف المنظومة والأسعار والعمولات لتبدأ الشبكة بالبيع.', btn: '👑 فتح الكتالوج', act: "document.getElementById('ownerExecutiveDashboardModal').style.display='none'; openOwnerCatalogPolicyModal();" });
+          if (pendingReqs > 0) insights.push({ level: 'sky', text: `يوجد ${pendingReqs} طلب إنشاء حساب بانتظار المراجعة والاعتماد لتسريع عمل الفريق.`, btn: '📨 مراجعة الطلبات', act: "document.getElementById('ownerExecutiveDashboardModal').style.display='none'; openAccountOnboardingModal();" });
+          if (pendingKeys > 0) insights.push({ level: 'purple', text: `يوجد ${pendingKeys} طلب مفتاح تفعيل بانتظار التوريد والتسليم عبر مدير الوكلاء.`, btn: '🔑 طلبات المفاتيح', act: "document.getElementById('ownerExecutiveDashboardModal').style.display='none'; document.getElementById('managerKeyInboxSection')?.scrollIntoView({behavior:'smooth'});" });
+          if (deals.length > 0 && convRate < 50) insights.push({ level: 'amber', text: `معدل إغلاق الصفقات الحالي ${convRate}% — يُنصح بمراجعة العروض التسويقية ونسب عمولة الموزع لتحفيز الإغلاق.`, btn: '👑 تحسين العمولات', act: "document.getElementById('ownerExecutiveDashboardModal').style.display='none'; openOwnerCatalogPolicyModal();" });
+          if (!insights.length) insights.push({ level: 'emerald', text: 'سير العمل منضبط ومستقر: يمكنك تصدير ملف التحديث عبر واتساب ومشاركته مع الفريق، أو أخذ نسخة أمان فورية.', btn: '🛡️ فحص وأخذ نسخة', act: "document.getElementById('ownerExecutiveDashboardModal').style.display='none'; verifyDataAndCreateBackupNow();" });
+
+          tipsEl.innerHTML = insights.map(ins => `
+            <div class="sub-card" style="padding:10px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; border-right:3px solid var(--${ins.level});">
+              <span style="font-size:12px; color:#e2e8f0; flex:1;">💡 ${escPayHtml(ins.text)}</span>
+              <button type="button" class="btn btn-sm btn-${ins.level}" onclick="${ins.act.replace(/"/g, '&quot;')}">${ins.btn}</button>
+            </div>
+          `).join('');
+        }
+
+        if (propEl) {
+          const proposals = [
+            { title: '1. حماية صافي هامش صاحب العمل تلقائياً', desc: `متوسط العمولات الممنوحة حالياً (${avgAgentPct}% للوكيل + ${avgDistPct}% للموزع) يترك صافي ${netOwnerMarginPct}% لصاحب العمل — حافظ على سقف العمولات من الكتالوج.` },
+            { title: '2. تسلسل بطاقات الدعوة المختومة بالقواعد', desc: 'كل بطاقة دعوة صادرة للوكيل أو الموزع أو المندوب تحمل تلقائياً نسخة من قوانين صاحب العمل وكود تتبع فريد لضمان الالتزام قبل التفعيل.' },
+            { title: '3. مزامنة واتساب موقّعة أوفلاين (.qlxsync)', desc: 'أي تحديث في الأسعار أو القواعد أو اعتماد/حذف الحسابات ينتقل عبر ملف موقّع بـ SHA-256 لا يمكن تعديله أو التلاعب به.' },
+            { title: '4. الرقابة المركزية وحق الإلغاء الفوري', desc: 'يمتلك صاحب العمل صلاحية حذف أو إيقاف أي حساب في أي طبقة فوراً مع الاحتفاظ بسجل التدقيق الكامل.' }
+          ];
+          propEl.innerHTML = proposals.map(p => `
+            <div class="sub-card" style="padding:9px 11px; border:1px solid rgba(16,185,129,0.25);">
+              <div style="font-size:12px; font-weight:800; color:var(--emerald);">${p.title}</div>
+              <div style="font-size:11px; color:#cbd5e1; margin-top:3px; line-height:1.45;">${p.desc}</div>
+            </div>
+          `).join('');
+        }
+      } catch (_) {}
     }
   </script>
 
@@ -5902,9 +6342,14 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
         </div>
       </div>
 
-      <button type="button" class="btn btn-emerald" style="width:100%; padding:11px; font-weight:800;" onclick="saveRoleProfile()">
-        💾 حفظ بيانات وصورة الحساب وتفعيله
-      </button>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button type="button" class="btn btn-emerald" style="flex:1; padding:11px; font-weight:800;" onclick="saveRoleProfile()">
+          💾 حفظ بيانات وصورة الحساب وتفعيله
+        </button>
+        <button id="rpDeleteRoleBtn" type="button" class="btn btn-rose" style="display:none; padding:11px 16px; font-weight:800;" onclick="deleteRoleProfileByOwner()">
+          🗑️ حذف هذا الحساب
+        </button>
+      </div>
     </div>
   </div>
 
@@ -5928,6 +6373,35 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
             <input type="file" accept=".qlxsync,.json" style="display:none;" onchange="importWhatsappAccountSyncPacket(this)" />
           </label>
         </div>
+      </div>
+
+      <div class="sub-card" style="padding:12px; margin-bottom:12px; border:1px solid rgba(245,158,11,0.4); background:rgba(245,158,11,0.07);">
+        <div style="font-size:12px; font-weight:800; color:var(--amber); margin-bottom:4px;">📜 قوانين ولوائح صاحب العمل السارية على جميع المنظومة:</div>
+        <div id="invOwnerRulesBanner" style="font-size:11.5px; color:#fde68a; white-space:pre-line;"></div>
+      </div>
+
+      <div class="sub-card" style="padding:12px; margin-bottom:12px; border:1px solid rgba(192,132,252,0.45); background:rgba(192,132,252,0.06);">
+        <div style="font-size:13px; font-weight:800; color:#c084fc; margin-bottom:8px;">🎴 توجيه بطاقة دعوة رسمية (صاحب العمل ← الوكيل ← الموزع ← المندوب والفني):</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
+          <div>
+            <label style="font-size:11.5px; color:var(--muted);">توجيه الدعوة إلى:</label>
+            <select id="invTargetRole" style="padding:6px; font-size:12px;"></select>
+          </div>
+          <div>
+            <label style="font-size:11.5px; color:var(--muted);">اسم المدعو / الجهة:</label>
+            <input id="invInviteeName" placeholder="اسم الوكيل أو الموزع أو المندوب..." style="padding:6px; font-size:12px;" />
+          </div>
+          <div>
+            <label style="font-size:11.5px; color:var(--muted);">رقم واتساب المدعو:</label>
+            <input id="invInviteePhone" dir="ltr" placeholder="010..." style="padding:6px; font-size:12px;" />
+          </div>
+          <div>
+            <label style="font-size:11.5px; color:var(--muted);">النطاق / المحافظة:</label>
+            <input id="invInviteeRegion" placeholder="المنطقة المخصصة..." style="padding:6px; font-size:12px;" />
+          </div>
+        </div>
+        <button type="button" class="btn btn-sm btn-purple" style="width:100%; font-weight:800; margin-bottom:10px;" onclick="issueInvitationCard()">🎴 إصدار بطاقة دعوة رسمية مرفق بها قوانين صاحب العمل</button>
+        <div id="invCardsListBox" style="max-height:190px; overflow-y:auto;"></div>
       </div>
 
       <div class="sub-card" style="padding:12px; margin-bottom:12px;">
@@ -5968,6 +6442,133 @@ document.getElementById('dealRows').innerHTML = data.deals.map(dl => `
       <div>
         <div style="font-size:13px; font-weight:800; color:var(--sky); margin-bottom:8px;">📋 سجل طلبات الحسابات والموافقات:</div>
         <div id="accRequestsListBox" style="max-height:240px; overflow-y:auto;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Business Owner Master Catalog, Versions, Prices, Commissions & Global Rules -->
+  <div id="ownerCatalogPolicyModal" style="display:none; position:fixed; inset:0; z-index:99999; background:rgba(2,6,23,0.9); backdrop-filter:blur(8px); align-items:center; justify-content:center; padding:16px;" onclick="if(event.target===this) this.style.display='none'">
+    <div style="max-width:860px; width:100%; max-height:92vh; overflow-y:auto; background:#0f172a; border:1.5px solid var(--amber); border-radius:16px; padding:22px; box-shadow:0 25px 60px rgba(0,0,0,0.9); direction:rtl; text-align:right;" onclick="event.stopPropagation()">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid var(--border); padding-bottom:10px; gap:10px; flex-wrap:wrap;">
+        <div>
+          <h3 style="margin:0; font-size:16.5px; color:var(--amber); font-weight:900;">👑 إدارة صاحب العمل: المنظومات والإصدارات والأسعار والعمولات والقوانين</h3>
+          <p style="margin:3px 0 0; font-size:11.5px; color:var(--muted);">يضع صاحب العمل المنظومات المعروضة للبيع وإصداراتها وأسعارها وعروضها التسويقية ونسب عمولة الوكيل والموزع والقوانين العامة السارية على الجميع</p>
+        </div>
+        <button type="button" class="btn btn-sm btn-rose" onclick="document.getElementById('ownerCatalogPolicyModal').style.display='none'">✕ إغلاق</button>
+      </div>
+
+      <div id="ownCatReadOnlyBanner" style="display:none; padding:10px 12px; border-radius:10px; margin-bottom:12px; background:rgba(245,158,11,0.12); border:1px solid rgba(245,158,11,0.45); font-size:12px; color:#fde68a;">
+        🔒 وضع العرض فقط: هذه المنظومات والأسعار ونسب العمولة والقواعد صادرة ومعتمدة من <strong>صاحب العمل</strong> وتسري على جميع المنظومة (للتعديل انتقل إلى دور «صاحب العمل»).
+      </div>
+
+      <div id="ownCatEditorBox" class="sub-card" style="padding:12px; margin-bottom:12px;">
+        <div style="font-size:13px; font-weight:800; color:var(--emerald); margin-bottom:8px;">➕ إضافة / تحديث منظومة معروضة للبيع والقواعد العامة:</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
+          <div>
+            <label style="font-size:11.5px; color:var(--muted);">اسم المنظومة المعروضة للبيع:</label>
+            <input id="ownItemName" placeholder="مثال: منظومة إدارة المبيعات والحسابات" style="padding:6px; font-size:12px;" />
+          </div>
+          <div>
+            <label style="font-size:11.5px; color:var(--muted);">الإصدار:</label>
+            <input id="ownItemVersion" dir="ltr" value="v1.0" style="padding:6px; font-size:12px;" />
+          </div>
+          <div>
+            <label style="font-size:11.5px; color:var(--muted);">سعر الباقة الأساسية (ج.م):</label>
+            <input id="ownItemBasic" type="number" dir="ltr" value="4500" style="padding:6px; font-size:12px;" />
+          </div>
+          <div>
+            <label style="font-size:11.5px; color:var(--muted);">سعر الباقة المتقدمة (ج.م):</label>
+            <input id="ownItemPro" type="number" dir="ltr" value="8500" style="padding:6px; font-size:12px;" />
+          </div>
+          <div>
+            <label style="font-size:11.5px; color:var(--muted);">سعر الباقة المؤسسية (ج.م):</label>
+            <input id="ownItemEnt" type="number" dir="ltr" value="18500" style="padding:6px; font-size:12px;" />
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+            <div>
+              <label style="font-size:11.5px; color:var(--muted);">عمولة الوكيل (%):</label>
+              <input id="ownItemAgentPct" type="number" dir="ltr" value="15" style="padding:6px; font-size:12px;" />
+            </div>
+            <div>
+              <label style="font-size:11.5px; color:var(--muted);">عمولة الموزع (%):</label>
+              <input id="ownItemDistPct" type="number" dir="ltr" value="27" style="padding:6px; font-size:12px;" />
+            </div>
+          </div>
+          <div>
+            <label style="font-size:11.5px; color:var(--muted);">العرض التسويقي والمميزات:</label>
+            <input id="ownItemPitch" placeholder="وصف العرض التقديمي والمميزات..." style="padding:6px; font-size:12px;" />
+          </div>
+          <div>
+            <label style="font-size:11.5px; color:var(--muted);">مسار أو رابط العرض التقديمي (اختياري):</label>
+            <input id="ownItemPresUrl" dir="ltr" placeholder="presentation-v1.pdf / link" style="padding:6px; font-size:12px;" />
+          </div>
+          <div style="grid-column:1 / -1;">
+            <label style="font-size:11.5px; color:var(--muted);">القوانين والقواعد العامة السارية على جميع المنظومة:</label>
+            <textarea id="ownGlobalRulesInput" rows="2" placeholder="اكتب القواعد والالتزامات التي تسري على الوكلاء والموزعين والمناديب والفنيين..." style="width:100%; padding:7px; border-radius:8px; background:#1e293b; color:#fff; border:1px solid var(--border); font-size:12px;"></textarea>
+          </div>
+        </div>
+        <button type="button" class="btn btn-sm btn-emerald" style="width:100%; font-weight:800;" onclick="saveOwnerCatalogPolicy()">💾 حفظ واعتماد سياسات صاحب العمل (وتضمينها في ملف الواتساب)</button>
+      </div>
+
+      <div class="sub-card" style="padding:10px; margin-bottom:10px; border:1px solid rgba(56,189,248,0.3);">
+        <div style="font-size:12px; font-weight:800; color:var(--sky); margin-bottom:4px;">📜 القواعد والقوانين المعتمدة السارية على الجميع:</div>
+        <div id="ownGlobalRulesView" style="font-size:12px; color:#e2e8f0; white-space:pre-line;"></div>
+      </div>
+
+      <div>
+        <div style="font-size:13px; font-weight:800; color:var(--amber); margin-bottom:8px;">📦 المنظومات المعروضة للبيع وإصداراتها وأسعارها:</div>
+        <div id="ownCatItemsList" style="max-height:240px; overflow-y:auto;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Owner Modern Executive Workflow & Optimization Dashboard -->
+  <div id="ownerExecutiveDashboardModal" style="display:none; position:fixed; inset:0; z-index:99999; background:rgba(2,6,23,0.92); backdrop-filter:blur(8px); align-items:center; justify-content:center; padding:16px;" onclick="if(event.target===this) this.style.display='none'">
+    <div style="max-width:940px; width:100%; max-height:92vh; overflow-y:auto; background:#0f172a; border:1.5px solid var(--purple); border-radius:16px; padding:22px; box-shadow:0 25px 60px rgba(0,0,0,0.9); direction:rtl; text-align:right;" onclick="event.stopPropagation()">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; border-bottom:1px solid var(--border); padding-bottom:10px; gap:10px; flex-wrap:wrap;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <img src="/public/img/qalix-sovereign-logo.svg" alt="Qalix" width="24" height="24" style="border-radius:6px;" />
+          <img src="/public/img/qalix-agents-icon.png" alt="Agents" width="24" height="24" style="border-radius:6px;" />
+          <div>
+            <h3 style="margin:0; font-size:17px; color:#c084fc; font-weight:900;">📊 مركز قيادة صاحب العمل: تحكم كامل ورؤية شاملة</h3>
+            <p style="margin:2px 0 0; font-size:11.5px; color:var(--muted);">إدارة المنظومة بالكامل من شاشة واحدة بضغطة زر — من القوانين وبطاقات الدعوة حتى حذف الحسابات وتحليل الهامش</p>
+          </div>
+        </div>
+        <button type="button" class="btn btn-sm btn-rose" onclick="document.getElementById('ownerExecutiveDashboardModal').style.display='none'">✕ إغلاق</button>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(175px, 1fr)); gap:8px; margin-bottom:14px;">
+        <button type="button" class="btn btn-sm btn-amber" style="padding:10px; font-weight:800;" onclick="document.getElementById('ownerExecutiveDashboardModal').style.display='none'; openOwnerCatalogPolicyModal();">📦 المنظومات والأسعار والقوانين</button>
+        <button type="button" class="btn btn-sm btn-sky" style="padding:10px; font-weight:800;" onclick="document.getElementById('ownerExecutiveDashboardModal').style.display='none'; openAccountOnboardingModal();">🎴 بطاقات الدعوة والحسابات</button>
+        <button type="button" class="btn btn-sm btn-emerald" style="padding:10px; font-weight:800;" onclick="exportWhatsappAccountSyncPacket();">📤 تصدير ملف للواتساب فوراً</button>
+        <button type="button" class="btn btn-sm btn-purple" style="padding:10px; font-weight:800;" onclick="document.getElementById('ownerExecutiveDashboardModal').style.display='none'; verifyDataAndCreateBackupNow();">🛡️ فحص وأخذ نسخة أمان</button>
+      </div>
+
+      <div class="sub-card" style="padding:10px 12px; margin-bottom:14px; border:1px solid rgba(245,158,11,0.4); background:rgba(245,158,11,0.07);">
+        <div style="font-size:12px; font-weight:800; color:var(--amber); margin-bottom:3px;">📜 ميثاق القوانين العامة السارية على الجميع:</div>
+        <div id="ownExecRulesBanner" style="font-size:11.5px; color:#fde68a; white-space:pre-line;"></div>
+      </div>
+
+      <div id="ownExecKpis" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:10px; margin-bottom:14px;"></div>
+
+      <div style="margin-bottom:14px;">
+        <div style="font-size:13px; font-weight:800; color:var(--sky); margin-bottom:8px;">🔄 خريطة سير العمل الحية عبر جميع الأدوار:</div>
+        <div id="ownExecWorkflow" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(135px, 1fr)); gap:8px;"></div>
+      </div>
+
+      <div style="margin-bottom:14px;">
+        <div style="font-size:13px; font-weight:800; color:var(--rose); margin-bottom:8px;">👥 التحكم الكامل في حسابات الشبكة (اعتماد / حذف فوري):</div>
+        <div id="ownExecAccounts" style="max-height:190px; overflow-y:auto;"></div>
+      </div>
+
+      <div style="margin-bottom:14px;">
+        <div style="font-size:13px; font-weight:800; color:var(--emerald); margin-bottom:8px;">💡 توصيات ذكية للتحسين الفوري واتخاذ القرار:</div>
+        <div id="ownExecInsights"></div>
+      </div>
+
+      <div>
+        <div style="font-size:13px; font-weight:800; color:#c084fc; margin-bottom:8px;">🚀 مقترحات تكامل المنظومة لصاحب العمل:</div>
+        <div id="ownExecProposals" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:8px;"></div>
       </div>
     </div>
   </div>
