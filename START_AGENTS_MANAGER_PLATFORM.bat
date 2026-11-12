@@ -1,11 +1,14 @@
 @echo off
 chcp 65001 >nul
 cd /d "%~dp0"
-title كالكس لإدارة الوكلاء والموزعين — Qalix Agents ^& Distributors Management (v1.0)
+if not "%QALIX_SILENT%"=="1" if exist "%~dp0Qalix_Desktop_App.vbs" (
+  start "" wscript.exe //nologo "%~dp0Qalix_Desktop_App.vbs"
+  exit /b 0
+)
+title Qalix Agents ^& Distributors Management (v1.0)
 echo ============================================================================
-echo   ★ كالكس لإدارة الوكلاء والموزعين — Qalix Agents ^& Distributors Management v1.0 ★
-echo   - مجلد التشغيل الحالي: %CD%
-echo   - تعمل 100%% أوفلاين بالكامل (Air-Gapped) بدون إنترنت + بترخيص Ed25519
+echo   Qalix Agents ^& Distributors Management v1.0 (100%% Offline Air-Gapped)
+echo   - Working Directory: %CD%
 echo ============================================================================
 
 set "NODE_BIN="
@@ -17,9 +20,9 @@ if "%NODE_BIN%"=="" if exist "%ProgramFiles(x86)%\nodejs\node.exe" set "NODE_BIN
 
 if "%NODE_BIN%"=="" (
   echo.
-  echo [خطأ] لم يتم العثور على Node.js على هذا الجهاز.
-  echo - لأجهزة ويندوز 64-بت: ثبّت Node.js 22 LTS ^(x64^) أو أحدث.
-  echo - لأجهزة ويندوز 32-بت: ثبّت Node.js 22 LTS ^(win-x86 32-bit^).
+  echo [ERROR] Node.js was not found on this Windows PC.
+  echo - Windows 64-bit: Install Node.js 22 LTS ^(x64^) or newer.
+  echo - Windows 32-bit: Install Node.js 22 LTS ^(win-x86 32-bit^).
   if not "%QALIX_SILENT%"=="1" pause
   exit /b 1
 )
@@ -30,9 +33,8 @@ if errorlevel 1 (
   "%NODE_BIN%" --experimental-sqlite -e "require('node:sqlite')" >nul 2>&1
   if errorlevel 1 (
     echo.
-    echo [خطأ] إصدار Node.js المثبت لا يدعم node:sqlite المدمج.
-    echo - لويندوز 64-بت: يرجى تثبيت Node.js 22 LTS أو 24 ^(x64^).
-    echo - لويندوز 32-بت: يرجى تثبيت Node.js 22.5+ LTS ^(win-x86^).
+    echo [ERROR] Installed Node.js does not support built-in node:sqlite.
+    echo - Please install Node.js 22.5+ LTS ^(32-bit or 64-bit^).
     if not "%QALIX_SILENT%"=="1" pause
     exit /b 1
   )
@@ -43,6 +45,6 @@ set AUTO_OPEN_BROWSER=1
 "%NODE_BIN%" %SQLITE_FLAG% "server\agent_server.js"
 if errorlevel 1 (
   echo.
-  echo [تنبيه] توقف الخادم برمز خطأ %errorlevel%.
+  echo [WARNING] Server exited with error code %errorlevel%.
   if not "%QALIX_SILENT%"=="1" pause
 )

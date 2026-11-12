@@ -1,11 +1,14 @@
 @echo off
 chcp 65001 >nul
 cd /d "%~dp0"
-title كالكس لإدارة الوكلاء والموزعين — Qalix Agents ^& Distributors Management (v1.0)
+if not "%QALIX_SILENT%"=="1" if exist "%~dp0Qalix_Desktop_App.vbs" (
+  start "" wscript.exe //nologo "%~dp0Qalix_Desktop_App.vbs"
+  exit /b 0
+)
+title Qalix Medical Agent Server v1.0 (100%% Offline Air-Gapped)
 echo ============================================================================
-echo   ★ كالكس لإدارة الوكلاء والموزعين — Qalix Agents ^& Distributors Management v1.0 ★
-echo   - مجلد التشغيل الحالي: %CD%
-echo   - تعمل 100%% أوفلاين بالكامل (Air-Gapped) بدون أي تبعيات خارجية
+echo   Qalix Agents ^& Distributors Management v1.0 (100%% Offline Air-Gapped)
+echo   - Working Directory: %CD%
 echo ============================================================================
 
 set "NODE_BIN="
@@ -17,10 +20,10 @@ if "%NODE_BIN%"=="" if exist "%ProgramFiles(x86)%\nodejs\node.exe" set "NODE_BIN
 
 if "%NODE_BIN%"=="" (
   echo.
-  echo [خطأ] لم يتم العثور على Node.js.
-  echo - لأجهزة 64-بت: ثبّت Node.js 22 LTS ^(x64^) أو أحدث.
-  echo - لأجهزة 32-بت: ثبّت Node.js 22 LTS ^(win-x86 32-bit^).
-  pause
+  echo [ERROR] Node.js was not found on this Windows PC.
+  echo - Windows 64-bit: Install Node.js 22 LTS ^(x64^) or newer.
+  echo - Windows 32-bit: Install Node.js 22 LTS ^(win-x86 32-bit^).
+  if not "%QALIX_SILENT%"=="1" pause
   exit /b 1
 )
 
@@ -30,8 +33,8 @@ if errorlevel 1 (
   "%NODE_BIN%" --experimental-sqlite -e "require('node:sqlite')" >nul 2>&1
   if errorlevel 1 (
     echo.
-    echo [خطأ] إصدار Node.js الحالي لا يدعم node:sqlite المدمج ^(يتطلب Node 22.5+^).
-    pause
+    echo [ERROR] Installed Node.js does not support built-in node:sqlite ^(requires Node 22.5+^).
+    if not "%QALIX_SILENT%"=="1" pause
     exit /b 1
   )
   set "SQLITE_FLAG=--experimental-sqlite"
@@ -39,4 +42,4 @@ if errorlevel 1 (
 
 set AUTO_OPEN_BROWSER=1
 "%NODE_BIN%" %SQLITE_FLAG% "server\agent_server.js"
-pause
+if not "%QALIX_SILENT%"=="1" pause

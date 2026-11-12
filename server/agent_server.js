@@ -2931,7 +2931,7 @@ server.listen(activePort, HOST, () => {
     ? 'Qalix Medical Agent Server v1.0 (100% Offline Air-Gapped)'
     : `${ACTIVE_SYSTEM.projectName || 'Qalix Multi-System Agent'} Server v1.0 (100% Offline Air-Gapped)`;
   console.log(`=============================================================`);
-  console.log(`★ ${bannerName} ★`);
+  console.log(`  [QALIX] ${bannerName}`);
   console.log(`  - Official Agent Contact: ${AGENT_INFO.phone} (${AGENT_INFO.intlPhone})`);
   console.log(`  - Agent Command URL:      http://${HOST}:${activePort}`);
   console.log(`  - Database (SQLite WAL):  ${dbPath}`);

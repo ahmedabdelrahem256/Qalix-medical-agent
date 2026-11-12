@@ -136,15 +136,19 @@ function buildCleanResellerEdition(options = {}) {
     }
   }
 
-  // Write clean neutral Windows startup launcher (with auto-port fallback + auto-open browser after listen)
+  // Write clean neutral Windows startup launcher (auto-handoff to silent desktop VBS + auto-port fallback)
   const startBat = [
     '@echo off',
     'chcp 65001 >nul',
     'cd /d "%~dp0"',
-    'title Universal Agent & Distributors Platform — لوحة إدارة الوكيل والموزعين',
+    'if not "%QALIX_SILENT%"=="1" if exist "%~dp0Qalix_Desktop_App.vbs" (',
+    '  start "" wscript.exe //nologo "%~dp0Qalix_Desktop_App.vbs"',
+    '  exit /b 0',
+    ')',
+    'title Qalix Agents ^& Distributors Management v1.0',
     'echo ============================================================================',
-    'echo   Universal Multi-System Agent Platform — v1.0 (Win 32-bit / 64-bit)',
-    'echo   لإدارة الموزعين والمبيعات والعمولات وتأكيد الدفع (أوفلاين 100%%)',
+    'echo   Qalix Agents ^& Distributors Management v1.0 (100%% Offline Air-Gapped)',
+    'echo   - Working Directory: %CD%',
     'echo ============================================================================',
     'set "NODE_BIN="',
     'if exist "%~dp0runtime\\node.exe" set "NODE_BIN=%~dp0runtime\\node.exe"',
@@ -153,9 +157,9 @@ function buildCleanResellerEdition(options = {}) {
     'if "%NODE_BIN%"=="" if exist "%ProgramFiles%\\nodejs\\node.exe" set "NODE_BIN=%ProgramFiles%\\nodejs\\node.exe"',
     'if "%NODE_BIN%"=="" if exist "%ProgramFiles(x86)%\\nodejs\\node.exe" set "NODE_BIN=%ProgramFiles(x86)%\\nodejs\\node.exe"',
     'if "%NODE_BIN%"=="" (',
-    '  echo [خطأ] لم يتم العثور على Node.js.',
-    '  echo - لويندوز 64-بت: ثبّت Node.js 22 LTS ^(x64^) أو أحدث.',
-    '  echo - لويندوز 32-بت: ثبّت Node.js 22 LTS ^(win-x86 32-bit^).',
+    '  echo [ERROR] Node.js was not found on this Windows PC.',
+    '  echo - Windows 64-bit: Install Node.js 22 LTS ^(x64^) or newer.',
+    '  echo - Windows 32-bit: Install Node.js 22 LTS ^(win-x86 32-bit^).',
     '  if not "%QALIX_SILENT%"=="1" pause',
     '  exit /b 1',
     ')',
@@ -164,7 +168,7 @@ function buildCleanResellerEdition(options = {}) {
     'if errorlevel 1 (',
     '  "%NODE_BIN%" --experimental-sqlite -e "require(\'node:sqlite\')" >nul 2>&1',
     '  if errorlevel 1 (',
-    '    echo [خطأ] إصدار Node.js الحالي لا يدعم SQLite المدمج. ثبّت Node.js 22.5+ LTS ^(32-bit أو 64-bit^).',
+    '    echo [ERROR] Installed Node.js does not support built-in node:sqlite ^(requires Node 22.5+^).',
     '    if not "%QALIX_SILENT%"=="1" pause',
     '    exit /b 1',
     '  )',

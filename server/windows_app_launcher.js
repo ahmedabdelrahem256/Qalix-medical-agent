@@ -9,12 +9,12 @@ const { spawn } = require('node:child_process');
 
 function findWindowsAppBrowser() {
   const candidates = [
-    path.join(process.env['ProgramFiles(x86)'] || '', 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
-    path.join(process.env.ProgramFiles || '', 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
-    path.join(process.env.LOCALAPPDATA || '', 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
     path.join(process.env.ProgramFiles || '', 'Google', 'Chrome', 'Application', 'chrome.exe'),
     path.join(process.env['ProgramFiles(x86)'] || '', 'Google', 'Chrome', 'Application', 'chrome.exe'),
-    path.join(process.env.LOCALAPPDATA || '', 'Google', 'Chrome', 'Application', 'chrome.exe')
+    path.join(process.env.LOCALAPPDATA || '', 'Google', 'Chrome', 'Application', 'chrome.exe'),
+    path.join(process.env['ProgramFiles(x86)'] || '', 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
+    path.join(process.env.ProgramFiles || '', 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
+    path.join(process.env.LOCALAPPDATA || '', 'Microsoft', 'Edge', 'Application', 'msedge.exe')
   ].filter(Boolean);
 
   for (const exe of candidates) {
@@ -30,21 +30,28 @@ function openWindowsDesktopApp(appUrl, baseDataDir) {
   const browserExe = findWindowsAppBrowser();
   if (browserExe) {
     try {
-      const profileDir = path.join(baseDataDir, '.desktop_profile');
-      fs.mkdirSync(profileDir, { recursive: true });
-      const args = [
+      const profileRoot = process.env.LOCALAPPDATA
+        ? path.join(process.env.LOCALAPPDATA, 'QalixDesktopProfile')
+        : path.join(baseDataDir, '.desktop_profile');
+      fs.mkdirSync(profileRoot, { recursive: true });
+      const cmdArgs = [
+        '/c',
+        'start',
+        '""',
+        browserExe,
         `--app=${appUrl}`,
+        '--new-window',
         '--window-size=1380,860',
-        `--user-data-dir=${profileDir}`,
+        `--user-data-dir=${profileRoot}`,
         '--no-first-run',
         '--no-default-browser-check'
       ];
-      spawn(browserExe, args, { detached: true, stdio: 'ignore', windowsHide: false }).unref();
+      spawn('cmd.exe', cmdArgs, { detached: true, stdio: 'ignore', windowsHide: true }).unref();
       return { mode: 'standalone_app_window', executable: path.basename(browserExe) };
     } catch (_) {}
   }
   try {
-    spawn('cmd.exe', ['/c', 'start', '', appUrl], { detached: true, stdio: 'ignore', windowsHide: true }).unref();
+    spawn('cmd.exe', ['/c', 'start', '""', appUrl], { detached: true, stdio: 'ignore', windowsHide: true }).unref();
     return { mode: 'default_browser_fallback' };
   } catch (_) {
     return { mode: 'failed' };

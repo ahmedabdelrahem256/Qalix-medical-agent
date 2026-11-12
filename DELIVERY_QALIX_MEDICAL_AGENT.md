@@ -77,8 +77,8 @@
 ### ب) حزمة التسليم النهائية الموجودة في [`data/exports/`](file:///G:/Qalix%20medical%20agent/data/exports)
 | الملف | الحجم | الوصف | بصمة `SHA-256` |
 | :--- | :--- | :--- | :--- |
-| [`Qalix_11Systems_Setup_v1.0.exe`](file:///G:/Qalix%20medical%20agent/data/exports/Qalix_11Systems_Setup_v1.0.exe) | `141.99 MB` | برنامج تثبيت ويندوز الكامل (Inno Setup + `runtime/node.exe` + الـ 11 منظومة مصفّرة + الوسائط + أيقونة كالكس + `unins000.exe`) | `c88d49bd75f7fae39c6fe22b5ef0fe6872594a3caea3b4011e8fa8f0890c066e` |
-| [`Qalix_11Systems_Setup_v1.0.zip`](file:///G:/Qalix%20medical%20agent/data/exports/Qalix_11Systems_Setup_v1.0.zip) | `141.45 MB` | الحزمة المضغوطة الجاهزة للمشاركة (تضم `Qalix_11Systems_Setup_v1.0.exe` + `README_INSTALL.txt`) | `7fd94b1c34ac1a515f7464d7097bd49646c2c068648b696aa44b5df232ef3afd` |
+| [`Qalix_11Systems_Setup_v1.0.exe`](file:///G:/Qalix%20medical%20agent/data/exports/Qalix_11Systems_Setup_v1.0.exe) | `141.99 MB` | برنامج تثبيت ويندوز الكامل (Inno Setup + `runtime/node.exe` + الـ 11 منظومة مصفّرة + الوسائط + أيقونة كالكس + `unins000.exe`) | `ea184fdd07a5109833a07aeb134a13e5ca27a3dd381b87df72453d57281f7c1d` |
+| [`Qalix_11Systems_Setup_v1.0.zip`](file:///G:/Qalix%20medical%20agent/data/exports/Qalix_11Systems_Setup_v1.0.zip) | `141.45 MB` | الحزمة المضغوطة الجاهزة للمشاركة (تضم `Qalix_11Systems_Setup_v1.0.exe` + `README_INSTALL.txt`) | `90c80674151d32e6da9f38dcc484ecd13a852b1be304847618a681c4a47730a8` |
 | [`Qalix_11Systems_Setup_v1.0.sha256.txt`](file:///G:/Qalix%20medical%20agent/data/exports/Qalix_11Systems_Setup_v1.0.sha256.txt) | `< 1 KB` | ملف بصمات التحقق للنسختين | — |
 
 ---
