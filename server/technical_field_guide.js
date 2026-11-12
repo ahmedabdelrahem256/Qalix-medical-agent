@@ -114,7 +114,7 @@ function renderDoctorCatalogFallbackHtml(agentInfo) {
     <div class="hdr">
       <div>
         <h1>كتالوج ودليل الاستخدام السريع للطبيب والعيادة</h1>
-        <div style="font-size:12.5px; color:#64748b;">منظومة كالكس الطبية الشاملة · Qalix Medical v1.0 (أوفلاين 100%)</div>
+        <div style="font-size:12.5px; color:#64748b;">منظومة إدارة الوكلاء والموزعين الموحدة · v1.0 (أوفلاين 100%)</div>
       </div>
       <div style="text-align:left; font-size:12px;">الدعم الفني المعتمد:<br><strong dir="ltr" style="font-size:14px; color:#0284c7;">${phone}</strong></div>
     </div>

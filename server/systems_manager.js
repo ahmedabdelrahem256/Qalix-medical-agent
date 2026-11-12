@@ -49,7 +49,7 @@ const SYSTEM_PRESETS = {
     id: 'universal_agent',
     category: 'universal_product',
     nameAr: 'منظومة إدارة الوكلاء والموزعين الموحدة',
-    subtitleAr: 'النسخة العامة المصفّرة — لإدارة الموزعين والمناديب والفنيين والمبيعات وتأكيد الدفع لأي مجال',
+    subtitleAr: 'إدارة شبكات الوكلاء والموزعين والمناديب والفنيين والمبيعات وتأكيد الدفع',
     projectName: 'Universal Agent & Distributors Platform',
     licensePrefix: 'AGT2',
     pricing: {

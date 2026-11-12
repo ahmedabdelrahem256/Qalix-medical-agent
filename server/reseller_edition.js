@@ -61,7 +61,7 @@ function generateWindowsOneClickInstallBat({ appShortcutName = 'Universal Agents
     '  pause & exit /b 1',
     ')',
     `echo [2/3] Creating Desktop and Start Menu shortcuts with official ${brandShortEn} icon ...`,
-    `powershell -NoProfile -ExecutionPolicy Bypass -Command "$ws = New-Object -ComObject WScript.Shell; $desk = [Environment]::GetFolderPath('Desktop'); $prog = [Environment]::GetFolderPath('Programs'); $tDir = Join-Path $env:LOCALAPPDATA '${installFolderName}'; $vbs = Join-Path $tDir '${vbsFileName}'; $ico = Join-Path $tDir '${iconRelPath}'; foreach($d in @($desk,$prog)){ $sc=$ws.CreateShortcut((Join-Path $d '${appShortcutName}.lnk')); if(Test-Path $vbs){ $sc.TargetPath=(Join-Path $env:SystemRoot 'System32\\wscript.exe'); $sc.Arguments=('//nologo \\"' + $vbs + '\\"') } else { $sc.TargetPath=(Join-Path $tDir '${launchBatName}') }; $sc.WorkingDirectory=$tDir; if(Test-Path $ico){ $sc.IconLocation=$ico }; $sc.Save() }"`,
+    `powershell -NoProfile -ExecutionPolicy Bypass -Command "$ws = New-Object -ComObject WScript.Shell; $desk = [Environment]::GetFolderPath('Desktop'); $prog = [Environment]::GetFolderPath('Programs'); $tDir = Join-Path $env:LOCALAPPDATA '${installFolderName}'; $vbs = Join-Path $tDir '${vbsFileName}'; $ico = Join-Path $tDir '${iconRelPath}'; foreach($d in @($desk,$prog)){ $sc=$ws.CreateShortcut((Join-Path $d '${appShortcutName}.lnk')); if(Test-Path $vbs){ $sc.TargetPath=$vbs; $sc.Arguments='' } else { $sc.TargetPath=(Join-Path $tDir '${launchBatName}') }; $sc.WorkingDirectory=$tDir; if(Test-Path $ico){ $sc.IconLocation=$ico }; $sc.Save() }"`,
     'echo [3/3] Installation completed cleanly!',
     `echo Launching ${brandShortEn} Windows Application ...`,
     `if exist "%TARGET_DIR%\\${vbsFileName}" (`,
@@ -157,7 +157,7 @@ function buildCleanResellerEdition(options = {}) {
       if (fs.existsSync(pngSrc)) fs.copyFileSync(pngSrc, path.join(imgDestDir, 'agents-platform-icon.png'));
       if (fs.existsSync(icoSrc)) fs.copyFileSync(icoSrc, path.join(imgDestDir, 'agents-platform.ico'));
       for (const f of fs.readdirSync(imgDestDir)) {
-        if (f.toLowerCase().startsWith('qalix-')) {
+        if (f.toLowerCase().startsWith('qalix-') && f.toLowerCase() !== 'qalix-sovereign-logo.svg') {
           fs.rmSync(path.join(imgDestDir, f), { force: true });
         }
       }
@@ -179,6 +179,7 @@ function buildCleanResellerEdition(options = {}) {
   const vbsFileName = isQalixSuiteEdition ? 'Qalix_Desktop_App.vbs' : 'Agents_Desktop_App.vbs';
   const startBat = [
     '@echo off',
+    'setlocal EnableDelayedExpansion',
     'chcp 65001 >nul',
     'cd /d "%~dp0"',
     `if not "%QALIX_SILENT%"=="1" if exist "%~dp0${vbsFileName}" (`,
@@ -191,28 +192,27 @@ function buildCleanResellerEdition(options = {}) {
     'echo   - Working Directory: %CD%',
     'echo ============================================================================',
     'set "NODE_BIN="',
-    'if exist "%~dp0runtime\\node.exe" set "NODE_BIN=%~dp0runtime\\node.exe"',
-    'if "%NODE_BIN%"=="" if exist "%~dp0node.exe" set "NODE_BIN=%~dp0node.exe"',
-    'if "%NODE_BIN%"=="" where node >nul 2>&1 && set "NODE_BIN=node"',
-    'if "%NODE_BIN%"=="" if exist "%ProgramFiles%\\nodejs\\node.exe" set "NODE_BIN=%ProgramFiles%\\nodejs\\node.exe"',
-    'if "%NODE_BIN%"=="" if exist "%ProgramFiles(x86)%\\nodejs\\node.exe" set "NODE_BIN=%ProgramFiles(x86)%\\nodejs\\node.exe"',
+    'set "SQLITE_FLAG="',
+    'for %%N in ("%~dp0runtime\\node.exe" "%~dp0runtime\\node-x86.exe" "%~dp0node.exe" "%ProgramFiles%\\nodejs\\node.exe" "%ProgramFiles(x86)%\\nodejs\\node.exe") do (',
+    '  if "!NODE_BIN!"=="" if exist %%~N (',
+    '    %%~N -e "require(\'node:sqlite\')" >nul 2>&1',
+    '    if not errorlevel 1 set "NODE_BIN=%%~N"',
+    '  )',
+    ')',
     'if "%NODE_BIN%"=="" (',
-    '  echo [ERROR] Node.js was not found on this Windows PC.',
+    '  for /f "delims=" %%N in (\'where node 2^>nul\') do (',
+    '    if "%NODE_BIN%"=="" (',
+    '      "%%~N" -e "require(\'node:sqlite\')" >nul 2>&1',
+    '      if not errorlevel 1 set "NODE_BIN=%%~N"',
+    '    )',
+    '  )',
+    ')',
+    'if "%NODE_BIN%"=="" (',
+    '  echo [ERROR] No compatible Node.js ^(22.5+ with node:sqlite^) was found on this Windows PC.',
     '  echo - Windows 64-bit: Install Node.js 22 LTS ^(x64^) or newer.',
-    '  echo - Windows 32-bit: Install Node.js 22 LTS ^(win-x86 32-bit^).',
+    '  echo - Windows 32-bit / Older Windows: Install Node.js 22 LTS ^(win-x86 32-bit^).',
     '  if not "%QALIX_SILENT%"=="1" pause',
     '  exit /b 1',
-    ')',
-    'set "SQLITE_FLAG="',
-    '"%NODE_BIN%" -e "require(\'node:sqlite\')" >nul 2>&1',
-    'if errorlevel 1 (',
-    '  "%NODE_BIN%" --experimental-sqlite -e "require(\'node:sqlite\')" >nul 2>&1',
-    '  if errorlevel 1 (',
-    '    echo [ERROR] Installed Node.js does not support built-in node:sqlite ^(requires Node 22.5+^).',
-    '    if not "%QALIX_SILENT%"=="1" pause',
-    '    exit /b 1',
-    '  )',
-    '  set "SQLITE_FLAG=--experimental-sqlite"',
     ')',
     'set AUTO_OPEN_BROWSER=1',
     '"%NODE_BIN%" %SQLITE_FLAG% "server\\agent_server.js"',
@@ -347,6 +347,11 @@ function buildCleanResellerEdition(options = {}) {
       cleanDb.exec('PRAGMA journal_mode = DELETE;');
     } finally {
       try { cleanDb.close(); } catch (_) {}
+    }
+    if (!isQalixSuiteEdition && primaryManifest.id === 'universal_agent') {
+      const uniSysDir = path.join(dataDest, 'systems', 'universal_agent');
+      fs.mkdirSync(uniSysDir, { recursive: true });
+      fs.copyFileSync(dbDestPath, path.join(uniSysDir, 'agent.db'));
     }
   }
 

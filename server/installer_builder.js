@@ -31,6 +31,7 @@ Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
 PrivilegesRequired=lowest
+MinVersion=6.1sp1
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -39,11 +40,11 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Source: "${srcWin}\\*"; DestDir: "{app}"; Excludes: "BUILD_INSTALLER.bat,*.iss"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{autodesktop}\\${appNameAr}"; Filename: "{sys}\\wscript.exe"; Parameters: "//nologo ""{app}\\${vbsFile}"""; WorkingDir: "{app}"; IconFilename: "{app}\\public\\img\\${iconFile}"
-Name: "{group}\\${appNameAr}"; Filename: "{sys}\\wscript.exe"; Parameters: "//nologo ""{app}\\${vbsFile}"""; WorkingDir: "{app}"; IconFilename: "{app}\\public\\img\\${iconFile}"
+Name: "{autodesktop}\\${appNameAr}"; Filename: "{app}\\${vbsFile}"; WorkingDir: "{app}"; IconFilename: "{app}\\public\\img\\${iconFile}"
+Name: "{group}\\${appNameAr}"; Filename: "{app}\\${vbsFile}"; WorkingDir: "{app}"; IconFilename: "{app}\\public\\img\\${iconFile}"
 
 [Run]
-Filename: "{sys}\\wscript.exe"; Parameters: "//nologo ""{app}\\${vbsFile}"""; Description: "Launch ${appNameAr}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\\${vbsFile}"; Description: "Launch ${appNameAr}"; Flags: nowait postinstall skipifsilent shellexec
 `;
 }
 

@@ -152,6 +152,9 @@ function getPendingKeyRequestsCount(sysId = null) {
 
 function isUniversalCleanMode() {
   try {
+    const sysList = Array.isArray(systemsRegistry?.systems) ? systemsRegistry.systems : [];
+    const hasNoQalixSystems = sysList.length > 0 && !sysList.some(s => String(s.id || '').startsWith('qalix'));
+    if (hasNoQalixSystems && !String(ACTIVE_SYSTEM.id || '').startsWith('qalix')) return true;
     const row = db.prepare("SELECT value FROM agent_private_settings WHERE key = 'clean_production_mode'").get();
     return Boolean(row && row.value === '1' && ACTIVE_SYSTEM.id === 'universal_agent');
   } catch (_) {
@@ -981,10 +984,16 @@ const server = http.createServer(async (req, res) => {
         dbIntegrityOk: dbOk,
         managerDbIntegrityOk: mgrOk,
         dataDir: BASE_DATA_DIR,
+        safeBackupDir: getSafeExternalBackupDir(),
         activeDbPath: dbPath,
         managerHubDbPath: path.join(BASE_DATA_DIR, 'manager_hub.db'),
         manualKeysOnlyPolicy: true
       });
+    }
+
+    if (req.method === 'POST' && pathname === '/api/system/session-backup') {
+      const result = runAutoSessionBackup('session_end');
+      return sendJson(res, 200, { ok: true, ...result });
     }
 
     if (req.method === 'POST' && pathname === '/api/system/flush-storage') {
@@ -1000,7 +1009,7 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'POST' && pathname === '/api/license') {
       const body = await readJsonBody(req);
       const token = String(body.licenseKey || body.token || '').trim();
-      if (!token) return sendJson(res, 400, { error: 'يرجى إدخال مفتاح التفعيل أولاً (يبدأ بـ QLX2.)' });
+      if (!token) return sendJson(res, 400, { error: 'يرجى إدخال مفتاح التفعيل الموقّع أولاً' });
       try {
         const updatedLic = appLicense.activateLicense(token, {
           dataDir: BASE_DATA_DIR,
@@ -1460,7 +1469,10 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (req.method === 'GET' && pathname === '/api/backup/export-data') {
-      const exportData = exportFullSystemJson(db);
+      const exportData = exportFullSystemJson(db, {
+        agentPhone: (ACTIVE_SYSTEM.agentInfo && ACTIVE_SYSTEM.agentInfo.phone) ? ACTIVE_SYSTEM.agentInfo.phone : '',
+        systemTitle: ACTIVE_SYSTEM.nameAr || 'Universal Agents & Distributors Database Export'
+      });
       res.writeHead(200, {
         'Content-Type': 'application/json; charset=utf-8',
         'Content-Disposition': `attachment; filename="Qalix-Agent-FullBackup-${new Date().toISOString().split('T')[0]}.json"`
@@ -1717,14 +1729,14 @@ const server = http.createServer(async (req, res) => {
       const phoneRow = db.prepare("SELECT value FROM agent_private_settings WHERE key = 'platform_owner_phone'").get();
       return sendJson(res, 200, {
         ok: true,
-        ownerName: nameRow ? nameRow.value : 'صاحب منصة كالكس الطبية',
+        ownerName: nameRow ? nameRow.value : (isUniversalCleanMode() ? 'إدارة منصة كالكس الأم' : 'صاحب منصة كالكس'),
         ownerPhone: phoneRow ? phoneRow.value : ''
       });
     }
 
     if (req.method === 'POST' && pathname === '/api/agent/owner-channel') {
       const body = await readJsonBody(req);
-      const ownerName = String(body.ownerName || 'صاحب منصة كالكس الطبية').trim().slice(0, 120);
+      const ownerName = String(body.ownerName || (isUniversalCleanMode() ? 'إدارة منصة كالكس الأم' : 'صاحب منصة كالكس')).trim().slice(0, 120);
       const ownerPhone = String(body.ownerPhone || '').replace(/[^0-9+]/g, '').slice(0, 20);
       const upsert = db.prepare('INSERT INTO agent_private_settings(key, value) VALUES(?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value');
       upsert.run('platform_owner_name', ownerName);
@@ -2663,6 +2675,13 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (req.method === 'POST' && pathname === '/api/systems/build-reseller-edition') {
+      const activeAppLic = getAppLicenseState();
+      if (!activeAppLic.isTrial && !activeAppLic.ownerOversight) {
+        return sendJson(res, 403, {
+          error: `باقة "${activeAppLic.displayNameAr}" لا تشمل تصدير نسخ الوكلاء المستقلة. يرجى الترقية إلى الباقة المتقدمة أو المؤسسية.`,
+          licenseUpgradeRequired: true
+        });
+      }
       if (!isManagerAuthorized(managerHubDb, req)) {
         return sendJson(res, 401, { error: 'يرجى تسجيل دخول مدير الوكلاء لتصدير النسخ', managerPinRequired: true });
       }
@@ -2695,6 +2714,13 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (req.method === 'POST' && pathname === '/api/systems/build-installer-kit') {
+      const activeAppLic = getAppLicenseState();
+      if (!activeAppLic.isTrial && !activeAppLic.ownerOversight) {
+        return sendJson(res, 403, {
+          error: `باقة "${activeAppLic.displayNameAr}" لا تشمل بناء حزم تثبيت ويندوز. يرجى الترقية إلى الباقة المتقدمة أو المؤسسية.`,
+          licenseUpgradeRequired: true
+        });
+      }
       if (!isManagerAuthorized(managerHubDb, req)) {
         return sendJson(res, 401, { error: 'يرجى تسجيل دخول مدير الوكلاء لتجهيز المُثبِّت', managerPinRequired: true });
       }
@@ -2947,7 +2973,58 @@ server.listen(activePort, HOST, () => {
   }
 });
 
+function getSafeExternalBackupDir() {
+  if (process.env.SAFE_BACKUP_DIR) return process.env.SAFE_BACKUP_DIR;
+  const docsDir = path.join(require('node:os').homedir(), 'Documents');
+  const folderName = isUniversalCleanMode() ? 'UniversalAgentsBackups' : 'QalixAgentsBackups';
+  return path.join(docsDir, folderName);
+}
+
+let lastAutoBackupAt = 0;
+function runAutoSessionBackup(reason = 'session_end') {
+  const nowMs = Date.now();
+  if (reason === 'session_end' && nowMs - lastAutoBackupAt < 3000) {
+    return { skipped: true, safeBackupDir: getSafeExternalBackupDir() };
+  }
+  lastAutoBackupAt = nowMs;
+  try {
+    const snap = createDatabaseSnapshot(db, ACTIVE_PATHS.dataDir);
+    const safeBase = getSafeExternalBackupDir();
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const sessionDir = path.join(safeBase, `session_${stamp}`);
+    fs.mkdirSync(sessionDir, { recursive: true });
+    fs.copyFileSync(snap.path, path.join(sessionDir, snap.filename));
+    if (fs.existsSync(`${snap.path}.meta.json`)) {
+      fs.copyFileSync(`${snap.path}.meta.json`, path.join(sessionDir, `${snap.filename}.meta.json`));
+    }
+    const sysJsonPath = path.join(BASE_DATA_DIR, 'systems.json');
+    if (fs.existsSync(sysJsonPath)) {
+      fs.copyFileSync(sysJsonPath, path.join(sessionDir, 'systems.json'));
+    }
+    try {
+      managerHubDb.exec('PRAGMA wal_checkpoint(TRUNCATE);');
+      const hubPath = path.join(BASE_DATA_DIR, 'manager_hub.db');
+      if (fs.existsSync(hubPath)) fs.copyFileSync(hubPath, path.join(sessionDir, 'manager_hub.db'));
+    } catch (_) {}
+    // Keep latest 15 session backup folders
+    try {
+      const dirs = fs.readdirSync(safeBase, { withFileTypes: true })
+        .filter(d => d.isDirectory() && d.name.startsWith('session_'))
+        .map(d => d.name)
+        .sort();
+      while (dirs.length > 15) {
+        const oldest = dirs.shift();
+        fs.rmSync(path.join(safeBase, oldest), { recursive: true, force: true });
+      }
+    } catch (_) {}
+    return { snapshot: snap, safeBackupDir: safeBase, sessionDir };
+  } catch (err) {
+    return { error: err.message, safeBackupDir: getSafeExternalBackupDir() };
+  }
+}
+
 function gracefulShutdown() {
+  try { runAutoSessionBackup('shutdown'); } catch (_) {}
   for (const conn of dbPool.values()) {
     try { conn.exec('PRAGMA wal_checkpoint(TRUNCATE);'); } catch (_) {}
     try { conn.close(); } catch (_) {}
@@ -2960,4 +3037,5 @@ function gracefulShutdown() {
   process.exit(0);
 }
 process.on('SIGINT', gracefulShutdown);
+process.on('SIGTERM', gracefulShutdown);
 process.on('SIGTERM', gracefulShutdown);

@@ -58,7 +58,7 @@ const EDITIONS = {
   },
   enterprise: {
     key: 'enterprise',
-    nameAr: 'باقة الوكالة الإقليمية المتكاملة (Qalix 11-Suite Enterprise v1.0)',
+    nameAr: 'الباقة المؤسسية الشاملة بلا حدود (Enterprise v1.0)',
     universalNameAr: 'الباقة المؤسسية الشاملة بلا حدود (Enterprise v1.0)',
     nameEn: 'Qalix Agents Enterprise',
     badge: 'Enterprise Suite (18,500 ج.م)',

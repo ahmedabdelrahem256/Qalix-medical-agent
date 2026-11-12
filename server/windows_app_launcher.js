@@ -41,7 +41,7 @@ function openWindowsDesktopApp(appUrl, baseDataDir) {
         browserExe,
         `--app=${appUrl}`,
         '--new-window',
-        '--window-size=1380,860',
+        '--start-maximized',
         `--user-data-dir=${profileRoot}`,
         '--no-first-run',
         '--no-default-browser-check'

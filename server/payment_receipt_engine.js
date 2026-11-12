@@ -111,7 +111,7 @@ function generateReceiptHtml(receiptData, agentInfo) {
     <tbody>
       <tr>
         <td>
-          <b>ترخيص دائم لمنظومة كالكس الطبية — ${d.tierNameAr}</b>
+          <b>ترخيص دائم للمنظومة — ${d.tierNameAr}</b>
           <div style="font-size:11px; color:#64748b;">شامل التثبيت والتدريب وضمان الاستقرار الفني لمدة 12 شهراً مجاناً</div>
         </td>
         <td>${d.standardPrice.toLocaleString('en-US')} ج.م</td>
@@ -156,7 +156,7 @@ function generateReceiptHtml(receiptData, agentInfo) {
   </div>
 
   <div class="footer">
-    صدر هذا السند إلكترونياً من منصة كالكس الطبية — الموزع المعتمد: ${d.distributorName} (${d.distributorCode})${d.distributorPhone ? ' · هاتف: ' + d.distributorPhone : ''}
+    صدر هذا السند إلكترونياً — الموزع المعتمد: ${d.distributorName} (${d.distributorCode})${d.distributorPhone ? ' · هاتف: ' + d.distributorPhone : ''}
   </div>
 </div>
 </body>

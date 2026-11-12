@@ -95,7 +95,7 @@ function listDatabaseSnapshots(dataDir) {
   return snapshots;
 }
 
-function exportFullSystemJson(db) {
+function exportFullSystemJson(db, options = {}) {
   const distributors = db.prepare('SELECT * FROM distributors ORDER BY created_at DESC').all();
   const deals = db.prepare('SELECT * FROM deals ORDER BY created_at DESC').all();
   const auditLogs = db.prepare('SELECT * FROM audit_log ORDER BY id ASC').all();
@@ -109,8 +109,8 @@ function exportFullSystemJson(db) {
 
   const exportObj = {
     exportedAt: new Date().toISOString(),
-    agentPhone: '01122166076',
-    systemTitle: 'Qalix Medical Agent Database Full Export',
+    agentPhone: (options && options.agentPhone) ? options.agentPhone : '',
+    systemTitle: (options && options.systemTitle) ? options.systemTitle : 'Universal Agents & Distributors Database Export',
     summary: {
       distributorsCount: distributors.length,
       dealsCount: deals.length,
