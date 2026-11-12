@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>كالكس لإدارة الوكلاء والموزعين | Qalix Agents & Distributors Management</title>
+  <title>منظومة إدارة الوكلاء والموزعين الموحدة | Agents &amp; Distributors Management</title>
   <link rel="icon" type="image/png" href="/public/img/qalix-agents-icon.png" />
   <link rel="shortcut icon" type="image/x-icon" href="/public/img/qalix-agents.ico" />
   <style>
@@ -271,7 +271,7 @@
     <header class="glass">
       <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:16px;">
         <div style="display:flex; align-items:center; gap:14px;">
-          <img src="/public/img/qalix-agents-icon.png" alt="كالكس لإدارة الوكلاء والموزعين — Qalix Agents & Distributors Management" width="58" height="58" style="border-radius:14px; border:1px solid rgba(56,189,248,0.45); box-shadow:0 8px 22px rgba(2,132,199,0.28); flex-shrink:0;" />
+          <img src="/public/img/qalix-agents-icon.png" alt="منظومة إدارة الوكلاء والموزعين — Agents &amp; Distributors Management" width="58" height="58" style="border-radius:14px; border:1px solid rgba(56,189,248,0.45); box-shadow:0 8px 22px rgba(2,132,199,0.28); flex-shrink:0;" />
           <div>
             <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:6px;">
               <span id="headerBrandBadge" class="badge b-emerald">★ منصة إدارة الوكلاء والموزعين · Agents &amp; Distributors Platform ★</span>
@@ -413,7 +413,7 @@
           <option value="pane-fieldkit">القسم 6: حقيبة العرض الميداني والمواد التسويقية</option>
           <option value="pane-contracts">القسم 7: العقود ومحاضر التسليم وكشوف الحساب</option>
           <option value="pane-quotations">القسم 8: عروض الأسعار الرسمية والرد على الاعتراضات</option>
-          <option value="pane-retention">القسم 9: متابعة ما بعد البيع ورضاء العيادات والنسخ الاحتياطي</option>
+          <option value="pane-retention">القسم 9: متابعة ما بعد البيع ورضاء العملاء والنسخ الاحتياطي</option>
           <option value="pane-fieldtraining">القسم 10: التدريب الميداني والجاهزية الفنية وحملات واتساب</option>
           <option value="pane-prescription">القسم 11: شرائح تميز الموزعين والتنبؤ المالي للإيرادات</option>
           <option value="pane-audit">القسم 12: تقرير الفحص والاعتماد</option>
@@ -441,7 +441,7 @@
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:16px;">
               <div>
                 <label style="font-size:12px; color:var(--muted);">اسم الموزع / المكتب المستقل:</label>
-                <input id="dName" placeholder="مثال: مكتب الصعيد للأنظمة الطبية" />
+                <input id="dName" placeholder="مثال: مكتب النخبة للأنظمة والتوزيع" />
               </div>
               <div>
                 <label style="font-size:12px; color:var(--muted);">رقم هاتف الموزع:</label>
@@ -479,11 +479,11 @@
         <div class="glass" style="display:flex; flex-direction:column; justify-content:space-between; margin-bottom:0;">
           <div>
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-              <h2 style="margin:0; font-size:17px;">تسجيل بيعة عيادة جديدة عبر موزع (بالسعر الثابت)</h2>
+              <h2 style="margin:0; font-size:17px;">تسجيل بيعة جديدة عبر موزع (بالسعر الثابت)</h2>
               <span class="badge b-sky">حساب تلقائي للنسبة وصافي الوكيل</span>
             </div>
             <p style="font-size:12.5px; color:var(--muted); margin-top:0; min-height:36px; line-height:1.5;">
-              توثيق بيع ترخيص عيادة جديد، مع الاحتساب التلقائي لعمولة الموزع، وتوريد صافي حصة الوكيل، وتجهيز بصمة HWID لإصدار الترخيص.
+              توثيق بيع ترخيص جديد، مع الاحتساب التلقائي لعمولة الموزع، وتوريد صافي حصة الوكيل، وتجهيز بصمة HWID لإصدار الترخيص.
             </p>
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:16px;">
               <div>
@@ -2133,12 +2133,29 @@
       const isMedical = sysId === 'qalix_medical';
       const agentPhone = (data.agent && data.agent.phone) ? data.agent.phone : '01000000000';
 
-      const isUniversalMode = !!(data.universalOnly || (sysId === 'universal_agent'));
+      const isUniversalMode = !!(data.isUniversalClean || data.universalOnly || (sysId === 'universal_agent'));
       document.title = isUniversalMode
         ? ('منظومة إدارة الوكلاء والموزعين الموحدة — ' + sysName)
         : ('كالكس لإدارة الوكلاء والموزعين | Qalix Agents & Distributors Management — ' + sysName);
       document.querySelectorAll('.dyn-agent-phone').forEach(el => { el.innerText = agentPhone; });
       document.querySelectorAll('.dyn-system-name').forEach(el => { el.innerText = sysName; });
+
+      const auditTabBtn = document.getElementById('btn-pane-audit');
+      const auditNavOpt = document.querySelector('#quickNavSelect option[value="pane-audit"]');
+      if (auditTabBtn) auditTabBtn.style.display = isUniversalMode ? 'none' : '';
+      if (auditNavOpt) auditNavOpt.style.display = isUniversalMode ? 'none' : '';
+      if (isUniversalMode) {
+        const msPresetEl = document.getElementById('msPreset');
+        if (msPresetEl) {
+          msPresetEl.querySelectorAll('optgroup').forEach(og => og.remove());
+        }
+        const rsDefaultEl = document.getElementById('rsDefaultSystem');
+        if (rsDefaultEl) {
+          rsDefaultEl.querySelectorAll('option').forEach(opt => {
+            if (opt.value && opt.value.startsWith('qalix')) opt.remove();
+          });
+        }
+      }
 
       const brandBadge = document.getElementById('headerBrandBadge');
       if (brandBadge) {

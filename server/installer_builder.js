@@ -7,21 +7,26 @@ const path = require('node:path');
 const { execFileSync } = require('node:child_process');
 const { buildCleanResellerEdition, generateWindowsOneClickInstallBat, generateWindowsUninstallBat } = require('./reseller_edition');
 
-function generateInnoSetupScript({ appNameAr, appVersion, sourceDir, outputDir, setupFilename }) {
+function generateInnoSetupScript({ appNameAr, appVersion, sourceDir, outputDir, setupFilename, isUniversal = false }) {
   const srcWin = sourceDir.replace(/\//g, '\\');
-  return `; Inno Setup Script — كالكس لإدارة الوكلاء والموزعين | Qalix Agents & Distributors Management ${appVersion}
+  const publisher = isUniversal ? 'Agents Platform' : 'Qalix Platform';
+  const dirName = isUniversal ? 'UniversalAgentsPlatform' : 'QalixAgentsPlatform';
+  const iconFile = isUniversal ? 'agents-platform.ico' : 'qalix-agents.ico';
+  const vbsFile = isUniversal ? 'Agents_Desktop_App.vbs' : 'Qalix_Desktop_App.vbs';
+  const headerBrand = isUniversal ? 'Universal Agents & Distributors Management' : 'كالكس لإدارة الوكلاء والموزعين | Qalix Agents & Distributors Management';
+  return `; Inno Setup Script — ${headerBrand} ${appVersion}
 ; متوافق مع ويندوز 32-bit (Node 22 LTS win-x86) و 64-bit (Node 22/24 win-x64)
 [Setup]
 AppName=${appNameAr}
 AppVersion=${appVersion}
-AppPublisher=Qalix Platform
-DefaultDirName={localappdata}\\QalixAgentsPlatform
+AppPublisher=${publisher}
+DefaultDirName={localappdata}\\${dirName}
 DefaultGroupName=${appNameAr}
 DisableProgramGroupPage=yes
 OutputDir=${outputDir.replace(/\//g, '\\')}
 OutputBaseFilename=${setupFilename}
-SetupIconFile=${srcWin}\\public\\img\\qalix-agents.ico
-UninstallDisplayIcon={app}\\public\\img\\qalix-agents.ico
+SetupIconFile=${srcWin}\\public\\img\\${iconFile}
+UninstallDisplayIcon={app}\\public\\img\\${iconFile}
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
@@ -34,15 +39,15 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Source: "${srcWin}\\*"; DestDir: "{app}"; Excludes: "BUILD_INSTALLER.bat,*.iss"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{autodesktop}\\${appNameAr}"; Filename: "{sys}\\wscript.exe"; Parameters: "//nologo ""{app}\\Qalix_Desktop_App.vbs"""; WorkingDir: "{app}"; IconFilename: "{app}\\public\\img\\qalix-agents.ico"
-Name: "{group}\\${appNameAr}"; Filename: "{sys}\\wscript.exe"; Parameters: "//nologo ""{app}\\Qalix_Desktop_App.vbs"""; WorkingDir: "{app}"; IconFilename: "{app}\\public\\img\\qalix-agents.ico"
+Name: "{autodesktop}\\${appNameAr}"; Filename: "{sys}\\wscript.exe"; Parameters: "//nologo ""{app}\\${vbsFile}"""; WorkingDir: "{app}"; IconFilename: "{app}\\public\\img\\${iconFile}"
+Name: "{group}\\${appNameAr}"; Filename: "{sys}\\wscript.exe"; Parameters: "//nologo ""{app}\\${vbsFile}"""; WorkingDir: "{app}"; IconFilename: "{app}\\public\\img\\${iconFile}"
 
 [Run]
-Filename: "{sys}\\wscript.exe"; Parameters: "//nologo ""{app}\\Qalix_Desktop_App.vbs"""; Description: "Launch ${appNameAr}"; Flags: nowait postinstall skipifsilent
+Filename: "{sys}\\wscript.exe"; Parameters: "//nologo ""{app}\\${vbsFile}"""; Description: "Launch ${appNameAr}"; Flags: nowait postinstall skipifsilent
 `;
 }
 
-function buildWindowsInstallerKit({ rootDir, baseDataDir, edition = 'qalix11', includeMediaAssets = false, includeLiveMedicalData = false }) {
+function buildWindowsInstallerKit({ rootDir, baseDataDir, edition = 'universal', includeMediaAssets = false, includeLiveMedicalData = false }) {
   const dataRoot = baseDataDir || path.join(rootDir, 'data');
   const stageRoot = path.join(dataRoot, 'installer_stage');
   fs.mkdirSync(stageRoot, { recursive: true });
@@ -84,17 +89,22 @@ function buildWindowsInstallerKit({ rootDir, baseDataDir, edition = 'qalix11', i
     appVersion: '1.0.0',
     sourceDir: stageDir,
     outputDir: issOutDir,
-    setupFilename: setupBaseName
+    setupFilename: setupBaseName,
+    isUniversal: !isQalix11
   });
-  const issPath = path.join(stageDir, 'Qalix_Agents_Setup.iss');
+  const issFileName = isQalix11 ? 'Qalix_Agents_Setup.iss' : 'Universal_Agents_Setup.iss';
+  const issPath = path.join(stageDir, issFileName);
   fs.writeFileSync(issPath, '\uFEFF' + issContent, 'utf8');
 
+  const compileBannerTitle = isQalix11
+    ? 'كالكس لإدارة الوكلاء والموزعين — Qalix Agents ^& Distributors Management'
+    : 'منظومة إدارة الوكلاء والموزعين الموحدة — Universal Agents ^& Distributors Management';
   const compileBat = [
     '@echo off',
     'chcp 65001 >nul',
     'cd /d "%~dp0"',
     'echo ============================================================================',
-    'echo   كالكس لإدارة الوكلاء والموزعين — Qalix Agents ^& Distributors Management',
+    `echo   ${compileBannerTitle}`,
     'echo   Windows Installer Compiler v1.0 (Inno Setup)',
     'echo ============================================================================',
     'set "ISCC_EXE="',
@@ -108,7 +118,7 @@ function buildWindowsInstallerKit({ rootDir, baseDataDir, edition = 'qalix11', i
     '  echo كما يمكنك تشغيل INSTALL_ON_WINDOWS.bat للتثبيت الفوري بأيقونة سطح المكتب.',
     '  pause & exit /b 0',
     ')',
-    '"%ISCC_EXE%" "Qalix_Agents_Setup.iss"',
+    `"%ISCC_EXE%" "${issFileName}"`,
     'pause',
     ''
   ].join('\r\n');
@@ -118,14 +128,17 @@ function buildWindowsInstallerKit({ rootDir, baseDataDir, edition = 'qalix11', i
     appShortcutName: isQalix11 ? 'Qalix Agents & Distributors Management' : 'Universal Agents & Distributors Management',
     installFolderName: isQalix11 ? 'QalixAgentsPlatform11' : 'UniversalAgentsPlatform',
     launchBatName: 'START_AGENT_PANEL.bat',
-    iconRelPath: 'public\\img\\qalix-agents.ico'
+    iconRelPath: isQalix11 ? 'public\\img\\qalix-agents.ico' : 'public\\img\\agents-platform.ico',
+    vbsFileName: isQalix11 ? 'Qalix_Desktop_App.vbs' : 'Agents_Desktop_App.vbs',
+    isUniversal: !isQalix11
   });
   const oneClickInstallBatPath = path.join(stageDir, 'INSTALL_ON_WINDOWS.bat');
   fs.writeFileSync(oneClickInstallBatPath, oneClickInstallBat, 'utf8');
 
   const oneClickUninstallBat = generateWindowsUninstallBat({
     appShortcutName: isQalix11 ? 'Qalix Agents & Distributors Management' : 'Universal Agents & Distributors Management',
-    installFolderName: isQalix11 ? 'QalixAgentsPlatform11' : 'UniversalAgentsPlatform'
+    installFolderName: isQalix11 ? 'QalixAgentsPlatform11' : 'UniversalAgentsPlatform',
+    isUniversal: !isQalix11
   });
   const oneClickUninstallBatPath = path.join(stageDir, 'UNINSTALL_FROM_WINDOWS.bat');
   fs.writeFileSync(oneClickUninstallBatPath, oneClickUninstallBat, 'utf8');

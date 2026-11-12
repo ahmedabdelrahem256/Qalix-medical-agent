@@ -762,6 +762,7 @@ function getSummaryResponse() {
   return {
     agent: AGENT_INFO,
     appLicense: getAppLicenseState(),
+    isUniversalClean: isUniversalCleanMode(),
     agentsManagerContact: getAgentVisibleManagerContact(),
     pendingKeyRequestsCount: getPendingKeyRequestsCount(),
     pendingSystemKeyRequestsCount: getPendingKeyRequestsCount(ACTIVE_SYSTEM.id),
@@ -771,8 +772,10 @@ function getSummaryResponse() {
       id: ACTIVE_SYSTEM.id,
       nameAr: ACTIVE_SYSTEM.nameAr,
       subtitleAr: ACTIVE_SYSTEM.subtitleAr,
-      projectName: ACTIVE_SYSTEM.projectName || AGENT_INFO.projectName || 'Qalix Agent',
-      licensePrefix: ACTIVE_SYSTEM.licensePrefix || 'QLX2',
+      projectName: isUniversalCleanMode()
+        ? 'Universal Agents & Distributors Platform'
+        : (ACTIVE_SYSTEM.projectName || AGENT_INFO.projectName || 'Qalix Agent'),
+      licensePrefix: ACTIVE_SYSTEM.licensePrefix || (isUniversalCleanMode() ? 'AGT2' : 'QLX2'),
       dbFileRel: path.relative(path.dirname(BASE_DATA_DIR), dbPath).replace(/\\/g, '/'),
       kitsDirRel: path.relative(path.dirname(BASE_DATA_DIR), KITS_DIR).replace(/\\/g, '/')
     },
@@ -2600,11 +2603,13 @@ const server = http.createServer(async (req, res) => {
     /* ---------------- Multi-System Isolation & Clean Reseller Edition API ---------------- */
     if (req.method === 'GET' && pathname === '/api/systems') {
       systemsRegistry = loadSystemsRegistry(BASE_DATA_DIR, BASE_KITS_DIR);
+      const universalClean = isUniversalCleanMode();
       return sendJson(res, 200, {
         ok: true,
+        isUniversalClean: universalClean,
         activeSystemId: ACTIVE_SYSTEM.id,
-        qalixSuiteIds: QALIX_11_SUITE_IDS,
-        presets: Object.values(SYSTEM_PRESETS),
+        qalixSuiteIds: universalClean ? [] : QALIX_11_SUITE_IDS,
+        presets: universalClean ? [SYSTEM_PRESETS.universal_agent] : Object.values(SYSTEM_PRESETS),
         systems: systemsRegistry.systems.map(s => summarizeSystemStats(BASE_DATA_DIR, BASE_KITS_DIR, s))
       });
     }

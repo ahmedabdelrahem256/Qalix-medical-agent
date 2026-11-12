@@ -38,15 +38,17 @@ function copyDirFiltered(src, dest, skipNames = new Set()) {
   }
 }
 
-function generateWindowsOneClickInstallBat({ appShortcutName = 'Qalix Agents & Distributors Management', installFolderName = 'QalixAgentsPlatform', launchBatName = 'START_AGENT_PANEL.bat', iconRelPath = 'public\\img\\qalix-agents.ico' } = {}) {
+function generateWindowsOneClickInstallBat({ appShortcutName = 'Universal Agents & Distributors Management', installFolderName = 'UniversalAgentsPlatform', launchBatName = 'START_AGENT_PANEL.bat', iconRelPath = 'public\\img\\agents-platform.ico', vbsFileName = 'Agents_Desktop_App.vbs', isUniversal = true } = {}) {
   const safeBannerName = String(appShortcutName).replace(/&/g, '^&');
+  const brandTitleAr = isUniversal ? 'منظومة إدارة الوكلاء والموزعين الموحدة' : 'كالكس لإدارة الوكلاء والموزعين';
+  const brandShortEn = isUniversal ? 'Agents Platform' : 'Qalix';
   return [
     '@echo off',
     'chcp 65001 >nul',
     'cd /d "%~dp0"',
-    `title كالكس لإدارة الوكلاء والموزعين - ${safeBannerName} (32-bit / 64-bit)`,
+    `title ${brandTitleAr} - ${safeBannerName} (32-bit / 64-bit)`,
     'echo ============================================================================',
-    'echo   كالكس لإدارة الوكلاء والموزعين',
+    `echo   ${brandTitleAr}`,
     `echo   ${safeBannerName} - One-Click Windows Installer`,
     'echo   Supports Windows 32-bit and 64-bit (100%% Offline, No Admin Required)',
     'echo ============================================================================',
@@ -58,12 +60,12 @@ function generateWindowsOneClickInstallBat({ appShortcutName = 'Qalix Agents & D
     '  echo [ERROR] Failed to copy application files cleanly.',
     '  pause & exit /b 1',
     ')',
-    'echo [2/3] Creating Desktop and Start Menu shortcuts with official Qalix icon ...',
-    `powershell -NoProfile -ExecutionPolicy Bypass -Command "$ws = New-Object -ComObject WScript.Shell; $desk = [Environment]::GetFolderPath('Desktop'); $prog = [Environment]::GetFolderPath('Programs'); $tDir = Join-Path $env:LOCALAPPDATA '${installFolderName}'; $vbs = Join-Path $tDir 'Qalix_Desktop_App.vbs'; $ico = Join-Path $tDir '${iconRelPath}'; foreach($d in @($desk,$prog)){ $sc=$ws.CreateShortcut((Join-Path $d '${appShortcutName}.lnk')); if(Test-Path $vbs){ $sc.TargetPath=(Join-Path $env:SystemRoot 'System32\\wscript.exe'); $sc.Arguments=('//nologo \\"' + $vbs + '\\"') } else { $sc.TargetPath=(Join-Path $tDir '${launchBatName}') }; $sc.WorkingDirectory=$tDir; if(Test-Path $ico){ $sc.IconLocation=$ico }; $sc.Save() }"`,
+    `echo [2/3] Creating Desktop and Start Menu shortcuts with official ${brandShortEn} icon ...`,
+    `powershell -NoProfile -ExecutionPolicy Bypass -Command "$ws = New-Object -ComObject WScript.Shell; $desk = [Environment]::GetFolderPath('Desktop'); $prog = [Environment]::GetFolderPath('Programs'); $tDir = Join-Path $env:LOCALAPPDATA '${installFolderName}'; $vbs = Join-Path $tDir '${vbsFileName}'; $ico = Join-Path $tDir '${iconRelPath}'; foreach($d in @($desk,$prog)){ $sc=$ws.CreateShortcut((Join-Path $d '${appShortcutName}.lnk')); if(Test-Path $vbs){ $sc.TargetPath=(Join-Path $env:SystemRoot 'System32\\wscript.exe'); $sc.Arguments=('//nologo \\"' + $vbs + '\\"') } else { $sc.TargetPath=(Join-Path $tDir '${launchBatName}') }; $sc.WorkingDirectory=$tDir; if(Test-Path $ico){ $sc.IconLocation=$ico }; $sc.Save() }"`,
     'echo [3/3] Installation completed cleanly!',
-    'echo Launching Qalix Windows Application ...',
-    'if exist "%TARGET_DIR%\\Qalix_Desktop_App.vbs" (',
-    '  start "" wscript.exe //nologo "%TARGET_DIR%\\Qalix_Desktop_App.vbs"',
+    `echo Launching ${brandShortEn} Windows Application ...`,
+    `if exist "%TARGET_DIR%\\${vbsFileName}" (`,
+    `  start "" wscript.exe //nologo "%TARGET_DIR%\\${vbsFileName}"`,
     ') else (',
     `  start "" "%TARGET_DIR%\\${launchBatName}"`,
     ')',
@@ -72,15 +74,16 @@ function generateWindowsOneClickInstallBat({ appShortcutName = 'Qalix Agents & D
   ].join('\r\n');
 }
 
-function generateWindowsUninstallBat({ appShortcutName = 'Qalix Agents & Distributors Management', installFolderName = 'QalixAgentsPlatform' } = {}) {
+function generateWindowsUninstallBat({ appShortcutName = 'Universal Agents & Distributors Management', installFolderName = 'UniversalAgentsPlatform', isUniversal = true } = {}) {
   const safeBannerName = String(appShortcutName).replace(/&/g, '^&');
+  const brandTitleAr = isUniversal ? 'منظومة إدارة الوكلاء والموزعين الموحدة' : 'كالكس لإدارة الوكلاء والموزعين';
   return [
     '@echo off',
     'chcp 65001 >nul',
     'cd /d "%~dp0"',
-    `title كالكس لإدارة الوكلاء والموزعين - إزالة التثبيت (${safeBannerName})`,
+    `title ${brandTitleAr} - إزالة التثبيت (${safeBannerName})`,
     'echo ============================================================================',
-    'echo   كالكس لإدارة الوكلاء والموزعين',
+    `echo   ${brandTitleAr}`,
     `echo   Uninstall ${safeBannerName} (Desktop / Start Menu / LocalAppData)`,
     'echo ============================================================================',
     `set "TARGET_DIR=%LOCALAPPDATA%\\${installFolderName}"`,
@@ -125,14 +128,47 @@ function buildCleanResellerEdition(options = {}) {
   copyDirFiltered(path.join(rootDir, 'public'), path.join(editionDir, 'public'));
   copyDirFiltered(path.join(rootDir, 'server'), path.join(editionDir, 'server'));
 
-  const safeRootFiles = [
-    'CREATE_BACKUP.bat',
-    'package.json'
-  ];
+  const safeRootFiles = isQalixSuiteEdition
+    ? ['CREATE_BACKUP.bat', 'package.json']
+    : ['CREATE_BACKUP.bat'];
   for (const fname of safeRootFiles) {
     const srcFile = path.join(rootDir, fname);
     if (fs.existsSync(srcFile)) {
       fs.copyFileSync(srcFile, path.join(editionDir, fname));
+    }
+  }
+  if (!isQalixSuiteEdition) {
+    const universalPkg = {
+      name: 'universal-agents-distributors-platform',
+      version: '1.0.0',
+      description: 'Universal Agents & Distributors Management Platform (100% Offline Air-Gapped Windows Edition, Zero External Dependencies)',
+      main: 'server/agent_server.js',
+      scripts: {
+        start: 'node server/agent_server.js'
+      },
+      license: 'UNLICENSED'
+    };
+    fs.writeFileSync(path.join(editionDir, 'package.json'), JSON.stringify(universalPkg, null, 2) + '\n', 'utf8');
+
+    const imgDestDir = path.join(editionDir, 'public', 'img');
+    if (fs.existsSync(imgDestDir)) {
+      const pngSrc = path.join(imgDestDir, 'qalix-agents-icon.png');
+      const icoSrc = path.join(imgDestDir, 'qalix-agents.ico');
+      if (fs.existsSync(pngSrc)) fs.copyFileSync(pngSrc, path.join(imgDestDir, 'agents-platform-icon.png'));
+      if (fs.existsSync(icoSrc)) fs.copyFileSync(icoSrc, path.join(imgDestDir, 'agents-platform.ico'));
+      for (const f of fs.readdirSync(imgDestDir)) {
+        if (f.toLowerCase().startsWith('qalix-')) {
+          fs.rmSync(path.join(imgDestDir, f), { force: true });
+        }
+      }
+    }
+    const edHtmlPath = path.join(editionDir, 'public', 'index.html');
+    if (fs.existsSync(edHtmlPath)) {
+      let edHtml = fs.readFileSync(edHtmlPath, 'utf8');
+      edHtml = edHtml
+        .replace(/\/public\/img\/qalix-agents-icon\.png/g, '/public/img/agents-platform-icon.png')
+        .replace(/\/public\/img\/qalix-agents\.ico/g, '/public/img/agents-platform.ico');
+      fs.writeFileSync(edHtmlPath, edHtml, 'utf8');
     }
   }
 
@@ -140,12 +176,13 @@ function buildCleanResellerEdition(options = {}) {
   const editionTitleAscii = isQalixSuiteEdition
     ? 'Qalix Agents ^& Distributors Management v1.0'
     : 'Universal Multi-System Agents ^& Distributors Platform v1.0';
+  const vbsFileName = isQalixSuiteEdition ? 'Qalix_Desktop_App.vbs' : 'Agents_Desktop_App.vbs';
   const startBat = [
     '@echo off',
     'chcp 65001 >nul',
     'cd /d "%~dp0"',
-    'if not "%QALIX_SILENT%"=="1" if exist "%~dp0Qalix_Desktop_App.vbs" (',
-    '  start "" wscript.exe //nologo "%~dp0Qalix_Desktop_App.vbs"',
+    `if not "%QALIX_SILENT%"=="1" if exist "%~dp0${vbsFileName}" (`,
+    `  start "" wscript.exe //nologo "%~dp0${vbsFileName}"`,
     '  exit /b 0',
     ')',
     `title ${editionTitleAscii}`,
@@ -183,19 +220,22 @@ function buildCleanResellerEdition(options = {}) {
     ''
   ].join('\r\n');
   fs.writeFileSync(path.join(editionDir, 'START_AGENT_PANEL.bat'), startBat, 'utf8');
-  fs.writeFileSync(path.join(editionDir, 'Qalix_Desktop_App.vbs'), generateSilentDesktopVbs('START_AGENT_PANEL.bat'), 'utf8');
+  fs.writeFileSync(path.join(editionDir, vbsFileName), generateSilentDesktopVbs('START_AGENT_PANEL.bat'), 'utf8');
 
   const installBat = generateWindowsOneClickInstallBat({
     appShortcutName: isQalixSuiteEdition ? 'Qalix Agents & Distributors Management' : 'Universal Agents & Distributors Management',
     installFolderName: isQalixSuiteEdition ? 'QalixAgentsPlatform11' : 'UniversalAgentsPlatform',
     launchBatName: 'START_AGENT_PANEL.bat',
-    iconRelPath: 'public\\img\\qalix-agents.ico'
+    iconRelPath: isQalixSuiteEdition ? 'public\\img\\qalix-agents.ico' : 'public\\img\\agents-platform.ico',
+    vbsFileName,
+    isUniversal: !isQalixSuiteEdition
   });
   fs.writeFileSync(path.join(editionDir, 'INSTALL_ON_WINDOWS.bat'), installBat, 'utf8');
 
   const uninstallBat = generateWindowsUninstallBat({
     appShortcutName: isQalixSuiteEdition ? 'Qalix Agents & Distributors Management' : 'Universal Agents & Distributors Management',
-    installFolderName: isQalixSuiteEdition ? 'QalixAgentsPlatform11' : 'UniversalAgentsPlatform'
+    installFolderName: isQalixSuiteEdition ? 'QalixAgentsPlatform11' : 'UniversalAgentsPlatform',
+    isUniversal: !isQalixSuiteEdition
   });
   fs.writeFileSync(path.join(editionDir, 'UNINSTALL_FROM_WINDOWS.bat'), uninstallBat, 'utf8');
 
@@ -341,32 +381,57 @@ function buildCleanResellerEdition(options = {}) {
   }
 
   // Write buyer / Agents Manager quick-start guide (100% Offline Windows v1.0)
-  const readmeText = [
-    '====================================================================',
-    '  كالكس لإدارة الوكلاء والموزعين — Qalix Agents & Distributors',
-    '  النسخة التجريبية الأولى (v1.0) — تعمل أوفلاين بالكامل على ويندوز',
-    '====================================================================',
-    '',
-    '1. التثبيت والتشغيل كبرنامج ويندوز حديث بدون نافذة أوامر أو متصفح تقليدي:',
-    '   - للتثبيت وإنشاء اختصارات سطح المكتب وقائمة ابدأ بأيقونة كالكس الرسمية:',
-    '     شغّل ملف INSTALL_ON_WINDOWS.bat (يثبت البرنامج في مجلد المستخدم القابل للكتابة).',
-    '   - أو للتشغيل الفوري المباشر كبرنامج ويندوز مستقل:',
-    '     اضغط مرتين على Qalix_Desktop_App.vbs',
-    '',
-    '2. دستور كالكس — 100% أوفلاين (Air-Gapped):',
-    '   - هذه المنظومة والـ 11 منظومة بداخلها تعمل محلياً بالكامل بدون أي اتصال سحابي.',
-    '   - جميع البيانات والصفقات والموزعين تُحفظ فوراً وبأمان داخل مجلد data\\ المحلي.',
-    '',
-    '3. سياسة مفاتيح التراخيص (إصدار يدوي من المنصة فقط):',
-    '   - لا تصدر هذه المنظومة ولا أي منظومة من الـ 11 منظومة بداخلها مفاتيح تراخيص.',
-    '   - مفاتيح التراخيص تُصدر حصراً داخل المنصة الأم بواسطة المطور، ويجلبها مدير',
-    '     الوكلاء ويسلّمها يدوياً للموزع عند الطلب.',
-    '',
-    '4. الإزالة النظيفة من ويندوز:',
-    '   - لإزالة الاختصارات والنسخة المثبتة دون المساس بالنسخة المضغوطة: UNINSTALL_FROM_WINDOWS.bat',
-    '====================================================================',
-    ''
-  ].join('\r\n');
+  const readmeText = isQalixSuiteEdition
+    ? [
+      '====================================================================',
+      '  كالكس لإدارة الوكلاء والموزعين — Qalix Agents & Distributors',
+      '  النسخة التجريبية الأولى (v1.0) — تعمل أوفلاين بالكامل على ويندوز',
+      '====================================================================',
+      '',
+      '1. التثبيت والتشغيل كبرنامج ويندوز حديث بدون نافذة أوامر أو متصفح تقليدي:',
+      '   - للتثبيت وإنشاء اختصارات سطح المكتب وقائمة ابدأ بأيقونة كالكس الرسمية:',
+      '     شغّل ملف INSTALL_ON_WINDOWS.bat (يثبت البرنامج في مجلد المستخدم القابل للكتابة).',
+      '   - أو للتشغيل الفوري المباشر كبرنامج ويندوز مستقل:',
+      '     اضغط مرتين على Qalix_Desktop_App.vbs',
+      '',
+      '2. دستور كالكس — 100% أوفلاين (Air-Gapped):',
+      '   - هذه المنظومة والـ 11 منظومة بداخلها تعمل محلياً بالكامل بدون أي اتصال سحابي.',
+      '   - جميع البيانات والصفقات والموزعين تُحفظ فوراً وبأمان داخل مجلد data\\ المحلي.',
+      '',
+      '3. سياسة مفاتيح التراخيص (إصدار يدوي من المنصة فقط):',
+      '   - لا تصدر هذه المنظومة ولا أي منظومة من الـ 11 منظومة بداخلها مفاتيح تراخيص.',
+      '   - مفاتيح التراخيص تُصدر حصراً داخل المنصة الأم بواسطة المطور، ويجلبها مدير',
+      '     الوكلاء ويسلّمها يدوياً للموزع عند الطلب.',
+      '',
+      '4. الإزالة النظيفة من ويندوز:',
+      '   - لإزالة الاختصارات والنسخة المثبتة دون المساس بالنسخة المضغوطة: UNINSTALL_FROM_WINDOWS.bat',
+      '====================================================================',
+      ''
+    ].join('\r\n')
+    : [
+      '====================================================================',
+      '  منظومة إدارة الوكلاء والموزعين الموحدة — Universal Agents & Distributors',
+      '  الإصدار الأول (v1.0) — يعمل أوفلاين بالكامل على ويندوز (صفر بيانات)',
+      '====================================================================',
+      '',
+      '1. التثبيت والتشغيل كبرنامج ويندوز مستقل بدون نافذة أوامر:',
+      '   - للتثبيت وإنشاء اختصارات سطح المكتب وقائمة ابدأ:',
+      '     شغّل ملف INSTALL_ON_WINDOWS.bat (يثبت البرنامج في مجلد المستخدم القابل للكتابة).',
+      '   - أو للتشغيل الفوري المباشر كبرنامج ويندوز مستقل:',
+      '     اضغط مرتين على Agents_Desktop_App.vbs',
+      '',
+      '2. التشغيل المحلي الكامل (100% Offline Air-Gapped):',
+      '   - تعمل هذه المنظومة محلياً بالكامل بدون أي اتصال سحابي أو خوادم خارجية.',
+      '   - جميع البيانات والصفقات والموزعين تُحفظ فوراً وبأمان داخل مجلد data\\ المحلي.',
+      '',
+      '3. سياسة مفاتيح التراخيص:',
+      '   - تصدر مفاتيح التراخيص رسمياً من المنصة الأم المعتمدة ويتم تسليمها عبر مدير الوكلاء.',
+      '',
+      '4. الإزالة النظيفة من ويندوز:',
+      '   - لإزالة الاختصارات والنسخة المثبتة: UNINSTALL_FROM_WINDOWS.bat',
+      '====================================================================',
+      ''
+    ].join('\r\n');
   fs.writeFileSync(path.join(editionDir, 'README_RESELLER_START.txt'), readmeText, 'utf8');
 
   // 5. Verify zero-data & zero-leak before compressing
