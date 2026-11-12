@@ -1,8 +1,8 @@
 {
-  "name": "qalix-agents-distributors-management",
+  "name": "universal-agents-distributors-platform",
   "version": "1.0.0",
   "private": true,
-  "description": "كالكس لإدارة الوكلاء والموزعين — Qalix Agents & Distributors Management (100% Offline Air-Gapped Windows Edition, Zero External Dependencies)",
+  "description": "منظومة إدارة الوكلاء والموزعين الموحدة — Universal Agents & Distributors Management Platform (100% Offline Air-Gapped Windows Edition, Zero External Dependencies)",
   "main": "server/agent_server.js",
   "scripts": {
     "start": "node server/agent_server.js",
