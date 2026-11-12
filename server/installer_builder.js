@@ -42,7 +42,7 @@ Filename: "{sys}\\wscript.exe"; Parameters: "//nologo ""{app}\\Qalix_Desktop_App
 `;
 }
 
-function buildWindowsInstallerKit({ rootDir, baseDataDir, edition = 'qalix11', includeMediaAssets = false }) {
+function buildWindowsInstallerKit({ rootDir, baseDataDir, edition = 'qalix11', includeMediaAssets = false, includeLiveMedicalData = false }) {
   const dataRoot = baseDataDir || path.join(rootDir, 'data');
   const stageRoot = path.join(dataRoot, 'installer_stage');
   fs.mkdirSync(stageRoot, { recursive: true });
@@ -51,11 +51,14 @@ function buildWindowsInstallerKit({ rootDir, baseDataDir, edition = 'qalix11', i
   const editionRes = buildCleanResellerEdition({
     rootDir,
     outputBaseDir: stageRoot,
-    editionName: isQalix11 ? 'Qalix_11Systems_Setup_Stage' : 'Universal_Agents_Setup_Stage',
+    editionName: isQalix11
+      ? (includeLiveMedicalData ? 'Qalix_11Systems_Agents_Manager_Stage' : 'Qalix_11Systems_Setup_Stage')
+      : 'Universal_Agents_Setup_Stage',
     buyerAgentTitleAr: isQalix11 ? 'مدير وكلاء منظومات كالكس الـ 11' : 'وكيل عام متعدد المنظومات',
     buyerOwnerName: 'إدارة الوكلاء',
     defaultSystemId: isQalix11 ? 'qalix_medical' : 'universal_agent',
     includeAllQalix11: isQalix11,
+    includeLiveMedicalData: isQalix11 && includeLiveMedicalData === true,
     includeMediaAssets,
     skipZip: true
   });
@@ -73,7 +76,9 @@ function buildWindowsInstallerKit({ rootDir, baseDataDir, edition = 'qalix11', i
 
   const issOutDir = path.join(dataRoot, 'exports');
   fs.mkdirSync(issOutDir, { recursive: true });
-  const setupBaseName = isQalix11 ? 'Qalix_11Systems_Setup_v1.0' : 'Universal_Agents_Setup_v1.0';
+  const setupBaseName = isQalix11
+    ? (includeLiveMedicalData ? 'Qalix_11Systems_Agents_Manager_Setup_v1.0' : 'Qalix_11Systems_Setup_v1.0')
+    : 'Universal_Agents_Setup_v1.0';
   const issContent = generateInnoSetupScript({
     appNameAr: isQalix11 ? 'Qalix Agents & Distributors Management' : 'Universal Agents & Distributors Management',
     appVersion: '1.0.0',

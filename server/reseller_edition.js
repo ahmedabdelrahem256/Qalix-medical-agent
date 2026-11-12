@@ -137,6 +137,9 @@ function buildCleanResellerEdition(options = {}) {
   }
 
   // Write clean neutral Windows startup launcher (auto-handoff to silent desktop VBS + auto-port fallback)
+  const editionTitleAscii = isQalixSuiteEdition
+    ? 'Qalix Agents ^& Distributors Management v1.0'
+    : 'Universal Multi-System Agents ^& Distributors Platform v1.0';
   const startBat = [
     '@echo off',
     'chcp 65001 >nul',
@@ -145,9 +148,9 @@ function buildCleanResellerEdition(options = {}) {
     '  start "" wscript.exe //nologo "%~dp0Qalix_Desktop_App.vbs"',
     '  exit /b 0',
     ')',
-    'title Qalix Agents ^& Distributors Management v1.0',
+    `title ${editionTitleAscii}`,
     'echo ============================================================================',
-    'echo   Qalix Agents ^& Distributors Management v1.0 (100%% Offline Air-Gapped)',
+    `echo   ${editionTitleAscii} (100%% Offline Air-Gapped)`,
     'echo   - Working Directory: %CD%',
     'echo ============================================================================',
     'set "NODE_BIN="',
@@ -196,9 +199,9 @@ function buildCleanResellerEdition(options = {}) {
   });
   fs.writeFileSync(path.join(editionDir, 'UNINSTALL_FROM_WINDOWS.bat'), uninstallBat, 'utf8');
 
-  // Legal docs (~3MB, helpful for new buyers)
+  // Legal docs (included for Qalix editions or when includeMediaAssets=true; excluded from pure Universal resale edition)
   const legalSrc = path.join(rootDir, 'الوثائق_القانونية_والتسليم');
-  if (fs.existsSync(legalSrc)) {
+  if ((isQalixSuiteEdition || options.includeMediaAssets === true) && fs.existsSync(legalSrc)) {
     copyDirFiltered(legalSrc, path.join(editionDir, 'الوثائق_القانونية_والتسليم'));
   }
 
@@ -211,45 +214,68 @@ function buildCleanResellerEdition(options = {}) {
     fs.mkdirSync(path.join(presDest, 'صور'), { recursive: true });
   }
 
-  // Empty kits & data folders
+  const includeLiveMedicalData = options.includeLiveMedicalData === true && isQalixSuiteEdition;
+
+  // Empty kits & data folders (or copy live qalix_medical kits when building dedicated Qalix Agents Manager edition)
   const kitsDest = path.join(editionDir, 'distributors_kits');
   fs.mkdirSync(kitsDest, { recursive: true });
-  fs.writeFileSync(path.join(kitsDest, '.gitkeep'), '', 'utf8');
+  const srcKitsDir = path.join(rootDir, 'distributors_kits');
+  if (includeLiveMedicalData && fs.existsSync(srcKitsDir)) {
+    copyDirFiltered(srcKitsDir, kitsDest);
+  } else {
+    fs.writeFileSync(path.join(kitsDest, '.gitkeep'), '', 'utf8');
+  }
 
   const dataDest = path.join(editionDir, 'data');
   fs.mkdirSync(dataDest, { recursive: true });
   fs.mkdirSync(path.join(dataDest, 'backups'), { recursive: true });
 
-  // 2. Customize clean buyer profile (never copy seller's private owner phone!)
-  const buyerPhone = String(options.buyerAgentPhone || '01000000000').replace(/[^0-9]/g, '').slice(0, 15) || '01000000000';
+  // 2. Customize clean buyer profile (or preserve qalix_medical live data when includeLiveMedicalData === true)
+  const buyerPhone = includeLiveMedicalData
+    ? '01122166076'
+    : (String(options.buyerAgentPhone || '01000000000').replace(/[^0-9]/g, '').slice(0, 15) || '01000000000');
   const buyerTitleAr = String(options.buyerAgentTitleAr || 'وكيل المنظومة المعتمد').trim() || 'وكيل المنظومة المعتمد';
   const buyerOwnerName = String(options.buyerOwnerName || 'صاحب المنصة / الوكيل الرئيسي').trim() || 'صاحب المنصة / الوكيل الرئيسي';
 
-  const defaultPresetId = (options.defaultSystemId && SYSTEM_PRESETS[options.defaultSystemId])
-    ? options.defaultSystemId
-    : (isQalixSuiteEdition ? 'qalix_platform' : 'universal_agent');
+  const defaultPresetId = includeLiveMedicalData
+    ? 'qalix_medical'
+    : ((options.defaultSystemId && SYSTEM_PRESETS[options.defaultSystemId])
+      ? options.defaultSystemId
+      : (isQalixSuiteEdition ? 'qalix_platform' : 'universal_agent'));
   const defaultPreset = SYSTEM_PRESETS[defaultPresetId];
 
-  const buyerAgentInfo = buildAgentInfoFromSystem({
-    projectName: defaultPreset.projectName || 'Universal Agent Platform',
-    titleAr: buyerTitleAr,
-    phone: buyerPhone,
-    facebookPageUrl: String(options.facebookPageUrl || ''),
-    megaTrialUrl: String(options.megaTrialUrl !== undefined ? options.megaTrialUrl : ''),
-    packageSha256: ''
-  }, buyerTitleAr);
+  const srcSystemsJsonPath = path.join(rootDir, 'data', 'systems.json');
+  let primaryManifest = null;
+  if (includeLiveMedicalData && fs.existsSync(srcSystemsJsonPath)) {
+    try {
+      const srcReg = JSON.parse(fs.readFileSync(srcSystemsJsonPath, 'utf8'));
+      const foundMed = (srcReg.systems || []).find(s => s.id === 'qalix_medical');
+      if (foundMed) primaryManifest = JSON.parse(JSON.stringify(foundMed));
+    } catch (_) {}
+  }
 
-  const primaryManifest = {
-    id: defaultPreset.id,
-    nameAr: defaultPreset.nameAr,
-    subtitleAr: defaultPreset.subtitleAr,
-    projectName: defaultPreset.projectName || 'Universal Agent Platform',
-    licensePrefix: defaultPreset.licensePrefix || 'AGT2',
-    isPrimaryDefault: true,
-    createdAt: new Date().toISOString(),
-    agentInfo: buyerAgentInfo,
-    pricing: JSON.parse(JSON.stringify(defaultPreset.pricing || DEFAULT_MEDICAL_PRICING))
-  };
+  if (!primaryManifest) {
+    const buyerAgentInfo = buildAgentInfoFromSystem({
+      projectName: defaultPreset.projectName || 'Universal Agent Platform',
+      titleAr: buyerTitleAr,
+      phone: buyerPhone,
+      facebookPageUrl: String(options.facebookPageUrl || ''),
+      megaTrialUrl: String(options.megaTrialUrl !== undefined ? options.megaTrialUrl : ''),
+      packageSha256: ''
+    }, buyerTitleAr);
+
+    primaryManifest = {
+      id: defaultPreset.id,
+      nameAr: defaultPreset.nameAr,
+      subtitleAr: defaultPreset.subtitleAr,
+      projectName: defaultPreset.projectName || 'Universal Agent Platform',
+      licensePrefix: defaultPreset.licensePrefix || 'AGT2',
+      isPrimaryDefault: true,
+      createdAt: new Date().toISOString(),
+      agentInfo: buyerAgentInfo,
+      pricing: JSON.parse(JSON.stringify(defaultPreset.pricing || DEFAULT_MEDICAL_PRICING))
+    };
+  }
 
   const systemsRegistry = {
     schemaVersion: '1.0',
@@ -259,18 +285,29 @@ function buildCleanResellerEdition(options = {}) {
   };
   fs.writeFileSync(path.join(dataDest, 'systems.json'), JSON.stringify(systemsRegistry, null, 2), 'utf8');
 
-  // 3. Initialize clean zero-data primary SQLite DB with clean_production_mode = '1'
+  // 3. Primary SQLite DB: either live qalix_medical DB (for dedicated Qalix Agents Manager edition) or clean zero-data DB
   const dbDestPath = path.join(dataDest, 'agent.db');
-  const cleanDb = new DatabaseSync(dbDestPath);
-  try {
-    initSystemSchema(cleanDb);
-    cleanDb.prepare("INSERT INTO agent_private_settings(key, value) VALUES('clean_production_mode', '1') ON CONFLICT(key) DO UPDATE SET value='1'").run();
-    seedGenericSystemProposals(cleanDb, primaryManifest);
-    seedSystemGenesisAudit(cleanDb, 'reseller_clean_release', 'نسخة وكيل متعددة المنظومات مصفرة البيانات وجاهزة للتشغيل التجاري المباشر');
-    cleanDb.exec('PRAGMA wal_checkpoint(TRUNCATE);');
-    cleanDb.exec('PRAGMA journal_mode = DELETE;');
-  } finally {
-    try { cleanDb.close(); } catch (_) {}
+  const srcAgentDbPath = path.join(rootDir, 'data', 'agent.db');
+  if (includeLiveMedicalData && fs.existsSync(srcAgentDbPath)) {
+    const srcConn = new DatabaseSync(srcAgentDbPath);
+    try { srcConn.exec('PRAGMA wal_checkpoint(TRUNCATE);'); } catch (_) {} finally { try { srcConn.close(); } catch (_) {} }
+    fs.copyFileSync(srcAgentDbPath, dbDestPath);
+    const liveCopyDb = new DatabaseSync(dbDestPath);
+    try {
+      liveCopyDb.exec('PRAGMA wal_checkpoint(TRUNCATE); PRAGMA journal_mode = DELETE;');
+    } finally { try { liveCopyDb.close(); } catch (_) {} }
+  } else {
+    const cleanDb = new DatabaseSync(dbDestPath);
+    try {
+      initSystemSchema(cleanDb);
+      cleanDb.prepare("INSERT INTO agent_private_settings(key, value) VALUES('clean_production_mode', '1') ON CONFLICT(key) DO UPDATE SET value='1'").run();
+      seedGenericSystemProposals(cleanDb, primaryManifest);
+      seedSystemGenesisAudit(cleanDb, 'reseller_clean_release', 'نسخة وكيل متعددة المنظومات مصفرة البيانات وجاهزة للتشغيل التجاري المباشر');
+      cleanDb.exec('PRAGMA wal_checkpoint(TRUNCATE);');
+      cleanDb.exec('PRAGMA journal_mode = DELETE;');
+    } finally {
+      try { cleanDb.close(); } catch (_) {}
+    }
   }
 
   // Initialize clean zeroed manager_hub.db (zero key requests, zero sessions, zero synced snapshots)
